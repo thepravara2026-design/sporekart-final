@@ -179,6 +179,10 @@ export default function ProductDetailPage({ onAddToCart }) {
             <img
               src={primaryImage}
               alt={`${product.title} - Fresh mushroom & lab spawn seeds India`}
+              width="800"
+              height="800"
+              loading="eager"
+              decoding="async"
               className="w-full h-80 sm:h-96 object-cover rounded-2xl"
             />
           </div>
@@ -192,7 +196,15 @@ export default function ProductDetailPage({ onAddToCart }) {
                     selectedImage === url ? 'border-spore-400 scale-105' : 'border-slate-800 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={url} alt={`${product.title} thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={url}
+                    alt={`${product.title} detailed view thumbnail ${idx + 1}`}
+                    width="160"
+                    height="160"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -397,7 +409,11 @@ export default function ProductDetailPage({ onAddToCart }) {
               >
                 <img
                   src={rel.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=400&q=80'}
-                  alt={rel.title}
+                  alt={`${rel.title} - Sporekart Mushroom Agritech Produce`}
+                  width="400"
+                  height="400"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-40 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform"
                 />
                 <h3 className="font-bold text-sm text-white group-hover:text-spore-300 transition-colors line-clamp-1">

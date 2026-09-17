@@ -105,6 +105,10 @@ export default function HomePage({ onAddToCart }) {
                 <img
                   src="https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1000&q=80"
                   alt="Fresh Organic Oyster & Button Mushrooms Sporekart India"
+                  width="1000"
+                  height="800"
+                  loading="eager"
+                  decoding="async"
                   className="w-full h-80 sm:h-96 object-cover rounded-2xl"
                 />
                 <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-card border border-spore-600/30">
@@ -197,6 +201,10 @@ export default function HomePage({ onAddToCart }) {
                       <img
                         src={primaryImg}
                         alt={`${product.title} - Fresh mushroom & spawn supply India`}
+                        width="600"
+                        height="400"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <span className="absolute top-3 left-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-spore-300 text-[10px] font-bold rounded-lg border border-spore-700/50">

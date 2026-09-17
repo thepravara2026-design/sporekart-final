@@ -176,6 +176,10 @@ export default function CatalogPage({ onAddToCart }) {
                     <img
                       src={image}
                       alt={`${product.title} - Fresh mushroom supply India`}
+                      width="600"
+                      height="400"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <span className="absolute top-3 left-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-spore-300 text-[10px] font-bold rounded-lg border border-spore-700/50 uppercase tracking-wider">

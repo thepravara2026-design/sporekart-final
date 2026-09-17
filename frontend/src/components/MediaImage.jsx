@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 
-const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=600&q=80';
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
 
 export default function MediaImage({
   src,
-  alt = 'Sporekart fresh mushroom product',
-  width,
-  height,
+  alt = 'Fresh organic mushroom produce and lab certified spawn seeds India',
+  width = 800,
+  height = 800,
   className = '',
   aspectRatio = 'aspect-square',
   fallbackSrc = DEFAULT_FALLBACK_IMAGE,
   loading = 'lazy',
+  decoding = 'async',
   ...props
 }) {
   const [imageState, setImageState] = useState({
@@ -28,6 +29,11 @@ export default function MediaImage({
 
   const displaySrc = imageState.isError ? fallbackSrc : (src || fallbackSrc);
 
+  // Validate alt text to prevent generic names like image1.jpg or IMG_92831.jpg
+  const sanitizedAlt = (alt && !alt.match(/^(image|img_\d+|final|photo)\d*\.(jpg|png|webp)/i))
+    ? alt
+    : 'Fresh organic mushroom produce, lab certified spawn seeds, and DIY growing kits in India';
+
   return (
     <div className={`relative overflow-hidden ${aspectRatio} ${className}`}>
       {/* Loading Skeleton */}
@@ -37,13 +43,14 @@ export default function MediaImage({
         </div>
       )}
 
-      {/* Responsive WebP/Image */}
+      {/* SEO-Optimized Responsive Image */}
       <img
         src={displaySrc}
-        alt={alt}
+        alt={sanitizedAlt}
         width={width}
         height={height}
         loading={loading}
+        decoding={decoding}
         onLoad={handleLoad}
         onError={handleError}
         className={`w-full h-full object-cover transition-opacity duration-300 ${
