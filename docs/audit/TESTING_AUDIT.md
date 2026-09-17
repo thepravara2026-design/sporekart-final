@@ -53,6 +53,12 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - Fluent business methods e.g., `loginPage.login(phone, otp)`.
   - **Exit Criteria**: Zero raw locators in tests, 15 Page classes extending `BasePage`, fluent action methods implemented.
 
+### SEL-04 — Common Component Automation
+- **Reusable UI Component Isolation**:
+  - 15 component classes under `pages/components/`: `HeaderComponent`, `FooterComponent`, `NavigationComponent`, `SearchBarComponent`, `ProductCardComponent`, `ProductGridComponent`, `PaginationComponent`, `ModalComponent`, `ToastComponent`, `DropdownComponent`, `DatePickerComponent`, `AddressFormComponent`, `PaymentWidgetComponent`, `FileUploaderComponent`, `DataTableComponent`.
+  - Eliminates locator & action duplication across parent Page Objects.
+  - **Exit Criteria**: 15 component classes created, code duplication eliminated, async toast/modal waits integrated cleanly.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.

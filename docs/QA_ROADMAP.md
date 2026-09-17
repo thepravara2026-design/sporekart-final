@@ -13,11 +13,12 @@ This roadmap outlines the complete end-to-end quality assurance, test automation
 | **SEL-01** | **Environment & Configuration** | **Multi-Tier Properties & CLI `-Denv`** | **Defined & Active** |
 | **SEL-02** | **WebDriver Infrastructure** | **DriverFactory, BrowserFactory & Utilities** | **Defined & Active** |
 | **SEL-03** | **Page Object Architecture** | **Encapsulated POM & Clean Page Hierarchy** | **Defined & Active** |
-| **SEL-04** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
-| **SEL-05** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
-| **SEL-06** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
-| **SEL-07** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
-| **SEL-08** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
+| **SEL-04** | **Common Component Automation** | **15 Reusable Page Component Classes** | **Defined & Active** |
+| **SEL-05** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
+| **SEL-06** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
+| **SEL-07** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
+| **SEL-08** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
+| **SEL-09** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
 | **API-01** | REST API & Contract Validation | RestAssured + TestNG | Scheduled |
 | **PERF-01**| Load & Performance Benchmarking | JMeter / K6 | Scheduled |
 
@@ -886,6 +887,197 @@ public class LoginPage extends BasePage {
 | **3** | **Encapsulated Locators** | Locators declared `private final By` within respective page classes | **PASSED** |
 | **4** | **Fluent Action Methods** | High-level business flows e.g. `loginPage.login(phone, otp)` return target page | **PASSED** |
 | **5** | **BasePage Inheritance** | All page objects extend `BasePage` and reuse centralized `WaitUtils` | **PASSED** |
+
+---
+
+## SEL-04 — Common Component Automation Specification
+
+### 1. Overview & Reusability Philosophy
+
+`SEL-04` introduces a Component-Based Automation architecture. Rather than duplicating locators and interaction logic across multiple Page Objects (e.g., search bar present in `HomePage`, `ProductListingPage`, and `BlogPage`), common UI components are encapsulated into reusable `Component` classes under `pages/components/`. 
+
+This modularity dramatically reduces Selenium code duplication, improves maintainability, and ensures locator updates occur in a single location.
+
+```mermaid
+graph TD
+    A[HomePage / ProductListingPage / BlogPage] --> B[HeaderComponent]
+    A --> C[SearchBarComponent]
+    A --> D[FooterComponent]
+    ProductListingPage --> E[ProductGridComponent]
+    ProductGridComponent --> F[ProductCardComponent]
+    ProductListingPage --> G[PaginationComponent]
+    CartPage / CheckoutPage --> H[ToastComponent]
+    CheckoutPage --> I[AddressFormComponent]
+    CheckoutPage --> J[PaymentWidgetComponent]
+    AdminPage --> K[DataTableComponent]
+```
+
+---
+
+### 2. Component Directory Hierarchy (`pages/components/`)
+
+All reusable UI components reside under `src/test/java/com/sporekart.automation.pages.components/`:
+
+```
+pages/components/
+├── HeaderComponent.java          # Header logo, cart badge count, user account icon, & search trigger
+├── FooterComponent.java          # Footer links, newsletter subscription input, social icons, & copyright
+├── NavigationComponent.java      # Category nav menu, mobile hamburger toggle, & active link indicator
+├── SearchBarComponent.java       # Live search input, search icon button, & autocomplete dropdown items
+├── ProductCardComponent.java     # Product card container, thumbnail, title, price, variant picker, & add button
+├── ProductGridComponent.java     # Grid container wrapping list of ProductCardComponents & empty grid state
+├── PaginationComponent.java      # Prev/Next page controls, page numbers, & items-per-page dropdown
+├── ModalComponent.java           # Modal container wrapper, title, body content, close button, & confirm/cancel CTAs
+├── ToastComponent.java           # Floating success/error notification banners & auto-dismiss wait helper
+├── DropdownComponent.java        # Generic custom select dropdown, filter search input, & option selection
+├── DatePickerComponent.java      # Calendar picker modal, month/year navigation, & date slot clicker
+├── AddressFormComponent.java     # Reusable shipping/billing address input fields & pincode validation
+├── PaymentWidgetComponent.java   # Razorpay modal iframe wrapper, UPI input field, & COD radio toggle
+├── FileUploaderComponent.java    # File upload drag-and-drop zone, file input path setter, & attachment preview
+└── DataTableComponent.java       # Table header sorting, row iteration, search filter, & row action buttons
+```
+
+---
+
+### 3. Component Functional Specifications
+
+| Component Class | Encapsulated UI Elements | Reusable Actions Provided |
+| :--- | :--- | :--- |
+| **`HeaderComponent`** | Header logo, cart counter badge, profile menu button | `getCartItemCount()`, `openProfileMenu()`, `clickLogo()` |
+| **`FooterComponent`** | Newsletter email input, subscribe button, social links | `subscribeNewsletter(email)`, `clickSocialLink(platform)` |
+| **`NavigationComponent`** | Category links (`Fresh Mushrooms`, `Kits`), mobile menu | `selectCategory(categoryName)`, `toggleMobileMenu()` |
+| **`SearchBarComponent`** | Search text field, clear button, autocomplete items | `typeQuery(term)`, `selectSuggestion(index)`, `submitSearch()` |
+| **`ProductCardComponent`** | Title, image, price text, size dropdown, add button | `getTitle()`, `getPrice()`, `selectSize(size)`, `clickAdd()` |
+| **`ProductGridComponent`** | List of product card elements, empty result text | `getProductCards()`, `getProductCount()`, `isEmpty()` |
+| **`PaginationComponent`** | Page 1..N buttons, Next button, items per page select | `goToPage(num)`, `clickNext()`, `selectItemsPerPage(count)` |
+| **`ModalComponent`** | Modal overlay, header title, body text, action buttons | `getModalTitle()`, `confirm()`, `cancel()`, `close()` |
+| **`ToastComponent`** | Toast banner container, message text, close button | `getToastMessage()`, `waitForToastToDismiss()`, `isSuccess()` |
+| **`DropdownComponent`** | Custom dropdown trigger, search input inside dropdown | `selectByText(text)`, `selectByValue(val)`, `getOptions()` |
+| **`DatePickerComponent`** | Month/Year header, prev/next arrows, day cells | `selectDate(day, month, year)`, `nextMonth()` |
+| **`AddressFormComponent`** | Name, phone, street, pincode, city, state inputs | `fillAddress(addressData)`, `submitForm()`, `getErrors()` |
+| **`PaymentWidgetComponent`** | UPI ID field, Razorpay iframe, COD option | `selectPaymentType(type)`, `enterUpiId(id)`, `payNow()` |
+| **`FileUploaderComponent`** | Upload dropzone, file input element, file preview | `uploadFile(filePath)`, `getUploadedFileName()` |
+| **`DataTableComponent`** | Header columns, table rows, search input, actions | `sortColumn(colName)`, `getRowData(rowIndex)`, `clickRowAction()` |
+
+---
+
+### 4. Implementation Code Samples
+
+#### `SearchBarComponent.java`
+```java
+package com.sporekart.automation.pages.components;
+
+import com.sporekart.automation.pages.BasePage;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
+import java.util.List;
+
+public class SearchBarComponent extends BasePage {
+
+    private final By searchInput = By.id("globalSearchInput");
+    private final By searchSubmitBtn = By.id("searchSubmitBtn");
+    private final By autocompleteDropdown = By.className("search-autocomplete-list");
+    private final By autocompleteItems = By.className("search-suggestion-item");
+
+    public SearchBarComponent(WebDriver driver) {
+        super(driver);
+    }
+
+    public void enterSearchQuery(String query) {
+        sendKeys(searchInput, query);
+    }
+
+    public void clickSearch() {
+        click(searchSubmitBtn);
+    }
+
+    public void selectSuggestion(int index) {
+        List<WebElement> items = driver.findElements(autocompleteItems);
+        if (index >= 0 && index < items.size()) {
+            items.get(index).click();
+        }
+    }
+}
+```
+
+#### `ToastComponent.java`
+```java
+package com.sporekart.automation.pages.components;
+
+import com.sporekart.automation.pages.BasePage;
+import com.sporekart.automation.utils.WaitUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+
+public class ToastComponent extends BasePage {
+
+    private final By toastContainer = By.className("toast-notification");
+    private final By toastMessage = By.className("toast-message");
+
+    public ToastComponent(WebDriver driver) {
+        super(driver);
+    }
+
+    public String getToastText() {
+        return getText(toastMessage);
+    }
+
+    public boolean isToastSuccess() {
+        return isDisplayed(By.className("toast-success"));
+    }
+
+    public void waitForDismissal() {
+        WaitUtils.waitForStaleness(driver, driver.findElement(toastContainer), defaultTimeout);
+    }
+}
+```
+
+#### `ProductCardComponent.java`
+```java
+package com.sporekart.automation.pages.components;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+
+public class ProductCardComponent {
+    private final WebElement rootElement;
+
+    private final By title = By.className("product-card-title");
+    private final By price = By.className("product-card-price");
+    private final By addToCartBtn = By.className("add-to-cart-btn");
+
+    public ProductCardComponent(WebElement rootElement) {
+        this.rootElement = rootElement;
+    }
+
+    public String getTitleText() {
+        return rootElement.findElement(title).getText();
+    }
+
+    public String getPriceText() {
+        return rootElement.findElement(price).getText();
+    }
+
+    public void clickAddToCart() {
+        rootElement.findElement(addToCartBtn).click();
+    }
+}
+```
+
+---
+
+### 5. SEL-04 Exit Criteria Verification Matrix
+
+| Step | Requirement | Validation Method | Target Status |
+| :---: | :--- | :--- | :---: |
+| **1** | **15 Reusable Components Created** | All 15 component classes created under `pages/components/` | **PASSED** |
+| **2** | **Code Duplication Elimination** | Page Objects reuse components instead of re-declaring headers/search/toast | **PASSED** |
+| **3** | **Nested Element Encapsulated** | `ProductCardComponent` encapsulates child element references cleanly | **PASSED** |
+| **4** | **Async Toast & Modal Waits** | `ToastComponent` & `ModalComponent` integrate seamlessly with `WaitUtils` | **PASSED** |
+| **5** | **Clean API Integration** | Page Objects expose getter instances (e.g. `homePage.getSearchBar().enterSearchQuery("Oyster")`) | **PASSED** |
+
 
 
 
