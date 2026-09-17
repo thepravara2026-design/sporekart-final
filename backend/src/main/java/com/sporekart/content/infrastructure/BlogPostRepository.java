@@ -36,4 +36,6 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, UUID> {
     List<BlogPost> findDueScheduledPosts(@Param("now") ZonedDateTime now);
 
     Page<BlogPost> findByStatus(BlogPostStatus status, Pageable pageable);
+
+    List<BlogPost> findByStatus(BlogPostStatus status);
 }

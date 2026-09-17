@@ -8,6 +8,8 @@ export default function SeoHead({
   ogType = "website",
   ogImage = "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1200&q=80",
   noindex = false,
+  prevUrl = null,
+  nextUrl = null,
   structuredData = null,
 }) {
   const defaultOrganizationSchema = {
@@ -27,6 +29,18 @@ export default function SeoHead({
       "contactType": "customer service",
       "areaServed": "IN",
       "availableLanguage": ["en", "hi"]
+    }
+  };
+
+  const defaultWebSiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Sporekart",
+    "url": "https://sporekart.in",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://sporekart.in/products?search={search_term_string}",
+      "query-input": "required name=search_term_string"
     }
   };
 
@@ -59,17 +73,28 @@ export default function SeoHead({
 
   return (
     <Helmet>
-      {/* Basic Metadata */}
+      {/* Primary HTML Title & Description */}
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
+
+      {/* Crawling Directives */}
       {noindex ? (
         <meta name="robots" content="noindex, nofollow" />
       ) : (
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       )}
 
-      {/* Open Graph */}
+      {/* Multi-regional & Language Hreflang Tags */}
+      <link rel="alternate" hrefLang="en-IN" href={canonicalUrl} />
+      <link rel="alternate" hrefLang="hi-IN" href={canonicalUrl} />
+      <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
+
+      {/* Pagination Tags */}
+      {prevUrl && <link rel="prev" href={prevUrl} />}
+      {nextUrl && <link rel="next" href={nextUrl} />}
+
+      {/* Open Graph / Facebook */}
       <meta property="og:site_name" content="Sporekart" />
       <meta property="og:type" content={ogType} />
       <meta property="og:title" content={title} />
@@ -84,17 +109,17 @@ export default function SeoHead({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Default Organization JSON-LD */}
+      {/* Structured Data / JSON-LD */}
       <script type="application/ld+json">
         {JSON.stringify(defaultOrganizationSchema)}
       </script>
-
-      {/* Default LocalBusiness JSON-LD */}
+      <script type="application/ld+json">
+        {JSON.stringify(defaultWebSiteSchema)}
+      </script>
       <script type="application/ld+json">
         {JSON.stringify(defaultLocalBusinessSchema)}
       </script>
 
-      {/* Custom Page-Specific JSON-LD */}
       {structuredData && (
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}

@@ -19,6 +19,7 @@ import BlogPostPage from './pages/BlogPostPage';
 import CultivationGuidePage from './pages/CultivationGuidePage';
 import SpawnGuidePage from './pages/SpawnGuidePage';
 import DashboardPage from './pages/DashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { authApi } from './api';
 
@@ -85,8 +86,9 @@ export default function App() {
                 <Route path="/mushroom-cultivation-guide" element={<CultivationGuidePage />} />
                 <Route path="/mushroom-spawn-guide" element={<SpawnGuidePage />} />
 
-                {/* User Account & Fallback */}
+                {/* User Account & Admin Console */}
                 <Route path="/dashboard" element={<DashboardPage user={user} />} />
+                <Route path="/admin" element={<AdminDashboardPage user={user} />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>

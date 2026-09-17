@@ -89,4 +89,17 @@ export const shippingApi = {
   checkPincode: (pincode) => api.get(`/shipping/check-pincode/${pincode}`),
 };
 
+export const adminApi = {
+  requestAdminOtp: (identifier) => api.post('/admin/auth/request-otp', { identifier }),
+  verifyAdminOtp: (identifier, otpCode) => api.post('/admin/auth/verify-otp', { identifier, otpCode }),
+  getBlogPosts: (status) => api.get('/admin/content/posts', { params: { status } }),
+  createBlogPost: (data) => api.post('/admin/content/posts', data),
+  publishBlogPost: (id) => api.post(`/admin/content/posts/${id}/publish`),
+  scheduleBlogPost: (id, scheduleTime) => api.post(`/admin/content/posts/${id}/schedule`, null, { params: { scheduleTime } }),
+  createCategory: (data) => api.post('/admin/catalog/categories', data),
+  createProduct: (data) => api.post('/admin/catalog/products', data),
+  updateOrderStatus: (orderId, status, reason) => api.put(`/orders/admin/${orderId}/status`, { newStatus: status, reason }),
+};
+
 export default api;
+
