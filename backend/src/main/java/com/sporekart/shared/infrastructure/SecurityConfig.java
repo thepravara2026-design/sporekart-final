@@ -25,10 +25,12 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final RequestIdFilter requestIdFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter) {
+    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter, RateLimitingFilter rateLimitingFilter) {
         this.tokenProvider = tokenProvider;
         this.requestIdFilter = requestIdFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
     }
 
     @Bean
@@ -46,11 +48,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/training/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/shipping/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/seo/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
                 .requestMatchers("/api/v1/cart/**").permitAll()
                 .requestMatchers("/api/v1/payment/webhook").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 

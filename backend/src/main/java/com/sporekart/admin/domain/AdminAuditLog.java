@@ -24,14 +24,31 @@ public class AdminAuditLog {
     @Column(nullable = false)
     private String action;
 
+    @Column(name = "resource_type")
+    private String resourceType;
+
+    @Column(name = "resource_id")
+    private String resourceId;
+
+    @Column(name = "old_value", columnDefinition = "TEXT")
+    private String oldValue;
+
+    @Column(name = "new_value", columnDefinition = "TEXT")
+    private String newValue;
+
     @Column(columnDefinition = "TEXT")
     private String details;
+
+    @Column(name = "ip_address")
+    private String ipAddress;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 }

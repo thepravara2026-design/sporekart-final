@@ -34,6 +34,7 @@ public class CartService {
     private final ProductMediaRepository productMediaRepository;
     private final InventoryRecordRepository inventoryRecordRepository;
     private final PricingService pricingService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CartResponse getCartResponse(UUID userId, String sessionId) {
@@ -102,6 +103,14 @@ public class CartService {
             cart.addItem(newItem);
             cartRepository.save(cart);
         }
+
+        eventPublisher.publishEvent(com.sporekart.analytics.domain.events.AddToCartEvent.builder()
+                .variantId(variantId)
+                .quantity(quantity)
+                .priceInr(unitPrice)
+                .userId(userId)
+                .sessionId(sessionId)
+                .build());
 
         return buildCartResponse(cart);
     }

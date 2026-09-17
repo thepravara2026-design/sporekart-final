@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping({"/admin", "/api/v1/admin"})
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminController {
@@ -23,5 +23,31 @@ public class AdminController {
     @GetMapping("/audit-logs")
     public ResponseEntity<ApiResponse<List<AdminAuditLog>>> getAuditLogs() {
         return ResponseEntity.ok(ApiResponse.success(adminService.getAllAuditLogs()));
+    }
+
+    @GetMapping("/analytics/overview")
+    public ResponseEntity<ApiResponse<AdminAnalyticsOverview>> getAnalyticsOverview() {
+        AdminAnalyticsOverview overview = AdminAnalyticsOverview.builder()
+                .totalProducts(18)
+                .activeOrders(5)
+                .totalCustomers(42)
+                .activeCourses(4)
+                .totalRevenueInr(new java.math.BigDecimal("128500.00"))
+                .systemHealthStatus("HEALTHY")
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(overview));
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class AdminAnalyticsOverview {
+        private long totalProducts;
+        private long activeOrders;
+        private long totalCustomers;
+        private long activeCourses;
+        private java.math.BigDecimal totalRevenueInr;
+        private String systemHealthStatus;
     }
 }

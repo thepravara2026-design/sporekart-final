@@ -5,19 +5,21 @@ import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/media")
+@RequestMapping("/api/v1/media")
 @RequiredArgsConstructor
 public class MediaController {
 
     private final MediaService mediaService;
 
     @PostMapping("/upload/initiate")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<MediaDtos.InitiateUploadResponse>> initiateUpload(
             Authentication authentication,
             @Valid @RequestBody MediaDtos.InitiateUploadRequest request) {
@@ -27,6 +29,7 @@ public class MediaController {
     }
 
     @PostMapping("/upload/complete")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<MediaDtos.MediaAssetDto>> completeUpload(
             @Valid @RequestBody MediaDtos.CompleteUploadRequest request) {
         MediaDtos.MediaAssetDto response = mediaService.completeUpload(request);
@@ -48,12 +51,14 @@ public class MediaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteMediaAsset(@PathVariable("id") UUID id) {
         mediaService.softDeleteMediaAsset(id);
         return ResponseEntity.ok(ApiResponse.success("Media asset deleted successfully"));
     }
 
     @PostMapping("/link")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> linkMediaToEntity(@Valid @RequestBody MediaDtos.LinkMediaRequest request) {
         mediaService.linkMediaToEntity(request);
         return ResponseEntity.ok(ApiResponse.success("Media linked successfully"));

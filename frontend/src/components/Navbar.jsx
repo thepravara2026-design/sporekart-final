@@ -148,6 +148,12 @@ export default function Navbar({ user, setUser }) {
                     <User className="w-4 h-4 text-spore-400" />
                     <span>{user.fullName || 'Dashboard'}</span>
                   </Link>
+                  {user.role === 'ROLE_ADMIN' && (
+                    <Link to="/admin" aria-label="Admin Control Console" className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl min-h-[44px]">
+                      <ShieldCheck className="w-4 h-4 text-amber-400" />
+                      <span>Admin Console</span>
+                    </Link>
+                  )}
                   <button onClick={handleLogout} aria-label="Log out of account" className="text-xs text-slate-400 hover:text-red-400 min-h-[44px] px-2">
                     Logout
                   </button>

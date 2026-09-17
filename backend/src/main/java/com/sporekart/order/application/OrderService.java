@@ -36,6 +36,7 @@ public class OrderService {
     private final CustomerService customerService;
     private final InventoryService inventoryService;
     private final PricingService pricingService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderResponse createOrderFromCart(UUID userId, String sessionId, String idempotencyKey, CreateOrderRequest request) {
@@ -52,6 +53,13 @@ public class OrderService {
         if (cart.getItems().isEmpty()) {
             throw new IllegalStateException("Cannot create order from an empty cart");
         }
+
+        // Publish CheckoutStartedEvent
+        eventPublisher.publishEvent(com.sporekart.analytics.domain.events.CheckoutStartedEvent.builder()
+                .cartId(cart.getId())
+                .itemCount(cart.getItems().size())
+                .userId(userId)
+                .build());
 
         // 3. Resolve Address Snapshot
         OrderAddressSnapshot addressSnapshot = resolveAddressSnapshot(userId, request);
@@ -139,6 +147,14 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        // Publish OrderCreatedEvent
+        eventPublisher.publishEvent(com.sporekart.analytics.domain.events.OrderCreatedEvent.builder()
+                .orderId(savedOrder.getId())
+                .orderNumber(savedOrder.getOrderNumber())
+                .totalAmountInr(savedOrder.getTotalAmountInr())
+                .userId(userId)
+                .build());
+
         // 8. Clear Cart after successful order creation
         cartService.clearCart(userId, sessionId);
 
@@ -150,8 +166,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
-            throw new IllegalArgumentException("Access denied to order details");
+        if (userId == null) {
+            throw new IllegalArgumentException("Access denied: User must be authenticated to view order details");
+        }
+        if (order.getUserId() != null && !userId.equals(order.getUserId())) {
+            throw new IllegalArgumentException("Access denied: You are not authorized to view this order");
         }
 
         return mapToResponse(order);
@@ -224,6 +243,12 @@ public class OrderService {
         order.addEvent(event);
 
         Order saved = orderRepository.save(order);
+        if (newStatus == OrderStatus.DELIVERED) {
+            eventPublisher.publishEvent(com.sporekart.analytics.domain.events.OrderDeliveredEvent.builder()
+                    .orderId(saved.getId())
+                    .orderNumber(saved.getOrderNumber())
+                    .build());
+        }
         return mapToResponse(saved);
     }
 
@@ -232,8 +257,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
-            throw new IllegalArgumentException("Access denied to cancel order");
+        if (userId == null) {
+            throw new IllegalArgumentException("Access denied: User must be authenticated to cancel order");
+        }
+        if (order.getUserId() != null && !userId.equals(order.getUserId())) {
+            throw new IllegalArgumentException("Access denied: You are not authorized to cancel this order");
         }
 
         OrderStatus currentStatus = order.getStatus();

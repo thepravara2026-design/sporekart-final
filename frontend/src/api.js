@@ -89,6 +89,13 @@ export const shippingApi = {
   checkPincode: (pincode) => api.get(`/shipping/check-pincode/${pincode}`),
 };
 
+export const supportApi = {
+  createTicket: (data) => api.post('/support/tickets', data),
+  getUserTickets: () => api.get('/support/tickets'),
+  getTicketById: (id) => api.get(`/support/tickets/${id}`),
+  addMessage: (id, message) => api.post(`/support/tickets/${id}/messages`, { message }),
+};
+
 export const adminApi = {
   requestAdminOtp: (identifier) => api.post('/admin/auth/request-otp', { identifier }),
   verifyAdminOtp: (identifier, otpCode) => api.post('/admin/auth/verify-otp', { identifier, otpCode }),
@@ -96,9 +103,34 @@ export const adminApi = {
   createBlogPost: (data) => api.post('/admin/content/posts', data),
   publishBlogPost: (id) => api.post(`/admin/content/posts/${id}/publish`),
   scheduleBlogPost: (id, scheduleTime) => api.post(`/admin/content/posts/${id}/schedule`, null, { params: { scheduleTime } }),
+  deleteBlogPost: (id) => api.delete(`/admin/content/posts/${id}`),
   createCategory: (data) => api.post('/admin/catalog/categories', data),
   createProduct: (data) => api.post('/admin/catalog/products', data),
-  updateOrderStatus: (orderId, status, reason) => api.put(`/orders/admin/${orderId}/status`, { newStatus: status, reason }),
+  addVariant: (productId, data) => api.post(`/admin/catalog/products/${productId}/variants`, data),
+  createOffer: (data) => api.post('/admin/catalog/offers', data),
+  addMedia: (data) => api.post('/admin/catalog/media', data),
+  getOrders: () => api.get('/admin/orders'),
+  getOrderById: (id) => api.get(`/admin/orders/${id}`),
+  updateOrderStatus: (orderId, status, reason) => api.put(`/admin/orders/${orderId}/status`, { status, reason }),
+  createCourse: (data) => api.post('/admin/training/courses', data),
+  createBatch: (data) => api.post('/admin/training/batches', data),
+  addBatchSchedule: (data) => api.post('/admin/training/schedules', data),
+  markAttendance: (data) => api.post('/admin/training/attendance', data),
+  completeCourse: (data) => api.post('/admin/training/complete-course', data),
+  getCustomers: () => api.get('/admin/customers'),
+  grantCapability: (userId, capability) => api.post(`/admin/customers/${userId}/capability`, { capability }),
+  getTickets: () => api.get('/admin/support/tickets'),
+  getTicketById: (ticketId) => api.get(`/admin/support/tickets/${ticketId}`),
+  replyToTicket: (ticketId, message) => api.post(`/admin/support/tickets/${ticketId}/messages`, { message }),
+  updateTicketStatus: (ticketId, status, priority) => api.put(`/admin/support/tickets/${ticketId}/status`, { status, priority }),
+  getAnalyticsOverview: () => api.get('/admin/analytics/overview'),
+  getAuditLogs: () => api.get('/admin/audit-logs'),
+};
+
+export const analyticsApi = {
+  trackProductView: (productId, productSlug, productTitle) => api.post('/analytics/track-product-view', { productId, productSlug, productTitle }),
+  getFunnelSummary: () => api.get('/analytics/funnel'),
+  getRecentEvents: () => api.get('/analytics/events'),
 };
 
 export default api;

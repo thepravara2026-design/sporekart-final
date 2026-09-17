@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Sprout, ShoppingBag, CheckCircle2, Truck, ShieldCheck, MapPin, ChevronDown, HelpCircle, Package, Layers } from 'lucide-react';
-import { catalogApi, shippingApi } from '../api';
+import { catalogApi, shippingApi, analyticsApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 
@@ -24,6 +24,10 @@ export default function ProductDetailPage({ onAddToCart }) {
         const res = await catalogApi.getProductBySlug(slug);
         const prod = res.data.data;
         setProduct(prod);
+        
+        if (prod.id) {
+          analyticsApi.trackProductView(prod.id, prod.slug, prod.title).catch(() => {});
+        }
         
         if (prod.variants && prod.variants.length > 0) {
           setSelectedVariant(prod.variants[0]);

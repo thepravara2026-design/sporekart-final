@@ -27,6 +27,7 @@ public class PaymentService {
     private final PaymentEventRepository paymentEventRepository;
     private final PaymentGateway paymentGateway;
     private final OrderService orderService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -100,6 +101,14 @@ public class PaymentService {
 
             // Confirm inventory purchase
             orderService.confirmOrderInventory(request.getOrderId());
+
+            // Publish PaymentCapturedEvent
+            eventPublisher.publishEvent(com.sporekart.analytics.domain.events.PaymentCapturedEvent.builder()
+                    .paymentId(payment.getId())
+                    .orderId(request.getOrderId())
+                    .amountInr(payment.getAmountInr())
+                    .razorpayPaymentId(request.getRazorpayPaymentId())
+                    .build());
 
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(true)

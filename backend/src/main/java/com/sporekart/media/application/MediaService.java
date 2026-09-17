@@ -26,8 +26,25 @@ public class MediaService {
     @Value("${app.supabase.bucket:sporekart-media}")
     private String defaultBucket;
 
+    private static final long MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024L; // 25 MB max
+    private static final java.util.Set<String> DISALLOWED_EXTENSIONS = java.util.Set.of(
+            "exe", "bat", "cmd", "sh", "php", "jsp", "asp", "aspx", "dll", "scr", "vbs", "jar", "war", "py", "pl"
+    );
+
     @Transactional
     public MediaDtos.InitiateUploadResponse initiateUpload(MediaDtos.InitiateUploadRequest request, UUID userId) {
+        if (request.getSizeBytes() > MAX_FILE_SIZE_BYTES) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed limit of 25MB");
+        }
+
+        String filename = request.getOriginalFilename() != null ? request.getOriginalFilename().toLowerCase() : "";
+        if (filename.contains(".")) {
+            String ext = filename.substring(filename.lastIndexOf(".") + 1);
+            if (DISALLOWED_EXTENSIONS.contains(ext)) {
+                throw new IllegalArgumentException("Uploading executable or dangerous files is strictly prohibited: ." + ext);
+            }
+        }
+
         String storageKey = supabaseStorageService.generateStorageKey(request.getOriginalFilename(), request.getMediaType());
 
         MediaAsset asset = MediaAsset.builder()

@@ -142,7 +142,16 @@ public class TrainingService {
                 .feePaidInr(course.getFeeInr())
                 .build();
 
-        return enrollmentRepository.save(enrollment);
+        Enrollment saved = enrollmentRepository.save(enrollment);
+
+        eventPublisher.publishEvent(com.sporekart.analytics.domain.events.EnrollmentCreatedEvent.builder()
+                .enrollmentId(saved.getId())
+                .courseId(course.getId())
+                .feePaidInr(course.getFeeInr())
+                .userId(userId)
+                .build());
+
+        return saved;
     }
 
     @Transactional

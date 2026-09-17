@@ -16,6 +16,7 @@ import java.util.List;
 public class CatalogController {
 
     private final CatalogApplicationService catalogService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @GetMapping({"/products", "/catalog/products"})
     public ResponseEntity<ApiResponse<List<CatalogDtos.ProductDto>>> getProducts(
@@ -40,6 +41,13 @@ public class CatalogController {
     @GetMapping({"/products/{slug}", "/catalog/products/{slug}"})
     public ResponseEntity<ApiResponse<CatalogDtos.ProductDto>> getProductBySlug(@PathVariable String slug) {
         CatalogDtos.ProductDto product = catalogService.getProductBySlug(slug);
+        if (product != null) {
+            eventPublisher.publishEvent(com.sporekart.analytics.domain.events.ProductViewedEvent.builder()
+                    .productId(product.getId())
+                    .productSlug(product.getSlug())
+                    .productTitle(product.getTitle())
+                    .build());
+        }
         return ResponseEntity.ok(ApiResponse.success(product));
     }
 

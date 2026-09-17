@@ -48,6 +48,7 @@ public class SupabaseStorageService {
         String targetBucket = (bucket != null && !bucket.isBlank()) ? bucket : defaultBucket;
         String baseUrl = supabaseUrl.replaceAll("/+$", "");
         String token = UUID.randomUUID().toString().replace("-", "");
-        return baseUrl + "/storage/v1/object/sign/" + targetBucket + "/" + storageKey + "?token=" + token + "&expiresIn=" + expirationSeconds;
+        return baseUrl + "/storage/v1/object/sign/" + targetBucket + "/" + storageKey + "?token=" + token
+                + "&expiresIn=" + expirationSeconds;
     }
 }

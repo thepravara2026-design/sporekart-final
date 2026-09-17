@@ -61,7 +61,17 @@ public class TrainingController {
     }
 
     @GetMapping("/user/{userId}/enrollments")
-    public ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>> getUserEnrollments(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>> getUserEnrollments(
+            org.springframework.security.core.Authentication authentication,
+            @PathVariable UUID userId) {
+        UUID authUserId = extractUserId(authentication);
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (authUserId == null || (!authUserId.equals(userId) && !isAdmin)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to training enrollments"));
+        }
+
         List<Enrollment> enrollments = trainingService.getUserEnrollments(userId);
         List<TrainingDtos.EnrollmentResponse> response = enrollments.stream().map(this::mapEnrollment).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -69,14 +79,33 @@ public class TrainingController {
 
     @GetMapping("/certificate/{enrollmentId}")
     public ResponseEntity<ApiResponse<TrainingDtos.CertificateResponse>> getCertificate(
-            @RequestAttribute(value = "userId", required = false) UUID authUserId,
+            org.springframework.security.core.Authentication authentication,
             @PathVariable UUID enrollmentId) {
+        UUID authUserId = extractUserId(authentication);
         if (authUserId != null && !capabilityService.hasCapability(authUserId, com.sporekart.customer.domain.CustomerCapability.TRAINING)) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "TRAINING capability required to access certificates"));
         }
         Certificate cert = trainingService.getCertificateByEnrollmentId(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Certificate not found for enrollment: " + enrollmentId));
+
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (authUserId == null || (cert.getEnrollment() != null && cert.getEnrollment().getUserId() != null && !cert.getEnrollment().getUserId().equals(authUserId) && !isAdmin)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to certificate"));
+        }
+
         return ResponseEntity.ok(ApiResponse.success(mapCertificate(cert)));
+    }
+
+    private UUID extractUserId(org.springframework.security.core.Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            try {
+                return UUID.fromString(authentication.getName());
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private TrainingDtos.CourseResponse mapCourse(Course course) {

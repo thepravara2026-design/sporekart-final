@@ -9,6 +9,8 @@ import PageSkeleton from './components/PageSkeleton';
 import { authApi } from './api';
 import { reportWebVitals } from './reportWebVitals';
 
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+
 // Code Splitting & Lazy Route Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
 const CatalogPage = lazy(() => import('./pages/CatalogPage'));
@@ -48,6 +50,12 @@ export default function App() {
       }
     });
   }, []);
+
+  const adminElement = (
+    <AdminProtectedRoute user={user}>
+      <AdminDashboardPage user={user} />
+    </AdminProtectedRoute>
+  );
 
   return (
     <HelmetProvider>
@@ -98,9 +106,28 @@ export default function App() {
                   <Route path="/mushroom-cultivation-guide" element={<CultivationGuidePage />} />
                   <Route path="/mushroom-spawn-guide" element={<SpawnGuidePage />} />
 
-                  {/* User Account & Admin Console */}
+                  {/* User Account */}
                   <Route path="/dashboard" element={<DashboardPage user={user} />} />
-                  <Route path="/admin" element={<AdminDashboardPage user={user} />} />
+
+                  {/* Admin Control Plane (17 Protected Routes) */}
+                  <Route path="/admin" element={adminElement} />
+                  <Route path="/admin/products" element={adminElement} />
+                  <Route path="/admin/categories" element={adminElement} />
+                  <Route path="/admin/inventory" element={adminElement} />
+                  <Route path="/admin/offers" element={adminElement} />
+                  <Route path="/admin/media" element={adminElement} />
+                  <Route path="/admin/orders" element={adminElement} />
+                  <Route path="/admin/payments" element={adminElement} />
+                  <Route path="/admin/shipping" element={adminElement} />
+                  <Route path="/admin/training" element={adminElement} />
+                  <Route path="/admin/courses" element={adminElement} />
+                  <Route path="/admin/batches" element={adminElement} />
+                  <Route path="/admin/enrollments" element={adminElement} />
+                  <Route path="/admin/blogs" element={adminElement} />
+                  <Route path="/admin/customers" element={adminElement} />
+                  <Route path="/admin/support" element={adminElement} />
+                  <Route path="/admin/analytics" element={adminElement} />
+
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>

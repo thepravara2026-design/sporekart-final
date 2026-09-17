@@ -77,8 +77,8 @@ public class AdminAuthService {
             throw new IllegalArgumentException("Maximum OTP verification attempts exceeded.");
         }
 
-        boolean isDevCode = "123456".equals(code);
-        if (!otp.getOtpCode().equals(code) && !isDevCode) {
+        // Validate Admin OTP code strictly against generated code
+        if (!otp.getOtpCode().equals(code)) {
             otp.setAttemptCount(otp.getAttemptCount() + 1);
             if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
                 otp.setConsumed(true);

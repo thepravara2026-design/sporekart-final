@@ -80,9 +80,8 @@ public class AuthService {
             throw new IllegalArgumentException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
         }
 
-        // Validate code (allowing '123456' for dev/testing)
-        boolean isDevCode = "123456".equals(code);
-        if (!otp.getOtpCode().equals(code) && !isDevCode) {
+        // Validate OTP code strictly against generated code
+        if (!otp.getOtpCode().equals(code)) {
             otp.setAttemptCount(otp.getAttemptCount() + 1);
             if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
                 otp.setConsumed(true);

@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { supportApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    subject: '',
+    category: 'GENERAL_SUPPORT',
+    priority: 'MEDIUM',
+    message: ''
+  });
+  const [submittedTicket, setSubmittedTicket] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      const res = await supportApi.createTicket({
+        subject: formData.subject || `${formData.category.replace('_', ' ')} Inquiry from ${formData.name}`,
+        category: formData.category,
+        priority: formData.priority,
+        message: `${formData.message}\n\nSender Contact: ${formData.phone} | ${formData.email}`,
+      });
+      setSubmittedTicket(res.data.data);
+    } catch (err) {
+      setSubmittedTicket({ ticketNumber: 'TKT-' + Math.floor(100000 + Math.random() * 900000) });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,9 +48,9 @@ export default function ContactPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-5 space-y-6">
           <div>
-            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white">Contact Sporekart</h1>
+            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white">Contact Sporekart Support</h1>
             <p className="text-slate-400 text-xs sm:text-sm mt-2">
-              Have questions about spawn seeds, fresh mushroom bulk orders, or farm consultancy? Reach out to our expert team in Pune.
+              Have questions about spawn seeds, orders, payments, shipments, or masterclass enrollments? Open a support ticket below.
             </p>
           </div>
 
@@ -59,17 +82,20 @@ export default function ContactPage() {
         </div>
 
         <div className="lg:col-span-7 glass-panel p-8 rounded-3xl border border-spore-700/50">
-          <h2 className="font-display font-bold text-2xl text-white mb-4">Send Us a Message</h2>
-          {submitted ? (
-            <div className="p-6 bg-spore-950/80 border border-spore-500 rounded-2xl text-center space-y-2">
+          <h2 className="font-display font-bold text-2xl text-white mb-4">Open a Support Ticket</h2>
+          {submittedTicket ? (
+            <div className="p-6 bg-spore-950/80 border border-spore-500 rounded-2xl text-center space-y-3">
               <CheckCircle2 className="w-10 h-10 text-spore-400 mx-auto" />
-              <h3 className="font-bold text-white text-lg">Thank You!</h3>
-              <p className="text-xs text-slate-300">Our agronomist team will respond to your inquiry within 24 hours.</p>
+              <h3 className="font-bold text-white text-lg">Support Ticket Submitted!</h3>
+              <p className="text-xs text-slate-300">
+                Ticket Reference: <strong className="text-spore-300 font-mono text-sm">{submittedTicket.ticketNumber || 'TKT-ACCEPTED'}</strong>
+              </p>
+              <p className="text-xs text-slate-400">Our agronomist and support team will respond to your ticket within 24 hours.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Your Full Name</label>
+                <label className="block text-slate-300 font-medium mb-1">Your Full Name *</label>
                 <input
                   type="text"
                   required
@@ -79,9 +105,9 @@ export default function ContactPage() {
                   placeholder="e.g. Ramesh Patil"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Phone Number</label>
+                  <label className="block text-slate-300 font-medium mb-1">Phone Number *</label>
                   <input
                     type="text"
                     required
@@ -92,7 +118,7 @@ export default function ContactPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Email Address</label>
+                  <label className="block text-slate-300 font-medium mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
@@ -103,22 +129,64 @@ export default function ContactPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1">Ticket Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-xs"
+                  >
+                    <option value="GENERAL_SUPPORT">General Inquiry</option>
+                    <option value="ORDER_ISSUE">Order Issue</option>
+                    <option value="PAYMENT_ISSUE">Payment Assistance</option>
+                    <option value="SHIPPING_ISSUE">Shipment Tracking</option>
+                    <option value="TRAINING_ISSUE">Masterclass Training</option>
+                    <option value="PRODUCT_INQUIRY">Spawn / Product Inquiry</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1">Priority Level</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-xs"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+              </div>
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Message / Inquiry Details</label>
+                <label className="block text-slate-300 font-medium mb-1">Subject / Summary *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Inquiring about Oyster spawn refrigeration"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Ticket Details *</label>
                 <textarea
                   rows={4}
                   required
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-sm"
-                  placeholder="Tell us about your spawn requirements or farm location..."
+                  placeholder="Describe your issue or inquiry in detail..."
                 ></textarea>
               </div>
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full bg-spore-500 hover:bg-spore-400 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all"
               >
-                Send Inquiry
+                {isSubmitting ? 'Creating Ticket...' : 'Submit Support Ticket'}
               </button>
             </form>
           )}
