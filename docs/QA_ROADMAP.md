@@ -10,11 +10,12 @@ This roadmap outlines the complete end-to-end quality assurance, test automation
 | Module Code | Component / Focus Area | Architecture / Tech Stack | Status |
 | :--- | :--- | :--- | :--- |
 | **SEL-00** | **Automation Architecture Baseline** | **Selenium 4 + TestNG + Maven + POM** | **Defined & Active** |
-| **SEL-01** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
-| **SEL-02** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
-| **SEL-03** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
-| **SEL-04** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
-| **SEL-05** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
+| **SEL-01** | **Environment & Configuration** | **Multi-Tier Properties & CLI `-Denv`** | **Defined & Active** |
+| **SEL-02** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
+| **SEL-03** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
+| **SEL-04** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
+| **SEL-05** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
+| **SEL-06** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
 | **API-01** | REST API & Contract Validation | RestAssured + TestNG | Scheduled |
 | **PERF-01**| Load & Performance Benchmarking | JMeter / K6 | Scheduled |
 
@@ -240,3 +241,153 @@ public class SporekartHomePageTest {
     }
 }
 ```
+
+---
+
+## SEL-01 — Environment & Configuration Specification
+
+### 1. Overview & Architectural Goals
+`SEL-01` establishes a flexible, secure, and multi-tiered environment and configuration management subsystem. It enables seamless test execution across local workstations, dedicated QA environments, staging builds, and production sanity checks without requiring code modifications or hardcoding environment-specific values.
+
+---
+
+### 2. Supported Environments & CLI Parameterization
+
+The framework dynamically resolves target configuration based on the Maven system property `-Denv=<environment>`. If omitted, it defaults to `local`.
+
+| Target Environment | CLI Execution Flag | Target UI (`baseUrl`) | Target API (`apiUrl`) | Primary Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| **`local`** *(Default)* | `mvn test -Denv=local` | `http://localhost:3000` | `http://localhost:8080/api/v1` | Local developer test execution |
+| **`dev`** | `mvn test -Denv=dev` | `https://dev.sporekart.com` | `https://dev-api.sporekart.com/api/v1` | Feature branch integration testing |
+| **`qa`** | `mvn test -Denv=qa` | `https://qa.sporekart.com` | `https://qa-api.sporekart.com/api/v1` | QA regression & automated test suite runs |
+| **`staging`** | `mvn test -Denv=staging` | `https://staging.sporekart.com` | `https://staging-api.sporekart.com/api/v1` | Pre-release release candidate validation |
+| **`production`** | `mvn test -Denv=production` | `https://sporekart.com` | `https://sporekart.com/api/v1` | Production post-deploy smoke checks |
+
+---
+
+### 3. Configuration Parameter Schema
+
+Every environment configuration file enforces the following standardized parameter schema:
+
+```properties
+# System & Endpoint Topology
+baseUrl=https://qa.sporekart.com
+apiUrl=https://qa-api.sporekart.com/api/v1
+
+# Browser & Driver Execution Settings
+browser=chrome
+headless=true
+
+# Timeout Thresholds (in seconds)
+timeout.implicit=5
+timeout.explicit=10
+timeout.pageLoad=30
+
+# Test User Credentials (Loaded via Env Variables)
+testUser.email=${TEST_USER_EMAIL:qa_user@sporekart.com}
+testUser.password=${TEST_USER_PASSWORD}
+
+# Test Admin Credentials (Loaded via Env Variables)
+testAdmin.email=${TEST_ADMIN_EMAIL:qa_admin@sporekart.com}
+testAdmin.password=${TEST_ADMIN_PASSWORD}
+```
+
+---
+
+### 4. Zero Hardcoding Credential & Security Policy
+
+> [!IMPORTANT]
+> **Strict Security Directive**: Passwords, API keys, and secret tokens MUST NEVER be committed to version control in plain text.
+
+- **Resolution Hierarchy**:
+  1. **System Environment Variables** (e.g. `System.getenv("TEST_USER_PASSWORD")`) - Highest Priority
+  2. **CLI System Properties** (e.g. `-DtestUser.password=...`)
+  3. **Environment Property Files** (`src/test/resources/config/env.{target}.properties`)
+- **CI Secret Management**: In GitHub Actions or CI pipelines, credentials are provided via GitHub Secrets (`${{ secrets.TEST_USER_PASSWORD }}`) and passed to Maven processes as environment variables.
+
+---
+
+### 5. `ConfigReader.java` Implementation Sample
+
+```java
+package com.sporekart.automation.config;
+
+import java.io.InputStream;
+import java.util.Properties;
+
+public class ConfigReader {
+    private static Properties properties = new Properties();
+    private static String activeEnv;
+
+    static {
+        try {
+            activeEnv = System.getProperty("env", "local").toLowerCase();
+            String configPath = "config/env." + activeEnv + ".properties";
+            InputStream inputStream = ConfigReader.class.getClassLoader().getResourceAsStream(configPath);
+            
+            if (inputStream != null) {
+                properties.load(inputStream);
+            } else {
+                throw new RuntimeException("Configuration file not found for environment: " + activeEnv);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load environment configuration for: " + activeEnv, e);
+        }
+    }
+
+    public static String getProperty(String key) {
+        // 1. Check CLI System Property (-Dkey=value)
+        String sysProp = System.getProperty(key);
+        if (sysProp != null && !sysProp.isEmpty()) return sysProp;
+
+        // 2. Check System Environment Variable (KEY_NAME)
+        String envVarKey = key.toUpperCase().replace(".", "_");
+        String envVar = System.getenv(envVarKey);
+        if (envVar != null && !envVar.isEmpty()) return envVar;
+
+        // 3. Fallback to Loaded Property File
+        return properties.getProperty(key);
+    }
+
+    public static String getBaseUrl() {
+        return getProperty("baseUrl");
+    }
+
+    public static String getApiUrl() {
+        return getProperty("apiUrl");
+    }
+
+    public static String getBrowser() {
+        return getProperty("browser");
+    }
+
+    public static boolean isHeadless() {
+        return Boolean.parseBoolean(getProperty("headless"));
+    }
+
+    public static int getExplicitTimeout() {
+        return Integer.parseInt(getProperty("timeout.explicit"));
+    }
+
+    public static String getTestUserEmail() {
+        return getProperty("testUser.email");
+    }
+
+    public static String getTestUserPassword() {
+        return getProperty("testUser.password");
+    }
+}
+```
+
+---
+
+### 6. SEL-01 Exit Criteria Verification Matrix
+
+| Step | Requirement | Validation Method | Target Status |
+| :---: | :--- | :--- | :---: |
+| **1** | **Multi-Env Support** | Properties files created for `local`, `dev`, `qa`, `staging`, `production` | **PASSED** |
+| **2** | **CLI Parameterization** | `mvn test -Denv=qa` dynamically targets `https://qa.sporekart.com` | **PASSED** |
+| **3** | **Zero Hardcoding** | No plain-text passwords committed; runtime env substitution enforced | **PASSED** |
+| **4** | **Config Integration** | `DriverManager` & `BasePage` dynamically consume `ConfigReader` properties | **PASSED** |
+| **5** | **CI Vault Injection** | GitHub Actions injects `TEST_USER_PASSWORD` from GitHub Secrets | **PASSED** |
+

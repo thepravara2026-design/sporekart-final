@@ -31,6 +31,14 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - CI execution pipeline with headless Chrome browser sessions.
   - **Exit Criteria**: Framework builds cleanly, TestNG executes suite, Chrome launches, first test passes, report generated.
 
+### SEL-01 — Environment & Configuration
+- **Multi-Environment Support & Zero Hardcoded Credentials**:
+  - Environments: `local`, `dev`, `qa`, `staging`, `production`.
+  - CLI parameterization via `-Denv=qa` / `-Denv=staging`.
+  - Standardized parameter schema: `baseUrl`, `apiUrl`, `browser`, `headless`, `timeouts`, `testUser`, `testAdmin`.
+  - Zero hardcoding policy: Secret injection via OS environment variables and GitHub Secrets in CI.
+  - **Exit Criteria**: Config properties segregated, `-Denv` dynamically targets environment endpoints, credentials safely injected.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.
