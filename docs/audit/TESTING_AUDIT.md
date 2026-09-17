@@ -59,6 +59,13 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - Eliminates locator & action duplication across parent Page Objects.
   - **Exit Criteria**: 15 component classes created, code duplication eliminated, async toast/modal waits integrated cleanly.
 
+### SEL-05 — Authentication Automation
+- **Customer Phone OTP & Google OAuth Automation**:
+  - Customer Test Suite (`AUTH-UI-001` to `AUTH-UI-007`): Open login, request phone OTP, verify valid OTP, invalid OTP error handling, expired OTP, OTP resend retry, & logout session clearance.
+  - Controlled QA OTP Mechanism: Zero SMS inbox dependency via `OtpFixtureHelper`, backend test API `/auth/test/latest-otp`, and Redis/DB test fixtures.
+  - Google OAuth Suite: Redirect flow, callback processing, existing vs. new user provisioning, & identity linking.
+  - **Exit Criteria**: All 7 OTP scenarios & Google OAuth flows automated without real SMS dependency.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.
