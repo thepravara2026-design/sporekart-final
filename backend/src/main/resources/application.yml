@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: sporekart-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sporekart}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api/v1
+  error:
+    include-stacktrace: never
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_mockkey123}
+    key-secret: ${RAZORPAY_KEY_SECRET:mocksecret123}
+  shiprocket:
+    email: ${SHIPROCKET_EMAIL:mock@sporekart.in}
+    password: ${SHIPROCKET_PASSWORD:mockpassword}

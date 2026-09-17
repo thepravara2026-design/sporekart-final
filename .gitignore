@@ -1,0 +1,29 @@
+# Target / Build outputs
+target/
+**/target/
+dist/
+**/dist/
+build/
+**/build/
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Logs & Environment
+*.log
+.env
+.env.local
+.env.*.local
+
+# IDE & OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Maven / Gradle wrappers & artifacts
+*.jar
+*.war

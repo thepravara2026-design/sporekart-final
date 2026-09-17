@@ -1,0 +1,11 @@
+# Sporekart Robots.txt for Search Crawlers (Google, Bing, Perplexity, ChatGPT)
+User-agent: *
+Allow: /
+Allow: /catalog/
+Allow: /training/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /api/
+
+Sitemap: https://sporekart.in/sitemap.xml
