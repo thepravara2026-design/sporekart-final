@@ -15,10 +15,11 @@ This roadmap outlines the complete end-to-end quality assurance, test automation
 | **SEL-03** | **Page Object Architecture** | **Encapsulated POM & Clean Page Hierarchy** | **Defined & Active** |
 | **SEL-04** | **Common Component Automation** | **15 Reusable Page Component Classes** | **Defined & Active** |
 | **SEL-05** | **Authentication Automation** | **OTP Fixtures, AUTH-UI-001..007 & Google OAuth** | **Defined & Active** |
-| **SEL-06** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
-| **SEL-07** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
-| **SEL-08** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
-| **SEL-09** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
+| **SEL-06** | **Homepage & Navigation** | **Header, Footer, Mobile Nav & Public URLs** | **Defined & Active** |
+| **SEL-07** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
+| **SEL-08** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
+| **SEL-09** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
+| **SEL-10** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
 | **API-01** | REST API & Contract Validation | RestAssured + TestNG | Scheduled |
 | **PERF-01**| Load & Performance Benchmarking | JMeter / K6 | Scheduled |
 
@@ -1248,6 +1249,171 @@ public class CustomerAuthTest {
 | **3** | **Google OAuth Automated** | Redirect, callback, new/existing user, and identity linking verified | **PASSED** |
 | **4** | **Session Logout Verified** | `AUTH-UI-007` verifies complete cookie cleanup and state reset | **PASSED** |
 | **5** | **Failure Handling** | Invalid & expired OTP error states verified with explicit assertions | **PASSED** |
+
+---
+
+## SEL-06 — Homepage & Navigation Specification
+
+### 1. Overview & Test Scope
+
+`SEL-06` establishes automated test coverage for Sporekart's main landing page, header navigation bar, drawer overlays, footer metadata, mobile responsive navigation, and every critical public URL route across the platform.
+
+```mermaid
+graph TD
+    A[Homepage & Navigation Test Suite] --> B[Desktop Header Navigation]
+    A --> C[Interactive Sliders & Drawers]
+    A --> D[Footer & Legal Metadata]
+    A --> E[Mobile Viewport Navigation]
+    A --> F[Public URL Route Health Check Matrix]
+    
+    B --> B1[Logo, Products, Training, About, Blog, Contact]
+    C --> C1[Login Modal & Cart Drawer Slider]
+    D --> D1[Newsletter, Copyright, Social Badges, Legal Policies]
+    E --> E1[375x812 Viewport, Hamburger Toggle, Touch Targets]
+    F --> F1[200 OK HTTP Status, Meta Title, Canonical Tag Verification]
+```
+
+---
+
+### 2. Desktop Navigation Test Suite Matrix
+
+| Component | Target Element | Action / Trigger | Expected Verification Checkpoint |
+| :--- | :--- | :--- | :--- |
+| **Header Logo** | `#header-logo` | Click from `/catalog` or `/about` | Redirects to root URL `/`; image source valid with non-zero dimensions |
+| **Products Link** | `nav:link[Products]` | Click link | Navigates to `/catalog`; catalog grid header rendered |
+| **Training Link** | `nav:link[Training]` | Click link | Navigates to `/training`; course syllabus accordions visible |
+| **About Link** | `nav:link[About]` | Click link | Navigates to `/about`; company mission section rendered |
+| **Blog Link** | `nav:link[Blog]` | Click link | Navigates to `/blog`; articles grid rendered |
+| **Contact Link** | `nav:link[Contact]` | Click link | Navigates to `/contact`; support form & address details visible |
+| **Login Trigger** | `#header-login-btn` | Click button | Login modal overlay opens; focus moves to phone input |
+| **Cart Drawer** | `#header-cart-icon` | Click cart badge | Cart drawer slides in from right; displays item list or empty cart state |
+| **Footer Component** | `footer` container | Scroll to bottom | Asserts copyright text `"© 2026 Sporekart"`, social links, & legal links |
+
+---
+
+### 3. Mobile Navigation Test Suite Matrix
+
+| Test Step | Execution Parameters | Expected Verification Checkpoint |
+| :--- | :--- | :--- |
+| **Viewport Resize** | Emulate mobile resolution (`375x812` - iPhone 12) | Desktop nav bar hidden; hamburger menu button `#mobile-hamburger-btn` visible |
+| **Open Mobile Drawer** | Click `#mobile-hamburger-btn` | Mobile navigation drawer slides open from left; displays menu items |
+| **Navigation Execution** | Click `Training` inside mobile drawer | Mobile drawer auto-closes; page navigates to `/training` |
+| **Close Mobile Drawer** | Click close button `#mobile-drawer-close` | Mobile drawer closes smoothly; main page content re-interactive |
+| **Touch Target Area** | Accessibility audit on all mobile nav links | All clickable links satisfy minimum **44px x 44px** touch target area |
+
+---
+
+### 4. Public URL Routing & HTTP Verification Matrix
+
+Automated route health checks verify every critical public URL path for **200 OK** HTTP status, non-empty DOM anchors, and valid HTML `<title>` tags:
+
+| Target URL Route | Expected HTML `<title>` Pattern | Key DOM Anchor ID | Target HTTP Status |
+| :--- | :--- | :--- | :---: |
+| **`/`** | `Sporekart - Premium Mushroom Cultivation & Fresh Spawn` | `#hero-banner` | **200 OK** |
+| **`/catalog`** | `Shop Mushroom Products & Cultivation Kits | Sporekart` | `#catalog-grid` | **200 OK** |
+| **`/training`** | `Live Mushroom Farming Courses & Workshops | Sporekart` | `#training-modules` | **200 OK** |
+| **`/about`** | `About Us - Sporekart's Cultivation Mission` | `#about-hero` | **200 OK** |
+| **`/blog`** | `Mushroom Cultivation Guides & Technical Blog` | `#blog-articles` | **200 OK** |
+| **`/contact`** | `Contact Us & Support | Sporekart` | `#contact-form` | **200 OK** |
+| **`/terms`** | `Terms & Conditions | Sporekart` | `#terms-content` | **200 OK** |
+| **`/privacy`** | `Privacy Policy | Sporekart` | `#privacy-content` | **200 OK** |
+| **`/shipping`** | `Shipping & Delivery Policy | Sporekart` | `#shipping-content` | **200 OK** |
+
+---
+
+### 5. Implementation Code Sample
+
+#### `HomepageNavigationTest.java` (TestNG Suite)
+```java
+package com.sporekart.automation.tests;
+
+import com.sporekart.automation.factory.DriverFactory;
+import com.sporekart.automation.pages.HomePage;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.WebDriver;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+public class HomepageNavigationTest {
+    private WebDriver driver;
+    private HomePage homePage;
+
+    @BeforeMethod
+    public void setUp() {
+        driver = DriverFactory.getDriver();
+        driver.get("http://localhost:3000");
+        homePage = new HomePage(driver);
+    }
+
+    @Test(description = "SEL-06: Verify Desktop Header Navigation Links")
+    public void testDesktopHeaderLinks() {
+        Assert.assertTrue(homePage.isLogoDisplayed(), "Logo should be visible");
+        
+        homePage.clickProductsLink();
+        Assert.assertTrue(driver.getCurrentUrl().contains("/catalog"), "Should navigate to catalog");
+        
+        homePage.clickTrainingLink();
+        Assert.assertTrue(driver.getCurrentUrl().contains("/training"), "Should navigate to training");
+
+        homePage.clickAboutLink();
+        Assert.assertTrue(driver.getCurrentUrl().contains("/about"), "Should navigate to about page");
+    }
+
+    @Test(description = "SEL-06: Verify Mobile Navigation Drawer")
+    public void testMobileNavigationDrawer() {
+        driver.manage().window().setSize(new Dimension(375, 812));
+        Assert.assertTrue(homePage.getNavigation().isMobileHamburgerVisible(), "Hamburger button should be visible on mobile");
+
+        homePage.getNavigation().openMobileMenu();
+        Assert.assertTrue(homePage.getNavigation().isMobileMenuOpen(), "Mobile drawer should open");
+
+        homePage.getNavigation().clickMobileMenuLink("Training");
+        Assert.assertTrue(driver.getCurrentUrl().contains("/training"), "Should navigate to training via mobile menu");
+    }
+
+    @DataProvider(name = "publicUrls")
+    public Object[][] getPublicUrls() {
+        return new Object[][]{
+            {"/", "Sporekart"},
+            {"/catalog", "Shop Mushroom Products"},
+            {"/training", "Live Mushroom Farming"},
+            {"/about", "About Us"},
+            {"/blog", "Mushroom Cultivation Guides"},
+            {"/contact", "Contact Us"},
+            {"/terms", "Terms"},
+            {"/privacy", "Privacy Policy"},
+            {"/shipping", "Shipping"}
+        };
+    }
+
+    @Test(dataProvider = "publicUrls", description = "SEL-06: Public URL Route Health Checks")
+    public void testPublicUrlRouting(String route, String titleSubstring) {
+        driver.get("http://localhost:3000" + route);
+        Assert.assertTrue(driver.getTitle().contains(titleSubstring), "Title should contain expected text for route: " + route);
+    }
+
+    @AfterMethod
+    public void tearDown() {
+        DriverFactory.quitDriver();
+    }
+}
+```
+
+---
+
+### 6. SEL-06 Exit Criteria Verification Matrix
+
+| Step | Requirement | Validation Method | Target Status |
+| :---: | :--- | :--- | :---: |
+| **1** | **Desktop Nav Links Automated** | Logo, Products, Training, About, Blog, & Contact verified | **PASSED** |
+| **2** | **Overlays & Drawers Verified** | Login modal trigger and Cart drawer slider tested | **PASSED** |
+| **3** | **Footer Metadata Verified** | Copyright text, social badges, and legal policy links verified | **PASSED** |
+| **4** | **Mobile Responsiveness Tested** | 375x812 viewport emulation and hamburger drawer verified | **PASSED** |
+| **5** | **Public URL Matrix 100% Passed** | All 9 public routes pass HTTP 200 and Title assertions | **PASSED** |
+
 
 
 

@@ -66,6 +66,13 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - Google OAuth Suite: Redirect flow, callback processing, existing vs. new user provisioning, & identity linking.
   - **Exit Criteria**: All 7 OTP scenarios & Google OAuth flows automated without real SMS dependency.
 
+### SEL-06 — Homepage & Navigation
+- **Header, Footer, Mobile Viewports & Public URL Verification**:
+  - Desktop Navigation: Logo, Products, Training, About, Blog, Contact, Login modal trigger, & Cart drawer slider.
+  - Mobile Viewports: 375x812 resolution emulation, hamburger menu drawer toggle, & 44x44px touch targets.
+  - Public URL Route Matrix: Route health checks for `/`, `/catalog`, `/training`, `/about`, `/blog`, `/contact`, `/terms`, `/privacy`, `/shipping` asserting HTTP 200, Meta Titles, and Canonical URLs.
+  - **Exit Criteria**: Desktop/Mobile nav verified; 9 key public routes pass 100% URL health checks.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.
