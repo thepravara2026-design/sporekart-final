@@ -46,6 +46,13 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - Headless support (`headless=true`) for CI pipeline execution.
   - **Exit Criteria**: `DriverFactory` thread safety verified, multi-browser & headless execution functional across Chrome/Firefox/Edge, utilities validated.
 
+### SEL-03 — Page Object Architecture
+- **Encapsulated POM & Strict Locator Separation**:
+  - Prohibits raw `driver.findElement(...)` lookups in `@Test` methods.
+  - Enforces 15 page object classes under `pages/`: `HomePage`, `LoginPage`, `ProductListingPage`, `ProductDetailsPage`, `CartPage`, `CheckoutPage`, `AddressPage`, `PaymentPage`, `OrderPage`, `TrainingPage`, `CoursePage`, `BatchPage`, `EnrollmentPage`, `BlogPage`, `AdminPage`.
+  - Fluent business methods e.g., `loginPage.login(phone, otp)`.
+  - **Exit Criteria**: Zero raw locators in tests, 15 Page classes extending `BasePage`, fluent action methods implemented.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.

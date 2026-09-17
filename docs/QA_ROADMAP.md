@@ -12,11 +12,12 @@ This roadmap outlines the complete end-to-end quality assurance, test automation
 | **SEL-00** | **Automation Architecture Baseline** | **Selenium 4 + TestNG + Maven + POM** | **Defined & Active** |
 | **SEL-01** | **Environment & Configuration** | **Multi-Tier Properties & CLI `-Denv`** | **Defined & Active** |
 | **SEL-02** | **WebDriver Infrastructure** | **DriverFactory, BrowserFactory & Utilities** | **Defined & Active** |
-| **SEL-03** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
-| **SEL-04** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
-| **SEL-05** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
-| **SEL-06** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
-| **SEL-07** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
+| **SEL-03** | **Page Object Architecture** | **Encapsulated POM & Clean Page Hierarchy** | **Defined & Active** |
+| **SEL-04** | User Auth & Session Management Tests | Selenium POM + TestNG DataProviders | Scheduled |
+| **SEL-05** | Catalog, Search & Filter Verification | Selenium POM + AssertJ | Scheduled |
+| **SEL-06** | Cart Drawer & Checkout E2E Flows | Selenium POM + Mock Razorpay Handler | Scheduled |
+| **SEL-07** | Training Module Enrollment E2E | Selenium POM + Dynamic Slots | Scheduled |
+| **SEL-08** | Admin Control Plane & Analytics Gates | Selenium POM + Role-Based Access | Scheduled |
 | **API-01** | REST API & Contract Validation | RestAssured + TestNG | Scheduled |
 | **PERF-01**| Load & Performance Benchmarking | JMeter / K6 | Scheduled |
 
@@ -694,5 +695,197 @@ public class CookieUtils {
 | **3** | **Explicit Synchronization** | `WaitUtils` eliminates hardcoded `Thread.sleep` calls | **PASSED** |
 | **4** | **Diagnostic Screenshots** | `ScreenshotUtils` captures Base64 and PNG files on test failure | **PASSED** |
 | **5** | **DOM & Window Utilities** | `JavaScriptUtils`, `WindowUtils`, and `CookieUtils` execute without errors | **PASSED** |
+
+---
+
+## SEL-03 — Page Object Architecture Specification
+
+### 1. Architectural Philosophy & Strictly Enforced Rules
+
+`SEL-03` defines the Page Object Model (POM) architecture for Sporekart. The core goal is to encapsulate page structure, locators, and UI interactions inside specialized Page classes, keeping `@Test` methods focused purely on test flow assertions and business validation.
+
+> [!CAUTION]
+> **Strict Anti-Pattern Violation Rule**: Raw Selenium element lookups (`driver.findElement(...)`) and direct interactions inside `@Test` methods are **STRICTLY PROHIBITED**.
+
+#### Anti-Pattern (BAD - Prohibited):
+```java
+// DO NOT DO THIS inside test methods:
+@Test
+public void testUserLogin() {
+    driver.findElement(By.id("phoneInput")).sendKeys("9876543210");
+    driver.findElement(By.id("sendOtpBtn")).click();
+    driver.findElement(By.id("otpInput")).sendKeys("123456");
+    driver.findElement(By.id("verifyBtn")).click();
+    Assert.assertTrue(driver.findElement(By.id("userAvatar")).isDisplayed());
+}
+```
+
+#### Best Practice (GOOD - Mandated Pattern):
+```java
+// ENFORCED PATTERN inside test methods:
+@Test
+public void testUserLogin() {
+    loginPage.login("9876543210", "123456");
+    Assert.assertTrue(homePage.isUserLoggedIn(), "User should be logged in successfully");
+}
+```
+
+---
+
+### 2. Page Object Directory Hierarchy (`pages/`)
+
+The framework organizes all UI interfaces into standard page objects under `src/test/java/com/sporekart.automation.pages/`:
+
+```
+pages/
+├── BasePage.java               # Parent abstraction holding WebDriver & WaitUtils wrappers
+├── HomePage.java               # Header, navigation, hero banner, search bar, & featured products
+├── LoginPage.java               # Phone OTP login form, validation messages, & modal dialogs
+├── ProductListingPage.java     # Category grids, filtering, sorting, & product cards
+├── ProductDetailsPage.java     # Variant selectors (size/weight), stock status, & add-to-cart
+├── CartPage.java               # Cart drawer, quantity modifiers, subtotal calculation, & checkout CTA
+├── CheckoutPage.java           # Shipping address selection, fee rules, order summary, & proceed to pay
+├── AddressPage.java            # Saved address management, add new address form, & Pincode validation
+├── PaymentPage.java            # Payment method selection (Razorpay, UPI, COD) & gateway trigger
+├── OrderPage.java              # Order confirmation summary, order number verification, & invoice view
+├── TrainingPage.java           # Mushroom cultivation courses overview, syllabus preview, & CTA
+├── CoursePage.java             # Individual course details, module breakdown, & instructor info
+├── BatchPage.java              # Live training batch schedules, slot availability, & seat selection
+├── EnrollmentPage.java         # Student enrollment form, batch slot lock, & fee payment flow
+├── BlogPage.java               # Mushroom cultivation guides, articles list, & post reader view
+└── AdminPage.java              # Admin control plane, product management, order processing, & analytics
+```
+
+---
+
+### 3. Page Object Encapsulation Details
+
+| Page Class | Primary Locators Encapsulated | Key Action Methods |
+| :--- | :--- | :--- |
+| **`HomePage`** | Logo, Search Input, Cart Icon, Account Drawer, Training Link | `searchProduct()`, `openCart()`, `navigateToTraining()` |
+| **`LoginPage`** | Phone Input, Send OTP Button, OTP Fields, Verify Button | `enterPhone()`, `enterOtp()`, `login(phone, otp)` |
+| **`ProductListingPage`** | Category Filters, Price Slider, Sort Dropdown, Product Items | `filterByCategory()`, `sortByPrice()`, `selectProduct()` |
+| **`ProductDetailsPage`** | Weight Variants, Quantity Buttons, Add to Cart, Buy Now | `selectVariant()`, `setQuantity()`, `clickAddToCart()` |
+| **`CartPage`** | Cart Items, Quantity Controls, Subtotal, Checkout Button | `increaseQuantity()`, `removeItem()`, `proceedToCheckout()` |
+| **`CheckoutPage`** | Address Cards, Add Address Button, Shipping Method, Pay Button | `selectAddress()`, `verifyShippingFee()`, `proceedToPayment()` |
+| **`AddressPage`** | Full Name, Pincode, City, State, Address Type, Save Button | `fillNewAddress()`, `saveAddress()`, `validatePincode()` |
+| **`PaymentPage`** | Payment Options (UPI, Card, COD), Razorpay Modal Trigger | `selectPaymentMethod()`, `payWithRazorpay()` |
+| **`OrderPage`** | Order ID, Payment Status Badge, Items List, Download Invoice | `getOrderNumber()`, `verifyPaymentSuccess()`, `downloadInvoice()` |
+| **`TrainingPage`** | Course Cards, Curriculum Syllabus Accordions, Enroll Buttons | `viewCourseDetails()`, `clickEnrollNow()` |
+| **`CoursePage`** | Modules List, Prerequisites, Batch Schedule Cards | `selectBatchSchedule()`, `startEnrollment()` |
+| **`BatchPage`** | Batch Dates, Available Seats Indicator, Slot Select Radio | `chooseActiveBatchSlot()`, `confirmSlot()` |
+| **`EnrollmentPage`** | Student Name, Email, Phone, Terms Checkbox, Pay Fee Button | `fillStudentDetails()`, `submitEnrollment()` |
+| **`BlogPage`** | Article Cards, Search Guides, Author Info, Related Posts | `readArticle()`, `searchGuides()` |
+| **`AdminPage`** | Sidebar Navigation, Inventory Table, Orders DataGrid, Metrics | `navigateToInventory()`, `updateStock()`, `viewAnalytics()` |
+
+---
+
+### 4. Implementation Code Samples
+
+#### `BasePage.java` (Parent Abstraction)
+```java
+package com.sporekart.automation.pages;
+
+import com.sporekart.automation.utils.JavaScriptUtils;
+import com.sporekart.automation.utils.WaitUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
+public abstract class BasePage {
+    protected WebDriver driver;
+    protected int defaultTimeout = 10;
+
+    public BasePage(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    protected void click(By locator) {
+        WaitUtils.waitForClickability(driver, locator, defaultTimeout).click();
+    }
+
+    protected void sendKeys(By locator, String text) {
+        WebElement element = WaitUtils.waitForVisibility(driver, locator, defaultTimeout);
+        element.clear();
+        element.sendKeys(text);
+    }
+
+    protected String getText(By locator) {
+        return WaitUtils.waitForVisibility(driver, locator, defaultTimeout).getText();
+    }
+
+    protected boolean isDisplayed(By locator) {
+        try {
+            return WaitUtils.waitForVisibility(driver, locator, defaultTimeout).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
+```
+
+#### `LoginPage.java` (Encapsulated Page Object)
+```java
+package com.sporekart.automation.pages;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+
+public class LoginPage extends BasePage {
+
+    // Encapsulated Locators (Private & Not Exposed to Test Classes)
+    private final By phoneInput = By.id("phoneInput");
+    private final By sendOtpButton = By.id("sendOtpBtn");
+    private final By otpInput = By.id("otpInput");
+    private final By verifyOtpButton = By.id("verifyOtpBtn");
+    private final By errorMessage = By.className("auth-error-msg");
+
+    public LoginPage(WebDriver driver) {
+        super(driver);
+    }
+
+    public void enterPhone(String phone) {
+        sendKeys(phoneInput, phone);
+    }
+
+    public void clickSendOtp() {
+        click(sendOtpButton);
+    }
+
+    public void enterOtp(String otp) {
+        sendKeys(otpInput, otp);
+    }
+
+    public void clickVerifyOtp() {
+        click(verifyOtpButton);
+    }
+
+    // High-Level Fluent Action Method
+    public HomePage login(String phone, String otp) {
+        enterPhone(phone);
+        clickSendOtp();
+        enterOtp(otp);
+        clickVerifyOtp();
+        return new HomePage(driver);
+    }
+
+    public String getErrorMessageText() {
+        return getText(errorMessage);
+    }
+}
+```
+
+---
+
+### 5. SEL-03 Exit Criteria Verification Matrix
+
+| Step | Requirement | Validation Method | Target Status |
+| :---: | :--- | :--- | :---: |
+| **1** | **Zero Raw Locators in Tests** | Code audit verifies no `driver.findElement` calls inside `@Test` methods | **PASSED** |
+| **2** | **15 Page Classes Created** | All page objects (`HomePage` to `AdminPage`) created under `pages/` | **PASSED** |
+| **3** | **Encapsulated Locators** | Locators declared `private final By` within respective page classes | **PASSED** |
+| **4** | **Fluent Action Methods** | High-level business flows e.g. `loginPage.login(phone, otp)` return target page | **PASSED** |
+| **5** | **BasePage Inheritance** | All page objects extend `BasePage` and reuse centralized `WaitUtils` | **PASSED** |
+
 
 
