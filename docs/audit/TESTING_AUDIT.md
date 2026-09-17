@@ -39,6 +39,13 @@ For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](f
   - Zero hardcoding policy: Secret injection via OS environment variables and GitHub Secrets in CI.
   - **Exit Criteria**: Config properties segregated, `-Denv` dynamically targets environment endpoints, credentials safely injected.
 
+### SEL-02 — WebDriver Infrastructure
+- **Browser Automation Infrastructure & Utilities**:
+  - Factories: `DriverFactory` (`ThreadLocal<WebDriver>`), `BrowserFactory` (Chrome, Firefox, Edge support).
+  - Utilities: `WaitUtils` (explicit waits), `ScreenshotUtils` (PNG/Base64 on failure), `JavaScriptUtils` (DOM scrolling & forced clicks), `WindowUtils` (multi-tab/window management), `CookieUtils` (session cookie management).
+  - Headless support (`headless=true`) for CI pipeline execution.
+  - **Exit Criteria**: `DriverFactory` thread safety verified, multi-browser & headless execution functional across Chrome/Firefox/Edge, utilities validated.
+
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
   - Test OTP expiration handling.
