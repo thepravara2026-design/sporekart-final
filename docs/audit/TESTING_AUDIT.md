@@ -17,7 +17,19 @@ This document outlines the testing strategy, test coverage, test environment con
 
 ---
 
-## 2. Recommended Test Expansion Strategy
+## 2. Recommended Test Expansion Strategy & QA Roadmap
+
+For full QA roadmap details and execution milestones, refer to [QA_ROADMAP.md](file:///f:/sporekart-v1/sporekart-final/docs/QA_ROADMAP.md).
+
+### SEL-00 — Automation Architecture
+- **Selenium 4 + TestNG + Maven + Page Object Model (POM)**:
+  - Driver management (`ThreadLocal<WebDriver>`) for parallel execution safety.
+  - Environment management (`ConfigReader` & `env.properties`).
+  - Test data strategy (DataProviders & dynamic test data generation).
+  - Failure screenshot strategy & ExtentReports HTML reporting.
+  - Log4j2 structured logging & TestNG retry analyzer (`IRetryAnalyzer`).
+  - CI execution pipeline with headless Chrome browser sessions.
+  - **Exit Criteria**: Framework builds cleanly, TestNG executes suite, Chrome launches, first test passes, report generated.
 
 ### 1. Service-Level Unit Tests (JUnit 5 + Mockito)
 - **`AuthServiceTest.java`**:
@@ -31,7 +43,7 @@ This document outlines the testing strategy, test coverage, test environment con
   - Test Razorpay order initiation payload formatting.
   - Test payment signature verification failure logic.
 
-### 2. Frontend End-to-End Tests (Playwright)
+### 2. Frontend End-to-End Tests (Playwright / Selenium)
 - **Checkout E2E Flow**:
   - Navigate to `/catalog`.
   - Select size variant and add product to cart.
@@ -48,4 +60,5 @@ This document outlines the testing strategy, test coverage, test environment con
 - **GitHub Actions Configuration**:
   - Step 1: Run Maven integration test suite (`mvn test`).
   - Step 2: Run frontend build check (`npm run build`).
-  - Step 3: Run Playwright E2E test suite against spin-up Docker container.
+  - Step 3: Run Selenium TestNG E2E test suite against spin-up Docker container.
+
