@@ -357,6 +357,31 @@ export default function ProductDetailPage({ onAddToCart }) {
         </div>
       </section>
 
+      {/* Intent Linking Chain Section (Product -> Related Guide -> Training) */}
+      <section className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/50 space-y-4">
+        <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
+          <GraduationCap className="w-5 h-5 text-spore-400" /> Agronomist Masterclass & Cultivation Resources
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Master the commercial cultivation techniques for <strong className="text-white">{product.title}</strong>. Read our expert guides or enroll in certified hands-on training batches.
+        </p>
+        <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold">
+          <Link
+            to="/mushroom-cultivation-guide"
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-spore-300 rounded-xl border border-spore-700/60 transition-all flex items-center gap-2"
+          >
+            📖 Read {product.title} Cultivation Guide
+          </Link>
+          <span className="text-slate-500 font-extrabold text-sm">➔</span>
+          <Link
+            to="/training"
+            className="px-4 py-2.5 bg-spore-500 hover:bg-spore-400 text-slate-950 rounded-xl transition-all flex items-center gap-2 shadow-lg"
+          >
+            🎓 Enroll in Certified Training Masterclass
+          </Link>
+        </div>
+      </section>
+
       {/* Related Products Internal Links Section */}
       {relatedProducts.length > 0 && (
         <section className="space-y-4">
