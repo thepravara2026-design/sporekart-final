@@ -7,6 +7,35 @@
     background-color: #090d09;
     color: #f1f5f9;
   }
+
+  /* High-visibility Focus Visible Ring for Keyboard Navigation */
+  :focus-visible {
+    outline: 2px solid #34d399 !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* Accessibility Skip-Link for Keyboard Navigation */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 9999;
+  background-color: #059669;
+  color: #090d09;
+  font-weight: 800;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: top 0.2s ease-in-out;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Minimum 44px Touch Target Boundary */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .glass-panel {

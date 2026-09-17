@@ -56,7 +56,7 @@ export default function App() {
           <div className="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100 font-sans">
             <Navbar user={user} setUser={setUser} />
 
-            <main className="flex-grow">
+            <main id="main-content" tabIndex="-1" className="flex-grow focus:outline-none">
               <Suspense fallback={<PageSkeleton />}>
                 <Routes>
                   {/* Core SEO Routes */}

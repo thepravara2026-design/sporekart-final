@@ -76,11 +76,16 @@ export default function Navbar({ user, setUser }) {
 
   return (
     <>
+      {/* Accessibility Keyboard Navigation Skip Link */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <header className="sticky top-0 z-40 w-full glass-panel border-b border-spore-800/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 group">
+            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-3 group min-h-[44px]">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-spore-400 to-spore-700 flex items-center justify-center shadow-lg shadow-spore-900/50 group-hover:scale-105 transition-transform">
                 <Sprout className="w-6 h-6 text-slate-950" />
               </div>
@@ -95,25 +100,26 @@ export default function Navbar({ user, setUser }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6 font-medium text-xs sm:text-sm text-slate-300">
-              <Link to="/products" className="hover:text-spore-300 transition-colors flex items-center gap-1.5">
+            <nav aria-label="Primary Navigation" className="hidden md:flex items-center gap-6 font-medium text-xs sm:text-sm text-slate-300">
+              <Link to="/products" className="hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-1">
                 <Sprout className="w-4 h-4 text-spore-400" /> Products
               </Link>
-              <Link to="/training" className="hover:text-spore-300 transition-colors flex items-center gap-1.5">
+              <Link to="/training" className="hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-1">
                 <GraduationCap className="w-4 h-4 text-spore-400" /> Training
               </Link>
-              <Link to="/blog" className="hover:text-spore-300 transition-colors">
+              <Link to="/blog" className="hover:text-spore-300 transition-colors min-h-[44px] flex items-center px-1">
                 Blog
               </Link>
-              <Link to="/about" className="hover:text-spore-300 transition-colors">
+              <Link to="/about" className="hover:text-spore-300 transition-colors min-h-[44px] flex items-center px-1">
                 About
               </Link>
-              <Link to="/contact" className="hover:text-spore-300 transition-colors">
+              <Link to="/contact" className="hover:text-spore-300 transition-colors min-h-[44px] flex items-center px-1">
                 Contact
               </Link>
               <button 
                 onClick={() => setIsPincodeModalOpen(true)}
-                className="hover:text-spore-300 transition-colors flex items-center gap-1.5 text-xs bg-spore-950/60 px-3 py-1.5 rounded-lg border border-spore-800/60"
+                aria-label="Check PIN code delivery serviceability"
+                className="hover:text-spore-300 transition-colors flex items-center gap-1.5 text-xs bg-spore-950/60 px-3 py-2 rounded-lg border border-spore-800/60 min-h-[44px]"
               >
                 <MapPin className="w-3.5 h-3.5 text-amber-400" /> Delivery Check
               </button>
@@ -124,8 +130,8 @@ export default function Navbar({ user, setUser }) {
               {/* Cart Button */}
               <button
                 onClick={openDrawer}
-                className="relative p-2.5 rounded-xl bg-spore-900/40 hover:bg-spore-800/60 border border-spore-700/30 text-slate-200 transition-all"
-                aria-label="View Shopping Cart"
+                className="relative p-2.5 rounded-xl bg-spore-900/40 hover:bg-spore-800/60 border border-spore-700/30 text-slate-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={`Shopping cart with ${cart.itemCount} items`}
               >
                 <ShoppingBag className="w-5 h-5 text-spore-300" />
                 {cart.itemCount > 0 && (
@@ -138,18 +144,19 @@ export default function Navbar({ user, setUser }) {
               {/* User Account / Auth */}
               {user ? (
                 <div className="flex items-center gap-3">
-                  <Link to="/dashboard" className="hidden sm:flex items-center gap-2 text-xs font-medium bg-spore-900/60 hover:bg-spore-800 px-3.5 py-2 rounded-xl border border-spore-700/40">
+                  <Link to="/dashboard" aria-label="User Account Dashboard" className="hidden sm:flex items-center gap-2 text-xs font-medium bg-spore-900/60 hover:bg-spore-800 px-3.5 py-2.5 rounded-xl border border-spore-700/40 min-h-[44px]">
                     <User className="w-4 h-4 text-spore-400" />
                     <span>{user.fullName || 'Dashboard'}</span>
                   </Link>
-                  <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-400">
+                  <button onClick={handleLogout} aria-label="Log out of account" className="text-xs text-slate-400 hover:text-red-400 min-h-[44px] px-2">
                     Logout
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-spore-950/40 transition-all"
+                  aria-label="Login or Sign Up for an Account"
+                  className="bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-spore-950/40 transition-all min-h-[44px]"
                 >
                   Login / Signup
                 </button>
@@ -158,7 +165,9 @@ export default function Navbar({ user, setUser }) {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-slate-300 hover:bg-spore-900/50"
+                aria-expanded={isMenuOpen}
+                aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
+                className="md:hidden p-2 rounded-lg text-slate-300 hover:bg-spore-900/50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
