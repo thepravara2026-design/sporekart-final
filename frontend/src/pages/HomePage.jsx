@@ -48,101 +48,80 @@ export default function HomePage({ onAddToCart }) {
         structuredData={websiteSchema}
       />
 
-      {/* Hero Section with Full-Section Background Image */}
-      <section className="relative min-h-[580px] md:min-h-[640px] flex items-center pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden rounded-3xl border border-spore-800/60 shadow-2xl my-4 bg-slate-950">
-        {/* Full Section Background Image */}
-        <img
-          src="https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=2000&q=80"
-          alt="Fresh Organic Oyster & Button Mushrooms Sporekart India"
-          loading="eager"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
+      {/* Hero Section */}
+      <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-spore-500/10 rounded-full blur-[140px] pointer-events-none"></div>
 
-        {/* Multi-layered Dark Vignette & Gradient Overlays for Readability */}
-        <div className="absolute inset-0 bg-slate-950/75 sm:bg-slate-950/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40" />
-
-        {/* Glowing Accent Ambient Blur */}
-        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-spore-500/15 rounded-full blur-[140px] pointer-events-none" />
-
-        {/* Overlay Content Container */}
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* Main Content & Headings */}
-            <div className="lg:col-span-8 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-spore-950/90 backdrop-blur-md border border-spore-600/60 text-spore-300 text-xs sm:text-sm font-semibold tracking-wide shadow-lg">
-                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-spore-950/80 border border-spore-700/50 text-spore-300 text-xs font-semibold tracking-wide">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                 <span>India's Premier Mushroom Agritech & Training Hub</span>
               </div>
 
-              <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-[1.15] drop-shadow-md">
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-tight">
                 Fresh Mushrooms, <br />
                 <span className="gradient-text">Pure Grain Spawn</span> & Certified Training
               </h1>
 
-              <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium drop-shadow-sm">
+              <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 Sporekart delivers lab-tested high-yield mushroom spawn seeds, fresh button & oyster varieties, DIY home growing kits, and comprehensive commercial cultivation training across India.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                 <Link
                   to="/catalog"
-                  className="w-full sm:w-auto bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-extrabold text-base px-8 py-4 rounded-xl shadow-xl shadow-spore-950/60 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+                  className="w-full sm:w-auto bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-extrabold text-base px-8 py-4 rounded-xl shadow-xl shadow-spore-950/50 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
                 >
                   <Sprout className="w-5 h-5" /> Explore Products
                 </Link>
                 <Link
                   to="/training"
-                  className="w-full sm:w-auto bg-slate-900/80 backdrop-blur-md hover:bg-spore-900/80 text-white font-bold text-base px-8 py-4 rounded-xl border border-spore-600/60 flex items-center justify-center gap-2 transition-all shadow-lg"
+                  className="w-full sm:w-auto glass-panel hover:bg-spore-900/60 text-white font-bold text-base px-8 py-4 rounded-xl border border-spore-700/50 flex items-center justify-center gap-2 transition-all"
                 >
                   <GraduationCap className="w-5 h-5 text-spore-400" /> Training Workshops
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-slate-800/80 text-slate-200 text-xs sm:text-sm font-semibold">
-                <div className="flex items-center justify-center lg:justify-start gap-2 bg-slate-950/60 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-spore-800/60">
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-spore-900/60 text-slate-300 text-xs sm:text-sm font-medium">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
                   <span>Lab Tested Spawn</span>
                 </div>
-                <div className="flex items-center justify-center lg:justify-start gap-2 bg-slate-950/60 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-spore-800/60">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
                   <span>Cold-Chain Express</span>
                 </div>
-                <div className="flex items-center justify-center lg:justify-start gap-2 bg-slate-950/60 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-spore-800/60">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
                   <span>100% Organic Fresh</span>
                 </div>
               </div>
             </div>
 
-            {/* Overlay Glass Cards */}
-            <div className="lg:col-span-4 flex flex-col gap-4">
-              <div className="p-5 rounded-2xl bg-slate-900/85 backdrop-blur-xl border border-spore-600/50 shadow-2xl transition-transform hover:scale-[1.02]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-spore-400 flex items-center gap-1.5">
-                    <Award className="w-4 h-4" /> Lab Certified
-                  </span>
-                  <span className="px-2.5 py-1 bg-spore-500/20 text-spore-300 text-[10px] font-bold rounded-md border border-spore-500/40">
-                    FSSAI Approved
-                  </span>
+            <div className="lg:col-span-5 relative">
+              <div className="relative rounded-3xl overflow-hidden glass-panel p-3 border border-spore-700/40 shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1000&q=80"
+                  alt="Fresh Organic Oyster & Button Mushrooms Sporekart India"
+                  width="1000"
+                  height="800"
+                  loading="eager"
+                  decoding="async"
+                  className="w-full h-80 sm:h-96 object-cover rounded-2xl"
+                />
+                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-card border border-spore-600/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-white text-sm">Farm Fresh Organic Mushrooms</h3>
+                      <p className="text-xs text-spore-300">Harvested Daily • Delivered in 24-48 Hours</p>
+                    </div>
+                    <span className="px-3 py-1 bg-spore-500/20 text-spore-300 text-xs font-bold rounded-lg border border-spore-500/40">
+                      FSSAI Approved
+                    </span>
+                  </div>
                 </div>
-                <h3 className="font-bold text-white text-base">Farm Fresh Organic Produce</h3>
-                <p className="text-xs text-slate-300 mt-1">Harvested Daily • Delivered in 24-48 Hours across India</p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-slate-900/85 backdrop-blur-xl border border-spore-600/50 shadow-2xl transition-transform hover:scale-[1.02]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4" /> High Yield
-                  </span>
-                  <span className="px-2.5 py-1 bg-amber-500/20 text-amber-300 text-[10px] font-bold rounded-md border border-amber-500/40">
-                    1st Gen Spawn
-                  </span>
-                </div>
-                <h3 className="font-bold text-white text-base">Master Grain Spawn Seeds</h3>
-                <p className="text-xs text-slate-300 mt-1">Zero contamination guarantee with 99% germination rate</p>
               </div>
             </div>
           </div>
