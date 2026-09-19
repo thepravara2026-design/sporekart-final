@@ -16,13 +16,13 @@ import java.util.UUID;
 @Component
 public class RazorpayPaymentGateway implements PaymentGateway {
 
-    @Value("${app.razorpay.key-id:rzp_test_mockkey123}")
+    @Value("${app.razorpay.key-id:}")
     private String keyId;
 
-    @Value("${app.razorpay.key-secret:mocksecret123}")
+    @Value("${app.razorpay.key-secret:}")
     private String keySecret;
 
-    @Value("${app.razorpay.webhook-secret:mockwebhooksecret123}")
+    @Value("${app.razorpay.webhook-secret:}")
     private String webhookSecret;
 
     @Override
@@ -117,7 +117,7 @@ public class RazorpayPaymentGateway implements PaymentGateway {
     }
 
     private boolean isMockMode() {
-        return keyId == null || keyId.startsWith("rzp_test_mock");
+        return keyId == null || keyId.trim().isEmpty() || keyId.startsWith("rzp_test_mock");
     }
 
     private String calculateHmacSha256(String data, String secret) {

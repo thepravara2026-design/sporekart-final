@@ -13,8 +13,15 @@ node_modules/
 # Logs & Environment
 *.log
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Local secrets & keys
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
 
 # IDE & OS files
 .idea/
@@ -27,3 +34,4 @@ Thumbs.db
 # Maven / Gradle wrappers & artifacts
 *.jar
 *.war
+

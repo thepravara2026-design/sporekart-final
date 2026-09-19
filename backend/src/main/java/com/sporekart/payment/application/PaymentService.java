@@ -32,7 +32,7 @@ public class PaymentService {
 
     @Transactional
     public PaymentDtos.InitiatePaymentResponse initiatePayment(UUID orderId) {
-        OrderResponse order = orderService.getOrderDetails(orderId, null);
+        OrderResponse order = orderService.getOrderById(orderId);
 
         PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(
                 orderId, order.getOrderNumber(), order.getTotalAmountInr()

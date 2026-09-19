@@ -162,14 +162,18 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public OrderResponse getOrderById(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        return mapToResponse(order);
+    }
+
+    @Transactional(readOnly = true)
     public OrderResponse getOrderDetails(UUID orderId, UUID userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId == null) {
-            throw new IllegalArgumentException("Access denied: User must be authenticated to view order details");
-        }
-        if (order.getUserId() != null && !userId.equals(order.getUserId())) {
+        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
             throw new IllegalArgumentException("Access denied: You are not authorized to view this order");
         }
 
@@ -257,7 +261,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId == null) {
+        if (userId == null && order.getUserId() != null) {
             throw new IllegalArgumentException("Access denied: User must be authenticated to cancel order");
         }
         if (order.getUserId() != null && !userId.equals(order.getUserId())) {

@@ -5,9 +5,9 @@ services:
     image: postgres:16-alpine
     container_name: sporekart-db
     environment:
-      POSTGRES_DB: sporekart
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${SUPABASE_DB_NAME:-sporekart}
+      POSTGRES_USER: ${SUPABASE_DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${SUPABASE_DB_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     healthcheck:
@@ -23,12 +23,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: sporekart-backend
+    env_file:
+      - .env
     environment:
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sporekart
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${SUPABASE_DB_NAME:-sporekart}
+      SPRING_DATASOURCE_USERNAME: ${SUPABASE_DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SUPABASE_DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8080:8080"
     depends_on:
@@ -37,3 +39,4 @@ services:
 
 volumes:
   pgdata:
+

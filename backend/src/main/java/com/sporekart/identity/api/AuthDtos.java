@@ -35,6 +35,7 @@ public class AuthDtos {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @Builder
     public static class GoogleOAuthRequest {
         @NotBlank(message = "Google ID token or subject is required")
         private String googleSub;
@@ -43,6 +44,15 @@ public class AuthDtos {
         private String firstName;
         private String lastName;
         private String fullName;
+        private String idToken;
+
+        public GoogleOAuthRequest(String googleSub, String email, String firstName, String lastName, String fullName) {
+            this.googleSub = googleSub;
+            this.email = email;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.fullName = fullName;
+        }
     }
 
     @Data

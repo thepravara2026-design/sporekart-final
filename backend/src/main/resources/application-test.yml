@@ -16,8 +16,9 @@ spring:
 
 app:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971
-    expiration-ms: 86400000
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   razorpay:
-    key-id: rzp_test_mockkey123
-    key-secret: mocksecret123
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_mockkey123}
+    key-secret: ${RAZORPAY_KEY_SECRET:mocksecret123}
+

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Sprout, GraduationCap, MapPin, ShoppingBag, User, X, Menu, CheckCircle, ShieldCheck } from 'lucide-react';
 import { shippingApi, authApi } from '../api';
+import GoogleLoginButton from './GoogleLoginButton';
 
 
 export default function Navbar({ user, setUser }) {
@@ -21,6 +22,7 @@ export default function Navbar({ user, setUser }) {
   const [otpSent, setOtpSent] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -65,6 +67,24 @@ export default function Navbar({ user, setUser }) {
       navigate('/dashboard');
     } catch (err) {
       setAuthError(err.response?.data?.message || 'Invalid OTP');
+    }
+  };
+
+  const handleGoogleSuccess = async (googleAuthData) => {
+    setAuthError('');
+    setAuthMessage('');
+    setAuthLoading(true);
+    try {
+      const res = await authApi.loginWithGoogle(googleAuthData);
+      const authData = res.data.data;
+      localStorage.setItem('sporekart_token', authData.token);
+      setUser(authData);
+      setIsAuthModalOpen(false);
+      navigate('/dashboard');
+    } catch (err) {
+      setAuthError(err.response?.data?.message || 'Google Login Failed');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -265,25 +285,41 @@ export default function Navbar({ user, setUser }) {
             )}
 
             {!otpSent ? (
-              <form onSubmit={handleRequestOtp} className="space-y-4">
-                <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1">Mobile Number or Email</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. +91 9876543210 or user@example.com"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    required
-                    className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-spore-400"
-                  />
+              <div className="space-y-4">
+                <GoogleLoginButton
+                  onSuccess={handleGoogleSuccess}
+                  onError={(err) => setAuthError(err)}
+                  loading={authLoading}
+                  setLoading={setAuthLoading}
+                />
+
+                <div className="relative flex items-center justify-center my-4">
+                  <div className="border-t border-slate-800 w-full" />
+                  <span className="bg-slate-900 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
+                    or continue with
+                  </span>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all"
-                >
-                  Send OTP Code
-                </button>
-              </form>
+
+                <form onSubmit={handleRequestOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-slate-300 font-medium mb-1">Mobile Number or Email</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. +91 9876543210 or user@example.com"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      required
+                      className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-spore-400"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-spore-500 to-spore-600 hover:from-spore-400 hover:to-spore-500 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all"
+                  >
+                    Send OTP Code
+                  </button>
+                </form>
+              </div>
             ) : (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>

@@ -34,6 +34,7 @@ api.interceptors.request.use((config) => {
 export const authApi = {
   requestOtp: (identifier) => api.post('/auth/otp/request', { identifier }),
   verifyOtp: (identifier, otpCode, fullName) => api.post('/auth/otp/verify', { identifier, otpCode, fullName }),
+  loginWithGoogle: (googleData) => api.post('/auth/oauth/google', googleData),
   getCurrentUser: () => api.get('/auth/me'),
 };
 

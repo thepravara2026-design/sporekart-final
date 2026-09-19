@@ -60,9 +60,16 @@ export default function DashboardPage({ user }) {
           <div>
             <h1 className="font-display font-bold text-2xl text-white">{user?.fullName || 'Sporekart Member'}</h1>
             <p className="text-xs text-slate-400">{user?.identifier || user?.email || user?.phone}</p>
-            <span className="inline-block mt-1 px-2 py-0.5 bg-spore-500/20 text-spore-300 text-[10px] font-bold rounded border border-spore-500/40">
-              {user?.role || 'ROLE_CUSTOMER'}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              <span className="px-2 py-0.5 bg-spore-500/20 text-spore-300 text-[10px] font-bold rounded border border-spore-500/40">
+                {user?.role || 'ROLE_CUSTOMER'}
+              </span>
+              {user?.linkedProviders?.map((provider) => (
+                <span key={provider} className="px-2 py-0.5 bg-slate-900 text-slate-300 text-[10px] font-semibold rounded border border-slate-700">
+                  {provider === 'GOOGLE' ? 'Google Auth' : provider === 'EMAIL_OTP' ? 'Email OTP' : provider === 'PHONE_OTP' ? 'Phone OTP' : provider}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
