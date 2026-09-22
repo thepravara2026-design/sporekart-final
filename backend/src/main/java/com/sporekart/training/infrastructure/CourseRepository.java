@@ -13,4 +13,5 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     Optional<Course> findBySlug(String slug);
     List<Course> findByIsActiveTrue();
     List<Course> findByCategoryIdAndIsActiveTrue(UUID categoryId);
+    List<Course> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description);
 }

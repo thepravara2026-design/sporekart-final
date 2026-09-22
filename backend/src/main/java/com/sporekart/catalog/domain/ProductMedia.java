@@ -33,6 +33,15 @@ public class ProductMedia {
     @Builder.Default
     private MediaType mediaType = MediaType.IMAGE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    @Builder.Default
+    private ProductMediaRole role = ProductMediaRole.GALLERY;
+
+    public ProductMediaRole getRole() {
+        return role != null ? role : ProductMediaRole.GALLERY;
+    }
+
     @Column(name = "is_primary", nullable = false)
     private boolean isPrimary;
 

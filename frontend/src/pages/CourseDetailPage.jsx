@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { GraduationCap, Calendar, Clock, MapPin, CheckCircle, Video, Award, ArrowLeft, Users, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Calendar, Clock, MapPin, CheckCircle, Video, Award, ArrowLeft, Users, ShieldCheck, X } from 'lucide-react';
 import { trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
+import AuthForm from '../components/AuthForm';
 
-export default function CourseDetailPage({ user }) {
+export default function CourseDetailPage({ user, setUser }) {
   const { courseSlug } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [bookingError, setBookingError] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingSlotId, setPendingSlotId] = useState(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -30,14 +33,16 @@ export default function CourseDetailPage({ user }) {
   }, [courseSlug]);
 
   const handleBookSlot = async (slotId) => {
-    if (!user) {
-      alert('Please login to book a training workshop batch.');
+    if (!user && !localStorage.getItem('sporekart_token')) {
+      setPendingSlotId(slotId);
+      setShowAuthModal(true);
       return;
     }
     setBookingError('');
     try {
       const res = await trainingApi.bookSlot(slotId);
       setBookingSuccess(res.data.data);
+      setShowAuthModal(false);
     } catch (err) {
       setBookingError(err.response?.data?.message || 'Failed to book slot.');
     }
@@ -185,6 +190,30 @@ export default function CourseDetailPage({ user }) {
           </div>
         </div>
       </div>
+
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="glass-panel w-full max-w-md p-6 sm:p-8 rounded-3xl relative border border-spore-600/50 shadow-2xl animate-scale-in">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <AuthForm
+              title="Trainee Registration & Login"
+              subtitle="Enter your mobile number or email to register your trainee account and confirm your seat."
+              setUser={setUser}
+              onSuccess={(authData) => {
+                setShowAuthModal(false);
+                if (pendingSlotId) {
+                  handleBookSlot(pendingSlotId);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

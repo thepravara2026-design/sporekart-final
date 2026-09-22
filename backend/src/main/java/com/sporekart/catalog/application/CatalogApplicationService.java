@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,6 +53,9 @@ public class CatalogApplicationService {
 
     @Transactional(readOnly = true)
     public Page<CatalogDtos.ProductDto> searchProducts(String categorySlug, ProductType productType, String searchQuery, int page, int size, String sortBy) {
+        String cleanCategory = (categorySlug != null && !categorySlug.trim().isEmpty()) ? categorySlug.trim() : null;
+        String cleanQuery = (searchQuery != null && !searchQuery.trim().isEmpty()) ? searchQuery.trim() : null;
+
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if ("price_asc".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Direction.ASC, "title");
@@ -60,7 +64,7 @@ public class CatalogApplicationService {
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> productPage = productRepository.searchProducts(categorySlug, productType, searchQuery, pageable);
+        Page<Product> productPage = productRepository.searchProducts(cleanCategory, productType, cleanQuery, pageable);
 
         return productPage.map(this::mapToProductDto);
     }
@@ -116,7 +120,7 @@ public class CatalogApplicationService {
                     .variantName(variant.getVariantName())
                     .unitPriceInr(variant.getPriceInr())
                     .isAvailable(false)
-                    .message("Insufficient stock. Only " + variant.getStockQuantity() + " items available.")
+                    .message("Insufficient stock for requested quantity")
                     .build();
         }
 
@@ -137,6 +141,7 @@ public class CatalogApplicationService {
                 .filter(ProductVariant::isActive)
                 .map(v -> {
                     PricingService.PriceCalculationResult calc = pricingService.calculatePrice(product, v);
+                    StockAvailability avail = StockAvailability.fromQuantity(v.getStockQuantity());
                     return CatalogDtos.VariantDto.builder()
                             .id(v.getId())
                             .variantName(v.getVariantName())
@@ -147,17 +152,23 @@ public class CatalogApplicationService {
                             .calculatedGstAmountInr(calc.getGstAmountInr())
                             .appliedOfferName(calc.getAppliedOfferName())
                             .stockQuantity(v.getStockQuantity())
+                            .availability(CatalogDtos.AvailabilityDto.builder()
+                                    .status(avail)
+                                    .label(avail.getLabel())
+                                    .build())
                             .isActive(v.isActive())
                             .build();
                 })
                 .collect(Collectors.toList());
 
         List<CatalogDtos.MediaDto> mediaDtos = product.getMedia().stream()
+                .sorted(Comparator.comparingInt(ProductMedia::getDisplayOrder))
                 .map(m -> CatalogDtos.MediaDto.builder()
                         .id(m.getId())
                         .variantId(m.getVariantId())
                         .mediaUrl(m.getMediaUrl())
                         .mediaType(m.getMediaType())
+                        .role(m.getRole() != null ? m.getRole() : ProductMediaRole.GALLERY)
                         .isPrimary(m.isPrimary())
                         .displayOrder(m.getDisplayOrder())
                         .build())
@@ -184,6 +195,8 @@ public class CatalogApplicationService {
                     .collect(Collectors.toList());
         }
 
+        CatalogDtos.ProductInformationDto infoDto = mapToProductInformationDto(product.getProductInformation());
+
         return CatalogDtos.ProductDto.builder()
                 .id(product.getId())
                 .title(product.getTitle())
@@ -202,7 +215,126 @@ public class CatalogApplicationService {
                 .media(mediaDtos)
                 .imageUrls(imageUrls)
                 .activeOffers(offerDtos)
+                .productInformation(infoDto)
                 .isActive(product.isActive())
+                .build();
+    }
+
+    public CatalogDtos.AdminProductDto mapToAdminProductDto(Product product) {
+        List<CatalogDtos.AdminVariantDto> variantDtos = product.getVariants().stream()
+                .map(v -> {
+                    PricingService.PriceCalculationResult calc = pricingService.calculatePrice(product, v);
+                    StockAvailability avail = StockAvailability.fromQuantity(v.getStockQuantity());
+                    return CatalogDtos.AdminVariantDto.builder()
+                            .id(v.getId())
+                            .variantName(v.getVariantName())
+                            .sku(v.getSku())
+                            .priceInr(v.getPriceInr())
+                            .compareAtPriceInr(v.getCompareAtPriceInr())
+                            .calculatedFinalPriceInr(calc.getFinalPriceInr())
+                            .calculatedGstAmountInr(calc.getGstAmountInr())
+                            .appliedOfferName(calc.getAppliedOfferName())
+                            .stockQuantity(v.getStockQuantity())
+                            .availability(CatalogDtos.AvailabilityDto.builder()
+                                    .status(avail)
+                                    .label(avail.getLabel())
+                                    .build())
+                            .isActive(v.isActive())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        List<CatalogDtos.MediaDto> mediaDtos = product.getMedia().stream()
+                .sorted(Comparator.comparingInt(ProductMedia::getDisplayOrder))
+                .map(m -> CatalogDtos.MediaDto.builder()
+                        .id(m.getId())
+                        .variantId(m.getVariantId())
+                        .mediaUrl(m.getMediaUrl())
+                        .mediaType(m.getMediaType())
+                        .role(m.getRole() != null ? m.getRole() : ProductMediaRole.GALLERY)
+                        .isPrimary(m.isPrimary())
+                        .displayOrder(m.getDisplayOrder())
+                        .build())
+                .collect(Collectors.toList());
+
+        List<String> imageUrls = mediaDtos.stream()
+                .filter(m -> m.getMediaType() == MediaType.IMAGE)
+                .map(CatalogDtos.MediaDto::getMediaUrl)
+                .collect(Collectors.toList());
+
+        List<CatalogDtos.OfferDto> offerDtos = new ArrayList<>();
+        if (product.getOffers() != null) {
+            offerDtos = product.getOffers().stream()
+                    .map(o -> CatalogDtos.OfferDto.builder()
+                            .id(o.getId())
+                            .variantId(o.getVariantId())
+                            .offerName(o.getOfferName())
+                            .discountPercent(o.getDiscountPercent())
+                            .discountAmountInr(o.getDiscountAmountInr())
+                            .validFrom(o.getValidFrom())
+                            .validTo(o.getValidTo())
+                            .isCurrentlyValid(o.isCurrentlyValid())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        CatalogDtos.ProductInformationDto infoDto = mapToProductInformationDto(product.getProductInformation());
+
+        return CatalogDtos.AdminProductDto.builder()
+                .id(product.getId())
+                .title(product.getTitle())
+                .slug(product.getSlug())
+                .description(product.getDescription())
+                .productType(product.getProductType())
+                .status(product.getStatus())
+                .categoryName(product.getCategory() != null ? product.getCategory().getName() : "General")
+                .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : "general")
+                .hsnCode(product.getHsnCode())
+                .gstRatePercent(product.getGstRatePercent())
+                .metaTitle(product.getMetaTitle())
+                .metaDescription(product.getMetaDescription())
+                .canonicalUrl(product.getCanonicalUrl())
+                .variants(variantDtos)
+                .media(mediaDtos)
+                .imageUrls(imageUrls)
+                .activeOffers(offerDtos)
+                .productInformation(infoDto)
+                .isActive(product.isActive())
+                .build();
+    }
+
+    private CatalogDtos.ProductInformationDto mapToProductInformationDto(ProductInformation info) {
+        if (info == null) return null;
+        return CatalogDtos.ProductInformationDto.builder()
+                .id(info.getId())
+                .brandName(info.getBrandName())
+                .countryOfOrigin(info.getCountryOfOrigin())
+                .manufacturerDetails(info.getManufacturerDetails())
+                .packerDetails(info.getPackerDetails())
+                .marketerDetails(info.getMarketerDetails())
+                .customerCareDetails(info.getCustomerCareDetails())
+                .netQuantity(info.getNetQuantity())
+                .unitOfMeasure(info.getUnitOfMeasure())
+                .fssaiLicenseNumber(info.getFssaiLicenseNumber())
+                .foodCategory(info.getFoodCategory())
+                .isVegetarian(info.isVegetarian())
+                .ingredients(info.getIngredients())
+                .allergenInfo(info.getAllergenInfo())
+                .nutritionalInfoJson(info.getNutritionalInfoJson())
+                .servingSize(info.getServingSize())
+                .mushroomSpecies(info.getMushroomSpecies())
+                .cultivationMethod(info.getCultivationMethod())
+                .strainVariety(info.getStrainVariety())
+                .recommendedSubstrate(info.getRecommendedSubstrate())
+                .inoculationGuidance(info.getInoculationGuidance())
+                .kitContents(info.getKitContents())
+                .cultivationCycleDays(info.getCultivationCycleDays())
+                .environmentRequirements(info.getEnvironmentRequirements())
+                .storageInstructions(info.getStorageInstructions())
+                .storageTemperatureGuidance(info.getStorageTemperatureGuidance())
+                .shelfLifeGuidance(info.getShelfLifeGuidance())
+                .handlingInstructions(info.getHandlingInstructions())
+                .safetyWarnings(info.getSafetyWarnings())
                 .build();
     }
 }

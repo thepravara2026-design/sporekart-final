@@ -9,6 +9,8 @@ build/
 # Node dependencies
 node_modules/
 **/node_modules/
+*.timestamp-*.mjs
+
 
 # Logs & Environment
 *.log

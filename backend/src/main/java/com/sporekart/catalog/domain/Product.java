@@ -75,6 +75,9 @@ public class Product {
     @Builder.Default
     private List<ProductOffer> offers = new ArrayList<>();
 
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ProductInformation productInformation;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

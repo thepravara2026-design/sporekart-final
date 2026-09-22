@@ -61,7 +61,10 @@ public class CatalogModuleTest {
         Exception catEx = assertThrows(IllegalArgumentException.class, () -> adminCatalogService.createCategory(catReq));
         assertTrue(catEx.getMessage().contains("Duplicate category slug"));
 
-        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Button Mushroom 200g", "fresh-button-200g", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "07095900", new BigDecimal("5.00"), "Title", "Desc", "url", true);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
+        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Button Mushroom 200g", "fresh-button-200g", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "07095900", new BigDecimal("5.00"), "Title", "Desc", "url", true, infoReq);
         adminCatalogService.createProduct(prodReq);
 
         Exception prodEx = assertThrows(IllegalArgumentException.class, () -> adminCatalogService.createProduct(prodReq));
@@ -70,8 +73,11 @@ public class CatalogModuleTest {
 
     @Test
     void testInactiveProductFiltering() {
-        CatalogDtos.CreateProductRequest activeProd = new CatalogDtos.CreateProductRequest(null, "Active Button", "active-button", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true);
-        CatalogDtos.CreateProductRequest inactiveProd = new CatalogDtos.CreateProductRequest(null, "Draft Button", "draft-button", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.DRAFT, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", false);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
+        CatalogDtos.CreateProductRequest activeProd = new CatalogDtos.CreateProductRequest(null, "Active Button", "active-button", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true, infoReq);
+        CatalogDtos.CreateProductRequest inactiveProd = new CatalogDtos.CreateProductRequest(null, "Draft Button", "draft-button", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.DRAFT, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", false, infoReq);
 
         adminCatalogService.createProduct(activeProd);
         adminCatalogService.createProduct(inactiveProd);
@@ -86,7 +92,10 @@ public class CatalogModuleTest {
 
     @Test
     void testPriceValidation() {
-        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Oyster Kit", "oyster-kit", "Desc", ProductType.GROWING_KIT, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setKitContents("Substrate block & sprayer");
+
+        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Oyster Kit", "oyster-kit", "Desc", ProductType.GROWING_KIT, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true, infoReq);
         Product product = adminCatalogService.createProduct(prodReq);
 
         // Invalid price: compareAtPrice < priceInr
@@ -97,7 +106,10 @@ public class CatalogModuleTest {
 
     @Test
     void testOfferValidityAndPriceCalculation() {
-        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Grain Spawn 1kg", "grain-spawn-1kg", "Desc", ProductType.SPAWN_SEED, ProductStatus.ACTIVE, "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setMushroomSpecies("Pleurotus ostreatus");
+
+        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Grain Spawn 1kg", "grain-spawn-1kg", "Desc", ProductType.SPAWN_SEED, ProductStatus.ACTIVE, "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true, infoReq);
         Product product = adminCatalogService.createProduct(prodReq);
 
         CatalogDtos.CreateVariantRequest variantReq = new CatalogDtos.CreateVariantRequest("1kg Bag", "SKU-SPAWN-1KG", new BigDecimal("200.00"), new BigDecimal("250.00"), 50, true);
@@ -129,7 +141,10 @@ public class CatalogModuleTest {
 
     @Test
     void testInventoryValidation() {
-        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Fresh Milky", "fresh-milky", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
+        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Fresh Milky", "fresh-milky", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true, infoReq);
         Product product = adminCatalogService.createProduct(prodReq);
 
         CatalogDtos.CreateVariantRequest variantReq = new CatalogDtos.CreateVariantRequest("200g Pack", "SKU-MILKY-200G", new BigDecimal("80.00"), new BigDecimal("100.00"), 5, true);
@@ -143,5 +158,56 @@ public class CatalogModuleTest {
         CatalogDtos.StockValidationResult res2 = catalogService.validateAndGetVariant(variant.getId(), 10);
         assertFalse(res2.isAvailable());
         assertTrue(res2.getMessage().contains("Insufficient stock"));
+    }
+
+    @Test
+    void testPublicApiHidesExactStockAndAdminApiExposesIt() {
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
+        CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Button Mushroom 200g", "button-200g", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true, infoReq);
+        Product product = adminCatalogService.createProduct(prodReq);
+
+        CatalogDtos.CreateVariantRequest variantReq = new CatalogDtos.CreateVariantRequest("200g Pack", "SKU-BM-15", new BigDecimal("80.00"), new BigDecimal("100.00"), 15, true);
+        adminCatalogService.addVariant(product.getId(), variantReq);
+
+        // Public API DTO mapping
+        CatalogDtos.ProductDto publicDto = catalogService.getProductBySlug("button-200g");
+        assertNotNull(publicDto);
+        assertEquals(1, publicDto.getVariants().size());
+        CatalogDtos.VariantDto publicVariant = publicDto.getVariants().get(0);
+        
+        assertNotNull(publicVariant.getAvailability());
+        assertEquals(StockAvailability.LIMITED_STOCK, publicVariant.getAvailability().getStatus());
+        assertEquals("Limited stock", publicVariant.getAvailability().getLabel());
+
+        // Admin API DTO mapping
+        CatalogDtos.AdminProductDto adminDto = catalogService.mapToAdminProductDto(productRepository.findById(product.getId()).orElseThrow());
+        assertNotNull(adminDto);
+        assertEquals(1, adminDto.getVariants().size());
+        CatalogDtos.AdminVariantDto adminVariant = adminDto.getVariants().get(0);
+
+        assertEquals(15, adminVariant.getStockQuantity()); // Admin retains exact stock
+        assertEquals(StockAvailability.LIMITED_STOCK, adminVariant.getAvailability().getStatus());
+    }
+
+    @Test
+    void testPublishValidationRequiresFssaiForFoodProducts() {
+        // Create draft product without FSSAI
+        CatalogDtos.CreateProductRequest draftReq = new CatalogDtos.CreateProductRequest(null, "Fresh Button Draft", "fresh-button-draft", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.DRAFT, "0709", BigDecimal.ZERO, "Meta", "Desc", "url", true, null);
+        Product draftProduct = adminCatalogService.createProduct(draftReq);
+        assertEquals(ProductStatus.DRAFT, draftProduct.getStatus());
+
+        // Attempting to publish without FSSAI info must throw exception
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> adminCatalogService.publishProduct(draftProduct.getId()));
+        assertTrue(ex.getMessage().contains("FSSAI License Number is required"));
+
+        // Now save FSSAI info and publish
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("14020099887766");
+        adminCatalogService.saveOrUpdateProductInformation(draftProduct, infoReq);
+
+        Product publishedProduct = adminCatalogService.publishProduct(draftProduct.getId());
+        assertEquals(ProductStatus.ACTIVE, publishedProduct.getStatus());
     }
 }

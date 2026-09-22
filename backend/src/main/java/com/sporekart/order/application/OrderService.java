@@ -293,23 +293,33 @@ public class OrderService {
 
     private OrderAddressSnapshot resolveAddressSnapshot(UUID userId, CreateOrderRequest request) {
         if (request.getAddressId() != null) {
-            Optional<CustomerAddress> addrOpt = customerService.findAddressById(request.getAddressId());
-            if (addrOpt.isPresent()) {
-                CustomerAddress a = addrOpt.get();
-                return OrderAddressSnapshot.builder()
-                        .recipientName(a.getRecipientName())
-                        .phone(a.getPhone())
-                        .line1(a.getLine1())
-                        .line2(a.getLine2())
-                        .city(a.getCity())
-                        .state(a.getState())
-                        .pincode(a.getPincode())
-                        .build();
+            CustomerAddress a = customerService.findAddressById(request.getAddressId())
+                    .orElseThrow(() -> new IllegalArgumentException("Address not found: " + request.getAddressId()));
+            if (userId != null && a.getUserId() != null && !userId.equals(a.getUserId())) {
+                throw new IllegalArgumentException("Access denied: Address does not belong to the current user");
             }
+            return OrderAddressSnapshot.builder()
+                    .recipientName(a.getRecipientName())
+                    .phone(a.getPhone())
+                    .line1(a.getLine1())
+                    .line2(a.getLine2())
+                    .city(a.getCity())
+                    .state(a.getState())
+                    .pincode(a.getPincode())
+                    .build();
         }
 
         if (request.getShippingAddress() != null) {
-            return request.getShippingAddress();
+            OrderAddressSnapshot snap = request.getShippingAddress();
+            if (snap.getRecipientName() == null || snap.getRecipientName().trim().isEmpty() ||
+                snap.getPhone() == null || snap.getPhone().trim().isEmpty() ||
+                snap.getLine1() == null || snap.getLine1().trim().isEmpty() ||
+                snap.getCity() == null || snap.getCity().trim().isEmpty() ||
+                snap.getState() == null || snap.getState().trim().isEmpty() ||
+                snap.getPincode() == null || !snap.getPincode().matches("^[1-9][0-9]{5}$")) {
+                throw new IllegalArgumentException("Invalid shipping address details. Please check recipient name, phone, line1, city, state, and 6-digit PIN code.");
+            }
+            return snap;
         }
 
         throw new IllegalArgumentException("Shipping address is required for checkout");

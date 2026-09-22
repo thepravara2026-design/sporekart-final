@@ -40,8 +40,13 @@ export const authApi = {
 
 export const catalogApi = {
   getProducts: (type, category) => api.get('/catalog/products', { params: { type, category } }),
+  searchProducts: (params) => api.get('/products/search', { params }),
   getProductBySlug: (slug) => api.get(`/catalog/products/${slug}`),
   getCategories: () => api.get('/catalog/categories'),
+};
+
+export const searchApi = {
+  globalSearch: (query) => api.get('/search', { params: { q: query } }),
 };
 
 export const cartApi = {
@@ -107,9 +112,12 @@ export const adminApi = {
   deleteBlogPost: (id) => api.delete(`/admin/content/posts/${id}`),
   createCategory: (data) => api.post('/admin/catalog/categories', data),
   createProduct: (data) => api.post('/admin/catalog/products', data),
+  updateProductInformation: (productId, data) => api.post(`/admin/catalog/products/${productId}/information`, data),
+  publishProduct: (productId) => api.post(`/admin/catalog/products/${productId}/publish`),
   addVariant: (productId, data) => api.post(`/admin/catalog/products/${productId}/variants`, data),
   createOffer: (data) => api.post('/admin/catalog/offers', data),
   addMedia: (data) => api.post('/admin/catalog/media', data),
+  reorderMedia: (productId, items) => api.put(`/admin/catalog/products/${productId}/media/reorder`, { items }),
   getOrders: () => api.get('/admin/orders'),
   getOrderById: (id) => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (orderId, status, reason) => api.put(`/admin/orders/${orderId}/status`, { status, reason }),

@@ -1,8 +1,10 @@
 package com.sporekart.catalog.api;
 
 import com.sporekart.catalog.domain.MediaType;
+import com.sporekart.catalog.domain.ProductMediaRole;
 import com.sporekart.catalog.domain.ProductStatus;
 import com.sporekart.catalog.domain.ProductType;
+import com.sporekart.catalog.domain.StockAvailability;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,11 +37,21 @@ public class CatalogDtos {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class AvailabilityDto {
+        private StockAvailability status;
+        private String label;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MediaDto {
         private UUID id;
         private UUID variantId;
         private String mediaUrl;
         private MediaType mediaType;
+        private ProductMediaRole role;
         private boolean isPrimary;
         private int displayOrder;
     }
@@ -73,7 +85,68 @@ public class CatalogDtos {
         private BigDecimal calculatedGstAmountInr;
         private String appliedOfferName;
         private int stockQuantity;
+        private AvailabilityDto availability;
         private boolean isActive;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminVariantDto {
+        private UUID id;
+        private String variantName;
+        private String sku;
+        private BigDecimal priceInr;
+        private BigDecimal compareAtPriceInr;
+        private BigDecimal calculatedFinalPriceInr;
+        private BigDecimal calculatedGstAmountInr;
+        private String appliedOfferName;
+        private int stockQuantity; // ADMIN ONLY: exact integer stock quantity
+        private AvailabilityDto availability;
+        private boolean isActive;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductInformationDto {
+        private UUID id;
+        private String brandName;
+        private String countryOfOrigin;
+        private String manufacturerDetails;
+        private String packerDetails;
+        private String marketerDetails;
+        private String customerCareDetails;
+        private String netQuantity;
+        private String unitOfMeasure;
+        
+        // Food & FSSAI
+        private String fssaiLicenseNumber;
+        private String foodCategory;
+        private boolean isVegetarian;
+        private String ingredients;
+        private String allergenInfo;
+        private String nutritionalInfoJson;
+        private String servingSize;
+        
+        // Mushroom & Agritech
+        private String mushroomSpecies;
+        private String cultivationMethod;
+        private String strainVariety;
+        private String recommendedSubstrate;
+        private String inoculationGuidance;
+        private String kitContents;
+        private Integer cultivationCycleDays;
+        private String environmentRequirements;
+        
+        // Storage & Handling
+        private String storageInstructions;
+        private String storageTemperatureGuidance;
+        private String shelfLifeGuidance;
+        private String handlingInstructions;
+        private String safetyWarnings;
     }
 
     @Data
@@ -98,6 +171,33 @@ public class CatalogDtos {
         private List<MediaDto> media;
         private List<String> imageUrls;
         private List<OfferDto> activeOffers;
+        private ProductInformationDto productInformation;
+        private boolean isActive;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminProductDto {
+        private UUID id;
+        private String title;
+        private String slug;
+        private String description;
+        private ProductType productType;
+        private ProductStatus status;
+        private String categoryName;
+        private String categorySlug;
+        private String hsnCode;
+        private BigDecimal gstRatePercent;
+        private String metaTitle;
+        private String metaDescription;
+        private String canonicalUrl;
+        private List<AdminVariantDto> variants;
+        private List<MediaDto> media;
+        private List<String> imageUrls;
+        private List<OfferDto> activeOffers;
+        private ProductInformationDto productInformation;
         private boolean isActive;
     }
 
@@ -140,13 +240,55 @@ public class CatalogDtos {
         private String description;
         @NotNull(message = "Product type is required")
         private ProductType productType;
-        private ProductStatus status = ProductStatus.ACTIVE;
+        private ProductStatus status = ProductStatus.DRAFT;
         private String hsnCode;
         private BigDecimal gstRatePercent = BigDecimal.ZERO;
         private String metaTitle;
         private String metaDescription;
         private String canonicalUrl;
         private boolean isActive = true;
+        private CreateProductInformationRequest productInformation;
+
+        public CreateProductRequest(UUID categoryId, String title, String slug, String description, ProductType productType, ProductStatus status, String hsnCode, BigDecimal gstRatePercent, String metaTitle, String metaDescription, String canonicalUrl, boolean isActive) {
+            this(categoryId, title, slug, description, productType, status, hsnCode, gstRatePercent, metaTitle, metaDescription, canonicalUrl, isActive, null);
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateProductInformationRequest {
+        private String brandName;
+        private String countryOfOrigin;
+        private String manufacturerDetails;
+        private String packerDetails;
+        private String marketerDetails;
+        private String customerCareDetails;
+        private String netQuantity;
+        private String unitOfMeasure;
+        
+        private String fssaiLicenseNumber;
+        private String foodCategory;
+        private boolean isVegetarian = true;
+        private String ingredients;
+        private String allergenInfo;
+        private String nutritionalInfoJson;
+        private String servingSize;
+        
+        private String mushroomSpecies;
+        private String cultivationMethod;
+        private String strainVariety;
+        private String recommendedSubstrate;
+        private String inoculationGuidance;
+        private String kitContents;
+        private Integer cultivationCycleDays;
+        private String environmentRequirements;
+        
+        private String storageInstructions;
+        private String storageTemperatureGuidance;
+        private String shelfLifeGuidance;
+        private String handlingInstructions;
+        private String safetyWarnings;
     }
 
     @Data
@@ -194,7 +336,25 @@ public class CatalogDtos {
         @NotBlank(message = "Media URL is required")
         private String mediaUrl;
         private MediaType mediaType = MediaType.IMAGE;
+        private ProductMediaRole role = ProductMediaRole.GALLERY;
         private boolean isPrimary;
         private int displayOrder;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateMediaOrderRequest {
+        private List<MediaOrderItem> items;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class MediaOrderItem {
+            private UUID mediaId;
+            private int displayOrder;
+            private boolean isPrimary;
+            private ProductMediaRole role;
+        }
     }
 }

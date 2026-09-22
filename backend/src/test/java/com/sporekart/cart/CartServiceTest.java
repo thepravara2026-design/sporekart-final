@@ -139,4 +139,46 @@ public class CartServiceTest {
         int cleanedCount = cartService.cleanupExpiredCarts(0);
         assertTrue(cleanedCount >= 1, "Should clean up expired active cart");
     }
+
+    @Test
+    void testVariantStockIsolationAndSumCount() {
+        String sessionId = "session-variant-iso-" + UUID.randomUUID();
+
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        CatalogDtos.CreateVariantRequest var150gReq = new CatalogDtos.CreateVariantRequest(
+                "150g Pack", "SKU-150G-" + uniqueSuffix, new BigDecimal("150.00"),
+                new BigDecimal("180.00"), 12, true
+        );
+        ProductVariant variant150g = adminCatalogService.addVariant(testProduct.getId(), var150gReq);
+
+        CatalogDtos.CreateVariantRequest var250gReq = new CatalogDtos.CreateVariantRequest(
+                "250g Pack", "SKU-250G-" + uniqueSuffix, new BigDecimal("250.00"),
+                new BigDecimal("300.00"), 45, true
+        );
+        ProductVariant variant250g = adminCatalogService.addVariant(testProduct.getId(), var250gReq);
+
+        // 1. Add 150g x 12
+        CartResponse cart1 = cartService.addItemToCart(null, sessionId, variant150g.getId(), 12);
+        assertEquals(12, cart1.getItemCount());
+
+        // 2. Add 250g x 33 (150g x 12 must NOT bleed into 250g stock limit)
+        CartResponse cart2 = cartService.addItemToCart(null, sessionId, variant250g.getId(), 33);
+        assertEquals(45, cart2.getItemCount());
+        assertEquals(2, cart2.getItems().size());
+
+        // 3. Add 250g x 12 more up to max stock limit of 45 (total 250g = 45, total cart = 57)
+        CartResponse cart3 = cartService.addItemToCart(null, sessionId, variant250g.getId(), 12);
+        assertEquals(57, cart3.getItemCount());
+
+        // 4. Attempt adding 250g x 1 more -> should fail with stock limit exception
+        assertThrows(IllegalStateException.class, () ->
+                cartService.addItemToCart(null, sessionId, variant250g.getId(), 1)
+        );
+
+        // 5. Remove 150g variant -> 250g x 45 remains unchanged, total count becomes 45
+        CartResponse cart4 = cartService.removeItemFromCart(null, sessionId, variant150g.getId());
+        assertEquals(45, cart4.getItemCount());
+        assertEquals(1, cart4.getItems().size());
+        assertEquals(variant250g.getId(), cart4.getItems().get(0).getVariantId());
+    }
 }

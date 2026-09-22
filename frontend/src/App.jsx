@@ -86,13 +86,13 @@ export default function App() {
 
                   {/* Cart & Checkout Routes */}
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/checkout" element={<CheckoutPage user={user} setUser={setUser} />} />
 
                   {/* Training & Masterclasses Routes */}
-                  <Route path="/training" element={<TrainingPage user={user} />} />
-                  <Route path="/training/mushroom-cultivation" element={<TrainingPage user={user} />} />
-                  <Route path="/training/spawn-production" element={<TrainingPage user={user} />} />
-                  <Route path="/training/:courseSlug" element={<CourseDetailPage user={user} />} />
+                  <Route path="/training" element={<TrainingPage user={user} setUser={setUser} />} />
+                  <Route path="/training/mushroom-cultivation" element={<TrainingPage user={user} setUser={setUser} />} />
+                  <Route path="/training/spawn-production" element={<TrainingPage user={user} setUser={setUser} />} />
+                  <Route path="/training/:courseSlug" element={<CourseDetailPage user={user} setUser={setUser} />} />
 
                   {/* Company & Support Routes */}
                   <Route path="/about" element={<AboutPage />} />

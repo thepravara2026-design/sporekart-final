@@ -23,14 +23,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByStatusAndIsActiveTrue(ProductStatus status);
     List<Product> findByProductTypeAndIsActiveTrue(ProductType type);
 
-    @Query("SELECT p FROM Product p JOIN p.category c WHERE c.slug = :categorySlug AND p.isActive = true AND p.status = 'ACTIVE'")
+    @Query("SELECT p FROM Product p JOIN p.category c WHERE c.slug = :categorySlug AND p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE")
     List<Product> findByCategorySlug(@Param("categorySlug") String categorySlug);
 
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.category c " +
-           "WHERE p.isActive = true AND p.status = 'ACTIVE' " +
-           "AND (:categorySlug IS NULL OR c.slug = :categorySlug) " +
+           "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR c.slug = :categorySlug) " +
            "AND (:productType IS NULL OR p.productType = :productType) " +
-           "AND (:searchQuery IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
+           "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
     Page<Product> searchProducts(
             @Param("categorySlug") String categorySlug,
             @Param("productType") ProductType productType,

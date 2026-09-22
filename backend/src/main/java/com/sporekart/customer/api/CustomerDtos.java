@@ -25,6 +25,7 @@ public class CustomerDtos {
         @NotBlank(message = "Recipient name is required")
         private String recipientName;
         @NotBlank(message = "Phone is required")
+        @jakarta.validation.constraints.Pattern(regexp = "^[0-9+ \\-()]{8,15}$", message = "Invalid phone number format")
         private String phone;
         @NotBlank(message = "Address line 1 is required")
         private String line1;
@@ -34,6 +35,7 @@ public class CustomerDtos {
         @NotBlank(message = "State is required")
         private String state;
         @NotBlank(message = "PIN code is required")
+        @jakarta.validation.constraints.Pattern(regexp = "^[1-9][0-9]{5}$", message = "PIN code must be a valid 6-digit Indian postal code")
         private String pincode;
         private boolean isDefault;
     }

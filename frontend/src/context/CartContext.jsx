@@ -16,13 +16,27 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const normalizeCartData = (cartData) => {
+    if (!cartData) {
+      return { items: [], subtotalInr: 0, gstTotalInr: 0, estimatedTotalInr: 0, itemCount: 0, totalQuantity: 0, valid: true };
+    }
+    const items = cartData.items || [];
+    const sumQty = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    return {
+      ...cartData,
+      items,
+      itemCount: sumQty,
+      totalQuantity: sumQty,
+    };
+  };
+
   const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await cartApi.getCart();
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
       }
     } catch (err) {
       console.error('Failed to fetch cart:', err);
@@ -36,13 +50,31 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, [fetchCart]);
 
-  const addToCart = async (variantId, quantity = 1) => {
+  const addToCart = async (variantId, quantity = 1, availableStock = null) => {
     try {
       setLoading(true);
       setError(null);
+
+      // Check client-side cart stock limits if availableStock is known or present in cart
+      const existing = cart.items?.find((i) => i.variantId === variantId);
+      const currentInCart = existing ? existing.quantity : 0;
+      const stockLimit = availableStock !== null && availableStock !== undefined 
+        ? availableStock 
+        : (existing ? existing.availableStock : null);
+
+      if (stockLimit !== null && stockLimit !== undefined && (currentInCart + quantity) > stockLimit) {
+        const msg = stockLimit <= 0 
+          ? 'Item is out of stock' 
+          : currentInCart > 0 
+            ? `Only ${stockLimit} items available (${currentInCart} already in cart)` 
+            : `Cannot add more than available stock (${stockLimit})`;
+        setError(msg);
+        return { success: false, message: msg };
+      }
+
       const response = await cartApi.addItem(variantId, quantity);
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
         setIsDrawerOpen(true); // Open drawer upon adding item
         return { success: true };
       }
@@ -55,13 +87,25 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateQuantity = async (variantId, quantity) => {
+  const updateQuantity = async (variantId, quantity, availableStock = null) => {
     try {
       setLoading(true);
       setError(null);
+
+      const existing = cart.items?.find((i) => i.variantId === variantId);
+      const stockLimit = availableStock !== null && availableStock !== undefined 
+        ? availableStock 
+        : (existing ? existing.availableStock : null);
+
+      if (stockLimit !== null && stockLimit !== undefined && quantity > stockLimit) {
+        const msg = `Maximum available stock is ${stockLimit}`;
+        setError(msg);
+        return { success: false, message: msg };
+      }
+
       const response = await cartApi.updateItemQuantity(variantId, quantity);
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
         return { success: true };
       }
     } catch (err) {
@@ -79,7 +123,7 @@ export const CartProvider = ({ children }) => {
       setError(null);
       const response = await cartApi.removeItem(variantId);
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
         return { success: true };
       }
     } catch (err) {
@@ -97,7 +141,7 @@ export const CartProvider = ({ children }) => {
       setError(null);
       const response = await cartApi.clearCart();
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
         return { success: true };
       }
     } catch (err) {
@@ -112,7 +156,7 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await cartApi.mergeGuestCart();
       if (response.data && response.data.success) {
-        setCart(response.data.data);
+        setCart(normalizeCartData(response.data.data));
       }
     } catch (err) {
       console.error('Failed to merge guest cart:', err);
