@@ -41,14 +41,36 @@ public class TrainingController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/enroll")
+    @PostMapping({"/enroll", "/bookings"})
     public ResponseEntity<ApiResponse<TrainingDtos.EnrollmentResponse>> enroll(
             @RequestAttribute(value = "userId", required = false) UUID authUserId,
+            org.springframework.security.core.Authentication authentication,
             @Valid @RequestBody TrainingDtos.EnrollRequest request) {
 
-        UUID userId = authUserId != null ? authUserId : UUID.randomUUID(); // Fallback for guest enrollment registration
-        Enrollment enrollment = trainingService.enrollCustomer(userId, request.getBatchId());
+        UUID userId = authUserId != null ? authUserId : extractUserId(authentication);
+        if (userId == null) {
+            userId = UUID.randomUUID(); // Fallback for guest enrollment registration
+        }
+
+        UUID targetBatchId = request.getTargetBatchId();
+        if (targetBatchId == null) {
+            throw new IllegalArgumentException("Batch ID or Slot ID is required for enrollment");
+        }
+
+        Enrollment enrollment = trainingService.enrollCustomer(userId, targetBatchId);
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
+    }
+
+    @GetMapping("/my-bookings")
+    public ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>> getMyBookings(
+            org.springframework.security.core.Authentication authentication) {
+        UUID authUserId = extractUserId(authentication);
+        if (authUserId == null) {
+            return ResponseEntity.ok(ApiResponse.success(List.of()));
+        }
+        List<Enrollment> enrollments = trainingService.getUserEnrollments(authUserId);
+        List<TrainingDtos.EnrollmentResponse> response = enrollments.stream().map(this::mapEnrollment).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/enrollments/{enrollmentId}/confirm-payment")
@@ -109,6 +131,34 @@ public class TrainingController {
     }
 
     private TrainingDtos.CourseResponse mapCourse(Course course) {
+        List<Batch> batches = trainingService.getBatchesForCourse(course.getId());
+        List<TrainingDtos.BatchSlotResponse> slots = batches.stream()
+                .filter(b -> b.getStatus() != BatchStatus.CANCELLED)
+                .map(b -> {
+                    java.time.ZonedDateTime startTime = b.getSchedules() != null && !b.getSchedules().isEmpty()
+                            ? b.getSchedules().get(0).getScheduledAt()
+                            : b.getStartDate().atStartOfDay(java.time.ZoneId.systemDefault());
+
+                    int availableSeats = Math.max(0, b.getCapacity() - (b.getEnrolledCount() != null ? b.getEnrolledCount() : 0));
+                    boolean isAvailable = b.hasAvailableCapacity() && b.getStatus() != BatchStatus.CANCELLED;
+
+                    return TrainingDtos.BatchSlotResponse.builder()
+                            .id(b.getId())
+                            .batchCode(b.getBatchCode())
+                            .startDate(b.getStartDate())
+                            .endDate(b.getEndDate())
+                            .startTime(startTime)
+                            .capacity(b.getCapacity())
+                            .enrolledCount(b.getEnrolledCount())
+                            .availableSeats(availableSeats)
+                            .isAvailable(isAvailable)
+                            .status(b.getStatus() != null ? b.getStatus().name() : "UPCOMING")
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        String defaultSyllabus = "[\"Module 1: Substrate Preparation & Pasteurization\",\"Module 2: Cleanroom Spawning & Incubation\",\"Module 3: Fruiting Chamber Climate Control\",\"Module 4: Harvesting & Market Linkages\"]";
+
         return TrainingDtos.CourseResponse.builder()
                 .id(course.getId())
                 .title(course.getTitle())
@@ -116,7 +166,11 @@ public class TrainingController {
                 .description(course.getDescription())
                 .durationDays(course.getDurationDays())
                 .feeInr(course.getFeeInr())
+                .category(course.getCategory() != null ? course.getCategory().getName() : "Mushroom Cultivation")
+                .mode("ONLINE")
+                .syllabusJson(defaultSyllabus)
                 .isActive(course.isActive())
+                .slots(slots)
                 .build();
     }
 

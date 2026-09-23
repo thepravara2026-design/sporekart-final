@@ -148,7 +148,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/products?category=FRESH_MUSHROOM" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
+          <Link to="/products/fresh-mushrooms" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
             <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
               <Sprout className="w-6 h-6" />
             </div>
@@ -156,7 +156,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             <p className="text-xs text-slate-400 mt-1">Daily harvested Button, Oyster & Milky varieties.</p>
           </Link>
 
-          <Link to="/products?category=DRY_MUSHROOM" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
+          <Link to="/products/dry-mushrooms" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
             <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
               <Layers className="w-6 h-6 text-emerald-400" />
             </div>
@@ -164,7 +164,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             <p className="text-xs text-slate-400 mt-1">Sun-dried & dehydrated rich umami mushroom slices.</p>
           </Link>
 
-          <Link to="/products?category=SPAWN_SEED" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
+          <Link to="/products/spawn-seeds" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
             <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
               <Zap className="w-6 h-6 text-amber-400" />
             </div>
@@ -172,7 +172,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             <p className="text-xs text-slate-400 mt-1">1st gen pure wheat grain master spawn for growers.</p>
           </Link>
 
-          <Link to="/products?category=GROWING_KIT" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
+          <Link to="/products/growing-kits" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
             <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
               <Award className="w-6 h-6 text-spore-300" />
             </div>

@@ -12,6 +12,7 @@ public class OrderResponse {
 
     private UUID id;
     private UUID userId;
+    private String sessionId;
     private String orderNumber;
     private BigDecimal subtotalAmountInr;
     private BigDecimal gstTotalAmountInr;
@@ -37,7 +38,11 @@ public class OrderResponse {
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }
 
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+
     public String getOrderNumber() { return orderNumber; }
+
     public void setOrderNumber(String orderNumber) { this.orderNumber = orderNumber; }
 
     public BigDecimal getSubtotalAmountInr() { return subtotalAmountInr; }

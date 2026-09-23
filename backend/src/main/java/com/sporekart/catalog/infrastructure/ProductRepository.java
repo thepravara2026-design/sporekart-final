@@ -28,7 +28,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.category c " +
            "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
-           "AND (:categorySlug IS NULL OR :categorySlug = '' OR c.slug = :categorySlug) " +
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
            "AND (:productType IS NULL OR p.productType = :productType) " +
            "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
     Page<Product> searchProducts(

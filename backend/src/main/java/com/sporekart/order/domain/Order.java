@@ -24,6 +24,9 @@ public class Order {
     @Column(name = "user_id")
     private UUID userId;
 
+    @Column(name = "session_id")
+    private String sessionId;
+
     @Column(name = "order_number", nullable = false, unique = true)
     private String orderNumber;
 

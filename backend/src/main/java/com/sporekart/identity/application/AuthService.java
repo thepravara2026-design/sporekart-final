@@ -153,8 +153,15 @@ public class AuthService {
         // 1. Check if this exact identity provider subject is already registered
         Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(provider, providerSubject);
         if (existingIdentity.isPresent()) {
-            return userRepository.findById(existingIdentity.get().getUserId())
+            User user = userRepository.findById(existingIdentity.get().getUserId())
                     .orElseThrow(() -> new IllegalStateException("User associated with identity not found"));
+            if (reqFullName != null && !reqFullName.isBlank()) {
+                user.setFullName(reqFullName.trim());
+                if (reqFirstName != null && !reqFirstName.isBlank()) user.setFirstName(reqFirstName.trim());
+                if (reqLastName != null && !reqLastName.isBlank()) user.setLastName(reqLastName.trim());
+                user = userRepository.save(user);
+            }
+            return user;
         }
 
         // 2. Search by phone or email to link to existing account (prevents duplicate accounts)
@@ -166,10 +173,16 @@ public class AuthService {
         User user;
         if (existingUser.isPresent()) {
             user = existingUser.get();
+            if (reqFullName != null && !reqFullName.isBlank()) {
+                user.setFullName(reqFullName.trim());
+                if (reqFirstName != null && !reqFirstName.isBlank()) user.setFirstName(reqFirstName.trim());
+                if (reqLastName != null && !reqLastName.isBlank()) user.setLastName(reqLastName.trim());
+                user = userRepository.save(user);
+            }
         } else {
-            String firstName = reqFirstName != null && !reqFirstName.isBlank() ? reqFirstName : "Mushroom";
-            String lastName = reqLastName != null && !reqLastName.isBlank() ? reqLastName : "Grower";
-            String fullName = reqFullName != null && !reqFullName.isBlank() ? reqFullName : (firstName + " " + lastName);
+            String firstName = reqFirstName != null && !reqFirstName.isBlank() ? reqFirstName.trim() : "Mushroom";
+            String lastName = reqLastName != null && !reqLastName.isBlank() ? reqLastName.trim() : "Grower";
+            String fullName = reqFullName != null && !reqFullName.isBlank() ? reqFullName.trim() : (firstName + " " + lastName);
 
             user = User.builder()
                     .firstName(firstName)

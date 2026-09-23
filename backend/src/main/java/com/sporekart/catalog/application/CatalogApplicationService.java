@@ -31,11 +31,18 @@ public class CatalogApplicationService {
 
     @Transactional(readOnly = true)
     public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug) {
+        String cleanCategory = resolveCategorySlug(categorySlug);
+        ProductType cleanType = typeFilter;
+
+        if (cleanType == null && categorySlug != null) {
+            cleanType = resolveProductType(categorySlug);
+        }
+
         List<Product> products;
-        if (categorySlug != null && !categorySlug.isBlank()) {
-            products = productRepository.findByCategorySlug(categorySlug);
-        } else if (typeFilter != null) {
-            products = productRepository.findByProductTypeAndIsActiveTrue(typeFilter);
+        if (cleanCategory != null && !cleanCategory.isBlank()) {
+            products = productRepository.findByCategorySlug(cleanCategory);
+        } else if (cleanType != null) {
+            products = productRepository.findByProductTypeAndIsActiveTrue(cleanType);
         } else {
             products = productRepository.findByIsActiveTrue();
         }
@@ -53,7 +60,8 @@ public class CatalogApplicationService {
 
     @Transactional(readOnly = true)
     public Page<CatalogDtos.ProductDto> searchProducts(String categorySlug, ProductType productType, String searchQuery, int page, int size, String sortBy) {
-        String cleanCategory = (categorySlug != null && !categorySlug.trim().isEmpty()) ? categorySlug.trim() : null;
+        String cleanCategory = resolveCategorySlug(categorySlug);
+        ProductType cleanType = productType != null ? productType : resolveProductType(categorySlug);
         String cleanQuery = (searchQuery != null && !searchQuery.trim().isEmpty()) ? searchQuery.trim() : null;
 
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
@@ -64,9 +72,49 @@ public class CatalogApplicationService {
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> productPage = productRepository.searchProducts(cleanCategory, productType, cleanQuery, pageable);
+        Page<Product> productPage = productRepository.searchProducts(cleanCategory, cleanType, cleanQuery, pageable);
 
         return productPage.map(this::mapToProductDto);
+    }
+
+    private String resolveCategorySlug(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        String raw = input.trim().toLowerCase();
+        if ("mushroom-spawn".equals(raw) || "spawn-seed".equals(raw) || "spawn_seed".equals(raw)) {
+            return "spawn-seeds";
+        }
+        if ("fresh_mushroom".equals(raw) || "fresh-mushroom".equals(raw)) {
+            return "fresh-mushrooms";
+        }
+        if ("dry_mushroom".equals(raw) || "dry-mushroom".equals(raw)) {
+            return "dry-mushrooms";
+        }
+        if ("growing_kit".equals(raw) || "growing-kit".equals(raw)) {
+            return "growing-kits";
+        }
+        return input.trim();
+    }
+
+    private ProductType resolveProductType(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        String raw = input.trim().toUpperCase().replace("-", "_");
+        if ("MUSHROOM_SPAWN".equals(raw) || "SPAWN_SEEDS".equals(raw)) {
+            return ProductType.SPAWN_SEED;
+        }
+        if ("FRESH_MUSHROOMS".equals(raw)) {
+            return ProductType.FRESH_MUSHROOM;
+        }
+        if ("DRY_MUSHROOMS".equals(raw)) {
+            return ProductType.DRY_MUSHROOM;
+        }
+        if ("GROWING_KITS".equals(raw)) {
+            return ProductType.GROWING_KIT;
+        }
+        try {
+            return ProductType.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)

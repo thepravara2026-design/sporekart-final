@@ -12,6 +12,13 @@ export const getOrCreateSessionId = () => {
   return sessionId;
 };
 
+// Helper to completely clear authentication tokens & session ID on logout
+export const clearSessionAndTokens = () => {
+  localStorage.removeItem('sporekart_token');
+  localStorage.removeItem('sporekart_session_id');
+  return getOrCreateSessionId();
+};
+
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
@@ -71,7 +78,7 @@ export const customerApi = {
 export const trainingApi = {
   getCourses: (category) => api.get('/training/courses', { params: { category } }),
   getCourseBySlug: (slug) => api.get(`/training/courses/${slug}`),
-  bookSlot: (slotId) => api.post('/training/bookings', { slotId }),
+  bookSlot: (slotId) => api.post('/training/enroll', { batchId: slotId, slotId }),
   getUserBookings: () => api.get('/training/my-bookings'),
 };
 
@@ -83,7 +90,9 @@ export const orderApi = {
   getUserOrders: () => api.get('/orders'),
   getOrderById: (id) => api.get(`/orders/${id}`),
   cancelOrder: (id, reason) => api.post(`/orders/${id}/cancel`, null, { params: { reason } }),
+  downloadInvoice: (id) => api.get(`/orders/${id}/invoice`, { responseType: 'blob' }),
 };
+
 
 export const paymentApi = {
   initiatePayment: (orderId) => api.post('/payment/initiate', { orderId }),

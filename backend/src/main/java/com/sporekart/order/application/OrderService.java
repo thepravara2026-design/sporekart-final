@@ -70,6 +70,7 @@ public class OrderService {
         // 5. Build Order Entity
         Order order = Order.builder()
                 .userId(userId)
+                .sessionId(sessionId)
                 .orderNumber(orderNumber)
                 .status(OrderStatus.PENDING_PAYMENT)
                 .idempotencyKey(idempotencyKey)
@@ -80,6 +81,7 @@ public class OrderService {
                 .discountTotalAmountInr(BigDecimal.ZERO)
                 .totalAmountInr(BigDecimal.ZERO)
                 .build();
+
 
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal gstTotal = BigDecimal.ZERO;
@@ -181,13 +183,51 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> getUserOrders(UUID userId) {
-        if (userId == null) return Collections.emptyList();
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
+    public byte[] generateInvoicePdf(UUID orderId, UUID userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+
+        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
+            throw new IllegalArgumentException("Access denied: You are not authorized to access invoice for this order");
+        }
+
+        return InvoicePdfGenerator.generateInvoicePdf(order);
+    }
+
+
+    @Transactional
+    public List<OrderResponse> getUserOrders(UUID userId, String sessionId) {
+        List<Order> orders;
+        if (userId != null) {
+            // Claim unassigned guest orders from current session if present
+            if (sessionId != null && !sessionId.trim().isEmpty()) {
+                List<Order> unassignedSessionOrders = orderRepository.findBySessionIdAndUserIdIsNull(sessionId);
+                if (!unassignedSessionOrders.isEmpty()) {
+                    for (Order o : unassignedSessionOrders) {
+                        o.setUserId(userId);
+                    }
+                    orderRepository.saveAll(unassignedSessionOrders);
+                }
+            }
+            // STRICT USER ISOLATION: Fetch strictly orders created by or claimed by this specific authenticated user
+            orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        } else if (sessionId != null && !sessionId.trim().isEmpty()) {
+            // Guest mode: fetch only unassigned guest orders matching session ID
+            orders = orderRepository.findBySessionIdAndUserIdIsNullOrderByCreatedAtDesc(sessionId);
+        } else {
+            return Collections.emptyList();
+        }
+
+        return orders.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getUserOrders(UUID userId) {
+        return getUserOrders(userId, null);
+    }
+
 
     @Transactional
     public void setRazorpayOrderId(UUID orderId, String razorpayOrderId) {
@@ -335,7 +375,9 @@ public class OrderService {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setUserId(order.getUserId());
+        response.setSessionId(order.getSessionId());
         response.setOrderNumber(order.getOrderNumber());
+
         response.setSubtotalAmountInr(order.getSubtotalAmountInr());
         response.setGstTotalAmountInr(order.getGstTotalAmountInr());
         response.setDiscountTotalAmountInr(order.getDiscountTotalAmountInr());

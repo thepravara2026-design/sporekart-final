@@ -84,8 +84,12 @@ public class TrainingDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class EnrollRequest {
-        @NotNull(message = "Batch ID is required")
         private UUID batchId;
+        private UUID slotId;
+
+        public UUID getTargetBatchId() {
+            return batchId != null ? batchId : slotId;
+        }
     }
 
     @Data
@@ -130,7 +134,38 @@ public class TrainingDtos {
         private String description;
         private Integer durationDays;
         private BigDecimal feeInr;
+        private String category;
+        private String mode;
+        private String syllabusJson;
         private boolean isActive;
+        private List<BatchSlotResponse> slots;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("priceInr")
+        public BigDecimal getPriceInr() {
+            return feeInr;
+        }
+
+        @com.fasterxml.jackson.annotation.JsonProperty("durationHours")
+        public Integer getDurationHours() {
+            return durationDays != null ? durationDays * 4 : 28;
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BatchSlotResponse {
+        private UUID id;
+        private String batchCode;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private ZonedDateTime startTime;
+        private Integer capacity;
+        private Integer enrolledCount;
+        private Integer availableSeats;
+        private boolean isAvailable;
+        private String status;
     }
 
     @Data

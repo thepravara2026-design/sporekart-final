@@ -32,14 +32,17 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getMyOrders(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getMyOrders(
+            Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId) {
         UUID userId = extractUserId(authentication);
-        if (userId == null) {
+        if (userId == null && (sessionId == null || sessionId.trim().isEmpty())) {
             return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Unauthenticated user"));
         }
-        List<OrderResponse> orders = orderService.getUserOrders(userId);
+        List<OrderResponse> orders = orderService.getUserOrders(userId, sessionId);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderDetails(
@@ -49,6 +52,23 @@ public class OrderController {
         OrderResponse response = orderService.getOrderDetails(orderId, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(
+            Authentication authentication,
+            @PathVariable("id") UUID orderId) {
+        UUID userId = extractUserId(authentication);
+        OrderResponse order = orderService.getOrderDetails(orderId, userId);
+        byte[] pdfBytes = orderService.generateInvoicePdf(orderId, userId);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Sporekart_Invoice_" + order.getOrderNumber() + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+    }
+
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(

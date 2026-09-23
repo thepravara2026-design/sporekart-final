@@ -359,6 +359,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initTrainingData() {
         CourseCategory category = trainingService.createCategory("Cultivation", "cultivation", "Mushroom Cultivation Courses");
+        CourseCategory labCategory = trainingService.createCategory("Lab & Spawn Production", "lab-spawn-production", "Grain Spawn & Tissue Culture Courses");
+
         Course c1 = trainingService.createCourse(
                 category.getId(),
                 "Commercial Oyster & Milky Mushroom Cultivation Masterclass",
@@ -382,6 +384,31 @@ public class DataInitializer implements CommandLineRunner {
                 ZonedDateTime.now().plusDays(5),
                 120,
                 "https://zoom.us/j/sporekart-training-batch1"
+        );
+
+        Course c2 = trainingService.createCourse(
+                labCategory.getId(),
+                "Lab-Certified Pure Grain Spawn Production & Tissue Culture",
+                "spawn-production-tissue-culture-masterclass",
+                "Master laminar flow hood protocols, mother grain spawn preparation, strain selection, and sterile tissue cloning.",
+                10,
+                new BigDecimal("2999.00")
+        );
+
+        Batch b2 = trainingService.createBatch(
+                c2.getId(),
+                "BATCH-LAB-2026-01",
+                LocalDate.now().plusDays(8),
+                LocalDate.now().plusDays(18),
+                30
+        );
+
+        trainingService.addBatchSchedule(
+                b2.getId(),
+                "Sterile Tissue Culture & Laminar Isolation",
+                ZonedDateTime.now().plusDays(8),
+                180,
+                "https://zoom.us/j/sporekart-lab-batch1"
         );
     }
 

@@ -15,14 +15,10 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
   const { categorySlug } = useParams();
   const [searchParams] = useSearchParams();
 
-  let activeTypeFilter = searchParams.get('type') || '';
-  if (categorySlug === 'fresh-mushrooms') activeTypeFilter = 'FRESH_MUSHROOM';
-  else if (categorySlug === 'dry-mushrooms') activeTypeFilter = 'DRY_MUSHROOM';
-  else if (categorySlug === 'mushroom-spawn') activeTypeFilter = 'SPAWN_SEED';
-  else if (categorySlug === 'growing-kits') activeTypeFilter = 'GROWING_KIT';
+  const categoryParam = searchParams.get('category') || categorySlug || '';
+  const typeParam = searchParams.get('type') || '';
 
-  const categoryFilter = searchParams.get('category') || '';
-
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -33,18 +29,33 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
   const [loading, setLoading] = useState(true);
   const [selectedVariants, setSelectedVariants] = useState({});
 
+  // Load backend categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await catalogApi.getCategories();
+        if (res.data && res.data.success && Array.isArray(res.data.data)) {
+          setCategories(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
+
   // Reset page to 0 on filter / search changes
   useEffect(() => {
     setPage(0);
-  }, [activeTypeFilter, categoryFilter, searchQuery, sortBy]);
+  }, [categoryParam, typeParam, searchQuery, sortBy]);
 
   useEffect(() => {
     const fetchCatalogProducts = async () => {
       setLoading(true);
       try {
         const response = await catalogApi.searchProducts({
-          category: categoryFilter || categorySlug,
-          type: activeTypeFilter,
+          category: categoryParam,
+          type: typeParam,
           q: searchQuery,
           page,
           size: pageSize,
@@ -78,7 +89,7 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
       }
     };
     fetchCatalogProducts();
-  }, [categorySlug, activeTypeFilter, categoryFilter, searchQuery, sortBy, page, pageSize]);
+  }, [categoryParam, typeParam, searchQuery, sortBy, page, pageSize]);
 
   const canonicalUrl = categorySlug
     ? `https://sporekart.in/products/${categorySlug}`
@@ -95,7 +106,7 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
       <Breadcrumbs
         items={[
           { label: 'Products', path: '/products' },
-          ...(categorySlug ? [{ label: categorySlug.replace('-', ' '), path: `/products/${categorySlug}` }] : [])
+          ...(categoryParam ? [{ label: categoryParam.replace('-', ' '), path: `/products/${categoryParam}` }] : [])
         ]}
       />
 
@@ -147,58 +158,79 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
         </div>
       </div>
 
-      {/* Type Filter Buttons */}
+      {/* Category Filter Buttons */}
       <div className="flex flex-wrap items-center gap-2">
         <Link
           to="/products"
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
-            !categorySlug && !activeTypeFilter
+            !categoryParam && !typeParam
               ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
               : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
           }`}
         >
           All Products
         </Link>
-        <Link
-          to="/products/fresh-mushrooms"
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
-            categorySlug === 'fresh-mushrooms' || activeTypeFilter === 'FRESH_MUSHROOM'
-              ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
-              : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
-          }`}
-        >
-          Fresh Mushrooms
-        </Link>
-        <Link
-          to="/products/dry-mushrooms"
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
-            categorySlug === 'dry-mushrooms' || activeTypeFilter === 'DRY_MUSHROOM'
-              ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
-              : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
-          }`}
-        >
-          Dry Mushrooms
-        </Link>
-        <Link
-          to="/products/mushroom-spawn"
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
-            categorySlug === 'mushroom-spawn' || activeTypeFilter === 'SPAWN_SEED'
-              ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
-              : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
-          }`}
-        >
-          Grain Spawn Seeds
-        </Link>
-        <Link
-          to="/products/growing-kits"
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
-            categorySlug === 'growing-kits' || activeTypeFilter === 'GROWING_KIT'
-              ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
-              : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
-          }`}
-        >
-          DIY Growing Kits
-        </Link>
+        {categories.length > 0 ? (
+          categories.map((cat) => {
+            const isSelected = categoryParam.toLowerCase() === cat.slug.toLowerCase() || categoryParam.toLowerCase() === cat.name.toLowerCase();
+            return (
+              <Link
+                key={cat.id}
+                to={`/products/${cat.slug}`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                    : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
+                }`}
+              >
+                {cat.name}
+              </Link>
+            );
+          })
+        ) : (
+          <>
+            <Link
+              to="/products/fresh-mushrooms"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
+                categoryParam === 'fresh-mushrooms' || categoryParam === 'FRESH_MUSHROOM'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
+              }`}
+            >
+              Fresh Mushrooms
+            </Link>
+            <Link
+              to="/products/dry-mushrooms"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
+                categoryParam === 'dry-mushrooms' || categoryParam === 'DRY_MUSHROOM'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
+              }`}
+            >
+              Dry Mushrooms
+            </Link>
+            <Link
+              to="/products/spawn-seeds"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
+                categoryParam === 'spawn-seeds' || categoryParam === 'mushroom-spawn' || categoryParam === 'SPAWN_SEED'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
+              }`}
+            >
+              Grain Spawn Seeds
+            </Link>
+            <Link
+              to="/products/growing-kits"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
+                categoryParam === 'growing-kits' || categoryParam === 'GROWING_KIT'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
+              }`}
+            >
+              DIY Growing Kits
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Product Grid */}

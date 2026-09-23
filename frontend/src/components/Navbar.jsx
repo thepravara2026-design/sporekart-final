@@ -2,24 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Sprout, GraduationCap, ShoppingBag, User, X, Menu, ShieldCheck, BookOpen, Info, PhoneCall } from 'lucide-react';
-import { authApi } from '../api';
-import GoogleLoginButton from './GoogleLoginButton';
 import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
+import { clearSessionAndTokens } from '../api';
 
 export default function Navbar({ user, setUser }) {
   const { cart, openDrawer, mergeGuestCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  // Auth State
-  const [identifier, setIdentifier] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [authMessage, setAuthMessage] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,64 +38,9 @@ export default function Navbar({ user, setUser }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleRequestOtp = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    setAuthMessage('');
-    try {
-      const res = await authApi.requestOtp(identifier);
-      setOtpSent(true);
-      setAuthMessage(`OTP sent to ${identifier}. (Dev code: ${res.data.data})`);
-    } catch (err) {
-      setAuthError(err.response?.data?.message || 'Failed to send OTP');
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      const res = await authApi.verifyOtp(identifier, otpCode, fullName);
-      const authData = res.data.data;
-      localStorage.setItem('sporekart_token', authData.token);
-      setUser(authData);
-      setIsAuthModalOpen(false);
-      setOtpSent(false);
-      setOtpCode('');
-      // Merge guest cart into authenticated user cart
-      if (mergeGuestCart) {
-        mergeGuestCart();
-      }
-      navigate('/dashboard');
-    } catch (err) {
-      setAuthError(err.response?.data?.message || 'Invalid OTP');
-    }
-  };
-
-  const handleGoogleSuccess = async (googleAuthData) => {
-    setAuthError('');
-    setAuthMessage('');
-    setAuthLoading(true);
-    try {
-      const res = await authApi.loginWithGoogle(googleAuthData);
-      const authData = res.data.data;
-      localStorage.setItem('sporekart_token', authData.token);
-      setUser(authData);
-      setIsAuthModalOpen(false);
-      // Merge guest cart into authenticated user cart
-      if (mergeGuestCart) {
-        mergeGuestCart();
-      }
-      navigate('/dashboard');
-    } catch (err) {
-      setAuthError(err.response?.data?.message || 'Google Login Failed');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   const handleLogout = () => {
-    localStorage.removeItem('sporekart_token');
+    clearSessionAndTokens();
     setUser(null);
     navigate('/');
   };
