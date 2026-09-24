@@ -23,11 +23,12 @@ public class AdminAuthService {
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final NotificationService notificationService;
 
     private static final int MAX_OTP_ATTEMPTS = 3;
 
     @Transactional
-    public String requestAdminOtp(AuthDtos.OtpRequest request) {
+    public void requestAdminOtp(AuthDtos.OtpRequest request) {
         String identifier = request.getIdentifier().trim().toLowerCase();
 
         // Admin authorization check: identifier must belong to an existing user with ROLE_ADMIN
@@ -52,7 +53,12 @@ public class AdminAuthService {
                 .build();
 
         otpRepository.save(otp);
-        return otpCode;
+
+        if (identifier.contains("@")) {
+            notificationService.sendOtpEmail(identifier, otpCode);
+        } else {
+            notificationService.sendOtpSms(identifier, otpCode);
+        }
     }
 
     @Transactional

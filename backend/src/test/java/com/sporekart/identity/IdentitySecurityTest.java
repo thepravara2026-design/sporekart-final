@@ -4,7 +4,6 @@ import com.sporekart.identity.api.AuthDtos;
 import com.sporekart.identity.application.AdminAuthService;
 import com.sporekart.identity.application.AuthService;
 import com.sporekart.identity.domain.CustomerIdentity;
-import com.sporekart.identity.domain.IdentityProvider;
 import com.sporekart.identity.domain.OtpType;
 import com.sporekart.identity.domain.User;
 import com.sporekart.identity.domain.UserRole;
@@ -14,16 +13,22 @@ import com.sporekart.identity.infrastructure.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
 public class IdentitySecurityTest {
@@ -43,6 +48,9 @@ public class IdentitySecurityTest {
     @Autowired
     private CustomerIdentityRepository customerIdentityRepository;
 
+    @Autowired
+    private MockMvc mockMvc;
+
     @BeforeEach
     void setUp() {
         customerIdentityRepository.deleteAll();
@@ -50,10 +58,17 @@ public class IdentitySecurityTest {
         userRepository.deleteAll();
     }
 
+    private String fetchLatestOtpCode(String identifier, OtpType type) {
+        return otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type)
+                .orElseThrow()
+                .getOtpCode();
+    }
+
     @Test
     void testValidOtpVerification() {
         String phone = "+919876543210";
-        String otpCode = authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
 
         AuthDtos.VerifyOtpRequest verifyReq = new AuthDtos.VerifyOtpRequest(phone, otpCode, "Ramesh", "Patil", "Ramesh Patil");
         AuthDtos.AuthResponse response = authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH);
@@ -84,7 +99,8 @@ public class IdentitySecurityTest {
     @Test
     void testReusedOtpRejection() {
         String phone = "+919876543212";
-        String otpCode = authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
 
         AuthDtos.VerifyOtpRequest verifyReq = new AuthDtos.VerifyOtpRequest(phone, otpCode, "Ramesh", "Patil", "Ramesh Patil");
         authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH);
@@ -130,7 +146,8 @@ public class IdentitySecurityTest {
         String email = "grower@sporekart.in";
 
         // 1. Email OTP auth creates user & links EMAIL_OTP identity
-        String otpCode = authService.requestOtp(new AuthDtos.OtpRequest(email), OtpType.CUSTOMER_AUTH);
+        authService.requestOtp(new AuthDtos.OtpRequest(email), OtpType.CUSTOMER_AUTH);
+        String otpCode = fetchLatestOtpCode(email, OtpType.CUSTOMER_AUTH);
         AuthDtos.AuthResponse res1 = authService.verifyOtp(new AuthDtos.VerifyOtpRequest(email, otpCode, "Suresh", "Kumar", "Suresh Kumar"), OtpType.CUSTOMER_AUTH);
 
         // 2. Google OAuth auth with same email links GOOGLE identity to SAME user
@@ -168,7 +185,8 @@ public class IdentitySecurityTest {
                 .build();
         userRepository.save(admin);
 
-        String adminOtp = adminAuthService.requestAdminOtp(new AuthDtos.OtpRequest(adminEmail));
+        adminAuthService.requestAdminOtp(new AuthDtos.OtpRequest(adminEmail));
+        String adminOtp = fetchLatestOtpCode(adminEmail, OtpType.ADMIN_AUTH);
         AuthDtos.AuthResponse adminRes = adminAuthService.verifyAdminOtp(new AuthDtos.VerifyOtpRequest(adminEmail, adminOtp, null, null, null));
 
         assertNotNull(adminRes);
@@ -195,10 +213,26 @@ public class IdentitySecurityTest {
         assertEquals(phone, updatedProfile.getPhone());
 
         // 4. User A logs out & logs in using Phone OTP for the same phone number
-        String otpCode = authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
         AuthDtos.AuthResponse resPhone = authService.verifyOtp(new AuthDtos.VerifyOtpRequest(phone, otpCode, "User", "A", "User A"), OtpType.CUSTOMER_AUTH);
 
         assertEquals(resGoogle.getUserId(), resPhone.getUserId(), "Phone OTP login must recognize User A and return the same userId");
         assertEquals(email, resPhone.getEmail(), "Phone OTP response must contain pre-filled Google email");
+    }
+
+    @Test
+    void testOtpResponseDoesNotLeakCode() throws Exception {
+        String phone = "+919988776655";
+        mockMvc.perform(post("/auth/otp/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\":\"" + phone + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    assertFalse(json.matches(".*\\b\\d{6}\\b.*"), "Response body must not contain 6-digit OTP code");
+                });
+
+        assertTrue(otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(phone, OtpType.CUSTOMER_AUTH).isPresent());
     }
 }

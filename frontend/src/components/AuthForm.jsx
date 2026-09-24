@@ -28,9 +28,9 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
     }
     setLoading(true);
     try {
-      const res = await authApi.requestOtp(identifier.trim());
+      await authApi.requestOtp(identifier.trim());
       setOtpSent(true);
-      setAuthMessage(`OTP sent to ${identifier}. (Dev code: ${res.data.data})`);
+      setAuthMessage(`OTP sent to ${identifier}. Please enter the 6-digit verification code sent to your mobile or email.`);
     } catch (err) {
       setAuthError(err.response?.data?.message || 'Failed to send OTP. Please check input.');
     } finally {

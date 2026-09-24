@@ -25,6 +25,7 @@ public class AuthService {
     private final OtpRepository otpRepository;
     private final CustomerIdentityRepository customerIdentityRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final NotificationService notificationService;
 
     private static final int MAX_OTP_ATTEMPTS = 3;
     private static final int RATE_LIMIT_MAX_REQUESTS = 3;
@@ -32,7 +33,7 @@ public class AuthService {
     private static final int OTP_EXPIRATION_MINUTES = 5;
 
     @Transactional
-    public String requestOtp(AuthDtos.OtpRequest request, OtpType type) {
+    public void requestOtp(AuthDtos.OtpRequest request, OtpType type) {
         String identifier = request.getIdentifier().trim().toLowerCase();
 
         // 1. Rate Limiting Check
@@ -55,7 +56,12 @@ public class AuthService {
                 .build();
 
         otpRepository.save(otp);
-        return otpCode;
+
+        if (identifier.contains("@")) {
+            notificationService.sendOtpEmail(identifier, otpCode);
+        } else {
+            notificationService.sendOtpSms(identifier, otpCode);
+        }
     }
 
     @Transactional

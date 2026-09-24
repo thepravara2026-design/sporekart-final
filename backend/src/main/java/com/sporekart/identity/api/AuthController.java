@@ -20,8 +20,8 @@ public class AuthController {
 
     @PostMapping("/otp/request")
     public ResponseEntity<ApiResponse<String>> requestOtp(@Valid @RequestBody AuthDtos.OtpRequest request) {
-        String otpCode = authService.requestOtp(request, OtpType.CUSTOMER_AUTH);
-        return ResponseEntity.ok(ApiResponse.success(otpCode));
+        authService.requestOtp(request, OtpType.CUSTOMER_AUTH);
+        return ResponseEntity.ok(ApiResponse.success("OTP sent"));
     }
 
     @PostMapping("/otp/verify")

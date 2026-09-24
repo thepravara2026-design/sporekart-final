@@ -16,8 +16,8 @@ public class AdminAuthController {
 
     @PostMapping("/otp/request")
     public ResponseEntity<ApiResponse<String>> requestAdminOtp(@Valid @RequestBody AuthDtos.OtpRequest request) {
-        String otpCode = adminAuthService.requestAdminOtp(request);
-        return ResponseEntity.ok(ApiResponse.success(otpCode));
+        adminAuthService.requestAdminOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("OTP sent"));
     }
 
     @PostMapping("/otp/verify")
