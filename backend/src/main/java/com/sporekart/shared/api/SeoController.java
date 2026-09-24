@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/seo")
+@RequestMapping("/seo")
 @RequiredArgsConstructor
 public class SeoController {
 

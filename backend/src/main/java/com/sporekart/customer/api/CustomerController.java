@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/v1/customer", "/customer"})
+@RequestMapping("/customer")
 @RequiredArgsConstructor
 public class CustomerController {
 

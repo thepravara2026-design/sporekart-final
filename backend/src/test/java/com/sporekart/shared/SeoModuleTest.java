@@ -23,7 +23,7 @@ public class SeoModuleTest {
 
     @Test
     void testRobotsTxtEndpoint() throws Exception {
-        mockMvc.perform(get("/api/v1/seo/robots.txt"))
+        mockMvc.perform(get("/seo/robots.txt"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string(containsString("User-agent: *")))
@@ -34,7 +34,7 @@ public class SeoModuleTest {
 
     @Test
     void testSitemapXmlEndpoint() throws Exception {
-        mockMvc.perform(get("/api/v1/seo/sitemap.xml"))
+        mockMvc.perform(get("/seo/sitemap.xml"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
                 .andExpect(content().string(containsString("<urlset")))
