@@ -10,11 +10,10 @@ export default function AuthForm({
   initialAdminMode = false,
   title,
   subtitle,
-  showModeSwitch = true,
 }) {
   const { mergeGuestCart } = useCart();
-  const [isAdminMode, setIsAdminMode] = useState(initialAdminMode);
-  const [identifier, setIdentifier] = useState('admin@sporekart.in');
+  const [isAdminMode] = useState(initialAdminMode);
+  const [identifier, setIdentifier] = useState(initialAdminMode ? 'admin@sporekart.in' : '');
   const [otpCode, setOtpCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -25,17 +24,6 @@ export default function AuthForm({
   // Google Auth Custom Profile Name State
   const [pendingGoogleAuth, setPendingGoogleAuth] = useState(null);
   const [googleProfileName, setGoogleProfileName] = useState('');
-
-  const switchMode = (adminMode) => {
-    setIsAdminMode(adminMode);
-    setAuthError('');
-    setAuthMessage('');
-    setOtpSent(false);
-    setOtpCode('');
-    if (adminMode && (!identifier || identifier.trim() === '')) {
-      setIdentifier('admin@sporekart.in');
-    }
-  };
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
@@ -130,7 +118,7 @@ export default function AuthForm({
     }
   };
 
-  // Skip step 1 and jump directly to OTP entry for dev convenience
+  // Skip step 1 and jump directly to OTP entry for dev convenience in Admin mode
   const handleJumpToOtp = () => {
     setAuthError('');
     setAuthMessage('Enter 6-digit administrative verification code (Dev Mock: 123456).');
@@ -314,37 +302,6 @@ export default function AuthForm({
 
   return (
     <div className="space-y-4 max-w-md mx-auto">
-      {/* Login Mode Toggle Tabs (Customer vs Admin) */}
-      {showModeSwitch && (
-        <div className="grid grid-cols-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl text-xs font-bold text-center">
-          <button
-            type="button"
-            onClick={() => switchMode(false)}
-            className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              !isAdminMode
-                ? 'bg-spore-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>Customer / Trainee</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => switchMode(true)}
-            className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              isAdminMode
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-950/50 font-extrabold'
-                : 'text-amber-400/80 hover:text-amber-300'
-            }`}
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Admin Portal</span>
-          </button>
-        </div>
-      )}
-
       {/* Header Banner */}
       <div className="text-center space-y-1">
         <div
@@ -526,19 +483,6 @@ export default function AuthForm({
             ← Change mobile number / email
           </button>
         </form>
-      )}
-
-      {/* Footer link for mode toggling if switch is hidden */}
-      {!showModeSwitch && (
-        <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => switchMode(!isAdminMode)}
-            className="text-xs text-amber-400/90 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors"
-          >
-            {isAdminMode ? 'Switch to Customer Login ←' : 'Switch to Admin Control Portal 🛡️ →'}
-          </button>
-        </div>
       )}
     </div>
   );
