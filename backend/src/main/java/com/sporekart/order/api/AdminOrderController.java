@@ -40,7 +40,7 @@ public class AdminOrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable("id") UUID id) {
-        OrderResponse order = orderService.getOrderDetails(id, null);
+        OrderResponse order = orderService.getOrderById(id);
         return ResponseEntity.ok(ApiResponse.success(order));
     }
 

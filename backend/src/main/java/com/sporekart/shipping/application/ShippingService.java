@@ -40,7 +40,7 @@ public class ShippingService {
             return existing.get();
         }
 
-        OrderResponse order = orderService.getOrderDetails(orderId, null);
+        OrderResponse order = orderService.getOrderById(orderId);
         OrderAddressSnapshot addr = order.getShippingAddress();
 
         List<ShippingProvider.ShipmentItemCommand> itemCommands = order.getItems().stream()

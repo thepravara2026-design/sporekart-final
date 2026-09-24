@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                 .requestMatchers("/cart/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
-                .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/number/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice", "/orders/number/*").permitAll()
                 .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook", "/payment/verify-enrollment").permitAll()
                 .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                 .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()

@@ -218,7 +218,7 @@ public class PaymentService {
 
     @Transactional
     public PaymentGateway.RefundResult refundPayment(UUID orderId, BigDecimal amountInr, String reason) {
-        OrderResponse order = orderService.getOrderDetails(orderId, null);
+        OrderResponse order = orderService.getOrderById(orderId);
 
         if (order.getRazorpayPaymentId() == null) {
             throw new IllegalStateException("Cannot refund order without payment ID");

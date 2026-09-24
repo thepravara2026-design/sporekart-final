@@ -161,7 +161,7 @@ public class PaymentModuleTest {
         Payment payment = paymentRepository.findByRazorpayOrderId(initResp.getRazorpayOrderId()).orElseThrow();
         assertEquals(PaymentStatus.CAPTURED, payment.getStatus());
 
-        OrderResponse updatedOrder = orderService.getOrderDetails(testOrder.getId(), null);
+        OrderResponse updatedOrder = orderService.getOrderById(testOrder.getId());
         assertEquals(OrderStatus.PAID, updatedOrder.getStatus());
     }
 
@@ -188,7 +188,7 @@ public class PaymentModuleTest {
         String res1 = paymentService.processWebhook(rawWebhookPayload, "mock_webhook_signature");
         assertTrue(res1.contains("processed successfully"));
 
-        OrderResponse order1 = orderService.getOrderDetails(testOrder.getId(), null);
+        OrderResponse order1 = orderService.getOrderById(testOrder.getId());
         assertEquals(OrderStatus.PAID, order1.getStatus());
 
         // 2nd Duplicate Webhook Execution (Idempotency Check)
@@ -212,7 +212,7 @@ public class PaymentModuleTest {
         assertNotNull(refundResult);
         assertNotNull(refundResult.getRefundId());
 
-        OrderResponse refundedOrder = orderService.getOrderDetails(testOrder.getId(), null);
+        OrderResponse refundedOrder = orderService.getOrderById(testOrder.getId());
         assertEquals(OrderStatus.REFUNDED, refundedOrder.getStatus());
     }
 }

@@ -194,28 +194,46 @@ public class OrderService {
         return mapToResponse(order);
     }
 
+    private void validateOrderAccess(Order order, UUID userId, String sessionId) {
+        if (order.getUserId() != null) {
+            if (userId == null || !userId.equals(order.getUserId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not authorized to access this order");
+            }
+        } else {
+            if (sessionId == null || sessionId.trim().isEmpty() || !sessionId.equals(order.getSessionId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not authorized to access this guest order");
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
-    public OrderResponse getOrderDetails(UUID orderId, UUID userId) {
+    public OrderResponse getOrderDetails(UUID orderId, UUID userId, String sessionId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
-            throw new IllegalArgumentException("Access denied: You are not authorized to view this order");
-        }
+        validateOrderAccess(order, userId, sessionId);
 
         return mapToResponse(order);
     }
 
     @Transactional(readOnly = true)
-    public byte[] generateInvoicePdf(UUID orderId, UUID userId) {
+    public OrderResponse getOrderDetails(UUID orderId, UUID userId) {
+        return getOrderDetails(orderId, userId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateInvoicePdf(UUID orderId, UUID userId, String sessionId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        if (userId != null && order.getUserId() != null && !userId.equals(order.getUserId())) {
-            throw new IllegalArgumentException("Access denied: You are not authorized to access invoice for this order");
-        }
+        validateOrderAccess(order, userId, sessionId);
 
         return InvoicePdfGenerator.generateInvoicePdf(order);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateInvoicePdf(UUID orderId, UUID userId) {
+        return generateInvoicePdf(orderId, userId, null);
     }
 
 

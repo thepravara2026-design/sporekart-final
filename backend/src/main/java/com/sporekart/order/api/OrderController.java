@@ -47,19 +47,21 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderDetails(
             Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
             @PathVariable("id") UUID orderId) {
         UUID userId = extractUserId(authentication);
-        OrderResponse response = orderService.getOrderDetails(orderId, userId);
+        OrderResponse response = orderService.getOrderDetails(orderId, userId, sessionId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{id}/invoice")
     public ResponseEntity<byte[]> downloadInvoice(
             Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
             @PathVariable("id") UUID orderId) {
         UUID userId = extractUserId(authentication);
-        OrderResponse order = orderService.getOrderDetails(orderId, userId);
-        byte[] pdfBytes = orderService.generateInvoicePdf(orderId, userId);
+        OrderResponse order = orderService.getOrderDetails(orderId, userId, sessionId);
+        byte[] pdfBytes = orderService.generateInvoicePdf(orderId, userId, sessionId);
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);

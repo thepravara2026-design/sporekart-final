@@ -141,7 +141,7 @@ public class ShippingModuleTest {
         assertNotNull(shipment.getProviderShipmentId());
         assertEquals(ShipmentStatus.PICKUP_SCHEDULED, shipment.getStatus());
 
-        OrderResponse updatedOrder = orderService.getOrderDetails(testOrder.getId(), null);
+        OrderResponse updatedOrder = orderService.getOrderById(testOrder.getId());
         assertEquals(OrderStatus.SHIPPED, updatedOrder.getStatus());
     }
 
@@ -171,7 +171,7 @@ public class ShippingModuleTest {
         assertEquals(ShipmentStatus.DELIVERED, updatedShipment.getStatus());
         assertNotNull(updatedShipment.getDeliveredAt());
 
-        OrderResponse updatedOrder = orderService.getOrderDetails(testOrder.getId(), null);
+        OrderResponse updatedOrder = orderService.getOrderById(testOrder.getId());
         assertEquals(OrderStatus.DELIVERED, updatedOrder.getStatus());
     }
 
