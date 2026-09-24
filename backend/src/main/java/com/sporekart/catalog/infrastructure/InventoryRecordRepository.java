@@ -14,6 +14,7 @@ import java.util.UUID;
 @Repository
 public interface InventoryRecordRepository extends JpaRepository<InventoryRecord, UUID> {
     Optional<InventoryRecord> findByVariantId(UUID variantId);
+    java.util.List<InventoryRecord> findByVariantIdIn(java.util.Collection<UUID> variantIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM InventoryRecord i WHERE i.variantId = :variantId")

@@ -181,4 +181,23 @@ public class CartServiceTest {
         assertEquals(1, cart4.getItems().size());
         assertEquals(variant250g.getId(), cart4.getItems().get(0).getVariantId());
     }
+
+    @Test
+    void testBatchLoadMultiItemCart() {
+        String sessionId = "session-batch-" + UUID.randomUUID();
+
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        CatalogDtos.CreateVariantRequest var2 = new CatalogDtos.CreateVariantRequest(
+                "300g Pack", "SKU-300G-" + uniqueSuffix, new BigDecimal("200.00"),
+                new BigDecimal("220.00"), 10, true
+        );
+        ProductVariant variant2 = adminCatalogService.addVariant(testProduct.getId(), var2);
+
+        cartService.addItemToCart(null, sessionId, testVariant.getId(), 2);
+        CartResponse cart = cartService.addItemToCart(null, sessionId, variant2.getId(), 3);
+
+        assertEquals(2, cart.getItems().size());
+        assertEquals(5, cart.getItemCount());
+        assertTrue(cart.isValid());
+    }
 }

@@ -289,13 +289,51 @@ public class CartService {
 
         List<CartItemResponse> itemResponses = new ArrayList<>();
 
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            response.setItems(itemResponses);
+            response.setSubtotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            response.setGstTotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            response.setEstimatedTotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            response.setItemCount(0);
+            response.setValid(false);
+            return response;
+        }
+
+        // Batch-load variants
+        List<UUID> variantIds = cart.getItems().stream().map(CartItem::getVariantId).distinct().toList();
+        Map<UUID, ProductVariant> variantMap = variantRepository.findAllById(variantIds).stream()
+                .collect(java.util.stream.Collectors.toMap(ProductVariant::getId, v -> v));
+
+        // Batch-load product media
+        List<UUID> productIds = variantMap.values().stream()
+                .map(v -> v.getProduct() != null ? v.getProduct().getId() : null)
+                .filter(Objects::nonNull)
+                .distinct().toList();
+
+        Map<UUID, String> primaryImageMap = new HashMap<>();
+        if (!productIds.isEmpty()) {
+            List<ProductMedia> mediaList = productMediaRepository.findByProductIdInOrderByDisplayOrderAsc(productIds);
+            for (ProductMedia m : mediaList) {
+                if (m.getProduct() != null) {
+                    primaryImageMap.putIfAbsent(m.getProduct().getId(), m.getMediaUrl());
+                }
+            }
+        }
+
+        // Batch-load inventory records
+        Map<UUID, Integer> stockMap = new HashMap<>();
+        if (!variantIds.isEmpty()) {
+            inventoryRecordRepository.findByVariantIdIn(variantIds)
+                    .forEach(rec -> stockMap.put(rec.getVariantId(), rec.getAvailableQuantity()));
+        }
+
         for (CartItem item : cart.getItems()) {
             CartItemResponse itemResp = new CartItemResponse();
             itemResp.setId(item.getId());
             itemResp.setVariantId(item.getVariantId());
             itemResp.setQuantity(item.getQuantity());
 
-            ProductVariant variant = variantRepository.findById(item.getVariantId()).orElse(null);
+            ProductVariant variant = variantMap.get(item.getVariantId());
             if (variant != null) {
                 Product product = variant.getProduct();
                 itemResp.setProductId(product.getId());
@@ -311,7 +349,7 @@ public class CartService {
                 BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                 itemResp.setLineTotalInr(lineTotal);
 
-                int available = getAvailableStock(variant.getId(), variant.getStockQuantity());
+                int available = stockMap.getOrDefault(variant.getId(), variant.getStockQuantity());
                 itemResp.setAvailableStock(available);
                 itemResp.setInStock(available >= item.getQuantity());
 
@@ -322,10 +360,9 @@ public class CartService {
                 subtotal = subtotal.add(priceResult.getNetPriceInr().multiply(BigDecimal.valueOf(item.getQuantity())));
                 gstTotal = gstTotal.add(priceResult.getGstAmountInr().multiply(BigDecimal.valueOf(item.getQuantity())));
 
-                // Find primary image URL
-                List<ProductMedia> mediaList = productMediaRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
-                if (!mediaList.isEmpty()) {
-                    itemResp.setImageUrl(mediaList.get(0).getMediaUrl());
+                String imageUrl = primaryImageMap.get(product.getId());
+                if (imageUrl != null) {
+                    itemResp.setImageUrl(imageUrl);
                 }
 
             } else {
