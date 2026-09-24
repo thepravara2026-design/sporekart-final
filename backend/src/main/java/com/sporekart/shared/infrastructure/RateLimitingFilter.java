@@ -4,14 +4,24 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+/**
+ * NOTE: This in-memory rate-limiting filter is designed for single-instance deployments.
+ * If/when SporeKart is horizontally scaled across multiple backend instances, this state
+ * must be moved to a shared distributed store (such as Redis or database-backed rate limiting).
+ */
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
@@ -19,8 +29,16 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private static final int MAX_AUTH_REQUESTS_PER_MINUTE = 15;
 
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
+    private final Set<String> trustedProxies;
 
-    private static class RequestCounter {
+    public RateLimitingFilter(
+            @Value("${app.rate-limiting.trusted-proxies:}") List<String> trustedProxies) {
+        this.trustedProxies = trustedProxies != null ? trustedProxies.stream()
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet()) : Set.of();
+    }
+
+    static class RequestCounter {
         long resetTime;
         int count;
 
@@ -38,7 +56,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         long now = System.currentTimeMillis();
 
-        boolean isAuthEndpoint = uri.startsWith("/api/v1/auth") || uri.startsWith("/admin/auth");
+        boolean isAuthEndpoint = uri.startsWith("/auth") || uri.startsWith("/api/v1/auth") || uri.startsWith("/admin/auth");
         int maxAllowed = isAuthEndpoint ? MAX_AUTH_REQUESTS_PER_MINUTE : MAX_REQUESTS_PER_MINUTE;
 
         String key = clientIp + ":" + (isAuthEndpoint ? "AUTH" : "GENERAL");
@@ -62,11 +80,20 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    @Scheduled(fixedRate = 60000)
+    public void evictExpiredCounters() {
+        long now = System.currentTimeMillis();
+        requestCounts.entrySet().removeIf(entry -> now > entry.getValue().resetTime);
+    }
+
     private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader != null && !xfHeader.isBlank()) {
-            return xfHeader.split(",")[0].trim();
+        String remoteAddr = request.getRemoteAddr();
+        if (remoteAddr != null && trustedProxies.contains(remoteAddr)) {
+            String xfHeader = request.getHeader("X-Forwarded-For");
+            if (xfHeader != null && !xfHeader.isBlank()) {
+                return xfHeader.split(",")[0].trim();
+            }
         }
-        return request.getRemoteAddr();
+        return remoteAddr;
     }
 }
