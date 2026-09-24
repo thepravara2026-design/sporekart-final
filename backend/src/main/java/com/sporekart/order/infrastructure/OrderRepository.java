@@ -17,6 +17,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     Optional<Order> findByOrderNumber(String orderNumber);
 
+    boolean existsByOrderNumber(String orderNumber);
+
     Optional<Order> findByRazorpayOrderId(String razorpayOrderId);
 
     Optional<Order> findByIdempotencyKey(String idempotencyKey);

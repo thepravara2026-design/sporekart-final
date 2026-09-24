@@ -32,6 +32,9 @@ class OrderAccessSecurityTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    private com.sporekart.order.application.OrderService orderService;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     private UUID userAId;
@@ -122,5 +125,16 @@ class OrderAccessSecurityTest {
         mockMvc.perform(get("/orders/" + guestOrder.getId() + "/invoice")
                         .header("X-Session-ID", guestSessionId))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCollisionSafeOrderNumberGeneration() {
+        String existingNumber = userAOrder.getOrderNumber();
+        org.junit.jupiter.api.Assertions.assertTrue(orderRepository.existsByOrderNumber(existingNumber));
+
+        String newNumber = orderService.generateOrderNumber();
+        org.junit.jupiter.api.Assertions.assertNotNull(newNumber);
+        org.junit.jupiter.api.Assertions.assertNotEquals(existingNumber, newNumber, "Generated order number must not collide with existing order numbers");
+        org.junit.jupiter.api.Assertions.assertFalse(orderRepository.existsByOrderNumber(newNumber));
     }
 }

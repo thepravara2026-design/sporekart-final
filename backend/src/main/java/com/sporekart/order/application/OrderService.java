@@ -407,10 +407,17 @@ public class OrderService {
         throw new IllegalArgumentException("Shipping address is required for checkout");
     }
 
-    private String generateOrderNumber() {
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
+    public String generateOrderNumber() {
         String datePrefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String randomDigits = String.format("%04d", new Random().nextInt(10000));
-        return "SK-" + datePrefix + "-" + randomDigits;
+        for (int attempt = 0; attempt < 10; attempt++) {
+            String candidate = "SK-" + datePrefix + "-" + String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+            if (!orderRepository.existsByOrderNumber(candidate)) {
+                return candidate;
+            }
+        }
+        return "SK-" + datePrefix + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
     }
 
     public OrderResponse mapToResponse(Order order) {
