@@ -421,14 +421,21 @@ export default function DashboardPage({ user }) {
 
                     <div className="flex flex-wrap items-center gap-3">
                       {/* PDF Invoice Download */}
-                      <button
-                        onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
-                        disabled={actionLoading[order.id]}
-                        className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 transition-all button-press"
-                      >
-                        <FileText className="w-4 h-4 text-spore-400" />
-                        <span>{actionLoading[order.id] ? 'Generating PDF...' : 'Download GST Invoice (PDF)'}</span>
-                      </button>
+                      {order.status === 'DELIVERED' ? (
+                        <button
+                          onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
+                          disabled={actionLoading[order.id]}
+                          className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 transition-all button-press"
+                        >
+                          <FileText className="w-4 h-4 text-spore-400" />
+                          <span>{actionLoading[order.id] ? 'Generating PDF...' : 'Download GST Invoice (PDF)'}</span>
+                        </button>
+                      ) : (
+                        <div className="px-3 py-1.5 bg-slate-950/80 border border-slate-800/80 rounded-xl text-xs text-slate-400 flex items-center gap-1.5" title="GST Tax Invoice will be generated automatically once your order is DELIVERED">
+                          <FileText className="w-3.5 h-3.5 text-slate-500" />
+                          <span>GST Bill (Available on Delivery)</span>
+                        </div>
+                      )}
 
                       {/* Cancel Order Action */}
                       <button
@@ -566,14 +573,18 @@ export default function DashboardPage({ user }) {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
-                      disabled={actionLoading[order.id]}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-spore-400" />
-                      <span>{actionLoading[order.id] ? 'Generating...' : 'GST Invoice PDF'}</span>
-                    </button>
+                    {order.status === 'DELIVERED' ? (
+                      <button
+                        onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
+                        disabled={actionLoading[order.id]}
+                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-spore-400" />
+                        <span>{actionLoading[order.id] ? 'Generating...' : 'GST Invoice PDF'}</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">GST Invoice available upon delivery</span>
+                    )}
                   </div>
                 </div>
 
@@ -630,7 +641,7 @@ export default function DashboardPage({ user }) {
                     <h3 className="font-bold text-white text-lg font-display">{booking.courseTitle}</h3>
                     <p className="text-xs text-slate-400 flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-spore-400" />
-                      Batch Date: {new Date(booking.startTime).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} at {new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      Batch Date: {booking.startDate ? new Date(booking.startDate).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.startTime ? new Date(booking.startTime).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.enrolledAt ? new Date(booking.enrolledAt).toLocaleDateString() : 'Upcoming Batch'))}
                     </p>
                     <p className="text-xs text-slate-300 flex items-center gap-1.5 pt-1">
                       <ExternalLink className="w-3.5 h-3.5 text-spore-400" />
@@ -640,7 +651,7 @@ export default function DashboardPage({ user }) {
 
                   <div className="text-right space-y-2 flex-shrink-0">
                     <span className="text-xs text-slate-400 block font-medium">Workshop Fee Paid</span>
-                    <span className="text-2xl font-bold text-amber-400 font-display">₹{booking.amountPaidInr}</span>
+                    <span className="text-2xl font-bold text-amber-400 font-display">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
                     <button
                       onClick={() => {
                         setTicketForm({

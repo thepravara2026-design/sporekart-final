@@ -234,6 +234,10 @@ public class OrderService {
 
         validateOrderAccess(order, userId, sessionId);
 
+        if (order.getStatus() != OrderStatus.DELIVERED) {
+            throw new IllegalStateException("GST tax invoice is available only after order is DELIVERED. Current status: " + order.getStatus());
+        }
+
         return InvoicePdfGenerator.generateInvoicePdf(order);
     }
 

@@ -142,14 +142,21 @@ export default function OrderConfirmationPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={handleDownloadInvoice}
-              disabled={downloadingInvoice}
-              className="w-full sm:w-auto flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
-            >
-              {downloadingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-spore-400" /> : <FileText className="w-4 h-4 text-spore-400" />}
-              <span>Download Tax Invoice</span>
-            </button>
+            {order.status === 'DELIVERED' ? (
+              <button
+                onClick={handleDownloadInvoice}
+                disabled={downloadingInvoice}
+                className="w-full sm:w-auto flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
+              >
+                {downloadingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-spore-400" /> : <FileText className="w-4 h-4 text-spore-400" />}
+                <span>Download Tax Invoice</span>
+              </button>
+            ) : (
+              <div className="w-full sm:w-auto flex-1 bg-slate-900/80 border border-slate-800 text-slate-300 font-medium py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2">
+                <FileText className="w-4 h-4 text-spore-400" />
+                <span>GST Tax Invoice will be available upon delivery</span>
+              </div>
+            )}
 
             <Link
               to="/products"

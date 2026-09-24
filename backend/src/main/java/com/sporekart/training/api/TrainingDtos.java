@@ -208,8 +208,13 @@ public class TrainingDtos {
         private String courseTitle;
         private UUID batchId;
         private String batchCode;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private ZonedDateTime startTime;
+        private String locationOrLink;
         private EnrollmentStatus status;
         private BigDecimal feePaidInr;
+        private BigDecimal amountPaidInr;
         private String paymentReference;
         private ZonedDateTime enrolledAt;
     }

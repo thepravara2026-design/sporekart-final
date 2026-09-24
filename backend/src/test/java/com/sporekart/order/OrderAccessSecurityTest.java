@@ -57,7 +57,7 @@ class OrderAccessSecurityTest {
         userAOrder = Order.builder()
                 .userId(userAId)
                 .orderNumber("SK-TEST-USERA")
-                .status(OrderStatus.PAID)
+                .status(OrderStatus.DELIVERED)
                 .subtotalAmountInr(new BigDecimal("100.00"))
                 .gstTotalAmountInr(new BigDecimal("18.00"))
                 .shippingFeeInr(BigDecimal.ZERO)
@@ -70,7 +70,7 @@ class OrderAccessSecurityTest {
         guestOrder = Order.builder()
                 .sessionId(guestSessionId)
                 .orderNumber("SK-TEST-GUEST")
-                .status(OrderStatus.PAID)
+                .status(OrderStatus.DELIVERED)
                 .subtotalAmountInr(new BigDecimal("200.00"))
                 .gstTotalAmountInr(new BigDecimal("36.00"))
                 .shippingFeeInr(BigDecimal.ZERO)
@@ -90,6 +90,26 @@ class OrderAccessSecurityTest {
         mockMvc.perform(get("/orders/" + userAOrder.getId() + "/invoice")
                         .header("Authorization", "Bearer " + tokenUserA))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testInvoiceDownloadBlockedWhenNotDelivered() throws Exception {
+        Order pendingOrder = Order.builder()
+                .userId(userAId)
+                .orderNumber("SK-TEST-PENDING")
+                .status(OrderStatus.PAID)
+                .subtotalAmountInr(new BigDecimal("100.00"))
+                .gstTotalAmountInr(new BigDecimal("18.00"))
+                .shippingFeeInr(BigDecimal.ZERO)
+                .discountTotalAmountInr(BigDecimal.ZERO)
+                .totalAmountInr(new BigDecimal("118.00"))
+                .shippingAddressJson("{\"recipientName\":\"User A\",\"phone\":\"9999999999\",\"line1\":\"Line 1\",\"city\":\"City\",\"state\":\"State\",\"pincode\":\"560001\"}")
+                .build();
+        pendingOrder = orderRepository.save(pendingOrder);
+
+        mockMvc.perform(get("/orders/" + pendingOrder.getId() + "/invoice")
+                        .header("Authorization", "Bearer " + tokenUserA))
+                .andExpect(status().isConflict());
     }
 
     @Test

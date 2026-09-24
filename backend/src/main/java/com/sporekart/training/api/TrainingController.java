@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -207,15 +208,29 @@ public class TrainingController {
     }
 
     private TrainingDtos.EnrollmentResponse mapEnrollment(Enrollment enrollment) {
+        Batch batch = enrollment.getBatch();
+        ZonedDateTime firstScheduleTime = null;
+        String meetingLink = null;
+        if (batch != null && batch.getSchedules() != null && !batch.getSchedules().isEmpty()) {
+            BatchSchedule firstSched = batch.getSchedules().get(0);
+            firstScheduleTime = firstSched.getScheduledAt();
+            meetingLink = firstSched.getMeetingLink();
+        }
+
         return TrainingDtos.EnrollmentResponse.builder()
                 .id(enrollment.getId())
                 .userId(enrollment.getUserId())
-                .courseId(enrollment.getCourse().getId())
-                .courseTitle(enrollment.getCourse().getTitle())
-                .batchId(enrollment.getBatch().getId())
-                .batchCode(enrollment.getBatch().getBatchCode())
+                .courseId(enrollment.getCourse() != null ? enrollment.getCourse().getId() : null)
+                .courseTitle(enrollment.getCourse() != null ? enrollment.getCourse().getTitle() : "Masterclass")
+                .batchId(batch != null ? batch.getId() : null)
+                .batchCode(batch != null ? batch.getBatchCode() : null)
+                .startDate(batch != null ? batch.getStartDate() : null)
+                .endDate(batch != null ? batch.getEndDate() : null)
+                .startTime(firstScheduleTime)
+                .locationOrLink(meetingLink)
                 .status(enrollment.getStatus())
                 .feePaidInr(enrollment.getFeePaidInr())
+                .amountPaidInr(enrollment.getFeePaidInr())
                 .paymentReference(enrollment.getPaymentReference())
                 .enrolledAt(enrollment.getEnrolledAt())
                 .build();
