@@ -27,13 +27,31 @@ public class AuthController {
     @PostMapping("/otp/verify")
     public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyOtp(@Valid @RequestBody AuthDtos.VerifyOtpRequest request) {
         AuthDtos.AuthResponse response = authService.verifyOtp(request, OtpType.CUSTOMER_AUTH);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(response));
     }
 
     @PostMapping("/oauth/google")
     public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> loginWithGoogle(@Valid @RequestBody AuthDtos.GoogleOAuthRequest request) {
         AuthDtos.AuthResponse response = authService.loginWithGoogle(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(response));
     }
 
     @GetMapping("/me")

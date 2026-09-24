@@ -23,6 +23,15 @@ public class AdminAuthController {
     @PostMapping("/otp/verify")
     public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyAdminOtp(@Valid @RequestBody AuthDtos.VerifyOtpRequest request) {
         AuthDtos.AuthResponse response = adminAuthService.verifyAdminOtp(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(response));
     }
 }

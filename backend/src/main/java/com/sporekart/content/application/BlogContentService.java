@@ -210,12 +210,12 @@ public class BlogContentService {
     // --- Public Content Discovery ---
     @Transactional(readOnly = true)
     public Page<BlogPost> getPublishedPosts(String categorySlug, String tagSlug, String query, Pageable pageable) {
-        return postRepository.findPublishedPosts(categorySlug, tagSlug, query, ZonedDateTime.now(), pageable);
+        return postRepository.findPublishedPosts(categorySlug, tagSlug, query, ZonedDateTime.now().plusSeconds(5), pageable);
     }
 
     @Transactional(readOnly = true)
     public Optional<BlogPost> getPublishedPostBySlug(String slug) {
-        return postRepository.findPublishedBySlug(slug, ZonedDateTime.now());
+        return postRepository.findPublishedBySlug(slug, ZonedDateTime.now().plusSeconds(5));
     }
 
     // --- Admin Content Discovery ---

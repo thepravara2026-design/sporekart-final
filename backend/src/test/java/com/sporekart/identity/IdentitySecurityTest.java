@@ -245,4 +245,33 @@ public class IdentitySecurityTest {
             assertTrue(code.matches("^\\d{6}$"), "OTP code must be exactly 6 digits, zero-padded: " + code);
         }
     }
+
+    @Test
+    void testHttpOnlyCookieAndBearerTokenExtraction() throws Exception {
+        String phone = "+919988775511";
+        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
+
+        var mvcResult = mockMvc.perform(post("/auth/otp/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identifier\":\"" + phone + "\",\"otpCode\":\"" + otpCode + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String setCookie = mvcResult.getResponse().getHeader("Set-Cookie");
+        assertNotNull(setCookie, "Set-Cookie header must be present on verify OTP response");
+        assertTrue(setCookie.contains("sporekart_token="), "Set-Cookie header must contain sporekart_token");
+        assertTrue(setCookie.contains("HttpOnly"), "Cookie must be marked HttpOnly");
+
+        // Extract cookie value
+        String cookieVal = setCookie.substring(setCookie.indexOf("sporekart_token=") + 16);
+        if (cookieVal.contains(";")) {
+            cookieVal = cookieVal.substring(0, cookieVal.indexOf(";"));
+        }
+
+        // Test authenticating /auth/me using Cookie fallback in JwtAuthenticationFilter
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/auth/me")
+                        .cookie(new jakarta.servlet.http.Cookie("sporekart_token", cookieVal)))
+                .andExpect(status().isOk());
+    }
 }

@@ -21,6 +21,7 @@ export const clearSessionAndTokens = () => {
 
 const api = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
