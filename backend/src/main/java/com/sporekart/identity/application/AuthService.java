@@ -10,16 +10,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
@@ -43,7 +45,7 @@ public class AuthService {
             throw new IllegalArgumentException("Rate limit exceeded. Maximum 3 OTP requests allowed every 10 minutes.");
         }
 
-        String otpCode = String.format("%06d", new Random().nextInt(900000) + 100000);
+        String otpCode = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
 
         Otp otp = Otp.builder()
                 .identifier(identifier)

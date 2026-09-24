@@ -232,7 +232,17 @@ public class IdentitySecurityTest {
                     String json = result.getResponse().getContentAsString();
                     assertFalse(json.matches(".*\\b\\d{6}\\b.*"), "Response body must not contain 6-digit OTP code");
                 });
-
         assertTrue(otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(phone, OtpType.CUSTOMER_AUTH).isPresent());
+    }
+
+    @Test
+    void testOtpCodeIsAlwaysSixDigitsZeroPadded() {
+        String phone = "+919988776600";
+        for (int i = 0; i < 5; i++) {
+            authService.requestOtp(new AuthDtos.OtpRequest(phone + i), OtpType.CUSTOMER_AUTH);
+            String code = fetchLatestOtpCode(phone + i, OtpType.CUSTOMER_AUTH);
+            assertNotNull(code);
+            assertTrue(code.matches("^\\d{6}$"), "OTP code must be exactly 6 digits, zero-padded: " + code);
+        }
     }
 }

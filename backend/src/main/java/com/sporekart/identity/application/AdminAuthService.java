@@ -12,13 +12,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class AdminAuthService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
@@ -40,7 +42,7 @@ public class AdminAuthService {
             throw new IllegalArgumentException("Access Denied: Identifier is not authorized for Admin access.");
         }
 
-        String otpCode = String.format("%06d", new Random().nextInt(900000) + 100000);
+        String otpCode = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
 
         Otp otp = Otp.builder()
                 .identifier(identifier)
