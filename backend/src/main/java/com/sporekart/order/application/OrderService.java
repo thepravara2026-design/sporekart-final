@@ -113,8 +113,12 @@ public class OrderService {
 
         String createdBy = userId != null ? "USER:" + userId : "GUEST:" + sessionId;
 
-        // 6. Process Line Items & Authoritative Calculations & Atomic Stock Reservation
-        for (CartItem item : cart.getItems()) {
+        // 6. Process Line Items & Authoritative Calculations & Atomic Stock Reservation (sorted by variantId to avoid deadlocks)
+        List<CartItem> sortedItems = cart.getItems().stream()
+                .sorted(java.util.Comparator.comparing(CartItem::getVariantId))
+                .toList();
+
+        for (CartItem item : sortedItems) {
             ProductVariant variant = catalogApplicationService.findVariantById(item.getVariantId())
                     .orElseThrow(() -> new IllegalArgumentException("Product variant not found: " + item.getVariantId()));
             Product product = variant.getProduct();

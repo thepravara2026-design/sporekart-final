@@ -20,6 +20,7 @@ public class AdminCatalogService {
     private final ProductOfferRepository offerRepository;
     private final ProductMediaRepository mediaRepository;
     private final ProductInformationRepository informationRepository;
+    private final InventoryService inventoryService;
 
     @Transactional
     public Category createCategory(CatalogDtos.CreateCategoryRequest request) {
@@ -181,6 +182,7 @@ public class AdminCatalogService {
 
         variant.validatePricing();
         ProductVariant saved = variantRepository.save(variant);
+        inventoryService.initializeInventory(saved.getId(), saved.getStockQuantity());
         product.getVariants().add(saved);
         return saved;
     }

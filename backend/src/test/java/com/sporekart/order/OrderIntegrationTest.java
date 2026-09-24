@@ -191,4 +191,50 @@ public class OrderIntegrationTest {
         // Verify OrderEvent logged
         assertTrue(cancelled.getEvents().stream().anyMatch(e -> e.getNewState() == OrderStatus.CANCELLED));
     }
+
+    @Test
+    void testConcurrentCheckoutNoDeadlock() throws Exception {
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        CatalogDtos.CreateVariantRequest var2Req = new CatalogDtos.CreateVariantRequest(
+                "500g", "SKU-OYSTER-500G-" + uniqueSuffix, new BigDecimal("200.00"),
+                new BigDecimal("240.00"), 50, true
+        );
+        ProductVariant variant2 = adminCatalogService.addVariant(testProduct.getId(), var2Req);
+
+        String sess1 = "sess-lock-1-" + UUID.randomUUID();
+        String sess2 = "sess-lock-2-" + UUID.randomUUID();
+
+        // Cart 1: V1, V2
+        cartService.addItemToCart(null, sess1, testVariant.getId(), 1);
+        cartService.addItemToCart(null, sess1, variant2.getId(), 1);
+
+        // Cart 2: V2, V1 (reversed order)
+        cartService.addItemToCart(null, sess2, variant2.getId(), 1);
+        cartService.addItemToCart(null, sess2, testVariant.getId(), 1);
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch startLatch = new CountDownLatch(1);
+
+        Callable<OrderResponse> task1 = () -> {
+            startLatch.await();
+            return orderService.createOrderFromCart(null, sess1, null, new CreateOrderRequest(null, testAddress, "Order 1"));
+        };
+
+        Callable<OrderResponse> task2 = () -> {
+            startLatch.await();
+            return orderService.createOrderFromCart(null, sess2, null, new CreateOrderRequest(null, testAddress, "Order 2"));
+        };
+
+        Future<OrderResponse> f1 = executor.submit(task1);
+        Future<OrderResponse> f2 = executor.submit(task2);
+
+        startLatch.countDown();
+
+        OrderResponse r1 = f1.get(10, TimeUnit.SECONDS);
+        OrderResponse r2 = f2.get(10, TimeUnit.SECONDS);
+
+        assertNotNull(r1);
+        assertNotNull(r2);
+        executor.shutdown();
+    }
 }

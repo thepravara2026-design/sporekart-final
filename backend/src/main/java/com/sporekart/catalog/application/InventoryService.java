@@ -41,7 +41,7 @@ public class InventoryService {
         return saved;
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public InventoryRecord reserveInventory(UUID variantId, int quantity, String referenceId, String createdBy) {
         InventoryRecord record = inventoryRecordRepository.findByVariantIdForUpdate(variantId)
                 .orElseGet(() -> {
@@ -66,7 +66,7 @@ public class InventoryService {
         return saved;
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public InventoryRecord releaseReservation(UUID variantId, int quantity, String referenceId, String reason, String createdBy) {
         InventoryRecord record = inventoryRecordRepository.findByVariantIdForUpdate(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory record not found for variant: " + variantId));
@@ -80,7 +80,7 @@ public class InventoryService {
         return saved;
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public InventoryRecord confirmPurchase(UUID variantId, int quantity, String referenceId, String createdBy) {
         InventoryRecord record = inventoryRecordRepository.findByVariantIdForUpdate(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory record not found for variant: " + variantId));
@@ -92,7 +92,7 @@ public class InventoryService {
         return saved;
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public InventoryRecord releaseCancelledOrder(UUID variantId, int quantity, String referenceId, boolean fromSold, String reason, String createdBy) {
         InventoryRecord record = inventoryRecordRepository.findByVariantIdForUpdate(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory record not found for variant: " + variantId));
