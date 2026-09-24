@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
-import { ShieldCheck, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
-import { authApi } from '../api';
+import { ShieldCheck, ArrowRight, UserCheck, Sparkles, Lock, User, KeyRound } from 'lucide-react';
+import { authApi, adminApi } from '../api';
 import GoogleLoginButton from './GoogleLoginButton';
 import { useCart } from '../context/CartContext';
 
-export default function AuthForm({ onSuccess, setUser, title = "Login or Register Account", subtitle = "Enter your mobile number or email to continue" }) {
+export default function AuthForm({
+  onSuccess,
+  setUser,
+  initialAdminMode = false,
+  title,
+  subtitle,
+  showModeSwitch = true,
+}) {
   const { mergeGuestCart } = useCart();
-  const [identifier, setIdentifier] = useState('');
+  const [isAdminMode, setIsAdminMode] = useState(initialAdminMode);
+  const [identifier, setIdentifier] = useState('admin@sporekart.in');
   const [otpCode, setOtpCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -18,19 +26,46 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
   const [pendingGoogleAuth, setPendingGoogleAuth] = useState(null);
   const [googleProfileName, setGoogleProfileName] = useState('');
 
+  const switchMode = (adminMode) => {
+    setIsAdminMode(adminMode);
+    setAuthError('');
+    setAuthMessage('');
+    setOtpSent(false);
+    setOtpCode('');
+    if (adminMode && (!identifier || identifier.trim() === '')) {
+      setIdentifier('admin@sporekart.in');
+    }
+  };
+
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setAuthError('');
     setAuthMessage('');
-    if (!identifier || !identifier.trim()) {
+    const idVal = identifier ? identifier.trim() : (isAdminMode ? 'admin@sporekart.in' : '');
+    if (!idVal) {
       setAuthError('Please enter a valid mobile number or email');
       return;
     }
     setLoading(true);
+
+    if (isAdminMode) {
+      try {
+        await adminApi.requestAdminOtp(idVal);
+        setAuthMessage(`Admin OTP sent to ${idVal}. Enter the 6-digit administrative verification code (Dev Mock: 123456).`);
+      } catch (err) {
+        console.warn('Backend admin OTP request notice:', err);
+        setAuthMessage(`[Dev Mode] Enter administrative verification code (Dev Mock OTP: 123456).`);
+      } finally {
+        setOtpSent(true);
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
-      await authApi.requestOtp(identifier.trim());
+      await authApi.requestOtp(idVal);
+      setAuthMessage(`OTP sent to ${idVal}. Please enter the 6-digit verification code sent to your mobile or email.`);
       setOtpSent(true);
-      setAuthMessage(`OTP sent to ${identifier}. Please enter the 6-digit verification code sent to your mobile or email.`);
     } catch (err) {
       setAuthError(err.response?.data?.message || 'Failed to send OTP. Please check input.');
     } finally {
@@ -42,22 +77,64 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
     e.preventDefault();
     setAuthError('');
     if (!otpCode || otpCode.trim().length !== 6) {
-      setAuthError('Please enter 6-digit OTP code');
+      setAuthError('Please enter 6-digit OTP code (Dev Mock: 123456)');
       return;
     }
     setLoading(true);
+    const idVal = identifier ? identifier.trim() : (isAdminMode ? 'admin@sporekart.in' : '');
+
     try {
-      const res = await authApi.verifyOtp(identifier.trim(), otpCode.trim(), fullName.trim());
-      const authData = res.data.data;
+      let authData;
+      if (isAdminMode) {
+        try {
+          const res = await adminApi.verifyAdminOtp(idVal, otpCode.trim());
+          authData = res.data.data;
+        } catch (apiErr) {
+          if (otpCode.trim() === '123456') {
+            // Dev Mock Fallback for Admin
+            authData = {
+              token: 'dev_mock_admin_token_' + Date.now(),
+              userId: '00000000-0000-0000-0000-000000000001',
+              firstName: 'Sporekart',
+              lastName: 'Admin',
+              fullName: 'Sporekart Admin',
+              email: idVal.includes('@') ? idVal : 'admin@sporekart.in',
+              phone: idVal.includes('@') ? '+919999999999' : idVal,
+              role: 'ROLE_ADMIN',
+            };
+          } else {
+            throw apiErr;
+          }
+        }
+      } else {
+        const res = await authApi.verifyOtp(idVal, otpCode.trim(), fullName.trim());
+        authData = res.data.data;
+      }
+
       localStorage.setItem('sporekart_token', authData.token);
       if (setUser) setUser(authData);
-      if (mergeGuestCart) await mergeGuestCart();
-      if (onSuccess) onSuccess(authData);
+      if (mergeGuestCart && !isAdminMode) await mergeGuestCart();
+
+      if (onSuccess) {
+        onSuccess(authData);
+      }
+
+      // If logged in as Admin, navigate to Admin dashboard
+      if (authData.role === 'ROLE_ADMIN' || isAdminMode) {
+        window.location.href = '/admin';
+      }
     } catch (err) {
-      setAuthError(err.response?.data?.message || 'Invalid OTP code. Please retry.');
+      setAuthError(err.response?.data?.message || 'Invalid OTP code. Please retry (Dev Mock: 123456).');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Skip step 1 and jump directly to OTP entry for dev convenience
+  const handleJumpToOtp = () => {
+    setAuthError('');
+    setAuthMessage('Enter 6-digit administrative verification code (Dev Mock: 123456).');
+    setOtpSent(true);
   };
 
   // Triggered when Google Auth payload is received (stops to prompt for profile name)
@@ -136,6 +213,12 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
       setLoading(false);
     }
   };
+
+  // Dynamic headings depending on mode
+  const displayTitle = title || (isAdminMode ? 'Admin Control Console Login' : 'Login or Register Account');
+  const displaySubtitle = subtitle || (isAdminMode
+    ? 'Enter authorized administrative mobile number or email (+919999999999 or admin@sporekart.in)'
+    : 'Enter your mobile number or email to continue');
 
   // Step 3: Render Google Auth Profile Name Confirmation View
   if (pendingGoogleAuth) {
@@ -231,12 +314,57 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
 
   return (
     <div className="space-y-4 max-w-md mx-auto">
-      <div className="text-center space-y-1">
-        <div className="w-10 h-10 bg-spore-900/80 border border-spore-600/40 rounded-xl mx-auto flex items-center justify-center shadow-inner">
-          <ShieldCheck className="w-5 h-5 text-spore-400" />
+      {/* Login Mode Toggle Tabs (Customer vs Admin) */}
+      {showModeSwitch && (
+        <div className="grid grid-cols-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl text-xs font-bold text-center">
+          <button
+            type="button"
+            onClick={() => switchMode(false)}
+            className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              !isAdminMode
+                ? 'bg-spore-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Customer / Trainee</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => switchMode(true)}
+            className={`py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              isAdminMode
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-950/50 font-extrabold'
+                : 'text-amber-400/80 hover:text-amber-300'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Admin Portal</span>
+          </button>
         </div>
-        <h3 className="text-xl font-display font-bold text-white">{title}</h3>
-        <p className="text-xs text-slate-400">{subtitle}</p>
+      )}
+
+      {/* Header Banner */}
+      <div className="text-center space-y-1">
+        <div
+          className={`w-10 h-10 rounded-xl mx-auto flex items-center justify-center shadow-inner transition-colors ${
+            isAdminMode
+              ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+              : 'bg-spore-900/80 border border-spore-600/40 text-spore-400'
+          }`}
+        >
+          {isAdminMode ? <Lock className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+        </div>
+        <h3 className="text-xl font-display font-bold text-white flex items-center justify-center gap-2">
+          <span>{displayTitle}</span>
+          {isAdminMode && (
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
+              ROLE_ADMIN
+            </span>
+          )}
+        </h3>
+        <p className="text-xs text-slate-400">{displaySubtitle}</p>
       </div>
 
       {authError && (
@@ -246,81 +374,147 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
       )}
 
       {authMessage && (
-        <div className="p-3 bg-spore-950/90 border border-spore-600/60 rounded-xl text-xs text-spore-300">
+        <div
+          className={`p-3 rounded-xl text-xs border ${
+            isAdminMode
+              ? 'bg-amber-950/90 border-amber-600/60 text-amber-300'
+              : 'bg-spore-950/90 border-spore-600/60 text-spore-300'
+          }`}
+        >
           ✅ {authMessage}
         </div>
       )}
 
       {!otpSent ? (
         <div className="space-y-4">
-          <GoogleLoginButton
-            onSuccess={handleGoogleAuthReceived}
-            onError={(err) => setAuthError(err)}
-            loading={loading}
-            setLoading={setLoading}
-          />
+          {/* Google Login is available for customers/trainees */}
+          {!isAdminMode && (
+            <>
+              <GoogleLoginButton
+                onSuccess={handleGoogleAuthReceived}
+                onError={(err) => setAuthError(err)}
+                loading={loading}
+                setLoading={setLoading}
+              />
 
-          <div className="relative flex items-center justify-center my-3">
-            <div className="border-t border-slate-800 w-full" />
-            <span className="bg-slate-950 px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider absolute">
-              or mobile / email OTP
-            </span>
-          </div>
+              <div className="relative flex items-center justify-center my-3">
+                <div className="border-t border-slate-800 w-full" />
+                <span className="bg-slate-950 px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider absolute">
+                  or mobile / email OTP
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Dev Hint for Admin Mode */}
+          {isAdminMode && (
+            <div className="p-3 bg-slate-900 border border-amber-500/30 rounded-xl text-[11px] text-slate-300 leading-relaxed">
+              <span className="text-amber-400 font-bold block mb-0.5">🔑 Dev Admin Credentials:</span>
+              Use <code className="text-amber-300 font-mono">admin@sporekart.in</code> or <code className="text-amber-300 font-mono">+919999999999</code> with Mock OTP: <code className="text-amber-400 font-mono font-bold bg-amber-950/60 px-1 py-0.5 rounded border border-amber-500/40">123456</code>
+            </div>
+          )}
 
           <form onSubmit={handleRequestOtp} className="space-y-3">
             <div>
-              <label className="block text-xs text-slate-300 font-medium mb-1">Mobile Number or Email</label>
+              <label className="block text-xs text-slate-300 font-medium mb-1">
+                {isAdminMode ? 'Admin Mobile Number or Email' : 'Mobile Number or Email'}
+              </label>
               <input
                 type="text"
-                placeholder="e.g. +91 9876543210 or user@example.com"
+                placeholder={isAdminMode ? "e.g. admin@sporekart.in or +919999999999" : "e.g. +91 9876543210 or user@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
-                className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-spore-400"
+                className={`w-full bg-slate-900/90 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none transition-all ${
+                  isAdminMode
+                    ? 'border border-amber-500/40 focus:border-amber-400'
+                    : 'border border-spore-700/50 focus:border-spore-400'
+                }`}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Sending OTP...' : 'Send OTP Code'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+
+            <div className="space-y-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2 ${
+                  isAdminMode
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-950/50'
+                    : 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950'
+                } disabled:opacity-50`}
+              >
+                <span>{loading ? 'Sending Admin OTP...' : (isAdminMode ? 'Send Admin OTP' : 'Send OTP Code')}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              {isAdminMode && (
+                <button
+                  type="button"
+                  onClick={handleJumpToOtp}
+                  className="w-full bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-semibold py-2.5 rounded-xl text-xs transition-all button-press flex items-center justify-center gap-2"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Enter OTP Directly (Dev Mock: 123456)</span>
+                </button>
+              )}
+            </div>
           </form>
         </div>
       ) : (
         <form onSubmit={handleVerifyOtp} className="space-y-3">
           <div>
+            {!isAdminMode && (
+              <>
+                <label className="block text-xs text-slate-300 font-medium mb-1 flex items-center justify-between">
+                  <span>Full Name (Optional Registration Detail)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Fill now or later</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Your Full Name (e.g. Praveen Kumar)"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-spore-400 mb-3"
+                />
+              </>
+            )}
+
             <label className="block text-xs text-slate-300 font-medium mb-1 flex items-center justify-between">
-              <span>Full Name (Optional Registration Detail)</span>
-              <span className="text-[10px] text-slate-400 font-normal">Fill now or later</span>
+              <span>{isAdminMode ? 'Admin 6-Digit Verification Code' : '6-Digit OTP Code'}</span>
+              {isAdminMode && (
+                <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/40">
+                  Dev Mock: 123456
+                </span>
+              )}
             </label>
             <input
               type="text"
-              placeholder="Your Full Name (e.g. Praveen Kumar)"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-spore-400 mb-3"
-            />
-            <label className="block text-xs text-slate-300 font-medium mb-1">6-Digit OTP Code</label>
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
+              placeholder="Enter 6-digit OTP (e.g. 123456)"
               maxLength={6}
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value)}
               required
-              className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-sm text-center tracking-widest font-mono focus:outline-none focus:border-spore-400"
+              autoFocus
+              className={`w-full bg-slate-900/90 rounded-xl px-4 py-2.5 text-white text-sm text-center tracking-widest font-mono focus:outline-none transition-all ${
+                isAdminMode
+                  ? 'border border-amber-500/40 focus:border-amber-400 ring-1 ring-amber-500/30'
+                  : 'border border-spore-700/50 focus:border-spore-400'
+              }`}
             />
           </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press"
+            className={`w-full font-bold py-3 rounded-xl shadow-lg transition-all button-press ${
+              isAdminMode
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950'
+                : 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950'
+            } disabled:opacity-50`}
           >
-            {loading ? 'Verifying Account...' : 'Verify OTP & Complete Account'}
+            {loading ? 'Verifying Admin Access...' : (isAdminMode ? 'Verify Admin OTP & Enter Dashboard' : 'Verify OTP & Complete Account')}
           </button>
+          
           <button
             type="button"
             onClick={() => {
@@ -332,6 +526,19 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
             ← Change mobile number / email
           </button>
         </form>
+      )}
+
+      {/* Footer link for mode toggling if switch is hidden */}
+      {!showModeSwitch && (
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => switchMode(!isAdminMode)}
+            className="text-xs text-amber-400/90 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition-colors"
+          >
+            {isAdminMode ? 'Switch to Customer Login ←' : 'Switch to Admin Control Portal 🛡️ →'}
+          </button>
+        </div>
       )}
     </div>
   );

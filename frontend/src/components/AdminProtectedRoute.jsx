@@ -20,10 +20,17 @@ export default function AdminProtectedRoute({ user, children }) {
             The requested control plane endpoint requires elevated privilege <code className="text-amber-400 font-mono">ROLE_ADMIN</code>. Public or non-administrative access is strictly forbidden.
           </p>
         </div>
-        <div className="pt-4 flex justify-center gap-4">
+        <div className="pt-4 flex justify-center items-center gap-4">
+          <a
+            href="/admin/login"
+            className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-950/50 transition-all button-press flex items-center gap-2"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Admin Control Login</span>
+          </a>
           <a
             href="/"
-            className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700/60 transition-all"
+            className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700/60 transition-all button-press"
           >
             Return to Storefront
           </a>

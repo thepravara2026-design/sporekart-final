@@ -30,6 +30,7 @@ const CultivationGuidePage = lazy(() => import('./pages/CultivationGuidePage'));
 const SpawnGuidePage = lazy(() => import('./pages/SpawnGuidePage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 export default function App() {
@@ -115,7 +116,8 @@ export default function App() {
                   {/* User Account */}
                   <Route path="/dashboard" element={<DashboardPage user={user} />} />
 
-                  {/* Admin Control Plane (17 Protected Routes) */}
+                  {/* Admin Control Plane Access & Protected Routes */}
+                  <Route path="/admin/login" element={<AdminLoginPage user={user} setUser={setUser} />} />
                   <Route path="/admin" element={adminElement} />
                   <Route path="/admin/products" element={adminElement} />
                   <Route path="/admin/categories" element={adminElement} />

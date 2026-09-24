@@ -67,6 +67,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook", "/payment/verify-enrollment").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()
+                    .requestMatchers("/admin/auth/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated();
             })

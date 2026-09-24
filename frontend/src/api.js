@@ -118,8 +118,8 @@ export const supportApi = {
 };
 
 export const adminApi = {
-  requestAdminOtp: (identifier) => api.post('/admin/auth/request-otp', { identifier }),
-  verifyAdminOtp: (identifier, otpCode) => api.post('/admin/auth/verify-otp', { identifier, otpCode }),
+  requestAdminOtp: (identifier) => api.post('/admin/auth/otp/request', { identifier }),
+  verifyAdminOtp: (identifier, otpCode) => api.post('/admin/auth/otp/verify', { identifier, otpCode }),
   getBlogPosts: (status) => api.get('/admin/content/posts', { params: { status } }),
   createBlogPost: (data) => api.post('/admin/content/posts', data),
   publishBlogPost: (id) => api.post(`/admin/content/posts/${id}/publish`),
