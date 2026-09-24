@@ -12,6 +12,7 @@ import com.sporekart.payment.domain.PaymentStatus;
 import com.sporekart.payment.infrastructure.PaymentEventRepository;
 import com.sporekart.payment.infrastructure.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -76,12 +78,20 @@ public class PaymentService {
                 request.getRazorpaySignature()
         );
 
+        // Source of truth for order association is DB Payment entity linked to razorpayOrderId
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
-                .orElseGet(() -> Payment.builder()
-                        .orderId(request.getOrderId())
-                        .razorpayOrderId(request.getRazorpayOrderId())
-                        .amountInr(BigDecimal.ZERO)
-                        .build());
+                .orElseThrow(() -> new IllegalArgumentException("No existing payment record found for Razorpay order ID: " + request.getRazorpayOrderId()));
+
+        UUID targetOrderId = payment.getOrderId();
+        if (targetOrderId == null) {
+            throw new IllegalArgumentException("Payment record is missing associated order ID");
+        }
+
+        if (request.getOrderId() != null && !request.getOrderId().equals(targetOrderId)) {
+            log.error("POTENTIAL FRAUD / MISMATCH ATTEMPT: Client provided orderId={} does not match payment record orderId={} for razorpayOrderId={}",
+                    request.getOrderId(), targetOrderId, request.getRazorpayOrderId());
+            throw new IllegalArgumentException("Payment verification failed: Mismatched order reference");
+        }
 
         payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
         payment.setRazorpaySignature(request.getRazorpaySignature());
@@ -97,16 +107,16 @@ public class PaymentService {
             payment.addEvent(event);
             paymentRepository.save(payment);
 
-            orderService.setRazorpayPaymentId(request.getOrderId(), request.getRazorpayPaymentId());
-            orderService.updateOrderStatus(request.getOrderId(), OrderStatus.PAID, "Payment verified successfully", "PAYMENT_SERVICE");
+            orderService.setRazorpayPaymentId(targetOrderId, request.getRazorpayPaymentId());
+            orderService.updateOrderStatus(targetOrderId, OrderStatus.PAID, "Payment verified successfully", "PAYMENT_SERVICE");
 
             // Confirm inventory purchase
-            orderService.confirmOrderInventory(request.getOrderId());
+            orderService.confirmOrderInventory(targetOrderId);
 
             // Publish PaymentCapturedEvent
             eventPublisher.publishEvent(com.sporekart.analytics.domain.events.PaymentCapturedEvent.builder()
                     .paymentId(payment.getId())
-                    .orderId(request.getOrderId())
+                    .orderId(targetOrderId)
                     .amountInr(payment.getAmountInr())
                     .razorpayPaymentId(request.getRazorpayPaymentId())
                     .build());
@@ -114,7 +124,7 @@ public class PaymentService {
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(true)
                     .message("Payment verified successfully")
-                    .orderId(request.getOrderId())
+                    .orderId(targetOrderId)
                     .build();
         } else {
             payment.setStatus(PaymentStatus.FAILED);
@@ -130,7 +140,7 @@ public class PaymentService {
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(false)
                     .message("Payment signature verification failed")
-                    .orderId(request.getOrderId())
+                    .orderId(targetOrderId)
                     .build();
         }
     }
