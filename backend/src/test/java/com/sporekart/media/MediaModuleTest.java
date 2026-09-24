@@ -127,4 +127,28 @@ public class MediaModuleTest {
         assertEquals(initRes.getMediaId(), links.get(0).getMediaId());
         assertTrue(links.get(0).isPrimary());
     }
+
+    @Test
+    void testDisallowedExtensionRejection() {
+        UUID userId = UUID.randomUUID();
+
+        // 1. .svg should be rejected
+        MediaDtos.InitiateUploadRequest svgReq = new MediaDtos.InitiateUploadRequest("logo.svg", "image/svg+xml", 1024L, MediaType.IMAGE, "Logo", true);
+        Exception ex1 = assertThrows(IllegalArgumentException.class, () -> mediaService.initiateUpload(svgReq, userId));
+        assertTrue(ex1.getMessage().contains("File extension not allowed"));
+
+        // 2. .html should be rejected
+        MediaDtos.InitiateUploadRequest htmlReq = new MediaDtos.InitiateUploadRequest("page.html", "text/html", 1024L, MediaType.IMAGE, "Page", true);
+        Exception ex2 = assertThrows(IllegalArgumentException.class, () -> mediaService.initiateUpload(htmlReq, userId));
+        assertTrue(ex2.getMessage().contains("File extension not allowed"));
+
+        // 3. .exe should be rejected
+        MediaDtos.InitiateUploadRequest exeReq = new MediaDtos.InitiateUploadRequest("malware.exe", "application/octet-stream", 1024L, MediaType.IMAGE, "Exe", true);
+        Exception ex3 = assertThrows(IllegalArgumentException.class, () -> mediaService.initiateUpload(exeReq, userId));
+        assertTrue(ex3.getMessage().contains("File extension not allowed"));
+
+        // 4. Allowed extensions (.png, .jpg, .pdf, .mp4, .webp, .gif, .mov) should succeed
+        MediaDtos.InitiateUploadRequest pngReq = new MediaDtos.InitiateUploadRequest("photo.png", "image/png", 1024L, MediaType.IMAGE, "Photo", true);
+        assertNotNull(mediaService.initiateUpload(pngReq, userId));
+    }
 }
