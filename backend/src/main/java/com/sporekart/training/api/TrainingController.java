@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/training")
+@RequestMapping({"/api/v1/training", "/training"})
 @RequiredArgsConstructor
 public class TrainingController {
 
@@ -82,6 +82,13 @@ public class TrainingController {
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
     }
 
+    @GetMapping("/enrollments/{enrollmentId}")
+    public ResponseEntity<ApiResponse<TrainingDtos.EnrollmentResponse>> getEnrollmentById(
+            @PathVariable UUID enrollmentId) {
+        Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
+        return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
+    }
+
     @GetMapping("/user/{userId}/enrollments")
     public ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>> getUserEnrollments(
             org.springframework.security.core.Authentication authentication,
@@ -132,24 +139,26 @@ public class TrainingController {
 
     private TrainingDtos.CourseResponse mapCourse(Course course) {
         List<Batch> batches = trainingService.getBatchesForCourse(course.getId());
-        List<TrainingDtos.BatchSlotResponse> slots = batches.stream()
+        List<TrainingDtos.BatchSlotResponse> slots = (batches != null ? batches.stream() : java.util.stream.Stream.<Batch>empty())
                 .filter(b -> b.getStatus() != BatchStatus.CANCELLED)
                 .map(b -> {
-                    java.time.ZonedDateTime startTime = b.getSchedules() != null && !b.getSchedules().isEmpty()
+                    java.time.ZonedDateTime startTime = (b.getSchedules() != null && !b.getSchedules().isEmpty() && b.getSchedules().get(0).getScheduledAt() != null)
                             ? b.getSchedules().get(0).getScheduledAt()
-                            : b.getStartDate().atStartOfDay(java.time.ZoneId.systemDefault());
+                            : (b.getStartDate() != null ? b.getStartDate().atStartOfDay(java.time.ZoneId.systemDefault()) : java.time.ZonedDateTime.now());
 
-                    int availableSeats = Math.max(0, b.getCapacity() - (b.getEnrolledCount() != null ? b.getEnrolledCount() : 0));
-                    boolean isAvailable = b.hasAvailableCapacity() && b.getStatus() != BatchStatus.CANCELLED;
+                    int capacity = b.getCapacity() != null ? b.getCapacity() : 30;
+                    int enrolledCount = b.getEnrolledCount() != null ? b.getEnrolledCount() : 0;
+                    int availableSeats = Math.max(0, capacity - enrolledCount);
+                    boolean isAvailable = (enrolledCount < capacity) && b.getStatus() != BatchStatus.CANCELLED;
 
                     return TrainingDtos.BatchSlotResponse.builder()
                             .id(b.getId())
-                            .batchCode(b.getBatchCode())
+                            .batchCode(b.getBatchCode() != null ? b.getBatchCode() : "UPCOMING")
                             .startDate(b.getStartDate())
                             .endDate(b.getEndDate())
                             .startTime(startTime)
-                            .capacity(b.getCapacity())
-                            .enrolledCount(b.getEnrolledCount())
+                            .capacity(capacity)
+                            .enrolledCount(enrolledCount)
                             .availableSeats(availableSeats)
                             .isAvailable(isAvailable)
                             .status(b.getStatus() != null ? b.getStatus().name() : "UPCOMING")

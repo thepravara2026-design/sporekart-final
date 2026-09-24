@@ -64,9 +64,25 @@ public class TrainingService {
         return courseRepository.save(course);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<Course> getAllActiveCourses() {
-        return courseRepository.findByIsActiveTrue();
+        List<Course> courses = courseRepository.findByIsActiveTrue();
+        for (Course course : courses) {
+            List<Batch> batches = batchRepository.findByCourseId(course.getId());
+            if (batches == null || batches.isEmpty()) {
+                log.info("Auto-provisioning default upcoming batch for course: {}", course.getTitle());
+                String codeSlug = course.getSlug() != null ? course.getSlug().replace("-", "").toUpperCase() : "COURSE";
+                String batchCode = "BATCH-" + LocalDate.now().getYear() + "-" + codeSlug.substring(0, Math.min(6, codeSlug.length()));
+                createBatch(
+                        course.getId(),
+                        batchCode,
+                        LocalDate.now().plusDays(7),
+                        LocalDate.now().plusDays(7 + (course.getDurationDays() != null ? course.getDurationDays() : 7)),
+                        30
+                );
+            }
+        }
+        return courses;
     }
 
     @Transactional(readOnly = true)
@@ -195,6 +211,12 @@ public class TrainingService {
     @Transactional(readOnly = true)
     public List<Enrollment> getUserEnrollments(UUID userId) {
         return enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Enrollment getEnrollmentById(UUID enrollmentId) {
+        return enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
     }
 
     // --- Attendance, Completion & Certificates ---

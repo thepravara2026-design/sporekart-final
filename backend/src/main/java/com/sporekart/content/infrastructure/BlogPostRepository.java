@@ -21,9 +21,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, UUID> {
     Optional<BlogPost> findPublishedBySlug(@Param("slug") String slug, @Param("now") ZonedDateTime now);
 
     @Query("SELECT p FROM BlogPost p WHERE p.status = 'PUBLISHED' AND (p.publishedAt IS NULL OR p.publishedAt <= :now) " +
-           "AND (:categorySlug IS NULL OR p.category.slug = :categorySlug) " +
-           "AND (:tagSlug IS NULL OR EXISTS (SELECT t FROM p.tags t WHERE t.slug = :tagSlug)) " +
-           "AND (:query IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.summary) LIKE LOWER(CONCAT('%', :query, '%')))")
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR p.category.slug = :categorySlug) " +
+           "AND (:tagSlug IS NULL OR :tagSlug = '' OR EXISTS (SELECT t FROM p.tags t WHERE t.slug = :tagSlug)) " +
+           "AND (:query IS NULL OR :query = '' OR LOWER(p.title) LIKE CONCAT('%', LOWER(:query), '%') OR LOWER(p.summary) LIKE CONCAT('%', LOWER(:query), '%'))")
     Page<BlogPost> findPublishedPosts(
             @Param("categorySlug") String categorySlug,
             @Param("tagSlug") String tagSlug,

@@ -80,6 +80,7 @@ export const trainingApi = {
   getCourseBySlug: (slug) => api.get(`/training/courses/${slug}`),
   bookSlot: (slotId) => api.post('/training/enroll', { batchId: slotId, slotId }),
   getUserBookings: () => api.get('/training/my-bookings'),
+  getEnrollmentById: (enrollmentId) => api.get(`/training/enrollments/${enrollmentId}`),
 };
 
 export const orderApi = {
@@ -98,6 +99,9 @@ export const paymentApi = {
   initiatePayment: (orderId) => api.post('/payment/initiate', { orderId }),
   verifyPayment: (orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature) =>
     api.post('/payment/verify', { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature }),
+  getPaymentSummary: (type, id) => api.get('/payment/summary', { params: { type, id } }),
+  verifyEnrollmentPayment: (enrollmentId, paymentMethod, transactionReference) =>
+    api.post('/payment/verify-enrollment', { enrollmentId, paymentMethod, transactionReference }),
 };
 
 export const shippingApi = {

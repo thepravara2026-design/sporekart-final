@@ -172,8 +172,7 @@ export default function CheckoutPage({ user, setUser }) {
       if (res.data && res.data.success) {
         const orderData = res.data.data;
         await fetchCart();
-        alert(`Order ${orderData.orderNumber} placed successfully!`);
-        navigate('/dashboard');
+        navigate(`/payment?type=order&id=${orderData.id}`);
       }
     } catch (err) {
       alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to place order');

@@ -59,4 +59,45 @@ public class PaymentDtos {
         private String message;
         private UUID orderId;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PaymentSummaryResponse {
+        private String type; // "ORDER" or "ENROLLMENT"
+        private UUID id;
+        private String title;
+        private String subtitle;
+        private BigDecimal amountInr;
+        private String status;
+        private String customerName;
+        private String customerEmail;
+        private String customerPhone;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VerifyEnrollmentPaymentRequest {
+        @NotNull(message = "Enrollment ID is required")
+        private UUID enrollmentId;
+
+        @NotBlank(message = "Payment method is required")
+        private String paymentMethod;
+
+        private String transactionReference;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VerifyEnrollmentPaymentResponse {
+        private boolean isSuccess;
+        private String message;
+        private UUID enrollmentId;
+        private String paymentReference;
+    }
 }

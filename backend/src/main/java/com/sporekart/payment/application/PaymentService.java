@@ -27,6 +27,7 @@ public class PaymentService {
     private final PaymentEventRepository paymentEventRepository;
     private final PaymentGateway paymentGateway;
     private final OrderService orderService;
+    private final com.sporekart.training.application.TrainingService trainingService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -231,5 +232,78 @@ public class PaymentService {
         orderService.updateOrderStatus(orderId, OrderStatus.REFUNDED, "Refund processed: " + refundResult.getRefundId(), "SYSTEM_REFUND");
 
         return refundResult;
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentDtos.PaymentSummaryResponse getPaymentSummary(String type, UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Payment ID is required");
+        }
+
+        boolean isEnrollment = "ENROLLMENT".equalsIgnoreCase(type);
+
+        if (!isEnrollment) {
+            try {
+                OrderResponse order = orderService.getOrderById(id);
+                String city = (order.getShippingAddress() != null && order.getShippingAddress().getCity() != null)
+                        ? order.getShippingAddress().getCity() : "";
+                String state = (order.getShippingAddress() != null && order.getShippingAddress().getState() != null)
+                        ? order.getShippingAddress().getState() : "";
+                String subtitle = (!city.isEmpty() || !state.isEmpty())
+                        ? (city + (city.isEmpty() || state.isEmpty() ? "" : ", ") + state) : "Delivery Order";
+                String statusStr = order.getStatus() != null ? order.getStatus().name() : "PENDING_PAYMENT";
+                String orderNo = order.getOrderNumber() != null ? order.getOrderNumber() : order.getId().toString().substring(0, 8);
+
+                return PaymentDtos.PaymentSummaryResponse.builder()
+                        .type("ORDER")
+                        .id(order.getId())
+                        .title("Order #" + orderNo)
+                        .subtitle(subtitle)
+                        .amountInr(order.getTotalAmountInr() != null ? order.getTotalAmountInr() : BigDecimal.ZERO)
+                        .status(statusStr)
+                        .customerName(order.getShippingAddress() != null ? order.getShippingAddress().getRecipientName() : null)
+                        .customerPhone(order.getShippingAddress() != null ? order.getShippingAddress().getPhone() : null)
+                        .build();
+            } catch (Exception e) {
+                isEnrollment = true;
+            }
+        }
+
+        if (isEnrollment) {
+            com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(id);
+            String title = enrollment.getCourse() != null && enrollment.getCourse().getTitle() != null
+                    ? enrollment.getCourse().getTitle() : "Training Course";
+            String batchCode = enrollment.getBatch() != null && enrollment.getBatch().getBatchCode() != null
+                    ? enrollment.getBatch().getBatchCode() : "UPCOMING";
+            String statusStr = enrollment.getStatus() != null ? enrollment.getStatus().name() : "PENDING_PAYMENT";
+
+            return PaymentDtos.PaymentSummaryResponse.builder()
+                    .type("ENROLLMENT")
+                    .id(enrollment.getId())
+                    .title(title)
+                    .subtitle("Batch: " + batchCode)
+                    .amountInr(enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO)
+                    .status(statusStr)
+                    .build();
+        }
+
+        throw new IllegalArgumentException("Payment session not found for ID: " + id);
+    }
+
+    @Transactional
+    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request) {
+        String txRef = request.getTransactionReference();
+        if (txRef == null || txRef.trim().isEmpty()) {
+            txRef = "PAY-MOCK-" + request.getPaymentMethod() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }
+
+        com.sporekart.training.domain.Enrollment enrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), txRef);
+
+        return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
+                .isSuccess(true)
+                .message("Training enrollment payment successful")
+                .enrollmentId(enrollment.getId())
+                .paymentReference(txRef)
+                .build();
     }
 }

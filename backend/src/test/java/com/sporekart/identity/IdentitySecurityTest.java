@@ -174,4 +174,31 @@ public class IdentitySecurityTest {
         assertNotNull(adminRes);
         assertEquals("ROLE_ADMIN", adminRes.getRole());
     }
+
+    @Test
+    void testCrossProviderPhoneLinkingAndAccountUnification() {
+        String email = "usera@gmail.com";
+        String phone = "+919876543210";
+
+        // 1. Google OAuth Auth creates User A
+        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_sub_user_a", email, "User", "A", "User A");
+        AuthDtos.AuthResponse resGoogle = authService.loginWithGoogle(googleReq);
+
+        assertNotNull(resGoogle.getUserId());
+        assertNull(resGoogle.getPhone(), "Initial Google auth phone should be null");
+
+        // 2. Link phone number (simulating address entry during checkout)
+        authService.linkPhoneToUser(resGoogle.getUserId(), phone);
+
+        // 3. Verify user profile now reflects linked phone
+        AuthDtos.UserDto updatedProfile = authService.getUserProfile(resGoogle.getUserId());
+        assertEquals(phone, updatedProfile.getPhone());
+
+        // 4. User A logs out & logs in using Phone OTP for the same phone number
+        String otpCode = authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
+        AuthDtos.AuthResponse resPhone = authService.verifyOtp(new AuthDtos.VerifyOtpRequest(phone, otpCode, "User", "A", "User A"), OtpType.CUSTOMER_AUTH);
+
+        assertEquals(resGoogle.getUserId(), resPhone.getUserId(), "Phone OTP login must recognize User A and return the same userId");
+        assertEquals(email, resPhone.getEmail(), "Phone OTP response must contain pre-filled Google email");
+    }
 }

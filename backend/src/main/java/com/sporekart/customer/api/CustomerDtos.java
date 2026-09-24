@@ -19,6 +19,7 @@ public class CustomerDtos {
     }
 
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AddressRequest {

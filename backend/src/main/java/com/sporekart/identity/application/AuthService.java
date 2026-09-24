@@ -167,8 +167,8 @@ public class AuthService {
         // 2. Search by phone or email to link to existing account (prevents duplicate accounts)
         boolean isEmail = emailOrPhone != null && emailOrPhone.contains("@");
         Optional<User> existingUser = isEmail
-                ? userRepository.findByEmail(emailOrPhone)
-                : userRepository.findByPhone(emailOrPhone);
+                ? userRepository.findByEmail(emailOrPhone.trim().toLowerCase())
+                : findUserByPhoneFlexible(emailOrPhone);
 
         User user;
         if (existingUser.isPresent()) {
@@ -195,9 +195,9 @@ public class AuthService {
                     .build();
 
             if (isEmail) {
-                user.setEmail(emailOrPhone);
+                user.setEmail(emailOrPhone.trim().toLowerCase());
             } else {
-                user.setPhone(emailOrPhone);
+                user.setPhone(normalizePhone(emailOrPhone));
             }
 
             user = userRepository.save(user);
@@ -213,6 +213,95 @@ public class AuthService {
         customerIdentityRepository.save(newIdentity);
 
         return user;
+    }
+
+    public Optional<User> findUserByPhoneFlexible(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) return Optional.empty();
+        String cleaned = rawPhone.replaceAll("[^0-9]", "");
+        if (cleaned.isEmpty()) return Optional.empty();
+        String last10 = cleaned.length() >= 10 ? cleaned.substring(cleaned.length() - 10) : cleaned;
+
+        // Try exact match first
+        Optional<User> user = userRepository.findByPhone(rawPhone.trim());
+        if (user.isPresent()) return user;
+
+        // Try +91 + last10
+        user = userRepository.findByPhone("+91" + last10);
+        if (user.isPresent()) return user;
+
+        // Try last10
+        return userRepository.findByPhone(last10);
+    }
+
+    public static String normalizePhone(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) return null;
+        String cleaned = rawPhone.replaceAll("[^0-9+]", "");
+        if (cleaned.startsWith("+91")) {
+            return cleaned;
+        }
+        String digitsOnly = cleaned.replaceAll("[^0-9]", "");
+        if (digitsOnly.length() == 10) {
+            return "+91" + digitsOnly;
+        }
+        return cleaned;
+    }
+
+    @Transactional
+    public void linkPhoneToUser(UUID userId, String rawPhone) {
+        if (userId == null || rawPhone == null || rawPhone.isBlank()) return;
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return;
+
+        String phoneToSet = normalizePhone(rawPhone);
+
+        if (user.getPhone() == null || user.getPhone().isBlank()) {
+            Optional<User> existing = findUserByPhoneFlexible(phoneToSet);
+            if (existing.isEmpty() || existing.get().getId().equals(userId)) {
+                user.setPhone(phoneToSet);
+                user.setPhoneVerified(true);
+                userRepository.save(user);
+            }
+        }
+
+        Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
+                IdentityProvider.PHONE_OTP, phoneToSet);
+        if (existingIdentity.isEmpty()) {
+            CustomerIdentity newIdentity = CustomerIdentity.builder()
+                    .userId(userId)
+                    .provider(IdentityProvider.PHONE_OTP)
+                    .providerSubject(phoneToSet)
+                    .build();
+            customerIdentityRepository.save(newIdentity);
+        }
+    }
+
+    @Transactional
+    public void linkEmailToUser(UUID userId, String rawEmail) {
+        if (userId == null || rawEmail == null || rawEmail.isBlank() || !rawEmail.contains("@")) return;
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return;
+
+        String emailToSet = rawEmail.trim().toLowerCase();
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            Optional<User> existing = userRepository.findByEmail(emailToSet);
+            if (existing.isEmpty() || existing.get().getId().equals(userId)) {
+                user.setEmail(emailToSet);
+                user.setEmailVerified(true);
+                userRepository.save(user);
+            }
+        }
+
+        Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
+                IdentityProvider.EMAIL_OTP, emailToSet);
+        if (existingIdentity.isEmpty()) {
+            CustomerIdentity newIdentity = CustomerIdentity.builder()
+                    .userId(userId)
+                    .provider(IdentityProvider.EMAIL_OTP)
+                    .providerSubject(emailToSet)
+                    .build();
+            customerIdentityRepository.save(newIdentity);
+        }
     }
 
     public AuthDtos.UserDto getUserProfile(UUID userId) {

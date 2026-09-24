@@ -22,6 +22,8 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerAddressRepository customerAddressRepository;
     private final CapabilityService capabilityService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.identity.application.AuthService authService;
 
     @Transactional(readOnly = true)
     public CustomerProfile getCustomerProfile(UUID userId) {
@@ -63,6 +65,10 @@ public class CustomerService {
 
     @Transactional
     public CustomerDtos.AddressDto addAddress(UUID userId, CustomerDtos.AddressRequest request) {
+        if (userId != null && request.getPhone() != null && !request.getPhone().isBlank()) {
+            authService.linkPhoneToUser(userId, request.getPhone());
+        }
+
         if (request.isDefault()) {
             clearDefaultAddress(userId);
         }
@@ -100,6 +106,10 @@ public class CustomerService {
     public CustomerDtos.AddressDto updateAddress(UUID userId, UUID addressId, CustomerDtos.AddressRequest request) {
         CustomerAddress address = customerAddressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Address not found or unauthorized"));
+
+        if (userId != null && request.getPhone() != null && !request.getPhone().isBlank()) {
+            authService.linkPhoneToUser(userId, request.getPhone());
+        }
 
         if (request.isDefault() && !address.isDefault()) {
             clearDefaultAddress(userId);

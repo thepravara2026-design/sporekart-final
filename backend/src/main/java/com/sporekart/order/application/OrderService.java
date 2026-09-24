@@ -8,6 +8,7 @@ import com.sporekart.catalog.application.InventoryService;
 import com.sporekart.catalog.application.PricingService;
 import com.sporekart.catalog.domain.Product;
 import com.sporekart.catalog.domain.ProductVariant;
+import com.sporekart.customer.api.CustomerDtos;
 import com.sporekart.customer.application.CustomerService;
 import com.sporekart.customer.domain.CustomerAddress;
 import com.sporekart.order.api.dto.*;
@@ -37,6 +38,8 @@ public class OrderService {
     private final InventoryService inventoryService;
     private final PricingService pricingService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.identity.application.AuthService authService;
 
     @Transactional
     public OrderResponse createOrderFromCart(UUID userId, String sessionId, String idempotencyKey, CreateOrderRequest request) {
@@ -63,6 +66,27 @@ public class OrderService {
 
         // 3. Resolve Address Snapshot
         OrderAddressSnapshot addressSnapshot = resolveAddressSnapshot(userId, request);
+
+        if (userId != null) {
+            if (addressSnapshot.getPhone() != null && !addressSnapshot.getPhone().isBlank()) {
+                authService.linkPhoneToUser(userId, addressSnapshot.getPhone());
+            }
+            if (request.getAddressId() == null && request.getShippingAddress() != null) {
+                List<CustomerDtos.AddressDto> existingAddrs = customerService.getAddresses(userId);
+                if (existingAddrs.isEmpty()) {
+                    customerService.addAddress(userId, CustomerDtos.AddressRequest.builder()
+                            .recipientName(addressSnapshot.getRecipientName())
+                            .phone(addressSnapshot.getPhone())
+                            .line1(addressSnapshot.getLine1())
+                            .line2(addressSnapshot.getLine2())
+                            .city(addressSnapshot.getCity())
+                            .state(addressSnapshot.getState())
+                            .pincode(addressSnapshot.getPincode())
+                            .isDefault(true)
+                            .build());
+                }
+            }
+        }
 
         // 4. Generate Order Number
         String orderNumber = generateOrderNumber();

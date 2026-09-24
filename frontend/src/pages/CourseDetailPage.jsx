@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, Calendar, Clock, MapPin, CheckCircle, Video, Award, ArrowLeft, Users, ShieldCheck, X } from 'lucide-react';
 import { trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
@@ -8,6 +8,7 @@ import AuthForm from '../components/AuthForm';
 
 export default function CourseDetailPage({ user, setUser }) {
   const { courseSlug } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState(null);
@@ -41,8 +42,11 @@ export default function CourseDetailPage({ user, setUser }) {
     setBookingError('');
     try {
       const res = await trainingApi.bookSlot(slotId);
-      setBookingSuccess(res.data.data);
-      setShowAuthModal(false);
+      if (res.data && res.data.success) {
+        const enrollment = res.data.data;
+        setShowAuthModal(false);
+        navigate(`/payment?type=enrollment&id=${enrollment.id}`);
+      }
     } catch (err) {
       setBookingError(err.response?.data?.message || 'Failed to book slot.');
     }

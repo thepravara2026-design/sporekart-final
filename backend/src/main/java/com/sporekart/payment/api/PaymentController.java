@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/payment")
+@RequestMapping({"/api/v1/payment", "/payment"})
 @RequiredArgsConstructor
 public class PaymentController {
 
@@ -26,6 +26,21 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentDtos.VerifyPaymentResponse>> verifyPayment(
             @Valid @RequestBody PaymentDtos.VerifyPaymentRequest request) {
         PaymentDtos.VerifyPaymentResponse response = paymentService.verifyPayment(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse<PaymentDtos.PaymentSummaryResponse>> getPaymentSummary(
+            @RequestParam(defaultValue = "ORDER") String type,
+            @RequestParam java.util.UUID id) {
+        PaymentDtos.PaymentSummaryResponse response = paymentService.getPaymentSummary(type, id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/verify-enrollment")
+    public ResponseEntity<ApiResponse<PaymentDtos.VerifyEnrollmentPaymentResponse>> verifyEnrollmentPayment(
+            @Valid @RequestBody PaymentDtos.VerifyEnrollmentPaymentRequest request) {
+        PaymentDtos.VerifyEnrollmentPaymentResponse response = paymentService.verifyEnrollmentPayment(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

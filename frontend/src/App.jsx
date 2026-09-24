@@ -19,6 +19,9 @@ const TrainingPage = lazy(() => import('./pages/TrainingPage'));
 const CourseDetailPage = lazy(() => import('./pages/CourseDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
+const TrainingConfirmationPage = lazy(() => import('./pages/TrainingConfirmationPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage'));
@@ -87,11 +90,14 @@ export default function App() {
                   {/* Cart & Checkout Routes */}
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage user={user} setUser={setUser} />} />
+                  <Route path="/payment" element={<PaymentPage />} />
+                  <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
 
                   {/* Training & Masterclasses Routes */}
                   <Route path="/training" element={<TrainingPage user={user} setUser={setUser} />} />
                   <Route path="/training/mushroom-cultivation" element={<TrainingPage user={user} setUser={setUser} />} />
                   <Route path="/training/spawn-production" element={<TrainingPage user={user} setUser={setUser} />} />
+                  <Route path="/training/confirmation/:enrollmentId" element={<TrainingConfirmationPage />} />
                   <Route path="/training/:courseSlug" element={<CourseDetailPage user={user} setUser={setUser} />} />
 
                   {/* Company & Support Routes */}

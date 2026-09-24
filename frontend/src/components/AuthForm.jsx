@@ -69,6 +69,37 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
     setGoogleProfileName(initialName);
   };
 
+  // Submits Google Auth using default Google account profile name without forcing custom input
+  const handleSkipGoogleProfile = async () => {
+    setAuthError('');
+    setLoading(true);
+    try {
+      const defaultName = pendingGoogleAuth.fullName || `${pendingGoogleAuth.firstName || ''} ${pendingGoogleAuth.lastName || ''}`.trim() || 'Google Grower';
+      const parts = defaultName.split(' ');
+      const firstName = parts[0] || defaultName;
+      const lastName = parts.slice(1).join(' ') || '';
+
+      const finalPayload = {
+        ...pendingGoogleAuth,
+        fullName: defaultName,
+        firstName,
+        lastName,
+      };
+
+      const res = await authApi.loginWithGoogle(finalPayload);
+      const authData = res.data.data;
+      localStorage.setItem('sporekart_token', authData.token);
+      if (setUser) setUser(authData);
+      if (mergeGuestCart) await mergeGuestCart();
+      if (onSuccess) onSuccess(authData);
+      setPendingGoogleAuth(null);
+    } catch (err) {
+      setAuthError(err.response?.data?.message || 'Google Auth Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Submits Google Auth with user's confirmed/edited profile name
   const handleConfirmGoogleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -128,7 +159,7 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
 
           <h3 className="text-xl font-display font-bold text-white tracking-tight">Set Profile Name</h3>
           <p className="text-xs text-slate-400">
-            Specify the name to save for your profile, orders, and workshop certificates.
+            Customize your display name or skip to use your default Google profile name.
           </p>
         </div>
 
@@ -141,7 +172,7 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
         <form onSubmit={handleConfirmGoogleProfileSubmit} className="space-y-4 pt-1">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
-              <span>Profile / Display Name</span>
+              <span>Profile / Display Name (Optional)</span>
               <span className="text-[10px] text-spore-400 flex items-center gap-1 font-normal"><Sparkles className="w-3 h-3" /> Customize</span>
             </label>
             <input
@@ -149,29 +180,39 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
               placeholder="Enter full name (e.g. Suresh Kumar)"
               value={googleProfileName}
               onChange={(e) => setGoogleProfileName(e.target.value)}
-              required
               autoFocus
               className="w-full bg-slate-900/90 border border-spore-600/60 focus:border-spore-400 focus:ring-1 focus:ring-spore-400 rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-all shadow-inner"
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              This name will be saved in your Sporekart profile.
+              You can edit this now or skip to use your Google account default name.
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || !googleProfileName.trim()}
-            className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2 group"
-          >
-            {loading ? (
-              <span>Saving Profile & Continuing...</span>
-            ) : (
-              <>
-                <span>Save Profile Name & Continue</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </>
-            )}
-          </button>
+          <div className="space-y-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2 group"
+            >
+              {loading ? (
+                <span>Saving Profile & Continuing...</span>
+              ) : (
+                <>
+                  <span>Save Profile Name & Continue</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleSkipGoogleProfile}
+              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition-all button-press"
+            >
+              Skip & Use Default Google Name
+            </button>
+          </div>
 
           <button
             type="button"
@@ -251,7 +292,10 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
       ) : (
         <form onSubmit={handleVerifyOtp} className="space-y-3">
           <div>
-            <label className="block text-xs text-slate-300 font-medium mb-1">Full Name (New Registrations)</label>
+            <label className="block text-xs text-slate-300 font-medium mb-1 flex items-center justify-between">
+              <span>Full Name (Optional Registration Detail)</span>
+              <span className="text-[10px] text-slate-400 font-normal">Fill now or later</span>
+            </label>
             <input
               type="text"
               placeholder="Your Full Name (e.g. Praveen Kumar)"
@@ -275,7 +319,7 @@ export default function AuthForm({ onSuccess, setUser, title = "Login or Registe
             disabled={loading}
             className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press"
           >
-            {loading ? 'Verifying Account...' : 'Verify OTP & Continue'}
+            {loading ? 'Verifying Account...' : 'Verify OTP & Complete Account'}
           </button>
           <button
             type="button"
