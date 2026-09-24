@@ -219,6 +219,40 @@ public class TrainingService {
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
     }
 
+    @Transactional
+    public Enrollment cancelEnrollment(UUID enrollmentId, UUID userId, String reason) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+
+        if (userId != null && !userId.equals(enrollment.getUserId())) {
+            throw new IllegalArgumentException("Access denied: You do not own this enrollment.");
+        }
+
+        if (enrollment.getStatus() == EnrollmentStatus.CANCELLED) {
+            return enrollment;
+        }
+
+        Batch batch = enrollment.getBatch();
+        LocalDate startDate = batch != null ? batch.getStartDate() : null;
+
+        if (startDate != null) {
+            if (LocalDate.now().plusDays(7).isAfter(startDate)) {
+                throw new IllegalStateException("Enrollment cancellation is only permitted at least 7 days before the batch start date.");
+            }
+        }
+
+        if (enrollment.getStatus() == EnrollmentStatus.CONFIRMED && batch != null) {
+            if (batch.getEnrolledCount() != null && batch.getEnrolledCount() > 0) {
+                batch.setEnrolledCount(batch.getEnrolledCount() - 1);
+                batchRepository.save(batch);
+            }
+        }
+
+        enrollment.setStatus(EnrollmentStatus.CANCELLED);
+        log.info("Enrollment ID {} cancelled for user ID {}. Reason: {}", enrollmentId, userId, reason);
+        return enrollmentRepository.save(enrollment);
+    }
+
     // --- Attendance, Completion & Certificates ---
     @Transactional
     public Attendance markAttendance(UUID enrollmentId, UUID scheduleId, boolean isPresent) {

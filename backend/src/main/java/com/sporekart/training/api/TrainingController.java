@@ -90,6 +90,25 @@ public class TrainingController {
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
     }
 
+    @PostMapping("/enrollments/{enrollmentId}/cancel")
+    public ResponseEntity<ApiResponse<TrainingDtos.EnrollmentResponse>> cancelEnrollment(
+            org.springframework.security.core.Authentication authentication,
+            @PathVariable UUID enrollmentId,
+            @RequestParam(required = false) String reason) {
+
+        UUID authUserId = extractUserId(authentication);
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
+        if (authUserId == null || (!authUserId.equals(enrollment.getUserId()) && !isAdmin)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to cancel enrollment"));
+        }
+
+        Enrollment cancelled = trainingService.cancelEnrollment(enrollmentId, authUserId, reason);
+        return ResponseEntity.ok(ApiResponse.success(mapEnrollment(cancelled)));
+    }
+
     @GetMapping("/user/{userId}/enrollments")
     public ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>> getUserEnrollments(
             org.springframework.security.core.Authentication authentication,

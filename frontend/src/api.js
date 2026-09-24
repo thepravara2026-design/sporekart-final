@@ -82,6 +82,7 @@ export const trainingApi = {
   bookSlot: (slotId) => api.post('/training/enroll', { batchId: slotId, slotId }),
   getUserBookings: () => api.get('/training/my-bookings'),
   getEnrollmentById: (enrollmentId) => api.get(`/training/enrollments/${enrollmentId}`),
+  cancelEnrollment: (enrollmentId, reason) => api.post(`/training/enrollments/${enrollmentId}/cancel`, null, { params: { reason } }),
 };
 
 export const orderApi = {

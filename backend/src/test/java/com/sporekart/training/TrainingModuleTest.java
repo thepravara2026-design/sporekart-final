@@ -175,4 +175,36 @@ public class TrainingModuleTest {
         Enrollment completedEnrollment = enrollmentRepository.findById(enrollment.getId()).orElseThrow();
         assertEquals(EnrollmentStatus.COMPLETED, completedEnrollment.getStatus());
     }
+
+    @Test
+    void testEnrollmentCancellationRestriction7Days() {
+        // testBatch starts 5 days from now -> cancellation MUST fail
+        Enrollment e1 = trainingService.enrollCustomer(userId, testBatch.getId());
+        trainingService.confirmEnrollmentPayment(e1.getId(), "PAY_CANCEL_1");
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            trainingService.cancelEnrollment(e1.getId(), userId, "Plans changed");
+        });
+        assertTrue(ex.getMessage().contains("at least 7 days before"));
+
+        // Create a batch starting 10 days from now -> cancellation MUST succeed
+        Batch futureBatch = trainingService.createBatch(
+                testCourse.getId(),
+                "BATCH-FUTURE-2026",
+                LocalDate.now().plusDays(10),
+                LocalDate.now().plusDays(17),
+                10
+        );
+        Enrollment e2 = trainingService.enrollCustomer(userId, futureBatch.getId());
+        trainingService.confirmEnrollmentPayment(e2.getId(), "PAY_CANCEL_2");
+
+        Batch batchBeforeCancel = batchRepository.findById(futureBatch.getId()).orElseThrow();
+        assertEquals(1, batchBeforeCancel.getEnrolledCount());
+
+        Enrollment cancelled = trainingService.cancelEnrollment(e2.getId(), userId, "Rescheduled");
+        assertEquals(EnrollmentStatus.CANCELLED, cancelled.getStatus());
+
+        Batch batchAfterCancel = batchRepository.findById(futureBatch.getId()).orElseThrow();
+        assertEquals(0, batchAfterCancel.getEnrolledCount());
+    }
 }

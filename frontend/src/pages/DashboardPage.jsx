@@ -23,6 +23,11 @@ export default function DashboardPage({ user }) {
   const [cancelReason, setCancelReason] = useState('Ordered by mistake');
   const [customCancelReason, setCustomCancelReason] = useState('');
 
+  // Cancel Enrollment Modal State
+  const [cancellingEnrollment, setCancellingEnrollment] = useState(null);
+  const [cancelEnrollmentReason, setCancelEnrollmentReason] = useState('Schedule conflict');
+  const [customCancelEnrollmentReason, setCustomCancelEnrollmentReason] = useState('');
+
   // Raise Ticket Modal State
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketForm, setTicketForm] = useState({
@@ -120,6 +125,32 @@ export default function DashboardPage({ user }) {
       alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to cancel order');
     } finally {
       setActionLoading((prev) => ({ ...prev, [cancellingOrder.id]: false }));
+    }
+  };
+
+  // Submit Training Enrollment Cancellation
+  const handleConfirmCancelEnrollment = async (e) => {
+    e.preventDefault();
+    if (!cancellingEnrollment) return;
+    const finalReason = cancelEnrollmentReason === 'Other' ? customCancelEnrollmentReason : cancelEnrollmentReason;
+    if (!finalReason || !finalReason.trim()) {
+      alert('Please select or specify a cancellation reason.');
+      return;
+    }
+
+    setActionLoading((prev) => ({ ...prev, [cancellingEnrollment.id]: true }));
+    try {
+      const res = await trainingApi.cancelEnrollment(cancellingEnrollment.id, finalReason);
+      if (res.data && res.data.success) {
+        alert(`Enrollment for ${cancellingEnrollment.courseTitle} cancelled successfully.`);
+        setCancellingEnrollment(null);
+        setCustomCancelEnrollmentReason('');
+        fetchData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to cancel enrollment. Note: Cancellations are only permitted at least 7 days before the batch start date.');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [cancellingEnrollment.id]: false }));
     }
   };
 
@@ -631,47 +662,139 @@ export default function DashboardPage({ user }) {
               actionLink="/training"
             />
           ) : (
-            bookings.map((booking) => (
-              <div key={booking.bookingId} className="glass-card p-6 sm:p-8 rounded-3xl border border-spore-800/50 space-y-4 hover-lift shadow-xl">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-spore-900/40 pb-4">
-                  <div className="space-y-1">
-                    <span className="px-3 py-1 bg-spore-500/20 text-spore-300 text-xs font-bold rounded-xl border border-spore-500/40 inline-block">
-                      {booking.status || 'CONFIRMED'}
-                    </span>
-                    <h3 className="font-bold text-white text-lg font-display">{booking.courseTitle}</h3>
-                    <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-spore-400" />
-                      Batch Date: {booking.startDate ? new Date(booking.startDate).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.startTime ? new Date(booking.startTime).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.enrolledAt ? new Date(booking.enrolledAt).toLocaleDateString() : 'Upcoming Batch'))}
-                    </p>
-                    <p className="text-xs text-slate-300 flex items-center gap-1.5 pt-1">
-                      <ExternalLink className="w-3.5 h-3.5 text-spore-400" />
-                      Location / Online Access Link: <strong className="text-spore-300 underline font-mono">{booking.locationOrLink || 'Sent to registered email'}</strong>
-                    </p>
+            bookings.map((booking) => {
+              const startDateObj = booking.startDate ? new Date(booking.startDate) : (booking.startTime ? new Date(booking.startTime) : null);
+              const now = new Date();
+              const timeDiff = startDateObj ? (startDateObj.getTime() - now.getTime()) : null;
+              const daysUntilStart = timeDiff !== null ? Math.ceil(timeDiff / (1000 * 3600 * 24)) : null;
+              const canCancel = booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && (daysUntilStart === null || daysUntilStart >= 7);
+
+              return (
+                <div key={booking.id || booking.bookingId} className="glass-card p-6 sm:p-8 rounded-3xl border border-spore-800/50 space-y-5 hover-lift shadow-xl">
+                  {/* Card Header & Summary */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-spore-900/40 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 text-xs font-bold rounded-xl border inline-block ${
+                          booking.status === 'CANCELLED' 
+                            ? 'bg-rose-950/80 text-rose-300 border-rose-800/60'
+                            : booking.status === 'COMPLETED'
+                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/60'
+                            : 'bg-spore-500/20 text-spore-300 border-spore-500/40'
+                        }`}>
+                          {booking.status || 'CONFIRMED'}
+                        </span>
+                        {booking.batchCode && (
+                          <span className="px-2.5 py-0.5 bg-slate-900 text-slate-300 text-[10px] font-mono font-bold rounded-lg border border-slate-700">
+                            {booking.batchCode}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-bold text-white text-lg font-display pt-0.5">{booking.courseTitle}</h3>
+
+                      <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-spore-400" />
+                        Batch Date: {booking.startDate ? new Date(booking.startDate).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.startTime ? new Date(booking.startTime).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.enrolledAt ? new Date(booking.enrolledAt).toLocaleDateString() : 'Upcoming Batch'))}
+                      </p>
+                      <p className="text-xs text-slate-300 flex items-center gap-1.5 pt-1">
+                        <ExternalLink className="w-3.5 h-3.5 text-spore-400" />
+                        Location / Online Access Link: <strong className="text-spore-300 underline font-mono">{booking.locationOrLink || 'Sent to registered email'}</strong>
+                      </p>
+                    </div>
+
+                    <div className="text-right space-y-2 flex-shrink-0">
+                      <span className="text-xs text-slate-400 block font-medium">Workshop Fee Paid</span>
+                      <span className="text-2xl font-bold text-amber-400 font-display block">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
+
+                      {/* Cancel Enrollment Button */}
+                      {canCancel && (
+                        <button
+                          onClick={() => setCancellingEnrollment(booking)}
+                          className="px-3.5 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press ml-auto"
+                        >
+                          <XCircle className="w-3.5 h-3.5 text-rose-400" /> Cancel Enrollment
+                        </button>
+                      )}
+
+                      {booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && daysUntilStart !== null && daysUntilStart < 7 && (
+                        <span className="text-[11px] text-amber-300 bg-amber-950/50 border border-amber-800/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5 ml-auto" title="Enrollment cancellation is allowed only at least 7 days before batch start date">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                          <span>Cancellation Locked (&lt; 7 Days)</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="text-right space-y-2 flex-shrink-0">
-                    <span className="text-xs text-slate-400 block font-medium">Workshop Fee Paid</span>
-                    <span className="text-2xl font-bold text-amber-400 font-display">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
-                    <button
-                      onClick={() => {
-                        setTicketForm({
-                          subject: `Workshop Query: ${booking.courseTitle}`,
-                          category: 'COURSE_QUERY',
-                          priority: 'MEDIUM',
-                          message: `Hi Sporekart Agronomist Team,\n\nI have a question regarding batch schedule for ${booking.courseTitle}.`,
-                          orderId: null,
-                          courseId: booking.courseId,
-                        });
-                        setTicketModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press ml-auto"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5 text-spore-400" /> Ask Instructor
-                    </button>
+                  {/* Customer Support Options Section */}
+                  <div className="bg-slate-950/60 p-4 rounded-2xl border border-spore-900/60 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-spore-400" />
+                      <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Customer Support Options for Training &amp; Courses</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      {/* Option 1: Batch & Schedule */}
+                      <button
+                        onClick={() => {
+                          setTicketForm({
+                            subject: `Batch & Schedule Query: ${booking.courseTitle}`,
+                            category: 'COURSE_QUERY',
+                            priority: 'MEDIUM',
+                            message: `Hi Sporekart Agronomist Support,\n\nI need assistance regarding batch timing, rescheduling, or google meet link for ${booking.courseTitle} (Batch: ${booking.batchCode || 'Masterclass'}).`,
+                            orderId: null,
+                            courseId: booking.courseId,
+                          });
+                          setTicketModalOpen(true);
+                        }}
+                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                      >
+                        <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <span>Batch &amp; Schedule Query</span>
+                      </button>
+
+                      {/* Option 2: Course Materials & Notes */}
+                      <button
+                        onClick={() => {
+                          setTicketForm({
+                            subject: `Course Materials & Study Notes: ${booking.courseTitle}`,
+                            category: 'COURSE_QUERY',
+                            priority: 'MEDIUM',
+                            message: `Hi Sporekart Agronomist Support,\n\nI need assistance accessing study guides, substrate formulas, or class recordings for ${booking.courseTitle}.`,
+                            orderId: null,
+                            courseId: booking.courseId,
+                          });
+                          setTicketModalOpen(true);
+                        }}
+                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                      >
+                        <GraduationCap className="w-4 h-4 text-spore-400 flex-shrink-0" />
+                        <span>Course Content &amp; Notes</span>
+                      </button>
+
+                      {/* Option 3: Payments & Refunds */}
+                      <button
+                        onClick={() => {
+                          setTicketForm({
+                            subject: `Training Payment & Refund Query: ${booking.courseTitle}`,
+                            category: 'PAYMENT_FAILURE',
+                            priority: 'MEDIUM',
+                            message: `Hi Sporekart Customer Support,\n\nI have a query regarding workshop fee payment, GST invoice, or refund status for ${booking.courseTitle} (Ref: ${booking.paymentReference || 'N/A'}).`,
+                            orderId: null,
+                            courseId: booking.courseId,
+                          });
+                          setTicketModalOpen(true);
+                        }}
+                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                      >
+                        <FileText className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <span>Training Payment / Refund</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -877,6 +1000,86 @@ export default function DashboardPage({ user }) {
                   className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
                 >
                   Keep Order
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CANCEL ENROLLMENT MODAL */}
+      {cancellingEnrollment && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-rose-800/60 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex justify-between items-center pb-3 border-b border-rose-900/60">
+              <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-rose-400" /> Cancel Enrollment
+              </h3>
+              <button onClick={() => setCancellingEnrollment(null)} className="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <p className="text-slate-200 font-bold">{cancellingEnrollment.courseTitle}</p>
+              <p className="text-slate-400">
+                Batch Date: <strong className="text-slate-300">{cancellingEnrollment.startDate ? new Date(cancellingEnrollment.startDate).toLocaleDateString() : 'Upcoming Batch'}</strong>
+              </p>
+              <p className="text-amber-300/90 bg-amber-950/50 p-2.5 rounded-xl border border-amber-800/60 text-[11px]">
+                ⚠️ Note: Cancellations are permitted at least 7 days prior to the batch start date. Upon confirmation, your slot will be released back to capacity.
+              </p>
+            </div>
+
+            <form onSubmit={handleConfirmCancelEnrollment} className="space-y-4">
+              <div className="space-y-2 text-xs">
+                <label className="block text-slate-300 font-medium mb-1">Reason for cancellation</label>
+                {[
+                  'Schedule conflict',
+                  'Health / Personal Emergency',
+                  'Location / Travel issue',
+                  'Enrolled in wrong course',
+                  'Other',
+                ].map((reason) => (
+                  <label key={reason} className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-slate-700">
+                    <input
+                      type="radio"
+                      name="cancelEnrollmentReason"
+                      value={reason}
+                      checked={cancelEnrollmentReason === reason}
+                      onChange={(e) => setCancelEnrollmentReason(e.target.value)}
+                      className="text-spore-500 focus:ring-spore-400"
+                    />
+                    <span className="text-slate-200 font-medium">{reason}</span>
+                  </label>
+                ))}
+              </div>
+
+              {cancelEnrollmentReason === 'Other' && (
+                <div>
+                  <label className="block text-xs text-slate-300 mb-1 font-medium font-mono">Specify details</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={customCancelEnrollmentReason}
+                    onChange={(e) => setCustomCancelEnrollmentReason(e.target.value)}
+                    placeholder="Enter reason for cancellation..."
+                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-rose-400"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={actionLoading[cancellingEnrollment.id]}
+                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all button-press"
+                >
+                  {actionLoading[cancellingEnrollment.id] ? 'Cancelling...' : 'Confirm Cancel Enrollment'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCancellingEnrollment(null)}
+                  className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
+                >
+                  Keep Enrollment
                 </button>
               </div>
             </form>
