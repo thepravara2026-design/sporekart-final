@@ -19,11 +19,26 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
+
+    @jakarta.annotation.PostConstruct
+    public void validateSecret() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET environment variable is missing or blank. Application cannot boot safely without a configured JWT secret.");
+        }
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret.trim());
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException("JWT_SECRET must be at least 32 bytes (256 bits) after Base64 decoding.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("JWT_SECRET must be a valid Base64-encoded string.", e);
+        }
+    }
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);

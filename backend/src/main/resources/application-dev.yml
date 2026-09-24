@@ -25,3 +25,7 @@ logging:
     com.sporekart: DEBUG
     org.springframework.security: DEBUG
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:dGVzdF9kZXZfc2VjcmV0X2tleV9mb3JfbG9jYWxfZGV2ZWxvcG1lbnRfb25seV8zMmJ5dGVz}
+
