@@ -15,6 +15,8 @@ import com.sporekart.order.api.dto.*;
 import com.sporekart.order.domain.*;
 import com.sporekart.order.infrastructure.OrderEventRepository;
 import com.sporekart.order.infrastructure.OrderRepository;
+import com.sporekart.shared.application.ForbiddenOperationException;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,7 +122,7 @@ public class OrderService {
 
         for (CartItem item : sortedItems) {
             ProductVariant variant = catalogApplicationService.findVariantById(item.getVariantId())
-                    .orElseThrow(() -> new IllegalArgumentException("Product variant not found: " + item.getVariantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found: " + item.getVariantId()));
             Product product = variant.getProduct();
 
             if (product == null || !product.isActive()) {
@@ -194,18 +196,18 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
         return mapToResponse(order);
     }
 
     private void validateOrderAccess(Order order, UUID userId, String sessionId) {
         if (order.getUserId() != null) {
             if (userId == null || !userId.equals(order.getUserId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not authorized to access this order");
+                throw new ForbiddenOperationException("Access denied: You are not authorized to access this order");
             }
         } else {
             if (sessionId == null || sessionId.trim().isEmpty() || !sessionId.equals(order.getSessionId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not authorized to access this guest order");
+                throw new ForbiddenOperationException("Access denied: You are not authorized to access this guest order");
             }
         }
     }
@@ -213,7 +215,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderDetails(UUID orderId, UUID userId, String sessionId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         validateOrderAccess(order, userId, sessionId);
 
@@ -228,7 +230,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public byte[] generateInvoicePdf(UUID orderId, UUID userId, String sessionId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         validateOrderAccess(order, userId, sessionId);
 
@@ -311,7 +313,7 @@ public class OrderService {
     @Transactional
     public OrderResponse updateOrderStatus(UUID orderId, OrderStatus newStatus, String reason, String updatedBy) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         OrderStatus previousStatus = order.getStatus();
         if (previousStatus == newStatus) {
@@ -345,13 +347,13 @@ public class OrderService {
     @Transactional
     public OrderResponse cancelOrder(UUID orderId, UUID userId, String reason) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         if (userId == null && order.getUserId() != null) {
-            throw new IllegalArgumentException("Access denied: User must be authenticated to cancel order");
+            throw new ForbiddenOperationException("Access denied: User must be authenticated to cancel order");
         }
         if (order.getUserId() != null && !userId.equals(order.getUserId())) {
-            throw new IllegalArgumentException("Access denied: You are not authorized to cancel this order");
+            throw new ForbiddenOperationException("Access denied: You are not authorized to cancel this order");
         }
 
         OrderStatus currentStatus = order.getStatus();
@@ -380,9 +382,9 @@ public class OrderService {
     private OrderAddressSnapshot resolveAddressSnapshot(UUID userId, CreateOrderRequest request) {
         if (request.getAddressId() != null) {
             CustomerAddress a = customerService.findAddressById(request.getAddressId())
-                    .orElseThrow(() -> new IllegalArgumentException("Address not found: " + request.getAddressId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Address not found: " + request.getAddressId()));
             if (userId != null && a.getUserId() != null && !userId.equals(a.getUserId())) {
-                throw new IllegalArgumentException("Access denied: Address does not belong to the current user");
+                throw new ForbiddenOperationException("Access denied: Address does not belong to the current user");
             }
             return OrderAddressSnapshot.builder()
                     .recipientName(a.getRecipientName())
