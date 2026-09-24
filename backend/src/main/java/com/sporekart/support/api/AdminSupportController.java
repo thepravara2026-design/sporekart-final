@@ -7,6 +7,10 @@ import com.sporekart.support.domain.*;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,8 +29,17 @@ public class AdminSupportController {
     private final AdminApplicationService adminAuditService;
 
     @GetMapping("/tickets")
-    public ResponseEntity<ApiResponse<List<SupportTicket>>> getAllTickets() {
-        return ResponseEntity.ok(ApiResponse.success(supportService.getAllTickets()));
+    public ResponseEntity<ApiResponse<Page<SupportTicket>>> getAllTickets(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size
+    ) {
+        int cappedSize = Math.min(Math.max(1, size), 100);
+        Pageable pageable = PageRequest.of(
+                Math.max(0, page),
+                cappedSize,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return ResponseEntity.ok(ApiResponse.success(supportService.getAllTickets(pageable)));
     }
 
     @GetMapping("/tickets/{id}")

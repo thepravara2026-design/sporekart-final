@@ -116,6 +116,11 @@ public class SupportApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<SupportTicket> getAllTickets(org.springframework.data.domain.Pageable pageable) {
+        return ticketRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
     public SupportTicket getTicketDetails(UUID ticketId) {
         return ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("Support ticket not found: " + ticketId));

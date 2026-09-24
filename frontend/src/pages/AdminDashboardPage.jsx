@@ -104,26 +104,26 @@ export default function AdminDashboardPage({ user }) {
           adminApi.getAuditLogs()
         ]);
         if (resOverview.status === 'fulfilled') setAnalytics(resOverview.value.data.data);
-        if (resLogs.status === 'fulfilled') setAuditLogs(resLogs.value.data.data || []);
+        if (resLogs.status === 'fulfilled') setAuditLogs(resLogs.value.data.data?.content || resLogs.value.data.data || []);
       } else if (section === 'blogs') {
         const res = await adminApi.getBlogPosts();
-        setPosts(res.data.data?.content || []);
+        setPosts(res.data.data?.content || res.data.data || []);
       } else if (section === 'products' || section === 'categories' || section === 'inventory' || section === 'offers' || section === 'media') {
         const [resProds, resCats] = await Promise.allSettled([
           catalogApi.getProducts(),
           catalogApi.getCategories()
         ]);
-        if (resProds.status === 'fulfilled') setProducts(resProds.value.data.data || []);
-        if (resCats.status === 'fulfilled') setCategories(resCats.value.data.data || []);
+        if (resProds.status === 'fulfilled') setProducts(resProds.value.data.data?.content || resProds.value.data.data || []);
+        if (resCats.status === 'fulfilled') setCategories(resCats.value.data.data?.content || resCats.value.data.data || []);
       } else if (section === 'orders' || section === 'payments' || section === 'shipping') {
         const res = await adminApi.getOrders();
-        setOrders(res.data.data || []);
+        setOrders(res.data.data?.content || res.data.data || []);
       } else if (section === 'customers') {
         const res = await adminApi.getCustomers();
-        setCustomers(res.data.data || []);
+        setCustomers(res.data.data?.content || res.data.data || []);
       } else if (section === 'support') {
         const res = await adminApi.getTickets();
-        setTickets(res.data.data || []);
+        setTickets(res.data.data?.content || res.data.data || []);
       } else if (section === 'training' || section === 'courses' || section === 'batches' || section === 'enrollments') {
         const res = await trainingApi.getCourses();
         setCourses(res.data.data || []);

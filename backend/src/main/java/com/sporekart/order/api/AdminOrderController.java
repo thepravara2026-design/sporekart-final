@@ -10,6 +10,10 @@ import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -30,12 +34,17 @@ public class AdminOrderController {
     private final AdminApplicationService adminAuditService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
-        List<OrderResponse> orders = orderRepository.findAll()
-                .stream()
-                .map(orderService::mapToResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success(orders));
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size
+    ) {
+        int cappedSize = Math.min(Math.max(1, size), 100);
+        Pageable pageable = PageRequest.of(
+                Math.max(0, page),
+                cappedSize,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders(pageable)));
     }
 
     @GetMapping("/{id}")

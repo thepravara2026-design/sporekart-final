@@ -131,7 +131,7 @@ export const adminApi = {
   createOffer: (data) => api.post('/admin/catalog/offers', data),
   addMedia: (data) => api.post('/admin/catalog/media', data),
   reorderMedia: (productId, items) => api.put(`/admin/catalog/products/${productId}/media/reorder`, { items }),
-  getOrders: () => api.get('/admin/orders'),
+  getOrders: (params) => api.get('/admin/orders', { params }),
   getOrderById: (id) => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (orderId, status, reason) => api.put(`/admin/orders/${orderId}/status`, { status, reason }),
   createCourse: (data) => api.post('/admin/training/courses', data),
@@ -139,14 +139,14 @@ export const adminApi = {
   addBatchSchedule: (data) => api.post('/admin/training/schedules', data),
   markAttendance: (data) => api.post('/admin/training/attendance', data),
   completeCourse: (data) => api.post('/admin/training/complete-course', data),
-  getCustomers: () => api.get('/admin/customers'),
+  getCustomers: (params) => api.get('/admin/customers', { params }),
   grantCapability: (userId, capability) => api.post(`/admin/customers/${userId}/capability`, { capability }),
-  getTickets: () => api.get('/admin/support/tickets'),
+  getTickets: (params) => api.get('/admin/support/tickets', { params }),
   getTicketById: (ticketId) => api.get(`/admin/support/tickets/${ticketId}`),
   replyToTicket: (ticketId, message) => api.post(`/admin/support/tickets/${ticketId}/messages`, { message }),
   updateTicketStatus: (ticketId, status, priority) => api.put(`/admin/support/tickets/${ticketId}/status`, { status, priority }),
   getAnalyticsOverview: () => api.get('/admin/analytics/overview'),
-  getAuditLogs: () => api.get('/admin/audit-logs'),
+  getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
 };
 
 export const analyticsApi = {

@@ -471,4 +471,9 @@ public class OrderService {
 
         return response;
     }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<OrderResponse> getAllOrders(org.springframework.data.domain.Pageable pageable) {
+        return orderRepository.findAll(pageable).map(this::mapToResponse);
+    }
 }

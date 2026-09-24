@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 
 @RestController
@@ -21,8 +27,17 @@ public class AdminController {
     private final AdminApplicationService adminService;
 
     @GetMapping("/audit-logs")
-    public ResponseEntity<ApiResponse<List<AdminAuditLog>>> getAuditLogs() {
-        return ResponseEntity.ok(ApiResponse.success(adminService.getAllAuditLogs()));
+    public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size
+    ) {
+        int cappedSize = Math.min(Math.max(1, size), 100);
+        Pageable pageable = PageRequest.of(
+                Math.max(0, page),
+                cappedSize,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return ResponseEntity.ok(ApiResponse.success(adminService.getAllAuditLogs(pageable)));
     }
 
     @GetMapping("/analytics/overview")
