@@ -65,7 +65,7 @@ export default function App() {
     <HelmetProvider>
       <CartProvider>
         <Router>
-          <div className="min-h-screen flex flex-col justify-between bg-[#f2f8f4] text-slate-900 font-sans">
+          <div className="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100 font-sans">
             <Navbar user={user} setUser={setUser} />
 
             <main id="main-content" tabIndex="-1" className="flex-grow focus:outline-none">

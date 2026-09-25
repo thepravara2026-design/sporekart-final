@@ -164,11 +164,11 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
           to="/products"
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
             !categoryParam && !typeParam
-              ? 'bg-[#16532f] text-white shadow-sm'
-              : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+              ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+              : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
           }`}
         >
-          Shop by Category
+          All Products
         </Link>
         {categories.length > 0 ? (
           categories.map((cat) => {
@@ -179,8 +179,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                 to={`/products/${cat.slug}`}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
                   isSelected
-                    ? 'bg-[#16532f] text-white shadow-sm'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+                    ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                    : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
                 }`}
               >
                 {cat.name}
@@ -193,8 +193,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               to="/products/fresh-mushrooms"
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
                 categoryParam === 'fresh-mushrooms' || categoryParam === 'FRESH_MUSHROOM'
-                  ? 'bg-[#16532f] text-white shadow-sm'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
               }`}
             >
               Fresh Mushrooms
@@ -203,8 +203,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               to="/products/dry-mushrooms"
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
                 categoryParam === 'dry-mushrooms' || categoryParam === 'DRY_MUSHROOM'
-                  ? 'bg-[#16532f] text-white shadow-sm'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
               }`}
             >
               Dry Mushrooms
@@ -213,8 +213,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               to="/products/spawn-seeds"
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
                 categoryParam === 'spawn-seeds' || categoryParam === 'mushroom-spawn' || categoryParam === 'SPAWN_SEED'
-                  ? 'bg-[#16532f] text-white shadow-sm'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
               }`}
             >
               Grain Spawn Seeds
@@ -223,8 +223,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               to="/products/growing-kits"
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all button-press ${
                 categoryParam === 'growing-kits' || categoryParam === 'GROWING_KIT'
-                  ? 'bg-[#16532f] text-white shadow-sm'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:text-[#16532f] hover:bg-[#f4f8f4]'
+                  ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-lg shadow-spore-950/40'
+                  : 'bg-spore-950/60 border border-spore-800/60 text-slate-300 hover:bg-spore-900 hover:text-white'
               }`}
             >
               DIY Growing Kits
@@ -262,17 +262,28 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               <div 
                 key={product.id} 
                 data-testid="product-card"
-                className="bg-white rounded-3xl overflow-hidden flex flex-col justify-between border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow group"
+                className="glass-card rounded-3xl overflow-hidden flex flex-col justify-between border border-spore-800/40 group hover-lift"
               >
                 <div>
-                  <div className="p-5 space-y-3">
-                    <span className="text-[10px] font-bold text-[#16532f] uppercase tracking-wider block">
-                      {product.categoryName || 'SPAWN & SEEDS'}
+                  <Link to={`/product/${product.slug}`} className="relative h-56 overflow-hidden block">
+                    <MediaImage
+                      src={image}
+                      alt={`${product.title} - Fresh mushroom supply India`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <span className="absolute top-3 left-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-spore-300 text-[10px] font-bold rounded-xl border border-spore-700/50 uppercase tracking-wider">
+                      {product.categoryName}
                     </span>
-                    <Link to={`/product/${product.slug}`} className="font-display font-bold text-lg text-gray-900 hover:text-[#16532f] transition-colors block">
+                    <div className="absolute top-3 right-3">
+                      <AvailabilityBadge availability={availability} />
+                    </div>
+                  </Link>
+
+                  <div className="p-5 space-y-3">
+                    <Link to={`/product/${product.slug}`} className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors block">
                       {product.title}
                     </Link>
-                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{product.description}</p>
+                    <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{product.description}</p>
 
                     {product.variants && product.variants.length > 1 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
@@ -282,8 +293,8 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                             onClick={() => setSelectedVariants({ ...selectedVariants, [product.id]: v })}
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
                               activeVariant?.id === v.id
-                                ? 'bg-[#e2f2e6] border-[#b8e2c2] text-[#16532f] font-bold'
-                                : 'bg-[#f4f8f4] border-gray-200 text-gray-600 hover:border-gray-300'
+                                ? 'bg-spore-950 border-spore-400 text-spore-300 font-bold'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                             }`}
                           >
                             {v.variantName}
@@ -294,21 +305,19 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                   </div>
                 </div>
 
-                <div className="p-5 pt-0 flex items-center justify-between gap-3 mt-2">
+                <div className="p-5 pt-0 flex items-center justify-between gap-3 border-t border-slate-900 mt-2">
                   <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Price</span>
                     <div className="flex items-baseline gap-2">
-                      <span className="font-display font-extrabold text-xl text-[#16532f]">
+                      <span className="font-display font-extrabold text-xl text-white">
                         ₹{activeVariant?.priceInr || 0}
                       </span>
                       {activeVariant?.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr) && (
-                        <span className="text-xs text-gray-400 line-through font-medium" data-testid="strikeout-price">
+                        <span className="text-xs text-slate-500 line-through font-medium" data-testid="strikeout-price">
                           ₹{activeVariant.compareAtPriceInr}
                         </span>
                       )}
                     </div>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#e2f2e6] text-[#16532f] text-[11px] font-semibold rounded-full">
-                      Free shipping
-                    </span>
                   </div>
 
                   <button
@@ -320,14 +329,14 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                       }
                     }}
                     disabled={!isAvailable || !activeVariant || isMaxInCart}
-                    className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all button-press shrink-0 ${
+                    className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all button-press ${
                       isAvailable && activeVariant && !isMaxInCart
-                        ? 'bg-[#16532f] hover:bg-[#124426] text-white shadow-md'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 shadow-md shadow-spore-950'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     }`}
-                    title={!isAvailable ? 'Out of Stock' : isMaxInCart ? `Max Stock (${currentInCart})` : 'Add to Cart'}
                   >
                     <ShoppingBag className="w-4 h-4" />
+                    {!isAvailable ? 'Out of Stock' : isMaxInCart ? `Max Stock (${currentInCart})` : 'Add to Cart'}
                   </button>
                 </div>
               </div>
@@ -336,36 +345,51 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
         </div>
       )}
 
-      {/* Pagination Controls - matching Image 2 */}
-      <div className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm font-medium text-gray-600">
-          Showing 1–{products.length} of {totalElements || products.length} products
-        </p>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-spore-800/40">
+          <p className="text-xs text-slate-400">
+            Page <strong className="text-white">{page + 1}</strong> of <strong className="text-white">{totalPages}</strong> ({totalElements} items total)
+          </p>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="w-9 h-9 rounded-xl bg-[#f4f8f4] border border-gray-200 text-gray-700 disabled:opacity-40 hover:bg-[#e2f2e6] transition-all flex items-center justify-center button-press"
-            aria-label="Previous Page"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="p-2.5 rounded-xl bg-slate-900 border border-spore-800 text-slate-300 disabled:opacity-40 hover:bg-spore-900 transition-all flex items-center gap-1 text-xs font-bold button-press"
+              aria-label="Previous Page"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
 
-          <span className="text-sm font-bold text-gray-900 px-3">
-            Page {page + 1} of {totalPages || 1}
-          </span>
+            {/* Desktop Page Numbers */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  className={`w-9 h-9 rounded-xl text-xs font-bold transition-all button-press ${
+                    page === i
+                      ? 'bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 shadow-md'
+                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
 
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="w-9 h-9 rounded-xl bg-[#f4f8f4] border border-gray-200 text-gray-700 disabled:opacity-40 hover:bg-[#e2f2e6] transition-all flex items-center justify-center button-press"
-            aria-label="Next Page"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="p-2.5 rounded-xl bg-slate-900 border border-spore-800 text-slate-300 disabled:opacity-40 hover:bg-spore-900 transition-all flex items-center gap-1 text-xs font-bold button-press"
+              aria-label="Next Page"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

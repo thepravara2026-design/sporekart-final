@@ -75,14 +75,10 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : flatList.length - 1));
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' && selectedIndex >= 0 && flatList[selectedIndex]) {
       e.preventDefault();
-      if (selectedIndex >= 0 && flatList[selectedIndex]) {
-        const item = flatList[selectedIndex];
-        handleSelectResult(item.url);
-      } else {
-        handleSearchSubmit();
-      }
+      const item = flatList[selectedIndex];
+      handleSelectResult(item.url);
     }
   };
 
@@ -93,55 +89,42 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
     navigate(url);
   };
 
-  const handleSearchSubmit = () => {
-    if (query.trim()) {
-      handleSelectResult(`/products?search=${encodeURIComponent(query.trim())}`);
-    }
-  };
-
   return (
     <div ref={searchRef} className={`relative ${isMobile ? 'w-full' : 'w-64 lg:w-80'}`} tabIndex={-1}>
       <div className="relative flex items-center">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= 2 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search for mushrooms, spawn seeds..."
-          className="w-full bg-white border border-gray-300 rounded-lg pl-4 pr-12 py-2 text-xs sm:text-sm text-slate-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#16532f] transition-all shadow-sm font-medium"
+          placeholder="Search products, spawn, courses, blogs..."
+          className="w-full bg-spore-950/80 border border-spore-800/60 rounded-xl pl-10 pr-10 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-spore-400 focus:ring-1 focus:ring-spore-400/50 transition-all shadow-inner"
           aria-label="Search Sporekart products, categories, workshops, and articles"
         />
         {loading ? (
-          <Loader2 className="w-4 h-4 text-[#16532f] animate-spin absolute right-3" />
+          <Loader2 className="w-4 h-4 text-spore-400 animate-spin absolute right-3" />
         ) : query ? (
           <button
             onClick={() => {
               setQuery('');
               setIsOpen(false);
             }}
-            className="absolute right-3 text-gray-500 hover:text-gray-900 p-1"
+            className="absolute right-3 text-slate-400 hover:text-white p-1"
             aria-label="Clear search query"
           >
             <X className="w-4 h-4" />
           </button>
-        ) : (
-          <button 
-            onClick={handleSearchSubmit} 
-            className="absolute right-1 top-1 bottom-1 px-3 bg-[#16532f] hover:bg-[#124426] text-white rounded-md flex items-center justify-center transition-colors"
-            aria-label="Search"
-          >
-            <Search className="w-4 h-4 text-white" />
-          </button>
-        )}
+        ) : null}
       </div>
 
       {/* Autocomplete Dropdown Overlay */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-[80vh] flex flex-col animate-scale-in">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-spore-800/70 rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden max-h-[80vh] flex flex-col animate-scale-in">
           {loading ? (
-            <div className="p-6 text-center text-xs text-slate-600 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 text-[#16532f] animate-spin" />
+            <div className="p-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 text-spore-400 animate-spin" />
               <span>Searching Sporekart catalog & content...</span>
             </div>
           ) : totalResults === 0 ? (

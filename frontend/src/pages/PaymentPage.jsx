@@ -110,10 +110,10 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f8f4] text-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-[#16532f] animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-700">Connecting to Gateway...</p>
+          <Loader2 className="w-10 h-10 text-spore-400 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-300">Connecting to Gateway...</p>
         </div>
       </div>
     );
@@ -121,7 +121,7 @@ export default function PaymentPage() {
 
   if (error && !summary) {
     return (
-      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto bg-[#f2f8f4]">
+      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto">
         <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-400">
           <AlertCircle className="w-6 h-6" />
         </div>
