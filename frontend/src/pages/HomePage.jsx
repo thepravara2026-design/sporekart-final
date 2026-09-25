@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, Building2, Layers, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, Building2, Layers, ShieldCheck, HeartHandshake, ShoppingBag } from 'lucide-react';
 import { catalogApi, trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import AvailabilityBadge from '../components/AvailabilityBadge';
@@ -61,59 +61,56 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
 
       {/* Hero Section */}
       <section className="relative pt-8 pb-16 md:pt-16 md:pb-24 overflow-hidden">
-        {/* Glow Effects */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-spore-500/10 rounded-full blur-[140px] pointer-events-none"></div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left animate-fade-up">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-spore-950/80 border border-spore-700/50 text-spore-300 text-xs font-semibold tracking-wide shadow-inner">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#e2f2e6] border border-[#c5e5ce] text-[#16532f] text-xs font-extrabold tracking-wide shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-[#16532f] animate-pulse" />
                 <span>India's Premier Mushroom Agritech & Training Platform</span>
               </div>
 
-              <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-tight">
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-slate-900 leading-tight">
                 Fresh Mushrooms, <br />
-                <span className="gradient-text">Pure Grain Spawn</span> & Certified Training
+                <span className="text-[#16532f]">Pure Grain Spawn</span> & Certified Training
               </h1>
 
-              <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              <p className="text-slate-700 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
                 Sporekart delivers lab-tested high-yield mushroom spawn seeds, fresh button & oyster varieties, DIY home growing kits, and comprehensive commercial cultivation training across India.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                 <Link
                   to="/products"
-                  className="w-full sm:w-auto bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl shadow-spore-950/60 flex items-center justify-center gap-2 transition-all button-press hover-lift"
+                  className="w-full sm:w-auto bg-[#16532f] hover:bg-[#124426] text-white font-extrabold text-base px-8 py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all button-press"
                 >
-                  <Sprout className="w-5 h-5" /> Explore Products
+                  <Sprout className="w-5 h-5 text-emerald-300" /> Explore Products
                 </Link>
                 <Link
                   to="/training"
-                  className="w-full sm:w-auto glass-panel hover:bg-spore-900/60 text-white font-bold text-base px-8 py-4 rounded-2xl border border-spore-700/50 flex items-center justify-center gap-2 transition-all button-press hover-lift"
+                  className="w-full sm:w-auto bg-white hover:bg-emerald-50 text-[#16532f] font-extrabold text-base px-8 py-4 rounded-xl border border-[#16532f] flex items-center justify-center gap-2 transition-all button-press shadow-sm"
                 >
-                  <GraduationCap className="w-5 h-5 text-spore-400" /> Training Workshops
+                  <GraduationCap className="w-5 h-5 text-[#16532f]" /> Training Workshops
                 </Link>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-spore-900/60 text-slate-300 text-xs sm:text-sm font-medium">
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-300 text-slate-800 text-xs sm:text-sm font-semibold">
                 <div className="flex items-center gap-2 justify-center lg:justify-start">
-                  <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#16532f] shrink-0" />
                   <span>Lab Tested Spawn</span>
                 </div>
                 <div className="flex items-center gap-2 justify-center lg:justify-start">
-                  <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#16532f] shrink-0" />
                   <span>Cold-Chain Express</span>
                 </div>
                 <div className="flex items-center gap-2 justify-center lg:justify-start">
-                  <CheckCircle2 className="w-4 h-4 text-spore-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#16532f] shrink-0" />
                   <span>100% Organic Fresh</span>
                 </div>
               </div>
             </div>
 
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden glass-panel p-3 border border-spore-700/40 shadow-2xl group hover-lift">
+              <div className="relative rounded-3xl overflow-hidden bg-white p-3 border border-gray-200 shadow-xl group">
                 <img
                   src="https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1000&q=80"
                   alt="Fresh Organic Oyster & Button Mushrooms Sporekart India"
@@ -123,13 +120,13 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                   decoding="async"
                   className="w-full h-80 sm:h-96 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-card border border-spore-600/30">
+                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-white text-sm">Farm Fresh Organic Mushrooms</h3>
-                      <p className="text-xs text-spore-300">Harvested Daily • Delivered in 24-48 Hours</p>
+                      <h3 className="font-extrabold text-slate-900 text-sm">Farm Fresh Organic Mushrooms</h3>
+                      <p className="text-xs text-slate-600 font-medium">Harvested Daily • Delivered in 24-48 Hours</p>
                     </div>
-                    <span className="px-3 py-1 bg-spore-500/20 text-spore-300 text-xs font-bold rounded-xl border border-spore-500/40">
+                    <span className="px-3 py-1 bg-[#e2f2e6] text-[#16532f] text-xs font-bold rounded-full border border-[#c5e5ce]">
                       FSSAI Approved
                     </span>
                   </div>
@@ -143,53 +140,53 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       {/* Category Grid Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-          <h2 className="font-display font-extrabold text-3xl text-white">Explore Agriculture Categories</h2>
-          <p className="text-slate-400 text-sm">Select from our laboratory-certified mushroom offerings</p>
+          <h2 className="font-display font-extrabold text-3xl text-slate-900">Explore Agriculture Categories</h2>
+          <p className="text-slate-600 text-sm font-medium">Select from our laboratory-certified mushroom offerings</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/products/fresh-mushrooms" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
+          <Link to="/products/fresh-mushrooms" className="bg-white p-6 rounded-2xl group block border border-gray-200 hover:border-[#16532f] hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f] mb-4 group-hover:scale-110 transition-transform">
               <Sprout className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors">Fresh Mushrooms</h3>
-            <p className="text-xs text-slate-400 mt-1">Daily harvested Button, Oyster & Milky varieties.</p>
+            <h3 className="font-display font-bold text-lg text-slate-900 group-hover:text-[#16532f] transition-colors">Fresh Mushrooms</h3>
+            <p className="text-xs text-slate-600 mt-1">Daily harvested Button, Oyster & Milky varieties.</p>
           </Link>
 
-          <Link to="/products/dry-mushrooms" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
-              <Layers className="w-6 h-6 text-emerald-400" />
+          <Link to="/products/dry-mushrooms" className="bg-white p-6 rounded-2xl group block border border-gray-200 hover:border-[#16532f] hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f] mb-4 group-hover:scale-110 transition-transform">
+              <Layers className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors">Dry Mushrooms</h3>
-            <p className="text-xs text-slate-400 mt-1">Sun-dried & dehydrated rich umami mushroom slices.</p>
+            <h3 className="font-display font-bold text-lg text-slate-900 group-hover:text-[#16532f] transition-colors">Dry Mushrooms</h3>
+            <p className="text-xs text-slate-600 mt-1">Sun-dried & dehydrated rich umami mushroom slices.</p>
           </Link>
 
-          <Link to="/products/spawn-seeds" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
-              <Zap className="w-6 h-6 text-amber-400" />
+          <Link to="/products/spawn-seeds" className="bg-white p-6 rounded-2xl group block border border-gray-200 hover:border-[#16532f] hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f] mb-4 group-hover:scale-110 transition-transform">
+              <Zap className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors">Spawn Seeds</h3>
-            <p className="text-xs text-slate-400 mt-1">1st gen pure wheat grain master spawn for growers.</p>
+            <h3 className="font-display font-bold text-lg text-slate-900 group-hover:text-[#16532f] transition-colors">Spawn Seeds</h3>
+            <p className="text-xs text-slate-600 mt-1">1st gen pure wheat grain master spawn for growers.</p>
           </Link>
 
-          <Link to="/products/growing-kits" className="glass-card p-6 rounded-3xl group block border border-spore-800/40 hover:border-spore-500/50 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400 mb-4 group-hover:scale-110 transition-transform">
-              <Award className="w-6 h-6 text-spore-300" />
+          <Link to="/products/growing-kits" className="bg-white p-6 rounded-2xl group block border border-gray-200 hover:border-[#16532f] hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f] mb-4 group-hover:scale-110 transition-transform">
+              <Award className="w-6 h-6" />
             </div>
-            <h3 className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors">DIY Growing Kits</h3>
-            <p className="text-xs text-slate-400 mt-1">Harvest mushrooms at home in 10-14 days.</p>
+            <h3 className="font-display font-bold text-lg text-slate-900 group-hover:text-[#16532f] transition-colors">DIY Growing Kits</h3>
+            <p className="text-xs text-slate-600 mt-1">Harvest mushrooms at home in 10-14 days.</p>
           </Link>
         </div>
       </section>
 
-      {/* Featured Products Grid */}
+      {/* Featured Products Grid (Matching Reference Screenshot 2) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
           <div>
-            <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white">Featured Products & Seeds</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">High-demand mushroom products available across India</p>
+            <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-900">Featured Products & Seeds</h2>
+            <p className="text-slate-600 text-xs sm:text-sm font-medium">High-demand mushroom products available across India</p>
           </div>
-          <Link to="/products" className="text-xs font-bold text-spore-400 hover:text-spore-300 flex items-center gap-1.5 hover-lift">
+          <Link to="/products" className="text-xs font-bold text-[#16532f] hover:underline flex items-center gap-1.5">
             View Full Catalog <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -197,7 +194,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card p-6 rounded-3xl animate-pulse h-80 bg-slate-900/40"></div>
+              <div key={i} className="bg-white p-6 rounded-2xl animate-pulse h-80 border border-gray-200"></div>
             ))}
           </div>
         ) : (
@@ -212,15 +209,15 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
               const isAvailable = availability.status !== 'OUT_OF_STOCK' && (activeVariant.stockQuantity === undefined || activeVariant.stockQuantity > 0);
 
               return (
-                <div key={product.id} className="glass-card rounded-3xl overflow-hidden flex flex-col justify-between border border-spore-800/40 group hover-lift">
+                <div key={product.id} className="bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-gray-200/90 shadow-sm hover:shadow-md transition-all group">
                   <div>
-                    <Link to={`/product/${product.slug}`} className="relative h-52 overflow-hidden block">
+                    <Link to={`/product/${product.slug}`} className="relative h-52 overflow-hidden block bg-gray-50">
                       <MediaImage
                         src={primaryImg}
                         alt={`${product.title} - Fresh mushroom & spawn supply India`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <span className="absolute top-3 left-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-spore-300 text-[10px] font-bold rounded-xl border border-spore-700/50">
+                      <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 text-[#16532f] text-[10px] font-extrabold rounded-full border border-[#c5e5ce] uppercase tracking-wider shadow-sm">
                         {product.categoryName}
                       </span>
                       <div className="absolute top-3 right-3">
@@ -228,10 +225,10 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                       </div>
                     </Link>
                     <div className="p-5 space-y-2">
-                      <Link to={`/product/${product.slug}`} className="font-display font-bold text-lg text-white group-hover:text-spore-300 transition-colors block">
+                      <Link to={`/product/${product.slug}`} className="font-display font-extrabold text-lg text-slate-900 group-hover:text-[#16532f] transition-colors block">
                         {product.title}
                       </Link>
-                      <p className="text-xs text-slate-400 line-clamp-2">{product.description}</p>
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{product.description}</p>
 
                       {product.variants && product.variants.length > 1 && (
                         <div className="flex flex-wrap gap-1.5 pt-2" data-testid="landing-product-variants">
@@ -240,10 +237,10 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                               key={v.id}
                               type="button"
                               onClick={() => setSelectedVariants({ ...selectedVariants, [product.id]: v })}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all button-press ${
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
                                 activeVariant?.id === v.id
-                                  ? 'bg-spore-950 border-spore-400 text-spore-300 font-bold shadow-sm'
-                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                                  ? 'bg-[#16532f] border-[#16532f] text-white shadow-sm'
+                                  : 'bg-gray-50 border-gray-200 text-slate-700 hover:border-gray-400'
                               }`}
                             >
                               {v.variantName}
@@ -251,17 +248,23 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                           ))}
                         </div>
                       )}
+
+                      <div className="pt-2 flex items-center gap-2">
+                        <span className="px-3 py-0.5 bg-[#e2f2e6] text-[#16532f] text-[11px] font-extrabold rounded-full">
+                          Free shipping
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-5 pt-0 flex items-center justify-between border-t border-spore-900/40 mt-4">
+                  <div className="p-5 pt-0 flex items-center justify-between border-t border-gray-100 mt-4">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-medium">{activeVariant.variantName}</span>
+                      <span className="text-[10px] text-slate-500 block font-medium">{activeVariant.variantName}</span>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-spore-400 font-display">₹{activeVariant.priceInr}</span>
+                        <span className="text-xl font-extrabold text-[#16532f] font-display">₹{activeVariant.priceInr}.00</span>
                         {activeVariant.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr) && (
-                          <span className="text-xs text-slate-500 line-through font-medium" data-testid="strikeout-price">
-                            ₹{activeVariant.compareAtPriceInr}
+                          <span className="text-xs text-slate-400 line-through font-semibold" data-testid="strikeout-price">
+                            ₹{activeVariant.compareAtPriceInr}.00
                           </span>
                         )}
                       </div>
@@ -274,13 +277,14 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                         }
                       }}
                       disabled={!isAvailable}
-                      className={`font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md button-press ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md ${
                         isAvailable
-                          ? 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 shadow-spore-950'
-                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                          ? 'bg-[#16532f] hover:bg-[#124426] text-white button-press'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
+                      aria-label="Add to cart"
                     >
-                      {isAvailable ? 'Add to Cart' : 'Out of Stock'}
+                      <ShoppingBag className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -290,44 +294,34 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         )}
       </section>
 
-      {/* Certified Training & Workshops Section */}
+      {/* Our Training Glimpses Section (Matching Reference Screenshot 1) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-spore-700/50 relative overflow-hidden shadow-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-spore-900/80 text-spore-300 text-xs font-bold border border-spore-700/40 shadow-inner">
-                <GraduationCap className="w-4 h-4 text-spore-400" />
-                <span>Certified Agri-Entrepreneurship Courses</span>
-              </div>
-              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white leading-tight">
-                Mushroom Cultivation & <br />
-                <span className="gradient-gold">Spawn Production Masterclasses</span>
-              </h2>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Join our expert agronomist-led online and offline laboratory workshops. Gain practical knowledge on substrate pasteurization, tissue isolation, laminar airflow operations, and direct buyback market linkage.
-              </p>
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-gray-200 shadow-lg text-center space-y-6">
+          <div className="inline-flex items-center gap-2 text-[#16532f] text-xs font-extrabold uppercase tracking-widest">
+            <span>🖼️ TRAINING GLIMPSES</span>
+          </div>
+          
+          <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-slate-900">
+            Our Training Glimpses
+          </h2>
 
-              <div className="pt-4 flex flex-wrap gap-4">
-                <Link
-                  to="/training"
-                  className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-extrabold text-sm px-6 py-3.5 rounded-2xl shadow-lg transition-all button-press hover-lift"
-                >
-                  View Upcoming Batches
-                </Link>
-              </div>
-            </div>
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <button className="w-10 h-10 rounded-full border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center text-slate-800 shadow-sm transition-all">
+              &lt;
+            </button>
+            <button className="w-10 h-10 rounded-full border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center text-slate-800 shadow-sm transition-all">
+              &gt;
+            </button>
+          </div>
 
-            <div className="lg:col-span-5 space-y-4">
-              {courses.slice(0, 3).map((c) => (
-                <div key={c.id} className="p-4 rounded-2xl glass-card border border-spore-800/60 flex items-center justify-between hover-lift">
-                  <div>
-                    <h4 className="font-bold text-white text-xs sm:text-sm">{c.title}</h4>
-                    <p className="text-[11px] text-spore-300 mt-0.5">{c.mode} • {c.durationHours} Hours Duration</p>
-                  </div>
-                  <span className="text-sm font-extrabold text-amber-400 font-display">₹{c.priceInr}</span>
-                </div>
-              ))}
-            </div>
+          <div className="pt-4">
+            <Link
+              to="/training"
+              className="inline-flex items-center gap-2 bg-[#16532f] hover:bg-[#124426] text-white font-extrabold text-sm px-6 py-3 rounded-lg shadow-md transition-all button-press"
+            >
+              <span>Explore Training</span>
+              <span>→</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -335,31 +329,31 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       {/* Online & Offline Business Support Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-          <h2 className="font-display font-extrabold text-3xl text-white">Complete Grower Ecosystem</h2>
-          <p className="text-slate-400 text-sm">Empowering mushroom growers across India with end-to-end solutions</p>
+          <h2 className="font-display font-extrabold text-3xl text-gray-900">Complete Grower Ecosystem</h2>
+          <p className="text-gray-500 text-sm">Empowering mushroom growers across India with end-to-end solutions</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card p-6 rounded-3xl border border-spore-800/40 space-y-3 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-spore-400">
+          <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-2xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f]">
               <Building2 className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-white text-lg">Lab & Farm Setup Consultancy</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Turnkey engineering design for climate-controlled mushroom fruiting rooms and spawn labs.</p>
+            <h3 className="font-bold text-gray-900 text-lg">Lab & Farm Setup Consultancy</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Turnkey engineering design for climate-controlled mushroom fruiting rooms and spawn labs.</p>
           </div>
-          <div className="glass-card p-6 rounded-3xl border border-spore-800/40 space-y-3 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-amber-400">
+          <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-2xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f]">
               <Zap className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-white text-lg">Pest & Contamination Advisory</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Instant expert agronomist online support for mould, Trichoderma, and humidity control.</p>
+            <h3 className="font-bold text-gray-900 text-lg">Pest & Contamination Advisory</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Instant expert agronomist online support for mould, Trichoderma, and humidity control.</p>
           </div>
-          <div className="glass-card p-6 rounded-3xl border border-spore-800/40 space-y-3 hover-lift">
-            <div className="w-12 h-12 rounded-2xl bg-spore-950/80 border border-spore-700/50 flex items-center justify-center text-emerald-400">
+          <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-2xl bg-[#e2f2e6] flex items-center justify-center text-[#16532f]">
               <HeartHandshake className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-white text-lg">Buyback & Market Linkages</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Connect with wholesale hotel buyers, retail chains, and dehydration processing units in India.</p>
+            <h3 className="font-bold text-gray-900 text-lg">Buyback & Market Linkages</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Connect with wholesale hotel buyers, retail chains, and dehydration processing units in India.</p>
           </div>
         </div>
       </section>

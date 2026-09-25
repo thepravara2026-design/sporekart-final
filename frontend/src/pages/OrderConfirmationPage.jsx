@@ -59,10 +59,10 @@ export default function OrderConfirmationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f8f4] text-slate-900">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-spore-400 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-300">Fetching order receipt...</p>
+          <Loader2 className="w-10 h-10 text-[#16532f] animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-700">Fetching order receipt...</p>
         </div>
       </div>
     );
@@ -70,9 +70,9 @@ export default function OrderConfirmationPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto">
-        <h2 className="text-xl font-bold text-white mb-2">Confirmation Unavailable</h2>
-        <p className="text-xs text-slate-400 mb-6">{error || 'Order record not found.'}</p>
+      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto bg-[#f2f8f4]">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Confirmation Unavailable</h2>
+        <p className="text-xs text-slate-600 mb-6">{error || 'Order record not found.'}</p>
         <Link
           to="/dashboard"
           className="bg-spore-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-all text-xs"

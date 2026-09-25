@@ -38,23 +38,23 @@ export default function TrainingConfirmationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f8f4] text-slate-900">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-spore-400 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-300">Fetching training enrollment receipt...</p>
+          <Loader2 className="w-10 h-10 text-[#16532f] animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-700">Fetching training enrollment receipt...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error || !enrollment) {
     return (
-      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto">
-        <h2 className="text-xl font-bold text-white mb-2">Enrollment Record Not Found</h2>
-        <p className="text-xs text-slate-400 mb-6">{error || 'Unable to retrieve enrollment.'}</p>
+      <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto bg-[#f2f8f4]">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Enrollment Record Not Found</h2>
+        <p className="text-xs text-slate-600 mb-6">{error || 'Unable to retrieve enrollment.'}</p>
         <Link
           to="/training"
-          className="bg-spore-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-all text-xs"
+          className="bg-[#16532f] hover:bg-[#124426] text-white font-bold px-6 py-2.5 rounded-xl transition-all text-xs"
         >
           Return to Training Courses
         </Link>
@@ -63,66 +63,66 @@ export default function TrainingConfirmationPage() {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto animate-fade-in text-white">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto animate-fade-in text-slate-900">
       {/* Confirmation Success Header */}
       <div className="text-center space-y-3 mb-10">
-        <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-spore-400 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 animate-bounce">
-          <GraduationCap className="w-10 h-10 text-slate-950" />
+        <div className="w-16 h-16 bg-gradient-to-tr from-[#16532f] to-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 animate-bounce">
+          <GraduationCap className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-white">Enrollment Confirmed!</h1>
-        <p className="text-sm text-slate-300 max-w-md mx-auto">
-          Congratulations! You are officially registered for <span className="text-spore-400 font-bold">{enrollment.courseTitle}</span>.
+        <h1 className="text-3xl sm:text-4xl font-display font-black text-slate-900">Enrollment Confirmed!</h1>
+        <p className="text-sm text-slate-600 max-w-md mx-auto">
+          Congratulations! You are officially registered for <span className="text-[#16532f] font-bold">{enrollment.courseTitle}</span>.
         </p>
       </div>
 
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+      <div className="bg-white border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
         {/* Main Details Card */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-950 rounded-2xl border border-slate-800/80 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 gap-4">
           <div>
-            <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60">
+            <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-100 text-[#16532f] border border-emerald-200">
               Status: {enrollment.status}
             </span>
-            <h3 className="text-lg font-extrabold text-white mt-2">{enrollment.courseTitle}</h3>
-            <p className="text-xs text-slate-400 flex items-center gap-2 mt-1">
-              <Calendar className="w-3.5 h-3.5 text-spore-400" /> Batch Code: <span className="font-mono text-slate-200">{enrollment.batchCode}</span>
+            <h3 className="text-lg font-extrabold text-slate-900 mt-2">{enrollment.courseTitle}</h3>
+            <p className="text-xs text-slate-600 flex items-center gap-2 mt-1">
+              <Calendar className="w-3.5 h-3.5 text-[#16532f]" /> Batch Code: <span className="font-mono text-slate-900 font-bold">{enrollment.batchCode}</span>
             </p>
           </div>
 
           <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0">
-            <span className="text-xs text-slate-400 block font-medium">Fee Paid</span>
-            <span className="text-xl font-bold text-spore-400 font-mono">₹{enrollment.feePaidInr?.toLocaleString('en-IN')}</span>
+            <span className="text-xs text-slate-500 block font-medium">Fee Paid</span>
+            <span className="text-xl font-bold text-[#16532f] font-mono">₹{enrollment.feePaidInr?.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
         {/* Enrollment Instructions & Metadata */}
         <div className="space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-spore-400" /> Training Details & Next Steps
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#16532f]" /> Training Details & Next Steps
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-sky-400 font-bold">
+            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-2">
+              <div className="flex items-center gap-2 text-sky-700 font-bold">
                 <Video className="w-4 h-4" /> Live Interactive Sessions
               </div>
-              <p className="text-slate-400 text-[11px]">
+              <p className="text-slate-600 text-[11px]">
                 Joining links and schedule invites will be accessible in your Training Dashboard prior to class start.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold">
+            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-2">
+              <div className="flex items-center gap-2 text-[#16532f] font-bold">
                 <Award className="w-4 h-4" /> Certificate of Completion
               </div>
-              <p className="text-slate-400 text-[11px]">
+              <p className="text-slate-600 text-[11px]">
                 Earn an official Sporekart Mushroom Cultivation Certificate upon completing course attendance.
               </p>
             </div>
           </div>
 
-          <div className="py-2 border-t border-b border-slate-800 flex justify-between items-center text-xs">
-            <span className="text-slate-400">Payment Reference</span>
-            <span className="font-mono font-bold text-slate-200">{enrollment.paymentReference || 'CONFIRMED'}</span>
+          <div className="py-2 border-t border-b border-gray-100 flex justify-between items-center text-xs">
+            <span className="text-slate-500">Payment Reference</span>
+            <span className="font-mono font-bold text-slate-900">{enrollment.paymentReference || 'CONFIRMED'}</span>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function TrainingConfirmationPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
           <Link
             to="/dashboard"
-            className="w-full sm:w-auto flex-1 bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 font-bold py-3.5 px-6 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all button-press"
+            className="w-full sm:w-auto flex-1 bg-[#16532f] hover:bg-[#124426] text-white font-bold py-3.5 px-6 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all button-press shadow-md"
           >
             <span>Go to My Training Dashboard</span>
             <ArrowRight className="w-4 h-4" />
@@ -138,7 +138,7 @@ export default function TrainingConfirmationPage() {
 
           <Link
             to="/training"
-            className="w-full sm:w-auto flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-white font-bold py-3.5 px-6 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all"
+            className="w-full sm:w-auto flex-1 bg-white hover:bg-slate-50 border border-gray-300 text-slate-800 font-bold py-3.5 px-6 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all"
           >
             Explore Other Courses
           </Link>

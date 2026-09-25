@@ -54,104 +54,56 @@ export default function Navbar({ user, setUser }) {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-40 w-full glass-panel border-b border-spore-800/30 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-4">
+      <header className="sticky top-0 z-40 w-full transition-all duration-300 shadow-md">
+        {/* Top Header Bar (Deep Forest Green #16532f) */}
+        <div className="bg-[#16532f] text-white py-3.5 px-4 sm:px-6 lg:px-8 border-b border-[#124426]">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             {/* Logo */}
             <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-3 group min-h-[44px] shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-spore-400 via-emerald-500 to-spore-700 flex items-center justify-center shadow-lg shadow-spore-950/50 group-hover:scale-105 transition-transform duration-200">
-                <Sprout className="w-6 h-6 text-slate-950" />
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#16532f] shadow-md group-hover:scale-105 transition-transform duration-200">
+                <Sprout className="w-6 h-6 text-[#16532f]" />
               </div>
               <div className="hidden sm:block">
                 <span className="font-display font-extrabold text-2xl tracking-tight text-white">
-                  Spore<span className="text-spore-400">kart</span>
+                  Spore<span className="text-emerald-300">kart</span>
                 </span>
-                <span className="block text-[10px] text-spore-300 font-semibold tracking-widest uppercase opacity-90">
-                  India Agritech
+                <span className="block text-[10px] text-emerald-200 font-bold tracking-widest uppercase opacity-90">
+                  Grow. Learn. Thrive.
                 </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-5 font-medium text-xs lg:text-sm text-slate-300">
-              <Link 
-                to="/products" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/products') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
-              >
-                <Sprout className="w-4 h-4 text-spore-400" /> Products
-              </Link>
-              <Link 
-                to="/training" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/training') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
-              >
-                <GraduationCap className="w-4 h-4 text-spore-400" /> Training
-              </Link>
-              <Link 
-                to="/blog" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/blog') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
-              >
-                <BookOpen className="w-4 h-4 text-spore-400" /> Blog
-              </Link>
-              <Link 
-                to="/about" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/about') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
-              >
-                <Info className="w-4 h-4 text-spore-400" /> About
-              </Link>
-              <Link 
-                to="/contact" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/contact') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
-              >
-                <PhoneCall className="w-4 h-4 text-spore-400" /> Contact
-              </Link>
-            </nav>
-
             {/* Desktop Global Search Bar */}
-            <div className="hidden md:block">
+            <div className="hidden md:block flex-1 max-w-xl mx-4">
               <GlobalSearch />
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2.5">
-              {/* Cart Button */}
-              <button
-                onClick={openDrawer}
-                className="relative p-2.5 rounded-xl bg-spore-900/50 hover:bg-spore-800/70 border border-spore-700/40 text-slate-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center button-press hover-lift"
-                aria-label={`Shopping cart with ${cart.itemCount} items`}
-              >
-                <ShoppingBag className="w-5 h-5 text-spore-300" />
-                {cart.itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-r from-spore-400 to-emerald-500 text-slate-950 text-[11px] font-extrabold rounded-full flex items-center justify-center shadow-md shadow-spore-950 animate-scale-in">
-                    {cart.itemCount}
-                  </span>
-                )}
-              </button>
-
-              {/* User Account / Auth */}
+            {/* Top Bar Actions */}
+            <div className="flex items-center gap-3">
               {user ? (
                 <div className="flex items-center gap-2">
                   <Link 
                     to="/dashboard" 
                     aria-label="User Account Dashboard" 
-                    className="hidden sm:flex items-center gap-2 text-xs font-medium bg-spore-900/70 hover:bg-spore-800 px-3.5 py-2.5 rounded-xl border border-spore-700/50 transition-all button-press"
+                    className="hidden sm:flex items-center gap-2 text-xs font-bold bg-white text-slate-900 px-4 py-2 rounded-full shadow-sm hover:bg-emerald-50 transition-all button-press"
                   >
-                    <User className="w-4 h-4 text-spore-400" />
-                    <span className="max-w-[100px] truncate">{user.fullName || 'Dashboard'}</span>
+                    <User className="w-4 h-4 text-[#16532f]" />
+                    <span className="max-w-[120px] truncate">{user.fullName || 'Account'}</span>
                   </Link>
                   {user.role === 'ROLE_ADMIN' && (
                     <Link 
                       to="/admin" 
                       aria-label="Admin Control Console" 
-                      className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl transition-all button-press"
+                      className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-400 text-slate-950 px-3.5 py-2 rounded-full shadow-sm hover:bg-amber-300 transition-all button-press"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-400" />
-                      <span>Admin</span>
+                      <ShieldCheck className="w-4 h-4 text-slate-950" />
+                      <span>Admin Console</span>
                     </Link>
                   )}
                   <button 
                     onClick={handleLogout} 
                     aria-label="Log out of account" 
-                    className="text-xs text-slate-400 hover:text-rose-400 min-h-[44px] px-2.5 transition-colors font-medium"
+                    className="text-xs text-emerald-200 hover:text-white min-h-[44px] px-2 transition-colors font-semibold"
                   >
                     Logout
                   </button>
@@ -160,73 +112,125 @@ export default function Navbar({ user, setUser }) {
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
                   aria-label="Login or Sign Up for an Account"
-                  className="bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-spore-950/50 transition-all button-press hover-lift shrink-0"
+                  className="bg-white text-[#16532f] hover:bg-emerald-50 font-bold text-xs sm:text-sm px-4 py-2 rounded-full shadow-md transition-all button-press shrink-0 flex items-center gap-1.5"
                 >
-                  Login / Signup
+                  <User className="w-4 h-4" /> Log In
                 </button>
               )}
+
+              {/* Cart Button */}
+              <button
+                onClick={openDrawer}
+                className="relative flex items-center gap-2 px-3 py-2 rounded-xl bg-[#124426] hover:bg-[#0e361e] text-white transition-all min-h-[44px] button-press shadow-sm"
+                aria-label={`Shopping cart with ${cart.itemCount} items`}
+              >
+                <ShoppingBag className="w-5 h-5 text-amber-400" />
+                <span className="text-xs font-bold hidden sm:inline">Cart</span>
+                <span className="bg-amber-400 text-slate-950 text-[11px] font-extrabold px-2 py-0.5 rounded-full shadow animate-scale-in">
+                  {cart.itemCount || 0}
+                </span>
+              </button>
 
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-expanded={isMenuOpen}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
-                className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-spore-900/60 min-h-[44px] min-w-[44px] flex items-center justify-center border border-spore-800/40"
+                className="lg:hidden p-2 rounded-xl text-white hover:bg-[#124426] min-h-[44px] min-w-[44px] flex items-center justify-center border border-emerald-800/40"
               >
-                {isMenuOpen ? <X className="w-6 h-6 text-spore-400" /> : <Menu className="w-6 h-6" />}
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Mobile Integrated Search Bar */}
-          <div className="md:hidden pb-3 pt-1">
-            <GlobalSearch isMobile={true} />
+        {/* Sub-Header Navigation Bar (White Background) */}
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-2">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            {/* Category Dropdown Button */}
+            <Link
+              to="/products"
+              className="bg-[#16532f] hover:bg-[#124426] text-white font-extrabold text-xs sm:text-sm px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all shrink-0"
+            >
+              <Sprout className="w-4 h-4 text-emerald-300" />
+              <span>Shop by Category</span>
+              <span className="text-xs">▼</span>
+            </Link>
+
+            {/* Navigation Links */}
+            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-6 font-bold text-xs sm:text-sm text-slate-800">
+              <Link 
+                to="/products" 
+                className={`hover:text-[#16532f] transition-colors flex items-center gap-1.5 py-1.5 ${isActive('/products') ? 'text-[#16532f] font-extrabold border-b-2 border-[#16532f]' : ''}`}
+              >
+                Products Catalog
+              </Link>
+              <Link 
+                to="/training" 
+                className={`hover:text-[#16532f] transition-colors flex items-center gap-1.5 py-1.5 ${isActive('/training') ? 'text-[#16532f] font-extrabold border-b-2 border-[#16532f]' : ''}`}
+              >
+                Training and Courses
+              </Link>
+              <Link 
+                to="/dashboard" 
+                className={`hover:text-[#16532f] transition-colors flex items-center gap-1.5 py-1.5 ${isActive('/dashboard') ? 'text-[#16532f] font-extrabold border-b-2 border-[#16532f]' : ''}`}
+              >
+                Track Order
+              </Link>
+              <Link 
+                to="/contact" 
+                className={`hover:text-[#16532f] transition-colors flex items-center gap-1.5 py-1.5 ${isActive('/contact') ? 'text-[#16532f] font-extrabold border-b-2 border-[#16532f]' : ''}`}
+              >
+                Contact Us
+              </Link>
+              <Link 
+                to="/products/mushroom-spawn" 
+                className="hover:text-[#16532f] transition-colors flex items-center gap-1.5 py-1.5 font-bold text-[#16532f]"
+              >
+                Bulk Orders
+              </Link>
+            </nav>
           </div>
         </div>
 
         {/* Mobile Slide-over Drawer */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-spore-800/50 bg-spore-950/95 backdrop-blur-xl animate-fade-in px-4 py-6 space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="lg:hidden border-t border-gray-200 bg-white animate-fade-in px-4 py-6 space-y-4 max-h-[85vh] overflow-y-auto shadow-xl">
+            <div className="pb-2">
+              <GlobalSearch isMobile={true} />
+            </div>
             <nav className="flex flex-col gap-2">
               <Link
                 to="/products"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/products') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-800 font-bold text-sm border transition-all ${isActive('/products') ? 'bg-[#e2f2e6] border-[#16532f] text-[#16532f]' : 'bg-gray-50 border-gray-200'}`}
               >
-                <Sprout className="w-5 h-5 text-spore-400" />
-                <span>Products & Spawn Catalog</span>
+                <Sprout className="w-5 h-5 text-[#16532f]" />
+                <span>Shop by Category / Catalog</span>
               </Link>
               <Link
                 to="/training"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/training') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-800 font-bold text-sm border transition-all ${isActive('/training') ? 'bg-[#e2f2e6] border-[#16532f] text-[#16532f]' : 'bg-gray-50 border-gray-200'}`}
               >
-                <GraduationCap className="w-5 h-5 text-spore-400" />
-                <span>Workshops & Training</span>
+                <GraduationCap className="w-5 h-5 text-[#16532f]" />
+                <span>Training and Courses</span>
               </Link>
               <Link
-                to="/blog"
+                to="/dashboard"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/blog') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-800 font-bold text-sm border transition-all ${isActive('/dashboard') ? 'bg-[#e2f2e6] border-[#16532f] text-[#16532f]' : 'bg-gray-50 border-gray-200'}`}
               >
-                <BookOpen className="w-5 h-5 text-spore-400" />
-                <span>Agritech Blog</span>
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/about') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
-              >
-                <Info className="w-5 h-5 text-spore-400" />
-                <span>About Sporekart</span>
+                <User className="w-5 h-5 text-[#16532f]" />
+                <span>Track Order & Dashboard</span>
               </Link>
               <Link
                 to="/contact"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/contact') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-800 font-bold text-sm border transition-all ${isActive('/contact') ? 'bg-[#e2f2e6] border-[#16532f] text-[#16532f]' : 'bg-gray-50 border-gray-200'}`}
               >
-                <PhoneCall className="w-5 h-5 text-spore-400" />
-                <span>Support & Contact</span>
+                <PhoneCall className="w-5 h-5 text-[#16532f]" />
+                <span>Contact Us</span>
               </Link>
             </nav>
 
