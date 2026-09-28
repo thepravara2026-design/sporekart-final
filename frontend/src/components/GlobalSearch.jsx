@@ -92,26 +92,26 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
   return (
     <div ref={searchRef} className={`relative ${isMobile ? 'w-full' : 'w-64 lg:w-80'}`} tabIndex={-1}>
       <div className="relative flex items-center">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+        <Search className="w-4 h-4 text-typography-muted absolute left-3.5 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= 2 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search products, spawn, courses, blogs..."
-          className="w-full bg-spore-950/80 border border-spore-800/60 rounded-xl pl-10 pr-10 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-spore-400 focus:ring-1 focus:ring-spore-400/50 transition-all shadow-inner"
+          placeholder="Search products, spawn, courses..."
+          className="w-full bg-surface-neutral border border-surface-border rounded-input pl-10 pr-10 py-2 text-xs sm:text-sm text-typography-primary placeholder-typography-muted focus:outline-none focus:border-forest-700 focus:bg-surface-white focus:ring-2 focus:ring-forest-700/15 transition-all shadow-level-1"
           aria-label="Search Sporekart products, categories, workshops, and articles"
         />
         {loading ? (
-          <Loader2 className="w-4 h-4 text-spore-400 animate-spin absolute right-3" />
+          <Loader2 className="w-4 h-4 text-forest-700 animate-spin absolute right-3" />
         ) : query ? (
           <button
             onClick={() => {
               setQuery('');
               setIsOpen(false);
             }}
-            className="absolute right-3 text-slate-400 hover:text-white p-1"
+            className="absolute right-3 text-typography-muted hover:text-typography-primary p-1"
             aria-label="Clear search query"
           >
             <X className="w-4 h-4" />
@@ -121,71 +121,71 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
 
       {/* Autocomplete Dropdown Overlay */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-950/95 border border-spore-800/70 rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden max-h-[80vh] flex flex-col animate-scale-in">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-surface-white border border-surface-border rounded-card shadow-level-3 backdrop-blur-xl z-50 overflow-hidden max-h-[80vh] flex flex-col animate-scale-in">
           {loading ? (
-            <div className="p-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 text-spore-400 animate-spin" />
+            <div className="p-6 text-center text-xs text-typography-secondary flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 text-forest-700 animate-spin" />
               <span>Searching Sporekart catalog & content...</span>
             </div>
           ) : totalResults === 0 ? (
             <div className="p-6 text-center space-y-3">
-              <p className="text-xs text-slate-300 font-semibold">
-                No results found for "<span className="text-spore-400">{query}</span>"
+              <p className="text-xs text-typography-primary font-semibold">
+                No results found for "<span className="text-forest-700">{query}</span>"
               </p>
-              <p className="text-[11px] text-slate-400">Try checking spelling or explore our popular categories:</p>
+              <p className="text-[11px] text-typography-muted">Try checking spelling or explore our popular categories:</p>
               <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                 <Link
                   to="/products"
                   onClick={() => setIsOpen(false)}
-                  className="px-3 py-1 bg-spore-900/60 hover:bg-spore-900 text-spore-300 text-[11px] font-bold rounded-lg border border-spore-800/50"
+                  className="px-3 py-1 bg-surface-cream hover:bg-surface-border text-forest-900 text-[11px] font-bold rounded-compact border border-surface-border"
                 >
                   Products
                 </Link>
                 <Link
                   to="/products/fresh-mushrooms"
                   onClick={() => setIsOpen(false)}
-                  className="px-3 py-1 bg-spore-900/60 hover:bg-spore-900 text-spore-300 text-[11px] font-bold rounded-lg border border-spore-800/50"
+                  className="px-3 py-1 bg-surface-cream hover:bg-surface-border text-forest-900 text-[11px] font-bold rounded-compact border border-surface-border"
                 >
                   Fresh Mushrooms
                 </Link>
                 <Link
                   to="/training"
                   onClick={() => setIsOpen(false)}
-                  className="px-3 py-1 bg-spore-900/60 hover:bg-spore-900 text-amber-300 text-[11px] font-bold rounded-lg border border-amber-800/40"
+                  className="px-3 py-1 bg-gold/15 hover:bg-gold/25 text-soil text-[11px] font-bold rounded-compact border border-gold/30"
                 >
                   Workshops
                 </Link>
               </div>
             </div>
           ) : (
-            <div className="overflow-y-auto p-2 divide-y divide-spore-900/60 scrollbar-thin">
+            <div className="overflow-y-auto p-2 divide-y divide-surface-border">
               {/* Products Section */}
               {results.products && results.products.length > 0 && (
                 <div className="py-2 first:pt-0">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-spore-400 flex items-center gap-1.5">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-forest-700 flex items-center gap-1.5">
                     <Sprout className="w-3.5 h-3.5" /> Products ({results.products.length})
                   </div>
                   {results.products.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSelectResult(item.url)}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-spore-900/70 flex items-center justify-between gap-3 group transition-all button-press"
+                      className="w-full text-left px-3 py-2 rounded-input hover:bg-surface-cream flex items-center justify-between gap-3 group transition-all button-press"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {item.imageUrl && (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-spore-800/60">
+                          <div className="w-10 h-10 rounded-compact overflow-hidden shrink-0 border border-surface-border bg-surface-cream">
                             <MediaImage src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-100 group-hover:text-spore-300 truncate">
+                          <p className="text-xs font-bold text-forest-900 group-hover:text-forest-700 truncate">
                             {item.title}
                           </p>
-                          <p className="text-[10px] text-slate-400 truncate">{item.subtitle}</p>
+                          <p className="text-[10px] text-typography-muted truncate">{item.subtitle}</p>
                         </div>
                       </div>
                       {item.priceInr && (
-                        <span className="text-xs font-extrabold text-spore-400 font-display shrink-0">
+                        <span className="text-xs font-bold text-forest-700 shrink-0">
                           ₹{item.priceInr}
                         </span>
                       )}
@@ -197,22 +197,22 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
               {/* Categories Section */}
               {results.categories && results.categories.length > 0 && (
                 <div className="py-2">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-forest-700 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" /> Categories ({results.categories.length})
                   </div>
                   {results.categories.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSelectResult(item.url)}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-spore-900/70 flex items-center justify-between gap-3 group transition-all button-press"
+                      className="w-full text-left px-3 py-2 rounded-input hover:bg-surface-cream flex items-center justify-between gap-3 group transition-all button-press"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-                        <p className="text-xs font-bold text-slate-100 group-hover:text-emerald-300 truncate">
+                        <span className="w-2 h-2 rounded-full bg-forest-700 shrink-0"></span>
+                        <p className="text-xs font-bold text-forest-900 group-hover:text-forest-700 truncate">
                           {item.title}
                         </p>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 text-typography-muted group-hover:text-forest-700 shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -221,23 +221,23 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
               {/* Training Courses Section */}
               {results.training && results.training.length > 0 && (
                 <div className="py-2">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-soil flex items-center gap-1.5">
                     <GraduationCap className="w-3.5 h-3.5" /> Training Workshops ({results.training.length})
                   </div>
                   {results.training.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSelectResult(item.url)}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-spore-900/70 flex items-center justify-between gap-3 group transition-all button-press"
+                      className="w-full text-left px-3 py-2 rounded-input hover:bg-surface-cream flex items-center justify-between gap-3 group transition-all button-press"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-100 group-hover:text-amber-300 truncate">
+                        <p className="text-xs font-bold text-forest-900 group-hover:text-soil truncate">
                           {item.title}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate">{item.subtitle}</p>
+                        <p className="text-[10px] text-typography-muted truncate">{item.subtitle}</p>
                       </div>
                       {item.priceInr && (
-                        <span className="text-xs font-extrabold text-amber-400 font-display shrink-0">
+                        <span className="text-xs font-bold text-soil shrink-0">
                           ₹{item.priceInr}
                         </span>
                       )}
@@ -249,22 +249,22 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
               {/* Blog Articles Section */}
               {results.blogs && results.blogs.length > 0 && (
                 <div className="py-2">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-spore-300 flex items-center gap-1.5">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-forest-700 flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5" /> Agritech Blog ({results.blogs.length})
                   </div>
                   {results.blogs.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSelectResult(item.url)}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-spore-900/70 flex items-center justify-between gap-3 group transition-all button-press"
+                      className="w-full text-left px-3 py-2 rounded-input hover:bg-surface-cream flex items-center justify-between gap-3 group transition-all button-press"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-100 group-hover:text-spore-300 truncate">
+                        <p className="text-xs font-bold text-forest-900 group-hover:text-forest-700 truncate">
                           {item.title}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate">{item.subtitle}</p>
+                        <p className="text-[10px] text-typography-muted truncate">{item.subtitle}</p>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-spore-300 shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 text-typography-muted group-hover:text-forest-700 shrink-0" />
                     </button>
                   ))}
                 </div>

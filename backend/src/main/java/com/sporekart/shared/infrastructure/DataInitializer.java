@@ -54,7 +54,7 @@ public class DataInitializer implements CommandLineRunner {
                     .build());
         }
 
-        if (categoryRepository.count() == 0 || productRepository.count() == 0) {
+        if (productRepository.count() < 30) {
             initCatalogData();
         }
         if (courseRepository.count() == 0) {
@@ -73,6 +73,74 @@ public class DataInitializer implements CommandLineRunner {
                         .description(description)
                         .imageUrl(imageUrl)
                         .build()));
+    }
+
+    private ProductVariant v(String variantName, String sku, String price, String comparePrice, int stock) {
+        return ProductVariant.builder()
+                .variantName(variantName)
+                .sku(sku)
+                .priceInr(new BigDecimal(price))
+                .compareAtPriceInr(comparePrice != null ? new BigDecimal(comparePrice) : null)
+                .stockQuantity(stock)
+                .build();
+    }
+
+    private void createProduct(
+            Category category,
+            String title,
+            String slug,
+            String description,
+            ProductType productType,
+            String hsnCode,
+            BigDecimal gstRate,
+            String imageUrl,
+            List<ProductVariant> variants
+    ) {
+        if (productRepository.existsBySlug(slug)) return;
+
+        Product p = Product.builder()
+                .category(category)
+                .title(title)
+                .slug(slug)
+                .description(description)
+                .productType(productType)
+                .status(ProductStatus.ACTIVE)
+                .hsnCode(hsnCode)
+                .gstRatePercent(gstRate)
+                .metaTitle("Buy " + title + " Online | Sporekart")
+                .metaDescription(description)
+                .canonicalUrl("https://sporekart.in/product/" + slug)
+                .isActive(true)
+                .build();
+
+        for (ProductVariant v : variants) {
+            v.setProduct(p);
+        }
+        p.setVariants(variants);
+
+        ProductMedia m1 = ProductMedia.builder()
+                .product(p)
+                .mediaUrl(imageUrl)
+                .mediaType(MediaType.IMAGE)
+                .role(ProductMediaRole.PRIMARY)
+                .isPrimary(true)
+                .displayOrder(1)
+                .build();
+        p.setMedia(List.of(m1));
+
+        ProductInformation info = ProductInformation.builder()
+                .product(p)
+                .brandName("Sporekart Agritech")
+                .countryOfOrigin("India")
+                .fssaiLicenseNumber("11522014000389")
+                .foodCategory(category.getName())
+                .isVegetarian(true)
+                .storageInstructions("Store in cool, dry place or refrigerate as applicable.")
+                .shelfLifeGuidance("7 to 365 Days depending on category")
+                .build();
+        p.setProductInformation(info);
+
+        productRepository.save(p);
     }
 
     private void initCatalogData() {
@@ -104,259 +172,246 @@ public class DataInitializer implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80"
         );
 
-        // Product 1: Organic Fresh Button Mushrooms
-        Product p1 = Product.builder()
-                .category(freshCategory)
-                .title("Organic Fresh Button Mushrooms")
-                .slug("organic-fresh-button-mushrooms")
-                .description("Handpicked daily from our climate-controlled indoor farm. High in protein, Vitamin D & minerals.")
-                .productType(ProductType.FRESH_MUSHROOM)
-                .status(ProductStatus.ACTIVE)
-                .hsnCode("07095900")
-                .gstRatePercent(new BigDecimal("5.00"))
-                .metaTitle("Buy Organic Fresh Button Mushrooms Online | Sporekart")
-                .metaDescription("Order farm fresh organic button mushrooms online across India with temperature controlled delivery.")
-                .canonicalUrl("https://sporekart.in/product/organic-fresh-button-mushrooms")
-                .isActive(true)
-                .build();
+        Category equipCategory = getOrCreateCategory(
+                "Cultivation Equipment & Supplies",
+                "equipment-supplies",
+                "Professional mycology gear, filter patch bags, liquid cultures, and climate controls.",
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80"
+        );
 
-        ProductVariant v1_1 = ProductVariant.builder()
-                .product(p1).variantName("200g Pack").sku("FBM-200G")
-                .priceInr(new BigDecimal("75.00")).compareAtPriceInr(new BigDecimal("90.00")).stockQuantity(150).build();
-        ProductVariant v1_2 = ProductVariant.builder()
-                .product(p1).variantName("500g Pack").sku("FBM-500G")
-                .priceInr(new BigDecimal("160.00")).compareAtPriceInr(new BigDecimal("190.00")).stockQuantity(4).build();
-        ProductVariant v1_3 = ProductVariant.builder()
-                .product(p1).variantName("1kg Bulk Pack").sku("FBM-1KG")
-                .priceInr(new BigDecimal("290.00")).compareAtPriceInr(new BigDecimal("340.00")).stockQuantity(0).build();
+        // --- Category 1: Fresh Mushrooms (9 Products) ---
+        createProduct(freshCategory, "Organic Fresh Button Mushrooms", "organic-fresh-button-mushrooms",
+                "Handpicked daily from our climate-controlled indoor farm. High in protein, Vitamin D & minerals.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80",
+                List.of(v("200g Pack", "FBM-200G", "75.00", "90.00", 150),
+                        v("500g Pack", "FBM-500G", "160.00", "190.00", 40),
+                        v("1kg Bulk Pack", "FBM-1KG", "290.00", "340.00", 15)));
 
-        ProductMedia m1_1 = ProductMedia.builder().product(p1)
-                .mediaUrl("https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PRIMARY).isPrimary(true).displayOrder(1).build();
-        ProductMedia m1_2 = ProductMedia.builder().product(p1)
-                .mediaUrl("https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.GALLERY).isPrimary(false).displayOrder(2).build();
-        ProductMedia m1_3 = ProductMedia.builder().product(p1)
-                .mediaUrl("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PACKAGING).isPrimary(false).displayOrder(3).build();
-        ProductMedia m1_4 = ProductMedia.builder().product(p1)
-                .mediaUrl("https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.LIFESTYLE).isPrimary(false).displayOrder(4).build();
+        createProduct(freshCategory, "Gourmet Pink Oyster Mushrooms", "gourmet-pink-oyster-mushrooms",
+                "Vibrant pink tropical oyster mushrooms with a rich savory umami flavor profile.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("250g Gourmet Pack", "POM-250G", "140.00", "180.00", 25),
+                        v("500g Chef Pack", "POM-500G", "260.00", "320.00", 45)));
 
-        ProductInformation info1 = ProductInformation.builder()
-                .product(p1).brandName("Sporekart Agritech").countryOfOrigin("India")
-                .manufacturerDetails("Sporekart Bio-Agri Labs Pvt Ltd, Plot 42, Biotech Park, Pune, MH 411057")
-                .packerDetails("Sporekart Cold Storage Hub, Sector 18, Gurugram, HR 122015")
-                .marketerDetails("Sporekart India Agritech Pvt Ltd, Bangalore, KA")
-                .customerCareDetails("care@sporekart.in | Toll-Free: 1800-123-77673")
-                .netQuantity("200g / 500g / 1kg").unitOfMeasure("Grams")
-                .fssaiLicenseNumber("11522014000389").foodCategory("Fresh Fungi / Edible Mushrooms")
-                .isVegetarian(true).ingredients("100% Organically Grown Fresh Button Mushrooms (Agaricus bisporus)")
-                .allergenInfo("None. Handled in sterile certified organic environment.")
-                .nutritionalInfoJson("{\"calories\":\"22 kcal\",\"protein\":\"3.1g\",\"carbohydrates\":\"3.3g\",\"fat\":\"0.3g\",\"dietary_fiber\":\"1.0g\",\"vitamin_d\":\"33% DV\"}")
-                .servingSize("100g").mushroomSpecies("Agaricus bisporus").cultivationMethod("Indoor Climate-Controlled Vertical Racks")
-                .strainVariety("A-15 High Yield Hybrid").recommendedSubstrate("Pasteurized Wheat Straw Compost")
-                .inoculationGuidance("Lab Inoculated").kitContents("Fresh produce ready to cook")
-                .cultivationCycleDays(35).environmentRequirements("Temperature: 16°C - 20°C | RH: 85-90%")
-                .storageInstructions("Refrigerate between 2°C and 5°C in breathable paper wrap. Do not freeze.")
-                .storageTemperatureGuidance("2°C to 5°C Refrigerated").shelfLifeGuidance("7 Days from Harvest")
-                .handlingInstructions("Wipe gently with damp cloth or rinse immediately before cooking.")
-                .safetyWarnings("Consume only after thorough cooking.").build();
+        createProduct(freshCategory, "Fresh White Oyster Mushrooms", "fresh-white-oyster-mushrooms",
+                "Delicate texture and subtle woody aroma. Perfect for stir-fries, soups, and curries.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("250g Pack", "WOM-250G", "110.00", "130.00", 60),
+                        v("1kg Commercial Pack", "WOM-1KG", "380.00", "450.00", 20)));
 
-        if (!productRepository.existsBySlug(p1.getSlug())) {
-            p1.setVariants(List.of(v1_1, v1_2, v1_3));
-            p1.setMedia(List.of(m1_1, m1_2, m1_3, m1_4));
-            p1.setProductInformation(info1);
-            productRepository.save(p1);
-        }
+        createProduct(freshCategory, "Fresh King Oyster Mushrooms (Eringi)", "fresh-king-oyster-mushrooms",
+                "Thick, meaty stems with an incredible steak-like chew. Highly popular in Asian gastronomy.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                List.of(v("300g Premium Pack", "KOM-300G", "220.00", "260.00", 30),
+                        v("1kg Box", "KOM-1KG", "650.00", "750.00", 10)));
 
-        // Product 2: Gourmet Pink Oyster Mushrooms
-        Product p2 = Product.builder()
-                .category(freshCategory)
-                .title("Gourmet Pink Oyster Mushrooms")
-                .slug("gourmet-pink-oyster-mushrooms")
-                .description("Vibrant pink tropical oyster mushrooms with a rich savory umami flavor profile.")
-                .productType(ProductType.FRESH_MUSHROOM)
-                .status(ProductStatus.ACTIVE)
-                .hsnCode("07095900")
-                .gstRatePercent(new BigDecimal("5.00"))
-                .metaTitle("Buy Fresh Pink Oyster Mushrooms | Sporekart")
-                .metaDescription("Exotic pink oyster mushrooms grown organically and delivered fresh.")
-                .canonicalUrl("https://sporekart.in/product/gourmet-pink-oyster-mushrooms")
-                .isActive(true)
-                .build();
+        createProduct(freshCategory, "Fresh Shiitake Mushrooms", "fresh-shiitake-mushrooms",
+                "Plump, dark caps packed with natural lentinan and deep savory taste.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+                List.of(v("200g Gourmet Tray", "FSM-200G", "280.00", "340.00", 18),
+                        v("500g Chef Pack", "FSM-500G", "620.00", "720.00", 8)));
 
-        ProductVariant v2_1 = ProductVariant.builder()
-                .product(p2).variantName("250g Gourmet Pack").sku("POM-250G")
-                .priceInr(new BigDecimal("140.00")).compareAtPriceInr(new BigDecimal("180.00")).stockQuantity(12).build();
-        ProductVariant v2_2 = ProductVariant.builder()
-                .product(p2).variantName("500g Chef Pack").sku("POM-500G")
-                .priceInr(new BigDecimal("260.00")).compareAtPriceInr(new BigDecimal("320.00")).stockQuantity(45).build();
+        createProduct(freshCategory, "Fresh Milky Mushrooms (Calocybe Indica)", "fresh-milky-mushrooms",
+                "Long shelf-life tropical mushroom with robust texture and velvety white appearance.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80",
+                List.of(v("250g Pack", "FMM-250G", "95.00", "115.00", 80),
+                        v("1kg Farm Pack", "FMM-1KG", "340.00", "390.00", 25)));
 
-        ProductMedia m2_1 = ProductMedia.builder().product(p2)
-                .mediaUrl("https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PRIMARY).isPrimary(true).displayOrder(1).build();
-        ProductMedia m2_2 = ProductMedia.builder().product(p2)
-                .mediaUrl("https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.GALLERY).isPrimary(false).displayOrder(2).build();
-        ProductMedia m2_3 = ProductMedia.builder().product(p2)
-                .mediaUrl("https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.LIFESTYLE).isPrimary(false).displayOrder(3).build();
+        createProduct(freshCategory, "Fresh Enoki Mushrooms", "fresh-enoki-mushrooms",
+                "Crisp, slender golden-needle mushrooms ideal for hot pots, ramen, and fresh salads.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("150g Vacuum Pack", "FEM-150G", "160.00", "190.00", 45),
+                        v("300g Twin Pack", "FEM-300G", "295.00", "350.00", 30)));
 
-        ProductInformation info2 = ProductInformation.builder()
-                .product(p2).brandName("Sporekart Gourmet").countryOfOrigin("India")
-                .fssaiLicenseNumber("11522014000389").foodCategory("Fresh Exotic Fungi")
-                .isVegetarian(true).ingredients("100% Fresh Pleurotus djamor (Pink Oyster)")
-                .mushroomSpecies("Pleurotus djamor").cultivationMethod("Aerobic Bag Culture")
-                .storageInstructions("Refrigerate at 4°C. Consume within 5 days.").shelfLifeGuidance("5 Days").build();
+        createProduct(freshCategory, "Fresh Lion's Mane Mushrooms (Hericium)", "fresh-lions-mane-mushrooms",
+                "Rare brain-boosting culinary fungus with lobster-like seafood flavor profile.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("200g Specialty Box", "FLM-200G", "350.00", "420.00", 12),
+                        v("400g Premium Box", "FLM-400G", "650.00", "780.00", 5)));
 
-        if (!productRepository.existsBySlug(p2.getSlug())) {
-            p2.setVariants(List.of(v2_1, v2_2));
-            p2.setMedia(List.of(m2_1, m2_2, m2_3));
-            p2.setProductInformation(info2);
-            productRepository.save(p2);
-        }
+        createProduct(freshCategory, "Fresh Portobello Mushrooms", "fresh-portobello-mushrooms",
+                "Fully mature button mushrooms with wide, dense caps perfect for grilling and roasting.",
+                ProductType.FRESH_MUSHROOM, "07095900", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                List.of(v("200g Grill Pack", "FPM-200G", "190.00", "230.00", 35),
+                        v("500g Jumbo Pack", "FPM-500G", "420.00", "490.00", 14)));
 
-        // Product 3: Sun-Dried Gourmet Shiitake Slices
-        Product p3 = Product.builder()
-                .category(dryCategory)
-                .title("Sun-Dried Gourmet Shiitake Slices")
-                .slug("sun-dried-gourmet-shiitake-slices")
-                .description("Concentrated umami shiitake slices perfect for soups, broths, and stir-fries.")
-                .productType(ProductType.DRY_MUSHROOM)
-                .status(ProductStatus.ACTIVE)
-                .hsnCode("07123900")
-                .gstRatePercent(new BigDecimal("12.00"))
-                .metaTitle("Dried Shiitake Mushrooms Online | Sporekart")
-                .metaDescription("Buy premium dehydrated shiitake mushroom slices with 12 months shelf life.")
-                .canonicalUrl("https://sporekart.in/product/sun-dried-gourmet-shiitake-slices")
-                .isActive(true)
-                .build();
 
-        ProductVariant v3_1 = ProductVariant.builder()
-                .product(p3).variantName("100g Pouch").sku("SHI-100G")
-                .priceInr(new BigDecimal("350.00")).compareAtPriceInr(new BigDecimal("420.00")).stockQuantity(80).build();
-        ProductVariant v3_2 = ProductVariant.builder()
-                .product(p3).variantName("250g Jar").sku("SHI-250G")
-                .priceInr(new BigDecimal("820.00")).compareAtPriceInr(new BigDecimal("950.00")).stockQuantity(8).build();
+        // --- Category 2: Dry Mushrooms (6 Products) ---
+        createProduct(dryCategory, "Sun-Dried Gourmet Shiitake Slices", "sun-dried-gourmet-shiitake-slices",
+                "Concentrated umami shiitake slices perfect for soups, broths, and stir-fries.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+                List.of(v("100g Pouch", "SHI-100G", "350.00", "420.00", 80),
+                        v("250g Jar", "SHI-250G", "820.00", "950.00", 25)));
 
-        ProductMedia m3_1 = ProductMedia.builder().product(p3)
-                .mediaUrl("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PRIMARY).isPrimary(true).displayOrder(1).build();
-        ProductMedia m3_2 = ProductMedia.builder().product(p3)
-                .mediaUrl("https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.GALLERY).isPrimary(false).displayOrder(2).build();
-        ProductMedia m3_3 = ProductMedia.builder().product(p3)
-                .mediaUrl("https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PACKAGING).isPrimary(false).displayOrder(3).build();
+        createProduct(dryCategory, "Dehydrated Black Morels (Guchi)", "dehydrated-black-morels",
+                "Wild harvested Himalayan black morels known for supreme earthy complexity.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                List.of(v("50g Luxury Pack", "MOR-50G", "2450.00", "2850.00", 15),
+                        v("100g Collector Pack", "MOR-100G", "4600.00", "5200.00", 6)));
 
-        ProductInformation info3 = ProductInformation.builder()
-                .product(p3).brandName("Sporekart Reserve").countryOfOrigin("India")
-                .fssaiLicenseNumber("11522014000389").foodCategory("Dehydrated Edible Mushrooms")
-                .isVegetarian(true).ingredients("100% Dehydrated Lentinula edodes")
-                .storageInstructions("Store in cool, dry place away from moisture.").shelfLifeGuidance("12 Months").build();
+        createProduct(dryCategory, "Dried Oyster Mushroom Flakes", "dried-oyster-mushroom-flakes",
+                "Coarsely flaked dried oysters ready for rapid rehydration and instant cooking.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80",
+                List.of(v("100g Pantry Pouch", "DOF-100G", "180.00", "220.00", 90),
+                        v("500g Commercial Bag", "DOF-500G", "750.00", "890.00", 30)));
 
-        if (!productRepository.existsBySlug(p3.getSlug())) {
-            p3.setVariants(List.of(v3_1, v3_2));
-            p3.setMedia(List.of(m3_1, m3_2, m3_3));
-            p3.setProductInformation(info3);
-            productRepository.save(p3);
-        }
+        createProduct(dryCategory, "Dehydrated Lion's Mane Powder", "dehydrated-lions-mane-powder",
+                "Micro-milled 100% pure fruiting body powder for smoothies, tea, and culinary enrichment.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("100g Glass Jar", "LMP-100G", "590.00", "690.00", 50),
+                        v("250g Bulk Pouch", "LMP-250G", "1250.00", "1450.00", 20)));
 
-        // Product 4: Lab Certified Milky Grain Spawn
-        Product p4 = Product.builder()
-                .category(spawnCategory)
-                .title("Lab Certified Milky Grain Spawn")
-                .slug("lab-certified-milky-grain-spawn")
-                .description("First-generation pure mother wheat grain spawn for high-yield summer cultivation.")
-                .productType(ProductType.SPAWN_SEED)
-                .status(ProductStatus.ACTIVE)
-                .hsnCode("07095900")
-                .gstRatePercent(BigDecimal.ZERO)
-                .metaTitle("Pure Milky Mushroom Grain Spawn Seeds | Sporekart")
-                .metaDescription("High vitality G1 grain spawn for commercial Calocybe indica farming.")
-                .canonicalUrl("https://sporekart.in/product/lab-certified-milky-grain-spawn")
-                .isActive(true)
-                .build();
+        createProduct(dryCategory, "Dried Porcini Mushrooms (Boletus Edulis)", "dried-porcini-mushrooms",
+                "European grade wild porcini slices offering rich nutty notes for risottos.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+                List.of(v("75g Gourmet Pouch", "POR-75G", "490.00", "580.00", 40),
+                        v("200g Reserve Box", "POR-200G", "1190.00", "1390.00", 15)));
 
-        ProductVariant v4_1 = ProductVariant.builder()
-                .product(p4).variantName("1kg Master Bag").sku("MMS-1KG")
-                .priceInr(new BigDecimal("120.00")).compareAtPriceInr(new BigDecimal("150.00")).stockQuantity(300).build();
-        ProductVariant v4_2 = ProductVariant.builder()
-                .product(p4).variantName("5kg Commercial Bag").sku("MMS-5KG")
-                .priceInr(new BigDecimal("550.00")).compareAtPriceInr(new BigDecimal("650.00")).stockQuantity(50).build();
+        createProduct(dryCategory, "Dehydrated Wood Ear Fungus (Black Fungus)", "dehydrated-wood-ear-fungus",
+                "Crisp textured dehydrated wood ear strips used in Asian broths and stir-fries.",
+                ProductType.DRY_MUSHROOM, "07123900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("100g Pack", "WEF-100G", "210.00", "250.00", 70),
+                        v("250g Pack", "WEF-250G", "460.00", "550.00", 35)));
 
-        ProductMedia m4_1 = ProductMedia.builder().product(p4)
-                .mediaUrl("https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PRIMARY).isPrimary(true).displayOrder(1).build();
-        ProductMedia m4_2 = ProductMedia.builder().product(p4)
-                .mediaUrl("https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.GALLERY).isPrimary(false).displayOrder(2).build();
-        ProductMedia m4_3 = ProductMedia.builder().product(p4)
-                .mediaUrl("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.INSTRUCTION).isPrimary(false).displayOrder(3).build();
 
-        ProductInformation info4 = ProductInformation.builder()
-                .product(p4).brandName("Sporekart Labs").countryOfOrigin("India")
-                .mushroomSpecies("Calocybe indica").strainVariety("APK-2 Thermal Tolerant Strain")
-                .recommendedSubstrate("Paddy Straw / Wheat Straw").cultivationCycleDays(40)
-                .environmentRequirements("Temp: 28°C - 35°C | RH: 80%").shelfLifeGuidance("30 Days").build();
+        // --- Category 3: Mushroom Spawn Seeds (7 Products) ---
+        createProduct(spawnCategory, "Lab Certified Milky Grain Spawn", "lab-certified-milky-grain-spawn",
+                "First-generation pure mother wheat grain spawn for high-yield summer cultivation.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg Master Bag", "MMS-1KG", "120.00", "150.00", 300),
+                        v("5kg Commercial Bag", "MMS-5KG", "550.00", "650.00", 50)));
 
-        if (!productRepository.existsBySlug(p4.getSlug())) {
-            p4.setVariants(List.of(v4_1, v4_2));
-            p4.setMedia(List.of(m4_1, m4_2, m4_3));
-            p4.setProductInformation(info4);
-            productRepository.save(p4);
-        }
+        createProduct(spawnCategory, "Florida White Oyster Grain Spawn", "florida-white-oyster-grain-spawn",
+                "High vigor G1 grain spawn of Pleurotus florida suitable for year-round cropping.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg Spawn Bag", "FWO-1KG", "110.00", "140.00", 250),
+                        v("5kg Grower Pack", "FWO-5KG", "490.00", "590.00", 60)));
 
-        // Product 5: All-In-One Oyster DIY Growing Kit
-        Product p5 = Product.builder()
-                .category(kitCategory)
-                .title("All-In-One Oyster DIY Growing Kit")
-                .slug("all-in-one-oyster-diy-growing-kit")
-                .description("Complete home kit! Just spray water twice daily and harvest fresh mushrooms in 10 days.")
-                .productType(ProductType.GROWING_KIT)
-                .status(ProductStatus.ACTIVE)
-                .hsnCode("07095900")
-                .gstRatePercent(new BigDecimal("12.00"))
-                .metaTitle("DIY Oyster Mushroom Growing Kit | Sporekart")
-                .metaDescription("Ready to grow indoor mushroom kit with spray bottle and step-by-step manual.")
-                .canonicalUrl("https://sporekart.in/product/all-in-one-oyster-diy-growing-kit")
-                .isActive(true)
-                .build();
+        createProduct(spawnCategory, "Hybrid Button Mushroom Grain Spawn (A-15)", "hybrid-button-mushroom-grain-spawn",
+                "Lab cloned A-15 strain grain spawn producing dense, heavy button caps.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg Sterilized Bag", "BMS-1KG", "140.00", "170.00", 200),
+                        v("10kg Commercial Crate", "BMS-10KG", "1250.00", "1500.00", 30)));
 
-        ProductVariant v5_1 = ProductVariant.builder()
-                .product(p5).variantName("Standard Kit (1.5 kg Block)").sku("OMG-KIT-STD")
-                .priceInr(new BigDecimal("499.00")).compareAtPriceInr(new BigDecimal("699.00")).stockQuantity(200).build();
-        ProductVariant v5_2 = ProductVariant.builder()
-                .product(p5).variantName("Deluxe Twin Pack").sku("OMG-KIT-DLX")
-                .priceInr(new BigDecimal("899.00")).compareAtPriceInr(new BigDecimal("1199.00")).stockQuantity(15).build();
+        createProduct(spawnCategory, "Pink Oyster Mother Grain Spawn G1", "pink-oyster-mother-grain-spawn-g1",
+                "Vibrant tropical strain G1 grain spawn with rapid substrate colonization rate.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg G1 Master Bag", "POS-1KG", "160.00", "190.00", 180),
+                        v("5kg Farm Pack", "POS-5KG", "720.00", "850.00", 40)));
 
-        ProductMedia m5_1 = ProductMedia.builder().product(p5)
-                .mediaUrl("https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.PRIMARY).isPrimary(true).displayOrder(1).build();
-        ProductMedia m5_2 = ProductMedia.builder().product(p5)
-                .mediaUrl("https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.GALLERY).isPrimary(false).displayOrder(2).build();
-        ProductMedia m5_3 = ProductMedia.builder().product(p5)
-                .mediaUrl("https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.LIFESTYLE).isPrimary(false).displayOrder(3).build();
-        ProductMedia m5_4 = ProductMedia.builder().product(p5)
-                .mediaUrl("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80")
-                .mediaType(MediaType.IMAGE).role(ProductMediaRole.INSTRUCTION).isPrimary(false).displayOrder(4).build();
+        createProduct(spawnCategory, "King Oyster Grain Spawn (Eringi Strain)", "king-oyster-grain-spawn",
+                "Cold-tolerant commercial strain optimized for thick stem development.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg High Viability Bag", "KOS-1KG", "180.00", "220.00", 140),
+                        v("5kg Bulk Pack", "KOS-5KG", "800.00", "950.00", 35)));
 
-        ProductInformation info5 = ProductInformation.builder()
-                .product(p5).brandName("Sporekart Home Farms").countryOfOrigin("India")
-                .kitContents("Pre-inoculated Substrate Block, Fine Mist Spray Bottle, Humidity Tent, Instruction Guide")
-                .cultivationCycleDays(10).environmentRequirements("Indirect Sunlight | Ambient Humidity")
-                .shelfLifeGuidance("45 Days before opening").build();
+        createProduct(spawnCategory, "Shiitake Sawdust & Grain Hybrid Spawn", "shiitake-sawdust-grain-spawn",
+                "Specially formulated oak sawdust and rye grain spawn for log and bag inoculation.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg Bag", "SGS-1KG", "220.00", "260.00", 110),
+                        v("5kg Commercial Sack", "SGS-5KG", "950.00", "1150.00", 25)));
 
-        if (!productRepository.existsBySlug(p5.getSlug())) {
-            p5.setVariants(List.of(v5_1, v5_2));
-            p5.setMedia(List.of(m5_1, m5_2, m5_3, m5_4));
-            p5.setProductInformation(info5);
-            productRepository.save(p5);
-        }
+        createProduct(spawnCategory, "Ganoderma Reishi Medicinal Grain Spawn", "ganoderma-reishi-grain-spawn",
+                "Pure culture Ganoderma lucidum grain spawn for medicinal tea cultivation.",
+                ProductType.SPAWN_SEED, "07095900", BigDecimal.ZERO,
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1kg Lab Sealed Bag", "GRS-1KG", "290.00", "350.00", 90),
+                        v("5kg Master Sack", "GRS-5KG", "1350.00", "1600.00", 18)));
+
+
+        // --- Category 4: Mushroom Growing Kits (5 Products) ---
+        createProduct(kitCategory, "All-In-One Oyster DIY Growing Kit", "all-in-one-oyster-diy-growing-kit",
+                "Complete home kit! Just spray water twice daily and harvest fresh mushrooms in 10 days.",
+                ProductType.GROWING_KIT, "07095900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80",
+                List.of(v("Standard Kit (1.5 kg Block)", "OMG-KIT-STD", "499.00", "699.00", 200),
+                        v("Deluxe Twin Pack", "OMG-KIT-DLX", "899.00", "1199.00", 75)));
+
+        createProduct(kitCategory, "Pink Tropical Oyster Fruiting Box Kit", "pink-tropical-oyster-fruiting-box",
+                "Eye-catching pink mushrooms grown directly inside a designer windows box.",
+                ProductType.GROWING_KIT, "07095900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80",
+                List.of(v("Single Fruiting Box", "POK-BOX", "549.00", "749.00", 150),
+                        v("Family Combo Pack", "POK-CMB", "999.00", "1399.00", 50)));
+
+        createProduct(kitCategory, "Lion's Mane Brain-Boost Growing Kit", "lions-mane-growing-kit",
+                "Grow your own cognitive wellness mushrooms right on your kitchen counter.",
+                ProductType.GROWING_KIT, "07095900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+                List.of(v("2kg Ready-to-Fruit Block", "LMK-2KG", "799.00", "999.00", 85),
+                        v("Starter Bundle with Humidity Tent", "LMK-BND", "1199.00", "1499.00", 40)));
+
+        createProduct(kitCategory, "Shiitake Log-Style Desktop Grow Kit", "shiitake-desktop-grow-kit",
+                "High density sawdust block formulated to simulate natural hardwood log fruiting.",
+                ProductType.GROWING_KIT, "07095900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+                List.of(v("1.8kg Substrate Block", "SDK-18KG", "699.00", "899.00", 95),
+                        v("Dual Harvest Kit", "SDK-DUAL", "1299.00", "1599.00", 30)));
+
+        createProduct(kitCategory, "Yellow Golden Oyster Home Farm Kit", "yellow-golden-oyster-home-kit",
+                "Vibrant golden yellow cluster mushrooms that pop up in massive flushes.",
+                ProductType.GROWING_KIT, "07095900", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                List.of(v("Starter Kit 1.2kg", "GOK-12KG", "479.00", "649.00", 110),
+                        v("Master Kit with Spray Bottle", "GOK-MST", "799.00", "999.00", 45)));
+
+
+        // --- Category 5: Cultivation Equipment & Supplies (5 Products) ---
+        createProduct(equipCategory, "Autoclavable PP Substrate Bags with Filter Patch", "autoclavable-pp-substrate-bags",
+                "Heavy duty 3 mil polypropylene grow bags withstand 121°C sterilization with 0.2 micron breathable patch.",
+                ProductType.GROWING_KIT, "39232990", new BigDecimal("18.00"),
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                List.of(v("Pack of 50 Bags (0.2 micron)", "PPB-50P", "390.00", "490.00", 250),
+                        v("Pack of 200 Bulk", "PPB-200P", "1350.00", "1650.00", 80)));
+
+        createProduct(equipCategory, "Mycology Liquid Culture Syringe Kit (Sterile)", "mycology-liquid-culture-syringe-kit",
+                "10ml nutrient enriched liquid culture pre-loaded with isolated high-performance mycelium.",
+                ProductType.SPAWN_SEED, "30029090", new BigDecimal("12.00"),
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                List.of(v("10ml Oyster LC Syringe", "LCS-OYS", "320.00", "390.00", 160),
+                        v("10ml Lion's Mane LC Syringe", "LCS-LMN", "450.00", "550.00", 90)));
+
+        createProduct(equipCategory, "Substrate pH Adjuster & Calcium Carbonate", "substrate-ph-adjuster-calcium-carbonate",
+                "Pure agricultural hydrated lime and chalk powder to optimize substrate alkalinity (pH 7.5-8.0).",
+                ProductType.GROWING_KIT, "25221000", new BigDecimal("5.00"),
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                List.of(v("2kg Agriculture Lime", "PHA-2KG", "180.00", "220.00", 300),
+                        v("5kg Commercial Pack", "PHA-5KG", "390.00", "480.00", 120)));
+
+        createProduct(equipCategory, "Digital Thermo-Hygrometer for Mushroom Rooms", "digital-thermo-hygrometer-mushroom-rooms",
+                "High precision sensor measuring temperature and humidity with min/max memory tracking.",
+                ProductType.GROWING_KIT, "90258010", new BigDecimal("18.00"),
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                List.of(v("Standard Sensor Model", "DTH-STD", "450.00", "590.00", 140),
+                        v("Dual Probe Pro Model", "DTH-PRO", "850.00", "1050.00", 60)));
+
+        createProduct(equipCategory, "High-Pressure Micro Mist Spray Nozzle System", "micro-mist-spray-nozzle-system",
+                "Brass ultra-fine mist nozzles to maintain 85-95% humidity in growing rooms without wetting substrate.",
+                ProductType.GROWING_KIT, "84248990", new BigDecimal("18.00"),
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                List.of(v("10-Nozzle Starter Kit", "MNS-10N", "890.00", "1100.00", 75),
+                        v("30-Nozzle Farm Kit", "MNS-30N", "2250.00", "2750.00", 25)));
     }
 
     private void initTrainingData() {

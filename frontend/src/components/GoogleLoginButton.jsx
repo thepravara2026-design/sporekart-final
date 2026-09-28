@@ -104,7 +104,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
         });
 
         window.google.accounts.id.renderButton(googleButtonRef.current, {
-          theme: 'filled_dark',
+          theme: 'outline',
           size: 'large',
           width: '100%',
           text: 'continue_with',
@@ -127,7 +127,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
           type="button"
           onClick={handleDevMockGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-slate-100 border border-slate-700 font-semibold py-3 px-4 rounded-xl shadow-md transition-all min-h-[44px] text-sm group"
+          className="w-full flex items-center justify-center gap-3 bg-surface-white hover:bg-surface-cream text-forest-900 border border-surface-border font-semibold py-3 px-4 rounded-input shadow-level-1 transition-all min-h-[44px] text-sm group button-press"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path

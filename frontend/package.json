@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "seo:gate": "node scripts/seo-quality-gate.js"
+    "seo:gate": "node scripts/seo-quality-gate.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "axios": "^1.7.4",
@@ -22,12 +23,18 @@
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^30.1.1",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^1.6.1"
   }
 }

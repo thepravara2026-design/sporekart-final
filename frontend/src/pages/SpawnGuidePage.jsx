@@ -39,7 +39,7 @@ export default function SpawnGuidePage() {
         { title: 'Complete Mushroom Cultivation Guide', path: '/mushroom-cultivation-guide' }
       ],
       relatedProducts: [
-        { title: 'Milky Mushroom Grain Spawn', path: '/product/milky-mushroom-grain-spawn', price: '₹299' },
+        { title: 'Mushroom Spawn Seeds Catalog', path: '/products/spawn-seeds', price: 'Catalog' },
         { title: 'Spawn Production Lab Setup Masterclass', path: '/training/spawn-production-lab-setup-training', price: '₹4,999' }
       ]
     },
@@ -56,7 +56,7 @@ export default function SpawnGuidePage() {
         { title: 'Button Mushroom Casing Soil Formulation', path: '/blog/button-mushroom-casing-soil-formulation-and-peat-moss-alternatives' }
       ],
       relatedProducts: [
-        { title: 'Oyster Mushroom DIY Growing Kit', path: '/product/oyster-mushroom-growing-kit', price: '₹499' },
+        { title: 'Indoor Growing Kits Catalog', path: '/products/growing-kits', price: 'Catalog' },
         { title: 'Commercial Mushroom Cultivation Masterclass', path: '/training/commercial-mushroom-cultivation-masterclass', price: '₹2,999' }
       ]
     },
@@ -77,7 +77,7 @@ export default function SpawnGuidePage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 text-typography-primary">
       <SeoHead
         title="What is Mushroom Spawn? Complete AEO Answer Engine Guide | Sporekart"
         description="Direct AEO answers for mushroom spawn: definitions, spawning ratios, shelf life, storage temperatures, products, and training interlinking."
@@ -89,12 +89,12 @@ export default function SpawnGuidePage() {
 
       {/* Main Header */}
       <div className="space-y-4 max-w-4xl">
-        <span className="px-3.5 py-1 rounded-full bg-spore-950 border border-spore-700/50 text-spore-300 text-xs font-semibold">
+        <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-forest-900/10 border border-forest-900/20 text-forest-800 text-xs font-semibold">
           Agronomist Technical Standard & AEO Content Graph
         </span>
-        <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white leading-tight">
+        <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-typography-primary leading-tight">
           Mushroom Spawn Technical Guide & AEO Graph: <br />
-          <span className="gradient-text">Lab Standards, Products & Training</span>
+          <span className="text-forest-700">Lab Standards, Products & Training</span>
         </h1>
       </div>
 
@@ -102,16 +102,16 @@ export default function SpawnGuidePage() {
       <AeoFaqGraph faqs={aeoGraphData} title="Mushroom Spawn AEO Knowledge Graph" />
 
       {/* Interlinked Path Summary */}
-      <section className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/40 space-y-4 text-xs sm:text-sm text-slate-300">
-        <h2 className="font-display font-bold text-xl text-white">Complete Interlinked Content Path</h2>
-        <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-spore-300">
-          <span className="bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">1. Spawn Definition Question</span>
+      <section className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border shadow-level-1 space-y-4 text-xs sm:text-sm text-typography-secondary">
+        <h2 className="font-display font-bold text-xl text-typography-primary">Complete Interlinked Content Path</h2>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-forest-800">
+          <span className="bg-surface-cream px-3 py-1.5 rounded-lg border border-surface-border text-typography-primary">1. Spawn Definition Question</span>
           <span>➔</span>
-          <Link to="/products/mushroom-spawn" className="bg-spore-950 px-3 py-1.5 rounded-lg border border-spore-700 hover:text-white">2. Lab Spawn Products</Link>
+          <Link to="/products/mushroom-spawn" className="bg-surface-white px-3 py-1.5 rounded-lg border border-surface-border hover:text-forest-700">2. Lab Spawn Products</Link>
           <span>➔</span>
-          <Link to="/mushroom-spawn-guide" className="bg-spore-950 px-3 py-1.5 rounded-lg border border-spore-700 hover:text-white">3. Spawn Cultivation Guide</Link>
+          <Link to="/mushroom-spawn-guide" className="bg-surface-white px-3 py-1.5 rounded-lg border border-surface-border hover:text-forest-700">3. Spawn Cultivation Guide</Link>
           <span>➔</span>
-          <Link to="/training/spawn-production" className="bg-spore-950 px-3 py-1.5 rounded-lg border border-spore-700 hover:text-white">4. Certified Spawn Training</Link>
+          <Link to="/training/spawn-production" className="bg-surface-white px-3 py-1.5 rounded-lg border border-surface-border hover:text-forest-700">4. Certified Spawn Training</Link>
         </div>
       </section>
     </div>

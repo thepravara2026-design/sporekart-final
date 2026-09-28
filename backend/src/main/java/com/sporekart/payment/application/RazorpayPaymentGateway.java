@@ -56,8 +56,12 @@ public class RazorpayPaymentGateway implements PaymentGateway {
 
     @Override
     public boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String signature) {
-        if (isMockMode() || signature == null || "mock_signature".equals(signature)) {
+        if (isMockMode()) {
             return true;
+        }
+
+        if (signature == null || "mock_signature".equals(signature)) {
+            return false;
         }
 
         try {
@@ -74,12 +78,12 @@ public class RazorpayPaymentGateway implements PaymentGateway {
 
     @Override
     public boolean verifyWebhookSignature(String rawBody, String signatureHeader) {
-        if (isMockMode() || "mock_webhook_signature".equals(signatureHeader)) {
-            return true;
+        if (rawBody == null || signatureHeader == null || signatureHeader.trim().isEmpty() || "invalid_signature".equals(signatureHeader)) {
+            return false;
         }
 
-        if (rawBody == null || signatureHeader == null) {
-            return false;
+        if (isMockMode()) {
+            return true;
         }
 
         try {

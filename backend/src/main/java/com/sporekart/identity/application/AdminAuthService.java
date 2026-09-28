@@ -79,7 +79,7 @@ public class AdminAuthService {
                 .build();
 
         otpRepository.save(otp);
-        log.info("Generated Admin OTP [{}] for identifier: {}", otpCode, identifier);
+        log.info("Dispatched Admin OTP request for identifier: {}", identifier);
 
         if (identifier.contains("@")) {
             notificationService.sendOtpEmail(identifier, otpCode);

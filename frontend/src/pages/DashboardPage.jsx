@@ -67,10 +67,22 @@ export default function DashboardPage({ user }) {
         supportApi.getUserTickets(),
       ]);
 
-      if (orderRes.status === 'fulfilled') setOrders(orderRes.value.data?.data || []);
-      if (bookingRes.status === 'fulfilled') setBookings(bookingRes.value.data?.data || []);
-      if (addrRes.status === 'fulfilled') setAddresses(addrRes.value.data?.data || []);
-      if (ticketRes.status === 'fulfilled') setTickets(ticketRes.value.data?.data || []);
+      if (orderRes.status === 'fulfilled') {
+        const d = orderRes.value.data?.data;
+        setOrders(Array.isArray(d) ? d : (d?.content || []));
+      }
+      if (bookingRes.status === 'fulfilled') {
+        const d = bookingRes.value.data?.data;
+        setBookings(Array.isArray(d) ? d : (d?.content || []));
+      }
+      if (addrRes.status === 'fulfilled') {
+        const d = addrRes.value.data?.data;
+        setAddresses(Array.isArray(d) ? d : (d?.content || []));
+      }
+      if (ticketRes.status === 'fulfilled') {
+        const d = ticketRes.value.data?.data;
+        setTickets(Array.isArray(d) ? d : (d?.content || []));
+      }
     } catch (err) {
       console.error('Failed to load dashboard portal data:', err);
     } finally {
@@ -229,10 +241,10 @@ export default function DashboardPage({ user }) {
   };
 
   // Filter Active vs Completed/Cancelled Orders
-  const activeOrders = orders.filter((o) =>
+  const activeOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)
   );
-  const historyOrders = orders.filter((o) =>
+  const historyOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['DELIVERED', 'CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(o.status)
   );
 
@@ -261,41 +273,41 @@ export default function DashboardPage({ user }) {
       case 'CONFIRMED':
       case 'PROCESSING':
         return (
-          <span className="px-3 py-1 bg-blue-950/80 text-blue-300 border border-blue-800/60 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-            <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> CONFIRMED & PROCESSING
+          <span className="px-3 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> CONFIRMED & PROCESSING
           </span>
         );
       case 'SHIPPED':
         return (
-          <span className="px-3 py-1 bg-amber-950/80 text-amber-300 border border-amber-800/60 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-            <Truck className="w-3.5 h-3.5 text-amber-400" /> SHIPPED (Shiprocket Express)
+          <span className="px-3 py-1 bg-gold/15 text-forest-900 border border-gold/30 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <Truck className="w-3.5 h-3.5 text-forest-700" /> SHIPPED (Shiprocket Express)
           </span>
         );
       case 'DELIVERED':
         return (
-          <span className="px-3 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> DELIVERED
+          <span className="px-3 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> DELIVERED
           </span>
         );
       case 'CANCELLED':
       case 'REFUNDED':
         return (
-          <span className="px-3 py-1 bg-rose-950/80 text-rose-300 border border-rose-800/60 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" /> CANCELLED
+          <span className="px-3 py-1 bg-red-600/10 text-red-700 border border-red-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <XCircle className="w-3.5 h-3.5 text-red-600" /> CANCELLED
           </span>
         );
       case 'PENDING_PAYMENT':
       default:
         return (
-          <span className="px-3 py-1 bg-slate-900 text-slate-300 border border-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-            <Clock className="w-3.5 h-3.5 text-spore-400" /> ORDER PLACED
+          <span className="px-3 py-1 bg-surface-neutral text-typography-secondary border border-surface-border text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <Clock className="w-3.5 h-3.5 text-forest-700" /> ORDER PLACED
           </span>
         );
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-typography-primary">
       <SeoHead
         title="Customer & Trainee Portal — Sporekart India"
         description="MNC Grade Portal to track active mushroom & spawn shipments, view order history, download GST PDF invoices, manage training masterclasses, and raise support queries."
@@ -303,39 +315,39 @@ export default function DashboardPage({ user }) {
       />
 
       {/* MNC Immutable Security Header */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/50 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <ShieldCheck className="w-48 h-48 text-spore-400" />
+      <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border shadow-level-2 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+          <ShieldCheck className="w-48 h-48 text-forest-700" />
         </div>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-spore-900 via-spore-950 to-emerald-950 border border-spore-600/50 flex items-center justify-center text-spore-400 shadow-xl flex-shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-forest-900/10 border border-forest-900/20 flex items-center justify-center text-forest-800 shadow-level-1 flex-shrink-0">
               <User className="w-9 h-9" />
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white">
+                <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-typography-primary">
                   {user?.fullName || 'Sporekart Verified Account'}
                 </h1>
-                <span className="px-2.5 py-0.5 bg-spore-500/20 text-spore-300 text-[10px] font-bold rounded-lg border border-spore-500/40 uppercase">
+                <span className="px-2.5 py-0.5 bg-forest-900/10 text-forest-800 text-[10px] font-bold rounded-lg border border-forest-900/20 uppercase">
                   {user?.role || 'ROLE_CUSTOMER'}
                 </span>
               </div>
 
               {/* Immutable Identity Fields */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 pt-1">
-                <span className="flex items-center gap-1 font-mono font-medium text-slate-200">
-                  <Lock className="w-3.5 h-3.5 text-spore-400" /> 📞 {user?.phone || user?.identifier || 'Registered Mobile'}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-typography-secondary pt-1">
+                <span className="flex items-center gap-1 font-mono font-medium text-typography-primary">
+                  <Lock className="w-3.5 h-3.5 text-forest-700" /> 📞 {user?.phone || user?.identifier || 'Registered Mobile'}
                 </span>
-                <span className="text-slate-600">•</span>
-                <span className="flex items-center gap-1 font-mono font-medium text-slate-200">
-                  <Lock className="w-3.5 h-3.5 text-spore-400" /> ✉️ {user?.email || user?.identifier || 'Registered Email'}
+                <span className="text-typography-muted">•</span>
+                <span className="flex items-center gap-1 font-mono font-medium text-typography-primary">
+                  <Lock className="w-3.5 h-3.5 text-forest-700" /> ✉️ {user?.email || user?.identifier || 'Registered Email'}
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-400 pt-0.5 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <p className="text-[11px] text-typography-muted pt-0.5 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
                 <span>Identity parameters (Name, Phone, Email) are immutably bound to your customer profile.</span>
               </p>
             </div>
@@ -347,76 +359,76 @@ export default function DashboardPage({ user }) {
                 setTicketForm({ subject: '', category: 'GENERAL_INQUIRY', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
                 setTicketModalOpen(true);
               }}
-              className="px-4 py-2.5 bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg button-press transition-all"
+              className="btn-primary px-4 py-2.5 text-xs font-bold flex items-center gap-2 shadow-level-1"
             >
               <MessageSquare className="w-4 h-4" /> Raise Support Query
             </button>
             <button
               onClick={fetchData}
-              className="p-2.5 bg-slate-900/90 hover:bg-slate-800 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-2 transition-all button-press"
+              className="p-2.5 btn-secondary text-xs font-bold flex items-center gap-2"
               title="Refresh Account Data"
             >
-              <RefreshCw className="w-4 h-4 text-spore-400" />
+              <RefreshCw className="w-4 h-4 text-forest-700" />
             </button>
           </div>
         </div>
       </div>
 
       {/* MNC Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-spore-900/60 pb-3 text-xs sm:text-sm font-bold">
+      <div className="flex flex-wrap gap-2 border-b border-surface-border pb-3 text-xs sm:text-sm font-bold">
         <button
           onClick={() => setActiveTab('activeTrack')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all button-press ${
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'activeTrack'
-              ? 'bg-spore-500/20 text-spore-300 border border-spore-500/50 shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <Truck className="w-4 h-4 text-spore-400" /> Active Track Orders ({activeOrders.length})
+          <Truck className="w-4 h-4 text-forest-700" /> Active Track Orders ({activeOrders.length})
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all button-press ${
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'history'
-              ? 'bg-spore-500/20 text-spore-300 border border-spore-500/50 shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <ShoppingBag className="w-4 h-4 text-spore-400" /> Order History ({historyOrders.length})
+          <ShoppingBag className="w-4 h-4 text-forest-700" /> Order History ({historyOrders.length})
         </button>
 
         <button
           onClick={() => setActiveTab('trainings')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all button-press ${
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'trainings'
-              ? 'bg-spore-500/20 text-spore-300 border border-spore-500/50 shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <GraduationCap className="w-4 h-4 text-spore-400" /> Training Masterclasses ({bookings.length})
+          <GraduationCap className="w-4 h-4 text-forest-700" /> Training Masterclasses ({bookings.length})
         </button>
 
         <button
           onClick={() => setActiveTab('addresses')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all button-press ${
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'addresses'
-              ? 'bg-spore-500/20 text-spore-300 border border-spore-500/50 shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <MapPin className="w-4 h-4 text-spore-400" /> Delivery Addresses ({addresses.length})
+          <MapPin className="w-4 h-4 text-forest-700" /> Delivery Addresses ({addresses.length})
         </button>
 
         <button
           onClick={() => setActiveTab('support')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all button-press ${
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'support'
-              ? 'bg-spore-500/20 text-spore-300 border border-spore-500/50 shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <MessageSquare className="w-4 h-4 text-spore-400" /> Helpdesk & Complaints ({tickets.length})
+          <MessageSquare className="w-4 h-4 text-forest-700" /> Helpdesk & Complaints ({tickets.length})
         </button>
       </div>
 
@@ -437,15 +449,15 @@ export default function DashboardPage({ user }) {
             activeOrders.map((order) => {
               const stage = getStepperStage(order.status);
               return (
-                <div key={order.id} className="glass-card p-6 sm:p-8 rounded-3xl border border-spore-700/50 space-y-6 hover-lift shadow-2xl">
+                <div key={order.id} className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-6 hover-lift shadow-level-1">
                   {/* Order Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-spore-900/60 pb-4 gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-4 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-extrabold text-white text-lg tracking-wider">{order.orderNumber}</span>
+                        <span className="font-mono font-extrabold text-typography-primary text-lg tracking-wider">{order.orderNumber}</span>
                         {getStatusBadge(order.status)}
                       </div>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-typography-muted">
                         Placed on {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
@@ -456,14 +468,14 @@ export default function DashboardPage({ user }) {
                         <button
                           onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
                           disabled={actionLoading[order.id]}
-                          className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 transition-all button-press"
+                          className="btn-secondary px-3.5 py-2 text-xs font-bold flex items-center gap-2"
                         >
-                          <FileText className="w-4 h-4 text-spore-400" />
+                          <FileText className="w-4 h-4 text-forest-700" />
                           <span>{actionLoading[order.id] ? 'Generating PDF...' : 'Download GST Invoice (PDF)'}</span>
                         </button>
                       ) : (
-                        <div className="px-3 py-1.5 bg-slate-950/80 border border-slate-800/80 rounded-xl text-xs text-slate-400 flex items-center gap-1.5" title="GST Tax Invoice will be generated automatically once your order is DELIVERED">
-                          <FileText className="w-3.5 h-3.5 text-slate-500" />
+                        <div className="px-3 py-1.5 bg-surface-cream border border-surface-border rounded-xl text-xs text-typography-muted flex items-center gap-1.5" title="GST Tax Invoice will be generated automatically once your order is DELIVERED">
+                          <FileText className="w-3.5 h-3.5 text-typography-muted" />
                           <span>GST Bill (Available on Delivery)</span>
                         </div>
                       )}
@@ -471,9 +483,9 @@ export default function DashboardPage({ user }) {
                       {/* Cancel Order Action */}
                       <button
                         onClick={() => setCancellingOrder(order)}
-                        className="px-3.5 py-2 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
+                        className="px-3.5 py-2 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                       >
-                        <XCircle className="w-4 h-4 text-rose-400" /> Cancel Order
+                        <XCircle className="w-4 h-4 text-red-600" /> Cancel Order
                       </button>
 
                       {/* Raise Ticket Action */}
@@ -489,16 +501,16 @@ export default function DashboardPage({ user }) {
                           });
                           setTicketModalOpen(true);
                         }}
-                        className="px-3.5 py-2 bg-spore-950/80 hover:bg-spore-900 text-spore-300 border border-spore-700/60 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
+                        className="btn-secondary px-3.5 py-2 text-xs font-bold flex items-center gap-1.5"
                       >
-                        <MessageSquare className="w-4 h-4 text-spore-400" /> Raise Ticket
+                        <MessageSquare className="w-4 h-4 text-forest-700" /> Raise Ticket
                       </button>
                     </div>
                   </div>
 
                   {/* MNC 5-Stage Stepper Bar */}
                   <div className="py-2 space-y-2">
-                    <span className="text-xs font-bold text-slate-300 block mb-3">Shipment Progress Stepper</span>
+                    <span className="text-xs font-bold text-typography-primary block mb-3">Shipment Progress Stepper</span>
                     <div className="grid grid-cols-5 gap-2 relative">
                       {[
                         { num: 1, title: 'Order Placed' },
@@ -514,15 +526,15 @@ export default function DashboardPage({ user }) {
                             <div
                               className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold transition-all border ${
                                 isComplete
-                                  ? 'bg-spore-500 text-slate-950 border-spore-400 shadow-md shadow-spore-950/50'
-                                  : 'bg-slate-900 text-slate-500 border-slate-800'
-                              } ${isCurrent ? 'ring-4 ring-spore-500/20 animate-pulse' : ''}`}
+                                  ? 'bg-green-600 text-white border-green-700 shadow-level-1'
+                                  : 'bg-surface-cream text-typography-muted border-surface-border'
+                              } ${isCurrent ? 'ring-4 ring-green-600/20 animate-pulse' : ''}`}
                             >
                               {isComplete ? <Check className="w-4 h-4" /> : s.num}
                             </div>
                             <span
                               className={`text-[11px] font-semibold ${
-                                isComplete ? 'text-white' : 'text-slate-500'
+                                isComplete ? 'text-typography-primary' : 'text-typography-muted'
                               }`}
                             >
                               {s.title}
@@ -534,39 +546,39 @@ export default function DashboardPage({ user }) {
                   </div>
 
                   {/* Order Line Items */}
-                  <div className="divide-y divide-spore-900/40 pt-2">
+                  <div className="divide-y divide-surface-border pt-2">
                     {order.items?.map((item) => (
                       <div key={item.id || item.variantId} className="py-3 flex justify-between items-center text-xs">
                         <div className="space-y-0.5">
-                          <span className="text-white font-bold text-sm block">{item.productTitle}</span>
-                          <span className="text-slate-400">
-                            Variant: <strong className="text-spore-300">{item.variantName}</strong> (SKU: {item.sku}) × {item.quantity} units
+                          <span className="text-typography-primary font-bold text-sm block">{item.productTitle}</span>
+                          <span className="text-typography-secondary">
+                            Variant: <strong className="text-forest-700">{item.variantName}</strong> (SKU: {item.sku}) × {item.quantity} units
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="font-extrabold text-white text-sm font-display block">
+                          <span className="font-extrabold text-typography-primary text-sm font-display block">
                             ₹{item.lineTotalInr ?? item.subtotalInr ?? (item.priceInr ? item.priceInr * item.quantity : 0)}
                           </span>
-                          <span className="text-[10px] text-slate-400">incl. 5% GST</span>
+                          <span className="text-[10px] text-typography-muted">incl. 5% GST</span>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Summary & Shipping Address */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-spore-900/60 gap-4 text-xs">
-                    <div className="text-slate-300 space-y-0.5">
-                      <span className="font-bold text-white flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-spore-400" /> Delivery Address:
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-surface-border gap-4 text-xs">
+                    <div className="text-typography-secondary space-y-0.5">
+                      <span className="font-bold text-typography-primary flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-forest-700" /> Delivery Address:
                       </span>
-                      <p className="text-slate-400">
+                      <p className="text-typography-secondary">
                         {order.shippingAddress?.recipientName} — {order.shippingAddress?.line1}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode} (📞 {order.shippingAddress?.phone})
                       </p>
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      <span className="text-slate-400 text-xs block font-medium">Total Paid (Free Shiprocket Express)</span>
-                      <span className="text-2xl font-extrabold text-spore-400 font-display">₹{order.totalAmountInr}</span>
+                      <span className="text-typography-muted text-xs block font-medium">Total Paid (Free Shiprocket Express)</span>
+                      <span className="text-2xl font-extrabold text-forest-800 font-display">₹{order.totalAmountInr}</span>
                     </div>
                   </div>
                 </div>
@@ -591,14 +603,14 @@ export default function DashboardPage({ user }) {
             />
           ) : (
             historyOrders.map((order) => (
-              <div key={order.id} className="glass-card p-6 rounded-3xl border border-spore-800/50 space-y-4 hover-lift">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-spore-900/40 pb-3 gap-3">
+              <div key={order.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-4 hover-lift shadow-level-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-3 gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-white text-base">{order.orderNumber}</span>
+                      <span className="font-mono font-bold text-typography-primary text-base">{order.orderNumber}</span>
                       {getStatusBadge(order.status)}
                     </div>
-                    <span className="text-xs text-slate-400 block">
+                    <span className="text-xs text-typography-muted block">
                       Ordered on {new Date(order.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -608,19 +620,19 @@ export default function DashboardPage({ user }) {
                       <button
                         onClick={() => handleDownloadInvoice(order.id, order.orderNumber)}
                         disabled={actionLoading[order.id]}
-                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
+                        className="btn-secondary px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
                       >
-                        <FileText className="w-3.5 h-3.5 text-spore-400" />
+                        <FileText className="w-3.5 h-3.5 text-forest-700" />
                         <span>{actionLoading[order.id] ? 'Generating...' : 'GST Invoice PDF'}</span>
                       </button>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">GST Invoice available upon delivery</span>
+                      <span className="text-xs text-typography-muted italic">GST Invoice available upon delivery</span>
                     )}
                   </div>
                 </div>
 
                 {order.cancellationReason && (
-                  <div className="p-3 bg-rose-950/50 border border-rose-900/50 rounded-xl text-xs text-rose-300">
+                  <div className="p-3 bg-red-600/10 border border-red-600/20 rounded-xl text-xs text-red-700">
                     <strong>Cancellation Reason:</strong> {order.cancellationReason}
                   </div>
                 )}
@@ -628,19 +640,19 @@ export default function DashboardPage({ user }) {
                 <div className="space-y-2">
                   {order.items?.map((item) => (
                     <div key={item.id || item.variantId} className="flex justify-between items-center text-xs">
-                      <span className="text-slate-300">
-                        {item.productTitle} — <span className="text-spore-300 font-semibold">{item.variantName}</span> × {item.quantity}
+                      <span className="text-typography-secondary">
+                        {item.productTitle} — <span className="text-forest-700 font-semibold">{item.variantName}</span> × {item.quantity}
                       </span>
-                      <span className="font-bold text-slate-200 font-display">
+                      <span className="font-bold text-typography-primary font-display">
                         ₹{item.lineTotalInr ?? item.subtotalInr ?? (item.priceInr ? item.priceInr * item.quantity : 0)}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-spore-900/40 text-sm font-bold text-white">
+                <div className="flex justify-between items-center pt-3 border-t border-surface-border text-sm font-bold text-typography-primary">
                   <span>Total Amount Paid</span>
-                  <span className="text-spore-400 text-xl font-display">₹{order.totalAmountInr}</span>
+                  <span className="text-forest-800 text-xl font-display">₹{order.totalAmountInr}</span>
                 </div>
               </div>
             ))
@@ -670,56 +682,56 @@ export default function DashboardPage({ user }) {
               const canCancel = booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && (daysUntilStart === null || daysUntilStart >= 7);
 
               return (
-                <div key={booking.id || booking.bookingId} className="glass-card p-6 sm:p-8 rounded-3xl border border-spore-800/50 space-y-5 hover-lift shadow-xl">
+                <div key={booking.id || booking.bookingId} className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-5 hover-lift shadow-level-1">
                   {/* Card Header & Summary */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-spore-900/40 pb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-border pb-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className={`px-3 py-1 text-xs font-bold rounded-xl border inline-block ${
                           booking.status === 'CANCELLED' 
-                            ? 'bg-rose-950/80 text-rose-300 border-rose-800/60'
+                            ? 'bg-red-600/10 text-red-700 border-red-600/20'
                             : booking.status === 'COMPLETED'
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/60'
-                            : 'bg-spore-500/20 text-spore-300 border-spore-500/40'
+                            ? 'bg-green-600/10 text-green-700 border-green-600/20'
+                            : 'bg-forest-900/10 text-forest-800 border-forest-900/20'
                         }`}>
                           {booking.status || 'CONFIRMED'}
                         </span>
                         {booking.batchCode && (
-                          <span className="px-2.5 py-0.5 bg-slate-900 text-slate-300 text-[10px] font-mono font-bold rounded-lg border border-slate-700">
+                          <span className="px-2.5 py-0.5 bg-surface-cream text-typography-primary text-[10px] font-mono font-bold rounded-lg border border-surface-border">
                             {booking.batchCode}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-bold text-white text-lg font-display pt-0.5">{booking.courseTitle}</h3>
+                      <h3 className="font-bold text-typography-primary text-lg font-display pt-0.5">{booking.courseTitle}</h3>
 
-                      <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-spore-400" />
+                      <p className="text-xs text-typography-secondary flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-forest-700" />
                         Batch Date: {booking.startDate ? new Date(booking.startDate).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.startTime ? new Date(booking.startTime).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (booking.enrolledAt ? new Date(booking.enrolledAt).toLocaleDateString() : 'Upcoming Batch'))}
                       </p>
-                      <p className="text-xs text-slate-300 flex items-center gap-1.5 pt-1">
-                        <ExternalLink className="w-3.5 h-3.5 text-spore-400" />
-                        Location / Online Access Link: <strong className="text-spore-300 underline font-mono">{booking.locationOrLink || 'Sent to registered email'}</strong>
+                      <p className="text-xs text-typography-secondary flex items-center gap-1.5 pt-1">
+                        <ExternalLink className="w-3.5 h-3.5 text-forest-700" />
+                        Location / Online Access Link: <strong className="text-forest-700 underline font-mono">{booking.locationOrLink || 'Sent to registered email'}</strong>
                       </p>
                     </div>
 
                     <div className="text-right space-y-2 flex-shrink-0">
-                      <span className="text-xs text-slate-400 block font-medium">Workshop Fee Paid</span>
-                      <span className="text-2xl font-bold text-amber-400 font-display block">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
+                      <span className="text-xs text-typography-muted block font-medium">Workshop Fee Paid</span>
+                      <span className="text-2xl font-bold text-forest-800 font-display block">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
 
                       {/* Cancel Enrollment Button */}
                       {canCancel && (
                         <button
                           onClick={() => setCancellingEnrollment(booking)}
-                          className="px-3.5 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press ml-auto"
+                          className="px-3.5 py-1.5 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ml-auto"
                         >
-                          <XCircle className="w-3.5 h-3.5 text-rose-400" /> Cancel Enrollment
+                          <XCircle className="w-3.5 h-3.5 text-red-600" /> Cancel Enrollment
                         </button>
                       )}
 
                       {booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && daysUntilStart !== null && daysUntilStart < 7 && (
-                        <span className="text-[11px] text-amber-300 bg-amber-950/50 border border-amber-800/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5 ml-auto" title="Enrollment cancellation is allowed only at least 7 days before batch start date">
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                        <span className="text-[11px] text-gold bg-gold/10 border border-gold/25 px-2.5 py-1 rounded-xl flex items-center gap-1.5 ml-auto" title="Enrollment cancellation is allowed only at least 7 days before batch start date">
+                          <AlertCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                           <span>Cancellation Locked (&lt; 7 Days)</span>
                         </span>
                       )}
@@ -727,10 +739,10 @@ export default function DashboardPage({ user }) {
                   </div>
 
                   {/* Customer Support Options Section */}
-                  <div className="bg-slate-950/60 p-4 rounded-2xl border border-spore-900/60 space-y-3">
+                  <div className="bg-surface-cream p-4 rounded-2xl border border-surface-border space-y-3">
                     <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-spore-400" />
-                      <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Customer Support Options for Training &amp; Courses</span>
+                      <MessageSquare className="w-4 h-4 text-forest-700" />
+                      <span className="text-xs font-bold text-typography-primary uppercase tracking-wider">Customer Support Options for Training &amp; Courses</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
@@ -747,9 +759,9 @@ export default function DashboardPage({ user }) {
                           });
                           setTicketModalOpen(true);
                         }}
-                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                        className="p-2.5 bg-surface-white hover:bg-forest-900/5 text-typography-primary border border-surface-border rounded-xl text-left font-semibold flex items-center gap-2 transition-all"
                       >
-                        <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <Clock className="w-4 h-4 text-gold flex-shrink-0" />
                         <span>Batch &amp; Schedule Query</span>
                       </button>
 
@@ -766,9 +778,9 @@ export default function DashboardPage({ user }) {
                           });
                           setTicketModalOpen(true);
                         }}
-                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                        className="p-2.5 bg-surface-white hover:bg-forest-900/5 text-typography-primary border border-surface-border rounded-xl text-left font-semibold flex items-center gap-2 transition-all"
                       >
-                        <GraduationCap className="w-4 h-4 text-spore-400 flex-shrink-0" />
+                        <GraduationCap className="w-4 h-4 text-forest-700 flex-shrink-0" />
                         <span>Course Content &amp; Notes</span>
                       </button>
 
@@ -785,9 +797,9 @@ export default function DashboardPage({ user }) {
                           });
                           setTicketModalOpen(true);
                         }}
-                        className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-xl text-left font-semibold flex items-center gap-2 transition-all button-press"
+                        className="p-2.5 bg-surface-white hover:bg-forest-900/5 text-typography-primary border border-surface-border rounded-xl text-left font-semibold flex items-center gap-2 transition-all"
                       >
-                        <FileText className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
                         <span>Training Payment / Refund</span>
                       </button>
                     </div>
@@ -803,14 +815,14 @@ export default function DashboardPage({ user }) {
       {activeTab === 'addresses' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-display font-bold text-white">Your Saved Shipping Addresses</h2>
+            <h2 className="text-lg font-display font-bold text-typography-primary">Your Saved Shipping Addresses</h2>
             <button
               onClick={() => {
                 setEditingAddress(null);
                 setAddressForm({ recipientName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', isDefault: addresses.length === 0 });
                 setAddressModalOpen(true);
               }}
-              className="px-4 py-2.5 bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 transition-all button-press shadow-lg"
+              className="btn-primary px-4 py-2.5 text-xs font-bold flex items-center gap-2"
             >
               <PlusCircle className="w-4 h-4" /> Add New Address
             </button>
@@ -833,35 +845,35 @@ export default function DashboardPage({ user }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {addresses.map((addr) => (
-                <div key={addr.id} className="glass-card p-6 rounded-3xl border border-spore-800/50 space-y-3 relative hover-lift">
+                <div key={addr.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 relative hover-lift shadow-level-1">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-white text-base">{addr.recipientName}</span>
+                    <span className="font-bold text-typography-primary text-base">{addr.recipientName}</span>
                     {addr.isDefault && (
-                      <span className="px-2.5 py-0.5 bg-spore-500/20 text-spore-300 border border-spore-500/40 text-[10px] font-bold rounded-lg">
+                      <span className="px-2.5 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[10px] font-bold rounded-lg">
                         DEFAULT ADDRESS
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-300">{addr.line1}, {addr.line2}</p>
-                  <p className="text-xs text-slate-400">{addr.city}, {addr.state} - {addr.pincode}</p>
-                  <p className="text-xs text-spore-400 font-mono">📞 {addr.phone}</p>
+                  <p className="text-xs text-typography-secondary">{addr.line1}, {addr.line2}</p>
+                  <p className="text-xs text-typography-muted">{addr.city}, {addr.state} - {addr.pincode}</p>
+                  <p className="text-xs text-forest-700 font-mono">📞 {addr.phone}</p>
 
-                  <div className="flex gap-2 pt-2 border-t border-spore-900/60">
+                  <div className="flex gap-2 pt-2 border-t border-surface-border">
                     <button
                       onClick={() => {
                         setEditingAddress(addr);
                         setAddressForm({ ...addr });
                         setAddressModalOpen(true);
                       }}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all button-press"
+                      className="btn-secondary px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-spore-400" /> Edit
+                      <Edit3 className="w-3.5 h-3.5 text-forest-700" /> Edit
                     </button>
                     <button
                       onClick={() => handleDeleteAddress(addr.id)}
-                      className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all button-press"
+                      className="px-3 py-1.5 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-rose-400" /> Delete
+                      <Trash2 className="w-3.5 h-3.5 text-red-600" /> Delete
                     </button>
                   </div>
                 </div>
@@ -875,13 +887,13 @@ export default function DashboardPage({ user }) {
       {activeTab === 'support' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-display font-bold text-white">Support Tickets & Complaint Tracker</h2>
+            <h2 className="text-lg font-display font-bold text-typography-primary">Support Tickets & Complaint Tracker</h2>
             <button
               onClick={() => {
                 setTicketForm({ subject: '', category: 'GENERAL_INQUIRY', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
                 setTicketModalOpen(true);
               }}
-              className="px-4 py-2.5 bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 transition-all button-press shadow-lg"
+              className="btn-primary px-4 py-2.5 text-xs font-bold flex items-center gap-2"
             >
               <PlusCircle className="w-4 h-4" /> Raise Complaint / Query
             </button>
@@ -903,25 +915,25 @@ export default function DashboardPage({ user }) {
           ) : (
             <div className="space-y-4">
               {tickets.map((t) => (
-                <div key={t.id} className="glass-card p-6 rounded-3xl border border-spore-800/50 space-y-3 hover-lift">
+                <div key={t.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 hover-lift shadow-level-1">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-base">{t.subject}</span>
+                        <span className="font-bold text-typography-primary text-base">{t.subject}</span>
                         <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border ${
-                          t.status === 'RESOLVED' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-amber-950 text-amber-300 border-amber-800'
+                          t.status === 'RESOLVED' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-gold/15 text-forest-900 border border-gold/30'
                         }`}>
                           {t.status}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        Category: <strong className="text-slate-300">{t.category}</strong> • Priority: {t.priority} • Opened on {new Date(t.createdAt).toLocaleDateString()}
+                      <p className="text-xs text-typography-muted">
+                        Category: <strong className="text-typography-primary">{t.category}</strong> • Priority: {t.priority} • Opened on {new Date(t.createdAt).toLocaleDateString()}
                       </p>
                     </div>
 
                     <button
                       onClick={() => setSelectedTicket(t)}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-spore-400 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all button-press"
+                      className="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5"
                     >
                       <span>View Message Thread ({t.messages?.length || 0})</span>
                       <ChevronRight className="w-4 h-4" />
@@ -936,16 +948,16 @@ export default function DashboardPage({ user }) {
 
       {/* CANCEL ORDER MODAL */}
       {cancellingOrder && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-rose-800/60 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-rose-900/60">
-              <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-rose-400" /> Cancel Order {cancellingOrder.orderNumber}
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-md w-full space-y-5 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <h3 className="text-lg font-display font-bold text-typography-primary flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-red-600" /> Cancel Order {cancellingOrder.orderNumber}
               </h3>
-              <button onClick={() => setCancellingOrder(null)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setCancellingOrder(null)} className="text-typography-muted hover:text-typography-primary">✕</button>
             </div>
 
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-typography-secondary leading-relaxed">
               Please select a cancellation reason. Reserved stock will be returned to inventory and any paid amount will enter refund processing.
             </p>
 
@@ -958,30 +970,30 @@ export default function DashboardPage({ user }) {
                   'Found lower price elsewhere',
                   'Other',
                 ].map((reason) => (
-                  <label key={reason} className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-slate-700">
+                  <label key={reason} className="flex items-center gap-2.5 p-3 rounded-xl bg-surface-cream border border-surface-border cursor-pointer">
                     <input
                       type="radio"
                       name="cancelReason"
                       value={reason}
                       checked={cancelReason === reason}
                       onChange={(e) => setCancelReason(e.target.value)}
-                      className="text-spore-500 focus:ring-spore-400"
+                      className="text-green-600 focus:ring-green-600/15"
                     />
-                    <span className="text-slate-200 font-medium">{reason}</span>
+                    <span className="text-typography-primary font-medium">{reason}</span>
                   </label>
                 ))}
               </div>
 
               {cancelReason === 'Other' && (
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1 font-medium">Specify details</label>
+                  <label className="block text-xs text-typography-primary mb-1 font-medium">Specify details</label>
                   <textarea
                     rows={2}
                     required
                     value={customCancelReason}
                     onChange={(e) => setCustomCancelReason(e.target.value)}
                     placeholder="Enter reason for cancellation..."
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-rose-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-typography-primary text-xs focus:outline-none focus:border-red-600"
                   />
                 </div>
               )}
@@ -990,14 +1002,14 @@ export default function DashboardPage({ user }) {
                 <button
                   type="submit"
                   disabled={actionLoading[cancellingOrder.id]}
-                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all button-press"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all"
                 >
                   {actionLoading[cancellingOrder.id] ? 'Cancelling...' : 'Confirm Order Cancellation'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCancellingOrder(null)}
-                  className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
+                  className="px-4 py-2.5 btn-secondary text-xs"
                 >
                   Keep Order
                 </button>
@@ -1009,28 +1021,28 @@ export default function DashboardPage({ user }) {
 
       {/* CANCEL ENROLLMENT MODAL */}
       {cancellingEnrollment && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-rose-800/60 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-rose-900/60">
-              <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-rose-400" /> Cancel Enrollment
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-md w-full space-y-5 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <h3 className="text-lg font-display font-bold text-typography-primary flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-red-600" /> Cancel Enrollment
               </h3>
-              <button onClick={() => setCancellingEnrollment(null)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setCancellingEnrollment(null)} className="text-typography-muted hover:text-typography-primary">✕</button>
             </div>
 
             <div className="space-y-2 text-xs">
-              <p className="text-slate-200 font-bold">{cancellingEnrollment.courseTitle}</p>
-              <p className="text-slate-400">
-                Batch Date: <strong className="text-slate-300">{cancellingEnrollment.startDate ? new Date(cancellingEnrollment.startDate).toLocaleDateString() : 'Upcoming Batch'}</strong>
+              <p className="text-typography-primary font-bold">{cancellingEnrollment.courseTitle}</p>
+              <p className="text-typography-secondary">
+                Batch Date: <strong className="text-typography-primary">{cancellingEnrollment.startDate ? new Date(cancellingEnrollment.startDate).toLocaleDateString() : 'Upcoming Batch'}</strong>
               </p>
-              <p className="text-amber-300/90 bg-amber-950/50 p-2.5 rounded-xl border border-amber-800/60 text-[11px]">
+              <p className="text-forest-900 bg-gold/15 p-2.5 rounded-xl border border-gold/30 text-[11px] font-medium leading-relaxed">
                 ⚠️ Note: Cancellations are permitted at least 7 days prior to the batch start date. Upon confirmation, your slot will be released back to capacity.
               </p>
             </div>
 
             <form onSubmit={handleConfirmCancelEnrollment} className="space-y-4">
               <div className="space-y-2 text-xs">
-                <label className="block text-slate-300 font-medium mb-1">Reason for cancellation</label>
+                <label className="block text-typography-primary font-medium mb-1">Reason for cancellation</label>
                 {[
                   'Schedule conflict',
                   'Health / Personal Emergency',
@@ -1038,30 +1050,30 @@ export default function DashboardPage({ user }) {
                   'Enrolled in wrong course',
                   'Other',
                 ].map((reason) => (
-                  <label key={reason} className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-900/80 border border-slate-800 cursor-pointer hover:border-slate-700">
+                  <label key={reason} className="flex items-center gap-2.5 p-3 rounded-xl bg-surface-cream border border-surface-border cursor-pointer">
                     <input
                       type="radio"
                       name="cancelEnrollmentReason"
                       value={reason}
                       checked={cancelEnrollmentReason === reason}
                       onChange={(e) => setCancelEnrollmentReason(e.target.value)}
-                      className="text-spore-500 focus:ring-spore-400"
+                      className="text-green-600 focus:ring-green-600/15"
                     />
-                    <span className="text-slate-200 font-medium">{reason}</span>
+                    <span className="text-typography-primary font-medium">{reason}</span>
                   </label>
                 ))}
               </div>
 
               {cancelEnrollmentReason === 'Other' && (
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1 font-medium font-mono">Specify details</label>
+                  <label className="block text-xs text-typography-primary mb-1 font-medium font-mono">Specify details</label>
                   <textarea
                     rows={2}
                     required
                     value={customCancelEnrollmentReason}
                     onChange={(e) => setCustomCancelEnrollmentReason(e.target.value)}
                     placeholder="Enter reason for cancellation..."
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-rose-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-typography-primary text-xs focus:outline-none focus:border-red-600"
                   />
                 </div>
               )}
@@ -1070,14 +1082,14 @@ export default function DashboardPage({ user }) {
                 <button
                   type="submit"
                   disabled={actionLoading[cancellingEnrollment.id]}
-                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all button-press"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all"
                 >
                   {actionLoading[cancellingEnrollment.id] ? 'Cancelling...' : 'Confirm Cancel Enrollment'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCancellingEnrollment(null)}
-                  className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
+                  className="px-4 py-2.5 btn-secondary text-xs"
                 >
                   Keep Enrollment
                 </button>
@@ -1089,35 +1101,35 @@ export default function DashboardPage({ user }) {
 
       {/* RAISE SUPPORT TICKET MODAL */}
       {ticketModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/60 max-w-lg w-full space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-spore-800/60">
-              <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-spore-400" /> Raise Support Query / Complaint
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-lg w-full space-y-5 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <h3 className="text-lg font-display font-bold text-typography-primary flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-forest-700" /> Raise Support Query / Complaint
               </h3>
-              <button onClick={() => setTicketModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setTicketModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
             </div>
 
             <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Subject Title</label>
+                <label className="block text-typography-primary font-medium mb-1">Subject Title</label>
                 <input
                   type="text"
                   required
                   placeholder="Brief summary of your query or issue"
                   value={ticketForm.subject}
                   onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
-                  className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-spore-400"
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Category</label>
+                  <label className="block text-typography-primary font-medium mb-1">Category</label>
                   <select
                     value={ticketForm.category}
                     onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   >
                     <option value="ORDER_ISSUE">Order Issue</option>
                     <option value="PAYMENT_FAILURE">Payment Query</option>
@@ -1127,11 +1139,11 @@ export default function DashboardPage({ user }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Priority</label>
+                  <label className="block text-typography-primary font-medium mb-1">Priority</label>
                   <select
                     value={ticketForm.priority}
                     onChange={(e) => setTicketForm({ ...ticketForm, priority: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -1141,14 +1153,14 @@ export default function DashboardPage({ user }) {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Detailed Message</label>
+                <label className="block text-typography-primary font-medium mb-1">Detailed Message</label>
                 <textarea
                   rows={4}
                   required
                   placeholder="Describe your issue or question in detail..."
                   value={ticketForm.message}
                   onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
-                  className="w-full bg-slate-900 border border-spore-700/50 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-spore-400"
+                  className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                 />
               </div>
 
@@ -1156,14 +1168,14 @@ export default function DashboardPage({ user }) {
                 <button
                   type="submit"
                   disabled={actionLoading.createTicket}
-                  className="flex-1 bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-all button-press shadow-lg"
+                  className="flex-1 btn-primary font-bold py-2.5 text-xs"
                 >
                   {actionLoading.createTicket ? 'Submitting Ticket...' : 'Submit Support Ticket'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setTicketModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
+                  className="px-4 py-2.5 btn-secondary text-xs"
                 >
                   Cancel
                 </button>
@@ -1175,30 +1187,30 @@ export default function DashboardPage({ user }) {
 
       {/* TICKET DETAILS & MESSAGING THREAD DRAWER */}
       {selectedTicket && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/60 max-w-2xl w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center pb-3 border-b border-spore-800/60 flex-shrink-0">
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-2xl w-full space-y-4 shadow-level-3 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border flex-shrink-0">
               <div>
-                <h3 className="text-lg font-display font-bold text-white">{selectedTicket.subject}</h3>
-                <span className="text-xs text-slate-400">
-                  Status: <strong className="text-spore-300">{selectedTicket.status}</strong> • Priority: {selectedTicket.priority}
+                <h3 className="text-lg font-display font-bold text-typography-primary">{selectedTicket.subject}</h3>
+                <span className="text-xs text-typography-muted">
+                  Status: <strong className="text-forest-700">{selectedTicket.status}</strong> • Priority: {selectedTicket.priority}
                 </span>
               </div>
-              <button onClick={() => setSelectedTicket(null)} className="text-slate-400 hover:text-white text-lg">✕</button>
+              <button onClick={() => setSelectedTicket(null)} className="text-typography-muted hover:text-typography-primary text-lg">✕</button>
             </div>
 
             {/* Message History */}
-            <div className="flex-1 overflow-y-auto space-y-3 p-3 bg-slate-950/60 rounded-2xl border border-spore-900/60">
+            <div className="flex-1 overflow-y-auto space-y-3 p-3 bg-surface-cream rounded-2xl border border-surface-border">
               {selectedTicket.messages?.map((msg) => (
                 <div
                   key={msg.id}
                   className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[85%] ${
                     msg.senderRole === 'CUSTOMER'
-                      ? 'ml-auto bg-spore-950/90 border border-spore-700/60 text-spore-100'
-                      : 'bg-slate-900 border border-slate-800 text-slate-200'
+                      ? 'ml-auto bg-forest-900/10 border border-forest-900/20 text-forest-900'
+                      : 'bg-surface-white border border-surface-border text-typography-secondary'
                   }`}
                 >
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 gap-4">
+                  <div className="flex justify-between items-center text-[10px] text-typography-muted gap-4">
                     <span className="font-bold">{msg.senderName} ({msg.senderRole})</span>
                     <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
@@ -1215,12 +1227,12 @@ export default function DashboardPage({ user }) {
                 placeholder="Type your reply to customer care..."
                 value={replyMessage}
                 onChange={(e) => setReplyMessage(e.target.value)}
-                className="flex-1 bg-slate-900 border border-spore-700/50 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                className="flex-1 bg-surface-white border border-surface-border rounded-xl px-4 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
               />
               <button
                 type="submit"
                 disabled={actionLoading.replyTicket}
-                className="px-5 py-2 bg-spore-500 hover:bg-spore-400 text-slate-950 font-bold rounded-xl text-xs button-press transition-all flex items-center gap-1"
+                className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1"
               >
                 <span>Send</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1232,90 +1244,90 @@ export default function DashboardPage({ user }) {
 
       {/* ADDRESS ADD/EDIT MODAL */}
       {addressModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-700/60 max-w-md w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-spore-800/60">
-              <h3 className="text-lg font-display font-bold text-white">
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-md w-full space-y-4 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <h3 className="text-lg font-display font-bold text-typography-primary">
                 {editingAddress ? 'Edit Delivery Address' : 'Add New Shipping Address'}
               </h3>
-              <button onClick={() => setAddressModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setAddressModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
             </div>
 
             <form onSubmit={handleSaveAddress} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 mb-1">Recipient Name</label>
+                  <label className="block text-typography-primary mb-1 font-medium">Recipient Name</label>
                   <input
                     type="text"
                     required
                     value={addressForm.recipientName}
                     onChange={(e) => setAddressForm({ ...addressForm, recipientName: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 mb-1">Phone Number</label>
+                  <label className="block text-typography-primary mb-1 font-medium">Phone Number</label>
                   <input
                     type="text"
                     required
                     value={addressForm.phone}
                     onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1">Address Line 1</label>
+                <label className="block text-typography-primary mb-1 font-medium">Address Line 1</label>
                 <input
                   type="text"
                   required
                   value={addressForm.line1}
                   onChange={(e) => setAddressForm({ ...addressForm, line1: e.target.value })}
-                  className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1">Address Line 2 (Optional)</label>
+                <label className="block text-typography-primary mb-1 font-medium">Address Line 2 (Optional)</label>
                 <input
                   type="text"
                   value={addressForm.line2}
                   onChange={(e) => setAddressForm({ ...addressForm, line2: e.target.value })}
-                  className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-slate-300 mb-1">City</label>
+                  <label className="block text-typography-primary mb-1 font-medium">City</label>
                   <input
                     type="text"
                     required
                     value={addressForm.city}
                     onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 mb-1">State</label>
+                  <label className="block text-typography-primary mb-1 font-medium">State</label>
                   <input
                     type="text"
                     required
                     value={addressForm.state}
                     onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 mb-1">PIN Code</label>
+                  <label className="block text-typography-primary mb-1 font-medium">PIN Code</label>
                   <input
                     type="text"
                     required
                     maxLength={6}
                     value={addressForm.pincode}
                     onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                    className="w-full bg-slate-900 border border-spore-700/50 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   />
                 </div>
               </div>
@@ -1325,23 +1337,23 @@ export default function DashboardPage({ user }) {
                   type="checkbox"
                   checked={addressForm.isDefault}
                   onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
-                  className="rounded text-spore-500 focus:ring-spore-400"
+                  className="rounded text-green-600 focus:ring-green-600/15"
                 />
-                <span className="text-slate-300 text-xs">Set as default delivery address</span>
+                <span className="text-typography-secondary text-xs">Set as default delivery address</span>
               </label>
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
                   disabled={actionLoading.saveAddress}
-                  className="flex-1 bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-all button-press shadow-lg"
+                  className="flex-1 btn-primary font-bold py-2.5 text-xs"
                 >
                   {actionLoading.saveAddress ? 'Saving Address...' : 'Save Shipping Address'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAddressModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs"
+                  className="px-4 py-2.5 btn-secondary text-xs"
                 >
                   Cancel
                 </button>

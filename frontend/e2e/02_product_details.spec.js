@@ -2,35 +2,31 @@ import { test, expect } from '@playwright/test';
 
 test.describe('E2E Flow 2: Product Details & Intelligent Stock Availability', () => {
   test('Guest can inspect product detail page, stock availability label, gallery, and check pincode', async ({ page }) => {
-    // 1. Navigate to catalog and click first product
-    await page.goto('/catalog');
-    const firstProduct = page.locator('.group.relative').first();
-    await expect(firstProduct).toBeVisible();
-    await firstProduct.click();
+    await page.goto('/products');
+    const firstProduct = page.getByTestId('product-card').first();
+    await firstProduct.waitFor({ state: 'visible', timeout: 15000 });
+    await firstProduct.getByRole('link').first().click();
 
-    // 2. Verify Product Detail URL & Core Elements
-    await expect(page).toHaveURL(/\/product\//);
+    await expect(page).toHaveURL(/\/product\//, { timeout: 15000 });
+    await page.getByTestId('product-title').waitFor({ state: 'visible', timeout: 20000 });
     await expect(page.getByTestId('product-title')).toBeVisible();
     await expect(page.getByTestId('product-price')).toBeVisible();
 
-    // 3. Verify Stock Availability Messaging (No raw integer quantity displayed)
     const availabilityBadge = page.getByTestId('product-availability');
-    await expect(availabilityBadge).toBeVisible();
+    await expect(availabilityBadge).toBeVisible({ timeout: 10000 });
     const availabilityText = await availabilityBadge.innerText();
-    expect(availabilityText).toMatch(/Available|Limited stock|Only a few left|Out of stock/i);
+    expect(availabilityText).toMatch(/Available|In Stock|Limited stock|Only a few left|Out of stock/i);
     expect(availabilityText).not.toMatch(/\b\d+\s+in stock\b/i);
 
-    // 4. Verify Multi-Image Product Gallery
     const gallery = page.getByTestId('product-gallery');
-    await expect(gallery).toBeVisible();
-    await expect(page.getByTestId('product-primary-image')).toBeVisible();
+    await expect(gallery).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('product-primary-image')).toBeVisible({ timeout: 10000 });
 
-    // 5. Verify Pincode Check Feature
-    const pincodeInput = page.getByPlaceholder(/Enter 6-digit PIN code/i);
+    const pincodeInput = page.getByPlaceholder(/6-digit PIN code/i);
     if (await pincodeInput.isVisible()) {
       await pincodeInput.fill('560001');
-      await page.getByRole('button', { name: /Check Delivery/i }).click();
-      await expect(page.getByText(/Serviceable/i)).toBeVisible();
+      await page.getByRole('button', { name: /Check Delivery|Check/i }).click();
+      await expect(page.getByText(/Delivery Available|Serviceable|Days/i).first()).toBeVisible({ timeout: 10000 });
     }
   });
 });

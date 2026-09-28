@@ -14,16 +14,53 @@ export default function OrderConfirmationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [polling, setPolling] = useState(false);
 
   useEffect(() => {
     if (orderId) {
-      loadOrder();
+      loadOrder(true);
     }
   }, [orderId]);
 
-  const loadOrder = async () => {
+  // Polling for webhook payment confirmation if order is in PENDING state
+  useEffect(() => {
+    let pollInterval;
+    let pollCount = 0;
+    const maxPolls = 6;
+
+    if (order && (order.status === 'PENDING' || order.paymentStatus === 'PENDING')) {
+      setPolling(true);
+      pollInterval = setInterval(async () => {
+        pollCount += 1;
+        try {
+          const res = await orderApi.getOrderById(orderId);
+          if (res.data && res.data.success) {
+            const updated = res.data.data;
+            setOrder(updated);
+            if (updated.status !== 'PENDING' || updated.paymentStatus === 'PAID' || pollCount >= maxPolls) {
+              clearInterval(pollInterval);
+              setPolling(false);
+            }
+          }
+        } catch (e) {
+          if (pollCount >= maxPolls) {
+            clearInterval(pollInterval);
+            setPolling(false);
+          }
+        }
+      }, 3000);
+    } else {
+      setPolling(false);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [order?.status, order?.paymentStatus, orderId]);
+
+  const loadOrder = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) setLoading(true);
       const res = await orderApi.getOrderById(orderId);
       if (res.data && res.data.success) {
         setOrder(res.data.data);
@@ -33,7 +70,7 @@ export default function OrderConfirmationPage() {
     } catch (err) {
       setError(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to load order confirmation details');
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
@@ -59,10 +96,10 @@ export default function OrderConfirmationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-screen flex items-center justify-center text-forest-900">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-spore-400 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-300">Fetching order receipt...</p>
+          <Loader2 className="w-10 h-10 text-forest-700 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-typography-secondary">Fetching order receipt...</p>
         </div>
       </div>
     );
@@ -71,11 +108,11 @@ export default function OrderConfirmationPage() {
   if (error || !order) {
     return (
       <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto">
-        <h2 className="text-xl font-bold text-white mb-2">Confirmation Unavailable</h2>
-        <p className="text-xs text-slate-400 mb-6">{error || 'Order record not found.'}</p>
+        <h2 className="text-xl font-bold text-forest-900 mb-2">Confirmation Unavailable</h2>
+        <p className="text-xs text-typography-secondary mb-6">{error || 'Order record not found.'}</p>
         <Link
           to="/dashboard"
-          className="bg-spore-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-all text-xs"
+          className="btn-primary text-xs px-6 py-2.5 shadow-level-1"
         >
           View Dashboard
         </Link>
@@ -86,57 +123,61 @@ export default function OrderConfirmationPage() {
   const shippingAddr = order.shippingAddress;
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto animate-fade-in text-white">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto animate-fade-in text-forest-900">
       {/* Confirmation Success Header */}
       <div className="text-center space-y-3 mb-10">
-        <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-spore-400 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 animate-bounce">
-          <CheckCircle2 className="w-10 h-10 text-slate-950" />
+        <div className="w-16 h-16 bg-green-600/10 border border-green-600/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
+          {polling ? <Loader2 className="w-9 h-9 text-forest-700 animate-spin" /> : <CheckCircle2 className="w-10 h-10 text-green-600" />}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-white">Payment Confirmed!</h1>
-        <p className="text-sm text-slate-300 max-w-md mx-auto">
-          Thank you for your purchase. Your order <span className="text-spore-400 font-bold">#{order.orderNumber}</span> has been confirmed and is being processed.
+        <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
+          {polling ? 'Syncing Payment Status...' : 'Payment Confirmed!'}
+        </h1>
+        <p className="text-sm text-typography-secondary max-w-md mx-auto">
+          {polling
+            ? `Verifying payment settlement with gateway for order #${order.orderNumber}...`
+            : `Thank you for your purchase. Your order #${order.orderNumber} has been confirmed and is being processed.`}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Left Column: Order Items */}
         <div className="md:col-span-7 space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <PackageCheck className="w-4 h-4 text-spore-400" /> Purchased Items ({order.items?.length || 0})
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1">
+            <div className="flex items-center justify-between border-b border-surface-border pb-4 mb-4">
+              <h3 className="text-sm font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+                <PackageCheck className="w-4 h-4 text-forest-700" /> Purchased Items ({order.items?.length || 0})
               </h3>
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-bold text-green-600 bg-green-600/10 border border-green-600/30 px-2.5 py-1 rounded-pill">
                 {order.status || 'PAID'}
               </span>
             </div>
 
-            <div className="divide-y divide-slate-800/60">
+            <div className="divide-y divide-surface-border">
               {order.items?.map((item, idx) => (
                 <div key={idx} className="py-3 flex items-center justify-between gap-4">
                   <div>
-                    <h4 className="text-xs font-bold text-white">{item.productTitle}</h4>
-                    <p className="text-[11px] text-slate-400">Variant: {item.variantName || 'Standard'} × {item.quantity}</p>
+                    <h4 className="text-xs font-bold text-forest-900">{item.productTitle}</h4>
+                    <p className="text-[11px] text-typography-secondary">Variant: {item.variantName || 'Standard'} × {item.quantity}</p>
                   </div>
-                  <span className="text-xs font-mono font-bold text-slate-200">
+                  <span className="text-xs font-mono font-bold text-forest-900">
                     ₹{(item.unitPriceInr * item.quantity).toLocaleString('en-IN')}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-slate-800 pt-4 mt-4 space-y-2 text-xs">
-              <div className="flex justify-between text-slate-400">
+            <div className="border-t border-surface-border pt-4 mt-4 space-y-2 text-xs">
+              <div className="flex justify-between text-typography-secondary">
                 <span>Subtotal</span>
-                <span className="text-white font-mono">₹{order.subtotalAmountInr?.toLocaleString('en-IN')}</span>
+                <span className="text-forest-900 font-mono">₹{order.subtotalAmountInr?.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-typography-secondary">
                 <span>Shipping Fee</span>
-                <span className="text-white font-mono">₹{order.shippingFeeInr?.toLocaleString('en-IN') || '0'}</span>
+                <span className="text-forest-900 font-mono">₹{order.shippingFeeInr?.toLocaleString('en-IN') || '0'}</span>
               </div>
-              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-white">
+              <div className="border-t border-surface-border pt-2 flex justify-between font-bold text-sm text-forest-900">
                 <span>Total Amount Paid</span>
-                <span className="text-spore-400 font-mono">₹{order.totalAmountInr?.toLocaleString('en-IN')}</span>
+                <span className="text-forest-700 font-mono">₹{order.totalAmountInr?.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -146,21 +187,21 @@ export default function OrderConfirmationPage() {
               <button
                 onClick={handleDownloadInvoice}
                 disabled={downloadingInvoice}
-                className="w-full sm:w-auto flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
+                className="w-full sm:w-auto flex-1 btn-secondary text-xs py-3 px-4 flex items-center justify-center gap-2"
               >
-                {downloadingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-spore-400" /> : <FileText className="w-4 h-4 text-spore-400" />}
+                {downloadingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-forest-700" /> : <FileText className="w-4 h-4 text-forest-700" />}
                 <span>Download Tax Invoice</span>
               </button>
             ) : (
-              <div className="w-full sm:w-auto flex-1 bg-slate-900/80 border border-slate-800 text-slate-300 font-medium py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2">
-                <FileText className="w-4 h-4 text-spore-400" />
+              <div className="w-full sm:w-auto flex-1 bg-surface-cream border border-surface-border text-typography-secondary font-medium py-3 px-4 rounded-input text-xs flex items-center justify-center gap-2">
+                <FileText className="w-4 h-4 text-forest-700" />
                 <span>GST Tax Invoice will be available upon delivery</span>
               </div>
             )}
 
             <Link
               to="/products"
-              className="w-full sm:w-auto flex-1 bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all button-press"
+              className="w-full sm:w-auto flex-1 btn-primary text-xs py-3 px-4 flex items-center justify-center gap-2 shadow-level-1"
             >
               <ShoppingBag className="w-4 h-4" /> Continue Shopping
             </Link>
@@ -170,41 +211,41 @@ export default function OrderConfirmationPage() {
         {/* Right Column: Shipping & Payment Metadata */}
         <div className="md:col-span-5 space-y-6">
           {/* Shipping Address */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-400" /> Delivery Address
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1 space-y-3">
+            <h3 className="text-xs font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-forest-700" /> Delivery Address
             </h3>
 
             {shippingAddr ? (
-              <div className="text-xs text-slate-300 space-y-1">
-                <p className="font-bold text-white text-sm">{shippingAddr.recipientName}</p>
+              <div className="text-xs text-typography-secondary space-y-1">
+                <p className="font-bold text-forest-900 text-sm">{shippingAddr.recipientName}</p>
                 <p>{shippingAddr.line1} {shippingAddr.line2}</p>
                 <p>{shippingAddr.city}, {shippingAddr.state} - {shippingAddr.pincode}</p>
-                <p className="text-slate-400 pt-1">Phone: {shippingAddr.phone}</p>
+                <p className="text-typography-muted pt-1">Phone: {shippingAddr.phone}</p>
               </div>
             ) : (
-              <p className="text-xs text-slate-400">Standard Delivery</p>
+              <p className="text-xs text-typography-muted">Standard Delivery</p>
             )}
           </div>
 
           {/* Payment & Status details */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <Truck className="w-4 h-4 text-sky-400" /> Fulfillment Summary
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1 space-y-3">
+            <h3 className="text-xs font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+              <Truck className="w-4 h-4 text-forest-700" /> Fulfillment Summary
             </h3>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Order Number</span>
-                <span className="font-mono text-white font-semibold">#{order.orderNumber}</span>
+              <div className="flex justify-between py-1 border-b border-surface-border">
+                <span className="text-typography-muted">Order Number</span>
+                <span className="font-mono text-forest-900 font-semibold">#{order.orderNumber}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Payment Ref</span>
-                <span className="font-mono text-spore-400 font-semibold">{order.razorpayPaymentId || 'CONFIRMED'}</span>
+              <div className="flex justify-between py-1 border-b border-surface-border">
+                <span className="text-typography-muted">Payment Ref</span>
+                <span className="font-mono text-forest-700 font-semibold">{order.razorpayPaymentId || 'CONFIRMED'}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400">Estimated Delivery</span>
-                <span className="text-emerald-400 font-semibold">3 - 5 Business Days</span>
+                <span className="text-typography-muted">Estimated Delivery</span>
+                <span className="text-green-600 font-semibold">3 - 5 Business Days</span>
               </div>
             </div>
           </div>

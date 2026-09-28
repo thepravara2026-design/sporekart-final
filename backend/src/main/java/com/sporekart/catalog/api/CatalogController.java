@@ -21,8 +21,10 @@ public class CatalogController {
     @GetMapping({"/products", "/catalog/products"})
     public ResponseEntity<ApiResponse<List<CatalogDtos.ProductDto>>> getProducts(
             @RequestParam(required = false) ProductType type,
-            @RequestParam(required = false) String category) {
-        List<CatalogDtos.ProductDto> products = catalogService.getAllActiveProducts(type, category);
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size) {
+        List<CatalogDtos.ProductDto> products = catalogService.getAllActiveProducts(type, category, page, size);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 

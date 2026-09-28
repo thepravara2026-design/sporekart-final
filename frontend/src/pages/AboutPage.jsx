@@ -15,33 +15,33 @@ export default function AboutPage() {
       <Breadcrumbs items={[{ label: 'About Us', path: '/about' }]} />
 
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="px-3.5 py-1.5 rounded-full bg-spore-950 border border-spore-700/50 text-spore-300 text-xs font-semibold">
+        <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-forest-900/10 border border-forest-900/20 text-forest-800 text-xs font-semibold">
           India's Mushroom Agritech Ecosystem
         </span>
-        <h1 className="font-display font-extrabold text-4xl sm:text-5xl text-white">
+        <h1 className="font-display font-extrabold text-4xl sm:text-5xl text-typography-primary">
           Pioneering Organic Mushroom Supply & <br />
-          <span className="gradient-text">Grower Incubation in India</span>
+          <span className="text-forest-700">Grower Incubation in India</span>
         </h1>
-        <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+        <p className="text-typography-secondary text-sm sm:text-base leading-relaxed">
           Founded with a vision to revolutionize tropical mushroom agriculture, Sporekart bridges the gap between laboratory mycology and commercial mushroom farming.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6 rounded-2xl border border-spore-800/40 space-y-3">
-          <ShieldCheck className="w-8 h-8 text-spore-400" />
-          <h3 className="font-bold text-white text-lg">Lab-Certified Pure Spawn</h3>
-          <p className="text-xs text-slate-400">First-generation wheat grain mother spawn cultured under HEPA laminar airflow conditions for maximum yield.</p>
+        <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-3 hover-lift">
+          <ShieldCheck className="w-8 h-8 text-forest-700" />
+          <h3 className="font-bold text-typography-primary text-lg">Lab-Certified Pure Spawn</h3>
+          <p className="text-xs text-typography-secondary leading-relaxed">First-generation wheat grain mother spawn cultured under HEPA laminar airflow conditions for maximum yield.</p>
         </div>
-        <div className="glass-card p-6 rounded-2xl border border-spore-800/40 space-y-3">
-          <Building2 className="w-8 h-8 text-amber-400" />
-          <h3 className="font-bold text-white text-lg">Turnkey Farm Engineering</h3>
-          <p className="text-xs text-slate-400">Designing climate-controlled indoor button, oyster, and tropical milky mushroom fruiting facilities across India.</p>
+        <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-3 hover-lift">
+          <Building2 className="w-8 h-8 text-gold" />
+          <h3 className="font-bold text-typography-primary text-lg">Turnkey Farm Engineering</h3>
+          <p className="text-xs text-typography-secondary leading-relaxed">Designing climate-controlled indoor button, oyster, and tropical milky mushroom fruiting facilities across India.</p>
         </div>
-        <div className="glass-card p-6 rounded-2xl border border-spore-800/40 space-y-3">
-          <Award className="w-8 h-8 text-emerald-400" />
-          <h3 className="font-bold text-white text-lg">Market Buyback Linkages</h3>
-          <p className="text-xs text-slate-400">Connecting trained growers with hotel chains, supermarket suppliers, and dehydration units.</p>
+        <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-3 hover-lift">
+          <Award className="w-8 h-8 text-green-600" />
+          <h3 className="font-bold text-typography-primary text-lg">Market Buyback Linkages</h3>
+          <p className="text-xs text-typography-secondary leading-relaxed">Connecting trained growers with hotel chains, supermarket suppliers, and dehydration units.</p>
         </div>
       </div>
     </div>

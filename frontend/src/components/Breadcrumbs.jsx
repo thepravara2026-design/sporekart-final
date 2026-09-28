@@ -32,10 +32,10 @@ export default function Breadcrumbs({ items }) {
       </Helmet>
 
       <nav aria-label="Breadcrumb" className="py-3">
-        <ol className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+        <ol className="flex items-center gap-1.5 text-xs text-typography-muted font-medium">
           <li>
-            <Link to="/" className="hover:text-spore-400 transition-colors flex items-center gap-1">
-              <Home className="w-3.5 h-3.5 text-spore-400" />
+            <Link to="/" className="hover:text-forest-700 transition-colors flex items-center gap-1">
+              <Home className="w-3.5 h-3.5 text-forest-700" />
               <span>Home</span>
             </Link>
           </li>
@@ -45,13 +45,13 @@ export default function Breadcrumbs({ items }) {
 
             return (
               <li key={item.path} className="flex items-center gap-1.5">
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                <ChevronRight className="w-3.5 h-3.5 text-typography-muted/60" />
                 {isLast ? (
-                  <span className="text-spore-300 font-bold" aria-current="page">
+                  <span className="text-forest-900 font-bold" aria-current="page">
                     {item.label}
                   </span>
                 ) : (
-                  <Link to={item.path} className="hover:text-spore-400 transition-colors">
+                  <Link to={item.path} className="hover:text-forest-700 transition-colors">
                     {item.label}
                   </Link>
                 )}

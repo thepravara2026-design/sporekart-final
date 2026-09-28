@@ -17,16 +17,25 @@ export default function AuthForm({
   const [otpCode, setOtpCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Google Auth Custom Profile Name State
   const [pendingGoogleAuth, setPendingGoogleAuth] = useState(null);
   const [googleProfileName, setGoogleProfileName] = useState('');
 
+  React.useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setInterval(() => {
+        setResendCooldown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
   const handleRequestOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setAuthError('');
     setAuthMessage('');
     const idVal = identifier ? identifier.trim() : (isAdminMode ? 'admin@sporekart.in' : '');
@@ -45,6 +54,7 @@ export default function AuthForm({
         setAuthMessage(`[Dev Mode] Enter administrative verification code (Dev Mock OTP: 123456).`);
       } finally {
         setOtpSent(true);
+        setResendCooldown(30);
         setLoading(false);
       }
       return;
@@ -54,8 +64,15 @@ export default function AuthForm({
       await authApi.requestOtp(idVal);
       setAuthMessage(`OTP sent to ${idVal}. Please enter the 6-digit verification code sent to your mobile or email.`);
       setOtpSent(true);
+      setResendCooldown(30);
     } catch (err) {
-      setAuthError(err.response?.data?.message || 'Failed to send OTP. Please check input.');
+      const msg = err.response?.data?.message || 'Failed to send OTP. Please check input.';
+      if (msg.toLowerCase().includes('rate limit')) {
+        setAuthError('Maximum 3 OTP requests allowed every 10 minutes. Please wait before retrying.');
+        setResendCooldown(60);
+      } else {
+        setAuthError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -213,12 +230,12 @@ export default function AuthForm({
     return (
       <div className="space-y-4 max-w-md mx-auto animate-fade-in">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-spore-900 via-slate-900 to-emerald-950 border border-spore-500/40 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-spore-950/60 relative">
-            <UserCheck className="w-6 h-6 text-spore-400" />
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-950 flex items-center justify-center text-[9px] font-extrabold text-slate-950">✓</span>
+          <div className="w-12 h-12 bg-surface-cream border border-surface-border rounded-container mx-auto flex items-center justify-center shadow-level-1 relative">
+            <UserCheck className="w-6 h-6 text-forest-700" />
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-600 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-extrabold text-white">✓</span>
           </div>
           
-          <div className="inline-flex items-center gap-2 bg-slate-900/90 border border-slate-700/60 px-3 py-1 rounded-full text-xs text-slate-300">
+          <div className="inline-flex items-center gap-2 bg-surface-neutral border border-surface-border px-3 py-1 rounded-pill text-xs text-typography-secondary">
             <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
               <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
@@ -228,23 +245,23 @@ export default function AuthForm({
             <span className="font-medium truncate max-w-[200px]">{pendingGoogleAuth.email}</span>
           </div>
 
-          <h3 className="text-xl font-display font-bold text-white tracking-tight">Set Profile Name</h3>
-          <p className="text-xs text-slate-400">
+          <h3 className="text-xl font-display font-bold text-forest-900 tracking-tight">Set Profile Name</h3>
+          <p className="text-xs text-typography-secondary">
             Customize your display name or skip to use your default Google profile name.
           </p>
         </div>
 
         {authError && (
-          <div className="p-3 bg-rose-950/80 border border-rose-800/80 rounded-xl text-xs text-rose-300">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-input text-xs text-rose-700">
             ⚠️ {authError}
           </div>
         )}
 
         <form onSubmit={handleConfirmGoogleProfileSubmit} className="space-y-4 pt-1">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
+            <label className="block text-xs font-medium text-typography-primary mb-1 flex items-center justify-between">
               <span>Profile / Display Name (Optional)</span>
-              <span className="text-[10px] text-spore-400 flex items-center gap-1 font-normal"><Sparkles className="w-3 h-3" /> Customize</span>
+              <span className="text-[10px] text-forest-700 flex items-center gap-1 font-normal"><Sparkles className="w-3 h-3" /> Customize</span>
             </label>
             <input
               type="text"
@@ -252,9 +269,9 @@ export default function AuthForm({
               value={googleProfileName}
               onChange={(e) => setGoogleProfileName(e.target.value)}
               autoFocus
-              className="w-full bg-slate-900/90 border border-spore-600/60 focus:border-spore-400 focus:ring-1 focus:ring-spore-400 rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-all shadow-inner"
+              className="w-full bg-surface-white border border-surface-border focus:border-forest-700 rounded-input px-4 py-2.5 text-forest-900 text-sm outline-none transition-all shadow-level-1"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-typography-muted mt-1">
               You can edit this now or skip to use your Google account default name.
             </p>
           </div>
@@ -263,7 +280,7 @@ export default function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2 group"
+              className="w-full btn-primary py-3 flex items-center justify-center gap-2 group shadow-level-1"
             >
               {loading ? (
                 <span>Saving Profile & Continuing...</span>
@@ -279,7 +296,7 @@ export default function AuthForm({
               type="button"
               disabled={loading}
               onClick={handleSkipGoogleProfile}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition-all button-press"
+              className="w-full btn-secondary py-2.5 text-xs"
             >
               Skip & Use Default Google Name
             </button>
@@ -291,7 +308,7 @@ export default function AuthForm({
               setPendingGoogleAuth(null);
               setAuthError('');
             }}
-            className="w-full text-xs text-slate-400 hover:text-white pt-1 transition-colors text-center block"
+            className="w-full text-xs text-typography-muted hover:text-forest-700 pt-1 transition-colors text-center block"
           >
             ← Change authentication method
           </button>
@@ -305,37 +322,37 @@ export default function AuthForm({
       {/* Header Banner */}
       <div className="text-center space-y-1">
         <div
-          className={`w-10 h-10 rounded-xl mx-auto flex items-center justify-center shadow-inner transition-colors ${
+          className={`w-10 h-10 rounded-input mx-auto flex items-center justify-center shadow-level-1 transition-colors ${
             isAdminMode
-              ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
-              : 'bg-spore-900/80 border border-spore-600/40 text-spore-400'
+              ? 'bg-gold/15 border border-gold/40 text-soil'
+              : 'bg-surface-cream border border-surface-border text-forest-700'
           }`}
         >
-          {isAdminMode ? <Lock className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+          {isAdminMode ? <Lock className="w-5 h-5 text-gold" /> : <ShieldCheck className="w-5 h-5 text-forest-700" />}
         </div>
-        <h3 className="text-xl font-display font-bold text-white flex items-center justify-center gap-2">
+        <h3 className="text-xl font-display font-bold text-forest-900 flex items-center justify-center gap-2">
           <span>{displayTitle}</span>
           {isAdminMode && (
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-pill bg-gold/20 text-soil border border-gold/40">
               ROLE_ADMIN
             </span>
           )}
         </h3>
-        <p className="text-xs text-slate-400">{displaySubtitle}</p>
+        <p className="text-xs text-typography-secondary">{displaySubtitle}</p>
       </div>
 
       {authError && (
-        <div className="p-3 bg-rose-950/80 border border-rose-800/80 rounded-xl text-xs text-rose-300">
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-input text-xs text-rose-700">
           ⚠️ {authError}
         </div>
       )}
 
       {authMessage && (
         <div
-          className={`p-3 rounded-xl text-xs border ${
+          className={`p-3 rounded-input text-xs border ${
             isAdminMode
-              ? 'bg-amber-950/90 border-amber-600/60 text-amber-300'
-              : 'bg-spore-950/90 border-spore-600/60 text-spore-300'
+              ? 'bg-gold/15 border-gold/40 text-soil'
+              : 'bg-green-600/10 border-green-600/30 text-green-600'
           }`}
         >
           ✅ {authMessage}
@@ -355,8 +372,8 @@ export default function AuthForm({
               />
 
               <div className="relative flex items-center justify-center my-3">
-                <div className="border-t border-slate-800 w-full" />
-                <span className="bg-slate-950 px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider absolute">
+                <div className="border-t border-surface-border w-full" />
+                <span className="bg-surface-white px-3 text-[10px] font-semibold text-typography-muted uppercase tracking-wider absolute">
                   or mobile / email OTP
                 </span>
               </div>
@@ -365,39 +382,41 @@ export default function AuthForm({
 
           {/* Dev Hint for Admin Mode */}
           {isAdminMode && (
-            <div className="p-3 bg-slate-900 border border-amber-500/30 rounded-xl text-[11px] text-slate-300 leading-relaxed">
-              <span className="text-amber-400 font-bold block mb-0.5">🔑 Dev Admin Credentials:</span>
-              Use <code className="text-amber-300 font-mono">admin@sporekart.in</code> or <code className="text-amber-300 font-mono">+919999999999</code> with Mock OTP: <code className="text-amber-400 font-mono font-bold bg-amber-950/60 px-1 py-0.5 rounded border border-amber-500/40">123456</code>
+            <div className="p-3 bg-surface-cream border border-gold/30 rounded-input text-[11px] text-soil leading-relaxed">
+              <span className="text-gold font-bold block mb-0.5">🔑 Dev Admin Credentials:</span>
+              Use <code className="text-forest-900 font-mono">admin@sporekart.in</code> or <code className="text-forest-900 font-mono">+919999999999</code> with Mock OTP: <code className="text-forest-900 font-mono font-bold bg-gold/20 px-1 py-0.5 rounded border border-gold/40">123456</code>
             </div>
           )}
 
           <form onSubmit={handleRequestOtp} className="space-y-3">
             <div>
-              <label className="block text-xs text-slate-300 font-medium mb-1">
+              <label className="block text-xs text-typography-primary font-medium mb-1">
                 {isAdminMode ? 'Admin Mobile Number or Email' : 'Mobile Number or Email'}
               </label>
               <input
+                data-testid="auth-identifier-input"
                 type="text"
                 placeholder={isAdminMode ? "e.g. admin@sporekart.in or +919999999999" : "e.g. +91 9876543210 or user@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
-                className={`w-full bg-slate-900/90 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none transition-all ${
+                className={`w-full bg-surface-white rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none transition-all ${
                   isAdminMode
-                    ? 'border border-amber-500/40 focus:border-amber-400'
-                    : 'border border-spore-700/50 focus:border-spore-400'
+                    ? 'border border-gold/40 focus:border-gold'
+                    : 'border border-surface-border focus:border-forest-700'
                 }`}
               />
             </div>
 
             <div className="space-y-2">
               <button
+                data-testid="send-otp-btn"
                 type="submit"
                 disabled={loading}
-                className={`w-full font-bold py-3 rounded-xl shadow-lg transition-all button-press flex items-center justify-center gap-2 ${
+                className={`w-full font-bold py-3 rounded-input shadow-level-1 transition-all button-press flex items-center justify-center gap-2 ${
                   isAdminMode
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-950/50'
-                    : 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950'
+                    ? 'btn-premium'
+                    : 'btn-primary'
                 } disabled:opacity-50`}
               >
                 <span>{loading ? 'Sending Admin OTP...' : (isAdminMode ? 'Send Admin OTP' : 'Send OTP Code')}</span>
@@ -408,9 +427,9 @@ export default function AuthForm({
                 <button
                   type="button"
                   onClick={handleJumpToOtp}
-                  className="w-full bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-semibold py-2.5 rounded-xl text-xs transition-all button-press flex items-center justify-center gap-2"
+                  className="w-full bg-surface-cream hover:bg-surface-border border border-gold/40 text-soil font-semibold py-2.5 rounded-input text-xs transition-all button-press flex items-center justify-center gap-2"
                 >
-                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                  <KeyRound className="w-3.5 h-3.5 text-gold" />
                   <span>Enter OTP Directly (Dev Mock: 123456)</span>
                 </button>
               )}
@@ -422,29 +441,30 @@ export default function AuthForm({
           <div>
             {!isAdminMode && (
               <>
-                <label className="block text-xs text-slate-300 font-medium mb-1 flex items-center justify-between">
+                <label className="block text-xs text-typography-primary font-medium mb-1 flex items-center justify-between">
                   <span>Full Name (Optional Registration Detail)</span>
-                  <span className="text-[10px] text-slate-400 font-normal">Fill now or later</span>
+                  <span className="text-[10px] text-typography-muted font-normal">Fill now or later</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Your Full Name (e.g. Praveen Kumar)"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-slate-900/90 border border-spore-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-spore-400 mb-3"
+                  className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none focus:border-forest-700 mb-3"
                 />
               </>
             )}
 
-            <label className="block text-xs text-slate-300 font-medium mb-1 flex items-center justify-between">
+            <label className="block text-xs text-typography-primary font-medium mb-1 flex items-center justify-between">
               <span>{isAdminMode ? 'Admin 6-Digit Verification Code' : '6-Digit OTP Code'}</span>
               {isAdminMode && (
-                <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/40">
+                <span className="text-[10px] text-soil font-mono font-bold bg-gold/20 px-1.5 py-0.5 rounded border border-gold/40">
                   Dev Mock: 123456
                 </span>
               )}
             </label>
             <input
+              data-testid="otp-code-input"
               type="text"
               placeholder="Enter 6-digit OTP (e.g. 123456)"
               maxLength={6}
@@ -452,36 +472,48 @@ export default function AuthForm({
               onChange={(e) => setOtpCode(e.target.value)}
               required
               autoFocus
-              className={`w-full bg-slate-900/90 rounded-xl px-4 py-2.5 text-white text-sm text-center tracking-widest font-mono focus:outline-none transition-all ${
+              className={`w-full bg-surface-white rounded-input px-4 py-2.5 text-forest-900 text-sm text-center tracking-widest font-mono focus:outline-none transition-all ${
                 isAdminMode
-                  ? 'border border-amber-500/40 focus:border-amber-400 ring-1 ring-amber-500/30'
-                  : 'border border-spore-700/50 focus:border-spore-400'
+                  ? 'border border-gold/40 focus:border-gold ring-1 ring-gold/30'
+                  : 'border border-surface-border focus:border-forest-700'
               }`}
             />
           </div>
 
           <button
+            data-testid="verify-otp-btn"
             type="submit"
             disabled={loading}
-            className={`w-full font-bold py-3 rounded-xl shadow-lg transition-all button-press ${
+            className={`w-full font-bold py-3 rounded-input shadow-level-1 transition-all button-press ${
               isAdminMode
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950'
-                : 'bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950'
+                ? 'btn-premium'
+                : 'btn-primary'
             } disabled:opacity-50`}
           >
             {loading ? 'Verifying Admin Access...' : (isAdminMode ? 'Verify Admin OTP & Enter Dashboard' : 'Verify OTP & Complete Account')}
           </button>
           
-          <button
-            type="button"
-            onClick={() => {
-              setOtpSent(false);
-              setOtpCode('');
-            }}
-            className="w-full text-xs text-slate-400 hover:text-white pt-1"
-          >
-            ← Change mobile number / email
-          </button>
+          <div className="flex items-center justify-between text-xs pt-2">
+            <button
+              type="button"
+              onClick={handleRequestOtp}
+              disabled={resendCooldown > 0 || loading}
+              className="text-forest-700 font-semibold hover:underline disabled:opacity-50 disabled:no-underline"
+            >
+              {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP Code'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOtpSent(false);
+                setOtpCode('');
+              }}
+              className="text-typography-muted hover:text-forest-700"
+            >
+              ← Change number / email
+            </button>
+          </div>
         </form>
       )}
     </div>

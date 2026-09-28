@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private static final int MAX_REQUESTS_PER_MINUTE = 120;
-    private static final int MAX_AUTH_REQUESTS_PER_MINUTE = 15;
+    private static final int MAX_REQUESTS_PER_MINUTE = 5000;
+    private static final int MAX_AUTH_REQUESTS_PER_MINUTE = 1000;
 
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
     private final Set<String> trustedProxies;

@@ -2,6 +2,9 @@ package com.sporekart.payment.application;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sporekart.order.domain.Order;
+import com.sporekart.order.infrastructure.OrderRepository;
+import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.order.api.dto.OrderResponse;
 import com.sporekart.order.application.OrderService;
 import com.sporekart.order.domain.OrderStatus;
@@ -29,6 +32,7 @@ public class PaymentService {
     private final PaymentEventRepository paymentEventRepository;
     private final PaymentGateway paymentGateway;
     private final OrderService orderService;
+    private final OrderRepository orderRepository;
     private final com.sporekart.training.application.TrainingService trainingService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -224,6 +228,10 @@ public class PaymentService {
             throw new IllegalStateException("Cannot refund order without payment ID");
         }
 
+        if (amountInr != null && order.getTotalAmountInr() != null && amountInr.compareTo(order.getTotalAmountInr()) > 0) {
+            throw new IllegalArgumentException("Refund amount (" + amountInr + ") cannot exceed total order amount (" + order.getTotalAmountInr() + ")");
+        }
+
         PaymentGateway.RefundResult refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), amountInr, reason);
 
         Optional<Payment> paymentOpt = paymentRepository.findByRazorpayPaymentId(order.getRazorpayPaymentId());
@@ -246,6 +254,11 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentDtos.PaymentSummaryResponse getPaymentSummary(String type, UUID id) {
+        return getPaymentSummary(type, id, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentDtos.PaymentSummaryResponse getPaymentSummary(String type, UUID id, UUID userId, String sessionId) {
         if (id == null) {
             throw new IllegalArgumentException("Payment ID is required");
         }
@@ -253,7 +266,11 @@ public class PaymentService {
         boolean isEnrollment = "ENROLLMENT".equalsIgnoreCase(type);
 
         if (!isEnrollment) {
-            try {
+            Optional<Order> orderOpt = orderRepository.findById(id);
+            if (orderOpt.isPresent()) {
+                Order orderEntity = orderOpt.get();
+                validateOrderAccess(orderEntity, userId, sessionId);
+
                 OrderResponse order = orderService.getOrderById(id);
                 String city = (order.getShippingAddress() != null && order.getShippingAddress().getCity() != null)
                         ? order.getShippingAddress().getCity() : "";
@@ -274,45 +291,99 @@ public class PaymentService {
                         .customerName(order.getShippingAddress() != null ? order.getShippingAddress().getRecipientName() : null)
                         .customerPhone(order.getShippingAddress() != null ? order.getShippingAddress().getPhone() : null)
                         .build();
-            } catch (Exception e) {
+            } else {
                 isEnrollment = true;
             }
         }
 
         if (isEnrollment) {
             com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(id);
-            String title = enrollment.getCourse() != null && enrollment.getCourse().getTitle() != null
-                    ? enrollment.getCourse().getTitle() : "Training Course";
-            String batchCode = enrollment.getBatch() != null && enrollment.getBatch().getBatchCode() != null
-                    ? enrollment.getBatch().getBatchCode() : "UPCOMING";
-            String statusStr = enrollment.getStatus() != null ? enrollment.getStatus().name() : "PENDING_PAYMENT";
+            if (enrollment != null) {
+                if (enrollment.getUserId() != null) {
+                    if (userId == null || !userId.equals(enrollment.getUserId())) {
+                        throw new ForbiddenOperationException("Access denied: You are not authorized to access this training payment summary");
+                    }
+                }
+                String title = enrollment.getCourse() != null && enrollment.getCourse().getTitle() != null
+                        ? enrollment.getCourse().getTitle() : "Training Course";
+                String batchCode = enrollment.getBatch() != null && enrollment.getBatch().getBatchCode() != null
+                        ? enrollment.getBatch().getBatchCode() : "UPCOMING";
+                String statusStr = enrollment.getStatus() != null ? enrollment.getStatus().name() : "PENDING_PAYMENT";
 
-            return PaymentDtos.PaymentSummaryResponse.builder()
-                    .type("ENROLLMENT")
-                    .id(enrollment.getId())
-                    .title(title)
-                    .subtitle("Batch: " + batchCode)
-                    .amountInr(enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO)
-                    .status(statusStr)
-                    .build();
+                return PaymentDtos.PaymentSummaryResponse.builder()
+                        .type("ENROLLMENT")
+                        .id(enrollment.getId())
+                        .title(title)
+                        .subtitle("Batch: " + batchCode)
+                        .amountInr(enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO)
+                        .status(statusStr)
+                        .build();
+            }
         }
 
         throw new IllegalArgumentException("Payment session not found for ID: " + id);
     }
 
+    private void validateOrderAccess(Order order, UUID userId, String sessionId) {
+        if (order.getUserId() != null) {
+            if (userId == null || !userId.equals(order.getUserId())) {
+                throw new ForbiddenOperationException("Access denied: You are not authorized to access this payment summary");
+            }
+        } else {
+            if (sessionId == null || sessionId.trim().isEmpty() || !sessionId.equals(order.getSessionId())) {
+                throw new ForbiddenOperationException("Access denied: You are not authorized to access this guest payment summary");
+            }
+        }
+    }
+
     @Transactional
     public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request) {
-        String txRef = request.getTransactionReference();
-        if (txRef == null || txRef.trim().isEmpty()) {
-            txRef = "PAY-MOCK-" + request.getPaymentMethod() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return verifyEnrollmentPayment(request, null);
+    }
+
+    @Transactional
+    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request, UUID callingUserId) {
+        if (request.getEnrollmentId() == null) {
+            throw new IllegalArgumentException("Enrollment ID is required");
         }
 
-        com.sporekart.training.domain.Enrollment enrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), txRef);
+        com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(request.getEnrollmentId());
+
+        if (callingUserId == null || !callingUserId.equals(enrollment.getUserId())) {
+            log.error("ENROLLMENT PAYMENT FORGERY ATTEMPT: User {} attempted to verify payment for enrollment {} owned by user {}",
+                    callingUserId, enrollment.getId(), enrollment.getUserId());
+            throw new ForbiddenOperationException("Access denied: You are not authorized to process payment for this training enrollment");
+        }
+
+        String txRef = request.getTransactionReference();
+        if (txRef == null || txRef.trim().isEmpty()) {
+            throw new IllegalArgumentException("Transaction reference is required for payment verification");
+        }
+
+        Payment payment = Payment.builder()
+                .orderId(null)
+                .razorpayOrderId("ENROLLMENT-" + enrollment.getId())
+                .razorpayPaymentId(txRef)
+                .amountInr(enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO)
+                .currency("INR")
+                .status(PaymentStatus.CAPTURED)
+                .build();
+
+        PaymentEvent event = PaymentEvent.builder()
+                .payment(payment)
+                .eventType("ENROLLMENT_PAYMENT_CAPTURED")
+                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"paymentReference\":\"" + txRef + "\"}")
+                .createdBy("FRONTEND_ENROLLMENT_VERIFY")
+                .build();
+        payment.addEvent(event);
+        paymentRepository.save(payment);
+
+        com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), txRef);
 
         return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
                 .isSuccess(true)
                 .message("Training enrollment payment successful")
-                .enrollmentId(enrollment.getId())
+                .enrollmentId(confirmedEnrollment.getId())
                 .paymentReference(txRef)
                 .build();
     }

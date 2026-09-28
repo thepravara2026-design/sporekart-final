@@ -6,7 +6,7 @@ const API_BASE = '/api/v1';
 export const getOrCreateSessionId = () => {
   let sessionId = localStorage.getItem('sporekart_session_id');
   if (!sessionId) {
-    sessionId = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+    sessionId = 'sess_' + crypto.randomUUID();
     localStorage.setItem('sporekart_session_id', sessionId);
   }
   return sessionId;
@@ -39,6 +39,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      clearSessionAndTokens();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sporekart_unauthorized'));
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith('/admin') && currentPath !== '/admin/login') {
+          window.location.href = '/admin/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authApi = {
   requestOtp: (identifier) => api.post('/auth/otp/request', { identifier }),
   verifyOtp: (identifier, otpCode, fullName) => api.post('/auth/otp/verify', { identifier, otpCode, fullName }),
@@ -47,7 +64,7 @@ export const authApi = {
 };
 
 export const catalogApi = {
-  getProducts: (type, category) => api.get('/catalog/products', { params: { type, category } }),
+  getProducts: (type, category, page = 0, size = 24) => api.get('/catalog/products', { params: { type, category, page, size } }),
   searchProducts: (params) => api.get('/products/search', { params }),
   getProductBySlug: (slug) => api.get(`/catalog/products/${slug}`),
   getCategories: () => api.get('/catalog/categories'),

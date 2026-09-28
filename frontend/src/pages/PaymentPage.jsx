@@ -110,10 +110,10 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-screen flex items-center justify-center text-forest-900">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-spore-400 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-300">Connecting to Gateway...</p>
+          <Loader2 className="w-10 h-10 text-forest-700 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-typography-secondary">Connecting to Gateway...</p>
         </div>
       </div>
     );
@@ -122,14 +122,14 @@ export default function PaymentPage() {
   if (error && !summary) {
     return (
       <div className="min-h-screen py-16 px-4 text-center max-w-md mx-auto">
-        <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-400">
+        <div className="w-12 h-12 bg-rose-50 border border-rose-200 rounded-card flex items-center justify-center mx-auto mb-4 text-rose-600">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Payment Session Error</h2>
-        <p className="text-xs text-slate-400 mb-6">{error}</p>
+        <h2 className="text-xl font-bold text-forest-900 mb-2">Payment Session Error</h2>
+        <p className="text-xs text-typography-secondary mb-6">{error}</p>
         <button
           onClick={() => navigate('/dashboard')}
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all text-xs"
+          className="btn-primary text-xs px-6 py-2.5 shadow-level-1"
         >
           Return to Dashboard
         </button>
@@ -138,38 +138,38 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto animate-fade-in text-white">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto animate-fade-in text-forest-900">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white mb-6 transition-colors"
+        className="flex items-center gap-2 text-xs font-semibold text-typography-muted hover:text-forest-900 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-spore-950/40 to-slate-900 border border-slate-800 p-6 rounded-3xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-forest-900 text-white border border-forest-800 p-6 sm:p-8 rounded-container mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-level-2">
         <div>
-          <div className="flex items-center gap-2 text-spore-400 text-xs font-extrabold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-leaf text-xs font-bold uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4" /> 256-Bit Encrypted Gateway
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-extrabold">Complete Payment</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold">Complete Payment</h1>
+          <p className="text-xs text-sage mt-1">
             {type === 'enrollment' ? 'Confirm your training course enrollment fee.' : 'Confirm payment for your Sporekart order.'}
           </p>
         </div>
 
-        <div className="bg-slate-950/80 border border-spore-500/30 p-4 rounded-2xl text-right">
-          <span className="text-xs text-slate-400 block font-medium">Total Amount Payable</span>
-          <span className="text-2xl font-black text-spore-400 font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
+        <div className="bg-forest-800 border border-forest-700 p-4 rounded-card text-right shadow-level-1">
+          <span className="text-xs text-sage block font-medium">Total Amount Payable</span>
+          <span className="text-2xl font-bold text-white font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Payment Methods Section */}
         <div className="md:col-span-7 space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
-            <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider text-slate-400">
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1">
+            <h3 className="text-sm font-bold text-forest-900 mb-4 uppercase tracking-wider">
               Select Payment Method
             </h3>
 
@@ -178,39 +178,39 @@ export default function PaymentPage() {
               <button
                 type="button"
                 onClick={() => setPaymentMethod('UPI')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all ${
+                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
                   paymentMethod === 'UPI'
-                    ? 'bg-spore-500/10 border-spore-400 text-spore-300'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
+                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
                 }`}
               >
-                <Smartphone className="w-5 h-5 text-emerald-400" />
+                <Smartphone className="w-5 h-5 text-forest-700" />
                 <span>UPI / GPay</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPaymentMethod('CARD')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all ${
+                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
                   paymentMethod === 'CARD'
-                    ? 'bg-spore-500/10 border-spore-400 text-spore-300'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
+                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
                 }`}
               >
-                <CreditCard className="w-5 h-5 text-indigo-400" />
+                <CreditCard className="w-5 h-5 text-forest-700" />
                 <span>Card</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPaymentMethod('NETBANKING')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all ${
+                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
                   paymentMethod === 'NETBANKING'
-                    ? 'bg-spore-500/10 border-spore-400 text-spore-300'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
+                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
                 }`}
               >
-                <Building2 className="w-5 h-5 text-sky-400" />
+                <Building2 className="w-5 h-5 text-forest-700" />
                 <span>Net Banking</span>
               </button>
             </div>
@@ -218,8 +218,8 @@ export default function PaymentPage() {
             {/* Form Fields */}
             <form onSubmit={handleProcessPayment} className="space-y-4">
               {paymentMethod === 'UPI' && (
-                <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                  <label className="block text-xs font-semibold text-slate-300">
+                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
+                  <label className="block text-xs font-semibold text-typography-primary">
                     VPA / UPI ID (Optional for Mock)
                   </label>
                   <input
@@ -227,44 +227,44 @@ export default function PaymentPage() {
                     placeholder="e.g. user@okhdfcbank"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
                   />
-                  <p className="text-[10px] text-slate-500">Instant authorization using Google Pay, PhonePe, Paytm, or BHIM.</p>
+                  <p className="text-[10px] text-typography-muted">Instant authorization using Google Pay, PhonePe, Paytm, or BHIM.</p>
                 </div>
               )}
 
               {paymentMethod === 'CARD' && (
-                <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Card Number</label>
+                    <label className="block text-xs font-semibold text-typography-primary mb-1">Card Number</label>
                     <input
                       type="text"
                       placeholder="4532 •••• •••• 8892"
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-spore-400"
+                      className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Expiry (MM/YY)</label>
+                      <label className="block text-xs font-semibold text-typography-primary mb-1">Expiry (MM/YY)</label>
                       <input
                         type="text"
                         placeholder="12/28"
                         value={cardExpiry}
                         onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-spore-400"
+                        className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">CVV</label>
+                      <label className="block text-xs font-semibold text-typography-primary mb-1">CVV</label>
                       <input
                         type="password"
                         placeholder="•••"
                         maxLength="4"
                         value={cardCvv}
                         onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-spore-400"
+                        className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
                       />
                     </div>
                   </div>
@@ -272,12 +272,12 @@ export default function PaymentPage() {
               )}
 
               {paymentMethod === 'NETBANKING' && (
-                <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                  <label className="block text-xs font-semibold text-slate-300">Select Bank</label>
+                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
+                  <label className="block text-xs font-semibold text-typography-primary">Select Bank</label>
                   <select
                     value={selectedBank}
                     onChange={(e) => setSelectedBank(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-spore-400"
+                    className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 focus:outline-none focus:border-forest-700 shadow-level-1"
                   >
                     <option value="">-- Choose Popular Bank --</option>
                     <option value="HDFC">HDFC Bank</option>
@@ -290,8 +290,8 @@ export default function PaymentPage() {
               )}
 
               {error && (
-                <div className="p-3 bg-rose-950/60 border border-rose-800/60 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-input text-xs text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>{error}</span>
                 </div>
               )}
@@ -299,7 +299,7 @@ export default function PaymentPage() {
               <button
                 type="submit"
                 disabled={processing || paymentSuccess}
-                className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-black py-3.5 px-6 rounded-2xl shadow-lg transition-all button-press flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                className="w-full btn-primary font-bold py-3.5 px-6 shadow-level-2 flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
                 {processing ? (
                   <>
@@ -307,11 +307,11 @@ export default function PaymentPage() {
                   </>
                 ) : paymentSuccess ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5 text-slate-950" /> Payment Success! Redirecting...
+                    <CheckCircle2 className="w-5 h-5 text-white" /> Payment Success! Redirecting...
                   </>
                 ) : (
                   <>
-                    <Lock className="w-4 h-4 text-slate-950" /> Pay ₹{summary?.amountInr?.toLocaleString('en-IN')} Securely
+                    <Lock className="w-4 h-4 text-white" /> Pay ₹{summary?.amountInr?.toLocaleString('en-IN')} Securely
                   </>
                 )}
               </button>
@@ -321,36 +321,36 @@ export default function PaymentPage() {
 
         {/* Summary Details Section */}
         <div className="md:col-span-5 space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-400">
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1 space-y-4">
+            <h3 className="text-sm font-bold text-forest-900 uppercase tracking-wider">
               Summary
             </h3>
 
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-2">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-spore-500/20 text-spore-400 border border-spore-500/30">
+            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-2">
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-pill bg-forest-700/10 text-forest-700 border border-forest-700/30">
                 {summary?.type}
               </span>
-              <h4 className="text-base font-extrabold text-white">{summary?.title}</h4>
-              {summary?.subtitle && <p className="text-xs text-slate-400">{summary?.subtitle}</p>}
+              <h4 className="text-base font-bold text-forest-900">{summary?.title}</h4>
+              {summary?.subtitle && <p className="text-xs text-typography-secondary">{summary?.subtitle}</p>}
             </div>
 
-            <div className="border-t border-slate-800 pt-4 space-y-2 text-xs">
-              <div className="flex justify-between text-slate-400">
+            <div className="border-t border-surface-border pt-4 space-y-2 text-xs">
+              <div className="flex justify-between text-typography-secondary">
                 <span>Subtotal</span>
-                <span className="text-white font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
+                <span className="text-forest-900 font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-typography-secondary">
                 <span>Gateway Service Fee</span>
-                <span className="text-emerald-400 font-bold">FREE</span>
+                <span className="text-green-600 font-semibold">FREE</span>
               </div>
-              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-white">
+              <div className="border-t border-surface-border pt-2 flex justify-between font-bold text-sm text-forest-900">
                 <span>Total Amount</span>
-                <span className="text-spore-400 font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
+                <span className="text-forest-700 font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-emerald-950/30 border border-emerald-800/30 rounded-xl text-[11px] text-emerald-300 flex items-start gap-2">
-              <Sparkles className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+            <div className="p-3 bg-surface-cream border border-surface-border rounded-input text-[11px] text-typography-secondary flex items-start gap-2">
+              <Sparkles className="w-4 h-4 shrink-0 text-forest-700 mt-0.5" />
               <span>
                 Mock Gateway active. Click <strong>Pay Securely</strong> to immediately complete authorization and confirm your order/enrollment.
               </span>

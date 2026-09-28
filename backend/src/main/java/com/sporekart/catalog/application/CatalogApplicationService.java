@@ -31,6 +31,11 @@ public class CatalogApplicationService {
 
     @Transactional(readOnly = true)
     public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug) {
+        return getAllActiveProducts(typeFilter, categorySlug, 0, 1000);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug, int page, int size) {
         String cleanCategory = resolveCategorySlug(categorySlug);
         ProductType cleanType = typeFilter;
 
@@ -47,10 +52,19 @@ public class CatalogApplicationService {
             products = productRepository.findByIsActiveTrue();
         }
 
-        return products.stream()
+        List<CatalogDtos.ProductDto> dtos = products.stream()
                 .filter(p -> p.getStatus() == ProductStatus.ACTIVE && p.isActive())
                 .map(this::mapToProductDto)
                 .collect(Collectors.toList());
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(1, size), 100);
+        int fromIndex = safePage * safeSize;
+        if (fromIndex >= dtos.size()) {
+            return List.of();
+        }
+        int toIndex = Math.min(dtos.size(), fromIndex + safeSize);
+        return dtos.subList(fromIndex, toIndex);
     }
 
     @Transactional(readOnly = true)
@@ -66,8 +80,12 @@ public class CatalogApplicationService {
 
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if ("price_asc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "title");
+            sort = Sort.by(Sort.Direction.ASC, "variants.priceInr");
         } else if ("price_desc".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.DESC, "variants.priceInr");
+        } else if ("title_asc".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.ASC, "title");
+        } else if ("title_desc".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Direction.DESC, "title");
         }
 

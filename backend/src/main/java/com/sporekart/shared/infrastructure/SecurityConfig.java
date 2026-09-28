@@ -43,10 +43,27 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         boolean isDevOrTest = environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+            .csrf(AbstractHttpConfigurer::disable);
+        if (isDevOrTest) {
+            http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+        } else {
+            http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+        }
+        http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required or token expired\"}}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"FORBIDDEN\",\"message\":\"Access denied\"}}");
+                })
+            )
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll();
@@ -63,8 +80,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                     .requestMatchers("/cart/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice", "/orders/number/*").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook", "/payment/verify-enrollment").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()
                     .requestMatchers("/admin/auth/**").permitAll()

@@ -54,7 +54,7 @@ export default function CourseDetailPage({ user, setUser }) {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-typography-muted font-medium">
         Loading masterclass details...
       </div>
     );
@@ -62,7 +62,7 @@ export default function CourseDetailPage({ user, setUser }) {
 
   if (!course) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-typography-muted font-medium">
         Masterclass course not found.
       </div>
     );
@@ -95,7 +95,7 @@ export default function CourseDetailPage({ user, setUser }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <SeoHead
         title={`${course.title} — Certified Training Masterclass | Sporekart`}
         description={`${course.description} Enroll in hands-on commercial training with market buyback support in India.`}
@@ -112,7 +112,7 @@ export default function CourseDetailPage({ user, setUser }) {
 
       <Link
         to="/training"
-        className="inline-flex items-center gap-2 text-xs text-spore-400 font-semibold hover:text-spore-300 transition-colors"
+        className="inline-flex items-center gap-2 text-xs text-forest-700 font-semibold hover:text-forest-900 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to All Workshops
       </Link>
@@ -120,87 +120,87 @@ export default function CourseDetailPage({ user, setUser }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 space-y-8">
           <div className="space-y-4">
-            <span className="px-3.5 py-1 rounded-full bg-spore-950 border border-spore-700/50 text-spore-300 text-xs font-semibold">
+            <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-forest-900/10 border border-forest-900/20 text-forest-800 text-xs font-semibold">
               Certified Agribusiness Masterclass
             </span>
-            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white leading-tight">
+            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-typography-primary leading-tight">
               {course.title}
             </h1>
-            <p className="text-slate-300 text-xs sm:text-base leading-relaxed">
+            <p className="text-typography-secondary text-sm sm:text-base leading-relaxed">
               {course.description}
             </p>
           </div>
 
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-spore-800/60 space-y-4">
-            <h2 className="font-display font-bold text-xl text-white flex items-center gap-2">
-              <Award className="w-6 h-6 text-spore-400" /> Key Curriculum Modules
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border shadow-level-1 space-y-4">
+            <h2 className="font-display font-bold text-xl text-typography-primary flex items-center gap-2">
+              <Award className="w-6 h-6 text-forest-700" /> Key Curriculum Modules
             </h2>
-            <ul className="space-y-3 text-xs sm:text-sm text-slate-300">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-spore-400 shrink-0 mt-0.5" />
-                <span><strong>Substrate Chemistry & Moisture Balance:</strong> Master immersion techniques, pH adjusting with calcium carbonate, and moisture determination test.</span>
+            <ul className="space-y-3 text-xs sm:text-sm text-typography-secondary">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <span><strong className="text-typography-primary font-semibold">Substrate Chemistry & Moisture Balance:</strong> Master immersion techniques, pH adjusting with calcium carbonate, and moisture determination test.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-spore-400 shrink-0 mt-0.5" />
-                <span><strong>Cleanroom Spawning Protocols:</strong> Sterile inoculation techniques, laminar flow hood sanitization, and spawn run chamber environmental control.</span>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <span><strong className="text-typography-primary font-semibold">Cleanroom Spawning Protocols:</strong> Sterile inoculation techniques, laminar flow hood sanitization, and spawn run chamber environmental control.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-spore-400 shrink-0 mt-0.5" />
-                <span><strong>Market Distribution & Buyback Linkage:</strong> Supply chain logistics, packaging standard, and direct purchase linkage with hotel partners.</span>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <span><strong className="text-typography-primary font-semibold">Market Distribution & Buyback Linkage:</strong> Supply chain logistics, packaging standard, and direct purchase linkage with hotel partners.</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="lg:col-span-4 glass-panel p-6 rounded-3xl border border-spore-700/50 space-y-6 sticky top-24">
-          <div className="space-y-1 pb-4 border-b border-slate-800">
-            <span className="text-xs text-slate-400">Workshop Course Fee</span>
-            <div className="font-display font-extrabold text-3xl text-white">
+        <div className="lg:col-span-4 bg-surface-white p-6 rounded-card border border-surface-border shadow-level-2 space-y-6 sticky top-24">
+          <div className="space-y-1 pb-4 border-b border-surface-border">
+            <span className="text-xs text-typography-muted font-medium">Workshop Course Fee</span>
+            <div className="font-display font-extrabold text-3xl text-typography-primary">
               ₹{course.priceInr?.toLocaleString('en-IN')}
-              <span className="text-xs font-normal text-slate-400"> / trainee</span>
+              <span className="text-xs font-normal text-typography-muted"> / trainee</span>
             </div>
           </div>
 
-          <div className="space-y-3 text-xs text-slate-300">
-            <h4 className="font-bold text-white text-sm">Upcoming Workshop Batches:</h4>
+          <div className="space-y-3 text-xs text-typography-secondary">
+            <h4 className="font-bold text-typography-primary text-sm">Upcoming Workshop Batches:</h4>
             {bookingSuccess ? (
-              <div className="p-4 rounded-xl bg-spore-950 border border-spore-500 text-spore-200 text-center space-y-1">
-                <CheckCircle className="w-6 h-6 text-spore-400 mx-auto" />
-                <h5 className="font-bold text-white">Seat Booked Successfully!</h5>
-                <p className="text-[11px] text-slate-300">Slot ID: {bookingSuccess.id}</p>
+              <div className="p-4 rounded-xl bg-forest-900/10 border border-forest-700/30 text-forest-900 text-center space-y-1">
+                <CheckCircle className="w-6 h-6 text-forest-700 mx-auto" />
+                <h5 className="font-bold text-typography-primary">Seat Booked Successfully!</h5>
+                <p className="text-[11px] text-typography-secondary">Slot ID: {bookingSuccess.id}</p>
               </div>
             ) : course.slots && course.slots.length > 0 ? (
               course.slots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2"
+                  className="p-3.5 rounded-2xl bg-surface-cream border border-surface-border space-y-2.5"
                 >
-                  <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-spore-400" /> {slot.startDate}</span>
-                    <span className="text-slate-400 text-[11px]">{slot.availableSeats} seats left</span>
+                  <div className="flex items-center justify-between text-xs text-typography-primary font-semibold">
+                    <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-forest-700" /> {slot.startDate}</span>
+                    <span className="text-typography-muted text-[11px]">{slot.availableSeats} seats left</span>
                   </div>
                   <button
                     onClick={() => handleBookSlot(slot.id)}
-                    className="w-full py-2 bg-spore-500 hover:bg-spore-400 text-slate-950 font-bold rounded-xl text-xs transition-all"
+                    className="btn-primary w-full py-2.5 text-xs font-bold"
                   >
                     Reserve Seat Now
                   </button>
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-xs italic">No open batches currently available.</p>
+              <p className="text-typography-muted text-xs italic">No open batches currently available.</p>
             )}
-            {bookingError && <p className="text-xs text-red-400">{bookingError}</p>}
+            {bookingError && <p className="text-xs text-red-600 font-medium">{bookingError}</p>}
           </div>
         </div>
       </div>
 
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="glass-panel w-full max-w-md p-6 sm:p-8 rounded-3xl relative border border-spore-600/50 shadow-2xl animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-surface-white w-full max-w-md p-6 sm:p-8 rounded-card relative border border-surface-border shadow-level-3 animate-scale-in">
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
+              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary p-2"
             >
               <X className="w-5 h-5" />
             </button>

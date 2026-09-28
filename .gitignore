@@ -37,3 +37,9 @@ Thumbs.db
 *.jar
 *.war
 
+# Test reports & outputs
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
+

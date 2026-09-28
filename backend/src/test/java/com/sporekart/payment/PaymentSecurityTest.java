@@ -92,4 +92,51 @@ public class PaymentSecurityTest {
         Order freshOrderB = orderRepository.findById(orderBId).orElseThrow();
         assertEquals(OrderStatus.PENDING_PAYMENT, freshOrderB.getStatus(), "Order B status must remain PENDING_PAYMENT");
     }
+
+    @Test
+    void testNonMockModeRejectsNullAndMockSignatures() {
+        com.sporekart.payment.application.RazorpayPaymentGateway gateway = new com.sporekart.payment.application.RazorpayPaymentGateway();
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "keyId", "rzp_live_realKey123");
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "keySecret", "realSecret123");
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "webhookSecret", "realWebhookSecret123");
+
+        assertFalse(gateway.verifySignature("order_123", "pay_123", null), "null signature must be rejected in non-mock mode");
+        assertFalse(gateway.verifySignature("order_123", "pay_123", "mock_signature"), "mock_signature must be rejected in non-mock mode");
+        assertFalse(gateway.verifyWebhookSignature("{\"event\":\"payment.captured\"}", "mock_webhook_signature"), "mock_webhook_signature must be rejected in non-mock mode");
+    }
+
+    @Test
+    void testUnauthenticatedOrWrongOwnerPaymentSummaryReturnsForbidden() {
+        UUID ownerUserId = UUID.randomUUID();
+        UUID attackerUserId = UUID.randomUUID();
+
+        Order order = Order.builder()
+                .orderNumber("ORD-OWNED-1001")
+                .userId(ownerUserId)
+                .status(OrderStatus.PENDING_PAYMENT)
+                .totalAmountInr(new BigDecimal("500.00"))
+                .subtotalAmountInr(new BigDecimal("500.00"))
+                .gstTotalAmountInr(BigDecimal.ZERO)
+                .shippingFeeInr(BigDecimal.ZERO)
+                .shippingAddressJson("{\"recipientName\":\"Owner Name\",\"phone\":\"+919876543210\"}")
+                .build();
+        order = orderRepository.save(order);
+
+        final UUID targetOrderId = order.getId();
+
+        // Unauthenticated call (userId=null, sessionId=null)
+        assertThrows(com.sporekart.shared.application.ForbiddenOperationException.class, () ->
+                paymentService.getPaymentSummary("ORDER", targetOrderId, null, null)
+        );
+
+        // Attacker user call (attackerUserId != ownerUserId)
+        assertThrows(com.sporekart.shared.application.ForbiddenOperationException.class, () ->
+                paymentService.getPaymentSummary("ORDER", targetOrderId, attackerUserId, null)
+        );
+
+        // Correct owner call should succeed
+        assertDoesNotThrow(() ->
+                paymentService.getPaymentSummary("ORDER", targetOrderId, ownerUserId, null)
+        );
+    }
 }

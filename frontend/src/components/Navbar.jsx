@@ -7,7 +7,7 @@ import AuthForm from './AuthForm';
 import { clearSessionAndTokens } from '../api';
 
 export default function Navbar({ user, setUser }) {
-  const { cart, openDrawer, mergeGuestCart } = useCart();
+  const { cart, openDrawer } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -38,7 +38,6 @@ export default function Navbar({ user, setUser }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-
   const handleLogout = () => {
     clearSessionAndTokens();
     setUser(null);
@@ -54,55 +53,55 @@ export default function Navbar({ user, setUser }) {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-40 w-full glass-panel border-b border-spore-800/30 transition-all duration-300">
+      <header className="sticky top-0 z-40 w-full bg-surface-white/95 backdrop-blur-md border-b border-surface-border shadow-level-1 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-4">
             {/* Logo */}
             <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-3 group min-h-[44px] shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-spore-400 via-emerald-500 to-spore-700 flex items-center justify-center shadow-lg shadow-spore-950/50 group-hover:scale-105 transition-transform duration-200">
-                <Sprout className="w-6 h-6 text-slate-950" />
+              <div className="w-11 h-11 rounded-xl bg-forest-700 flex items-center justify-center shadow-level-1 group-hover:bg-forest-800 transition-colors duration-200">
+                <Sprout className="w-6 h-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <span className="font-display font-extrabold text-2xl tracking-tight text-white">
-                  Spore<span className="text-spore-400">kart</span>
+                <span className="font-display font-bold text-2xl tracking-tight text-forest-900">
+                  Spore<span className="text-forest-700">kart</span>
                 </span>
-                <span className="block text-[10px] text-spore-300 font-semibold tracking-widest uppercase opacity-90">
+                <span className="block text-[10px] text-typography-secondary font-semibold tracking-widest uppercase opacity-90">
                   India Agritech
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-5 font-medium text-xs lg:text-sm text-slate-300">
+            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-2 font-medium text-sm text-typography-secondary">
               <Link 
                 to="/products" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/products') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/products') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
-                <Sprout className="w-4 h-4 text-spore-400" /> Products
+                <Sprout className="w-4 h-4 text-forest-700" /> Products
               </Link>
               <Link 
                 to="/training" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/training') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/training') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
-                <GraduationCap className="w-4 h-4 text-spore-400" /> Training
+                <GraduationCap className="w-4 h-4 text-forest-700" /> Training
               </Link>
               <Link 
                 to="/blog" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/blog') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/blog') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
-                <BookOpen className="w-4 h-4 text-spore-400" /> Blog
+                <BookOpen className="w-4 h-4 text-forest-700" /> Blog
               </Link>
               <Link 
                 to="/about" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/about') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/about') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
-                <Info className="w-4 h-4 text-spore-400" /> About
+                <Info className="w-4 h-4 text-forest-700" /> About
               </Link>
               <Link 
                 to="/contact" 
-                className={`hover:text-spore-300 transition-colors flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg ${isActive('/contact') ? 'text-spore-400 bg-spore-950/60 font-semibold border border-spore-800/50' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/contact') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
-                <PhoneCall className="w-4 h-4 text-spore-400" /> Contact
+                <PhoneCall className="w-4 h-4 text-forest-700" /> Contact
               </Link>
             </nav>
 
@@ -112,16 +111,16 @@ export default function Navbar({ user, setUser }) {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               {/* Cart Button */}
               <button
                 onClick={openDrawer}
-                className="relative p-2.5 rounded-xl bg-spore-900/50 hover:bg-spore-800/70 border border-spore-700/40 text-slate-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center button-press hover-lift"
+                className="relative p-2.5 rounded-xl bg-surface-neutral hover:bg-surface-cream border border-surface-border text-typography-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center button-press hover-lift"
                 aria-label={`Shopping cart with ${cart.itemCount} items`}
               >
-                <ShoppingBag className="w-5 h-5 text-spore-300" />
+                <ShoppingBag className="w-5 h-5 text-forest-700" />
                 {cart.itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-r from-spore-400 to-emerald-500 text-slate-950 text-[11px] font-extrabold rounded-full flex items-center justify-center shadow-md shadow-spore-950 animate-scale-in">
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gold text-white text-[11px] font-bold rounded-pill flex items-center justify-center shadow-level-1 animate-scale-in">
                     {cart.itemCount}
                   </span>
                 )}
@@ -133,34 +132,38 @@ export default function Navbar({ user, setUser }) {
                   <Link 
                     to="/dashboard" 
                     aria-label="User Account Dashboard" 
-                    className="hidden sm:flex items-center gap-2 text-xs font-medium bg-spore-900/70 hover:bg-spore-800 px-3.5 py-2.5 rounded-xl border border-spore-700/50 transition-all button-press"
+                    className="hidden sm:flex items-center gap-2 text-xs font-semibold bg-surface-cream hover:bg-surface-border text-forest-900 px-3.5 py-2.5 rounded-xl border border-surface-border transition-all button-press"
                   >
-                    <User className="w-4 h-4 text-spore-400" />
-                    <span className="max-w-[100px] truncate">{user.fullName || 'Dashboard'}</span>
+                    <User className="w-4 h-4 text-forest-700" />
+                    <span className="max-w-[110px] truncate">{user.fullName || 'Dashboard'}</span>
                   </Link>
                   {user.role === 'ROLE_ADMIN' && (
                     <Link 
                       to="/admin" 
                       aria-label="Admin Control Console" 
-                      className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl transition-all button-press"
+                      className="hidden sm:flex items-center gap-2 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-3.5 py-2 rounded-xl transition-all button-press"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-400" />
+                      <ShieldCheck className="w-4 h-4 text-gold" />
                       <span>Admin</span>
                     </Link>
                   )}
                   <button 
                     onClick={handleLogout} 
                     aria-label="Log out of account" 
-                    className="text-xs text-slate-400 hover:text-rose-400 min-h-[44px] px-2.5 transition-colors font-medium"
+                    className="text-xs text-typography-muted hover:text-rose-600 min-h-[44px] px-2.5 transition-colors font-medium"
                   >
                     Logout
                   </button>
                 </div>
               ) : (
                 <button
-                  onClick={() => setIsAuthModalOpen(true)}
+                  data-testid="desktop-login-btn"
+                  onClick={() => {
+                    console.log('>>> [NAVBAR] Desktop login button clicked!');
+                    setIsAuthModalOpen(true);
+                  }}
                   aria-label="Login or Sign Up for an Account"
-                  className="bg-gradient-to-r from-spore-500 to-emerald-500 hover:from-spore-400 hover:to-emerald-400 text-slate-950 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-spore-950/50 transition-all button-press hover-lift shrink-0"
+                  className="btn-primary text-xs sm:text-sm px-4 py-2.5 shrink-0 shadow-level-1"
                 >
                   Login / Signup
                 </button>
@@ -171,9 +174,9 @@ export default function Navbar({ user, setUser }) {
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-expanded={isMenuOpen}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
-                className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-spore-900/60 min-h-[44px] min-w-[44px] flex items-center justify-center border border-spore-800/40"
+                className="lg:hidden p-2 rounded-xl text-typography-primary bg-surface-neutral hover:bg-surface-cream min-h-[44px] min-w-[44px] flex items-center justify-center border border-surface-border"
               >
-                {isMenuOpen ? <X className="w-6 h-6 text-spore-400" /> : <Menu className="w-6 h-6" />}
+                {isMenuOpen ? <X className="w-6 h-6 text-forest-700" /> : <Menu className="w-6 h-6 text-forest-900" />}
               </button>
             </div>
           </div>
@@ -186,67 +189,67 @@ export default function Navbar({ user, setUser }) {
 
         {/* Mobile Slide-over Drawer */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-spore-800/50 bg-spore-950/95 backdrop-blur-xl animate-fade-in px-4 py-6 space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="lg:hidden border-t border-surface-border bg-surface-offwhite/98 backdrop-blur-xl animate-fade-in px-4 py-6 space-y-4 max-h-[85vh] overflow-y-auto shadow-level-2">
             <nav className="flex flex-col gap-2">
               <Link
                 to="/products"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/products') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/products') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
               >
-                <Sprout className="w-5 h-5 text-spore-400" />
+                <Sprout className="w-5 h-5 text-forest-700" />
                 <span>Products & Spawn Catalog</span>
               </Link>
               <Link
                 to="/training"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/training') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/training') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
               >
-                <GraduationCap className="w-5 h-5 text-spore-400" />
+                <GraduationCap className="w-5 h-5 text-forest-700" />
                 <span>Workshops & Training</span>
               </Link>
               <Link
                 to="/blog"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/blog') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/blog') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
               >
-                <BookOpen className="w-5 h-5 text-spore-400" />
+                <BookOpen className="w-5 h-5 text-forest-700" />
                 <span>Agritech Blog</span>
               </Link>
               <Link
                 to="/about"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/about') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/about') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
               >
-                <Info className="w-5 h-5 text-spore-400" />
+                <Info className="w-5 h-5 text-forest-700" />
                 <span>About Sporekart</span>
               </Link>
               <Link
                 to="/contact"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-slate-200 font-medium text-sm border transition-all ${isActive('/contact') ? 'bg-spore-950 border-spore-500/50 text-spore-300 font-bold' : 'bg-spore-900/40 border-spore-800/40 hover:bg-spore-900/80'}`}
+                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/contact') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
               >
-                <PhoneCall className="w-5 h-5 text-spore-400" />
+                <PhoneCall className="w-5 h-5 text-forest-700" />
                 <span>Support & Contact</span>
               </Link>
             </nav>
 
             {user ? (
-              <div className="pt-4 border-t border-spore-800/40 flex flex-col gap-2">
+              <div className="pt-4 border-t border-surface-border flex flex-col gap-2">
                 <Link
                   to="/dashboard"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 p-3.5 rounded-xl bg-spore-900/60 text-slate-200 font-medium text-sm border border-spore-700/50"
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-cream text-forest-900 font-semibold text-sm border border-surface-border"
                 >
-                  <User className="w-5 h-5 text-spore-400" />
+                  <User className="w-5 h-5 text-forest-700" />
                   <span>Dashboard ({user.fullName})</span>
                 </Link>
                 {user.role === 'ROLE_ADMIN' && (
                   <Link
                     to="/admin"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 p-3.5 rounded-xl bg-amber-500/20 text-amber-300 font-bold text-sm border border-amber-500/40"
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-gold/15 text-soil font-bold text-sm border border-gold/30"
                   >
-                    <ShieldCheck className="w-5 h-5 text-amber-400" />
+                    <ShieldCheck className="w-5 h-5 text-gold" />
                     <span>Admin Control Console</span>
                   </Link>
                 )}
@@ -255,19 +258,19 @@ export default function Navbar({ user, setUser }) {
                     setIsMenuOpen(false);
                     handleLogout();
                   }}
-                  className="p-3.5 rounded-xl text-rose-400 font-medium text-sm text-left hover:bg-rose-950/30"
+                  className="p-3.5 rounded-xl text-rose-600 font-medium text-sm text-left hover:bg-rose-50"
                 >
                   Log out
                 </button>
               </div>
             ) : (
-              <div className="pt-4 border-t border-spore-800/40">
+              <div className="pt-4 border-t border-surface-border">
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
                     setIsAuthModalOpen(true);
                   }}
-                  className="w-full bg-gradient-to-r from-spore-500 to-emerald-500 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg text-center button-press"
+                  className="w-full btn-primary py-3.5 text-center shadow-level-1"
                 >
                   Login / Register Account
                 </button>
@@ -279,11 +282,11 @@ export default function Navbar({ user, setUser }) {
 
       {/* Auth Modal (Phone / Email OTP) */}
       {isAuthModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="glass-panel w-full max-w-md p-6 sm:p-8 rounded-3xl relative border border-spore-600/50 shadow-2xl animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-forest-900/45 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-surface-white w-full max-w-md p-6 sm:p-8 rounded-[24px] relative border border-surface-border shadow-level-3 animate-scale-in">
             <button
               onClick={() => setIsAuthModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
+              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary p-2"
             >
               <X className="w-5 h-5" />
             </button>

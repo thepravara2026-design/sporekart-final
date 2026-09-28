@@ -20,36 +20,36 @@ export default function AvailabilityBadge({ availability, className = '' }) {
       case 'AVAILABLE':
       case 'IN_STOCK':
         return {
-          bg: 'bg-emerald-950/70 border-emerald-800/50 text-emerald-400',
-          dot: 'bg-emerald-400 animate-pulse',
+          bg: 'bg-green-600/10 border-green-600/30 text-green-600',
+          dot: 'bg-green-600 animate-pulse',
           icon: CheckCircle2,
           defaultLabel: 'In Stock'
         };
       case 'LIMITED_STOCK':
         return {
-          bg: 'bg-amber-950/70 border-amber-800/50 text-amber-300',
-          dot: 'bg-amber-400 animate-pulse',
+          bg: 'bg-gold/15 border-gold/40 text-soil',
+          dot: 'bg-gold animate-pulse',
           icon: AlertTriangle,
           defaultLabel: 'Limited Stock'
         };
       case 'LOW_STOCK':
         return {
-          bg: 'bg-orange-950/70 border-orange-800/50 text-orange-400',
-          dot: 'bg-orange-400 animate-pulse',
+          bg: 'bg-soil/15 border-soil/30 text-soil',
+          dot: 'bg-soil animate-pulse',
           icon: AlertCircle,
           defaultLabel: 'Low Stock'
         };
       case 'OUT_OF_STOCK':
         return {
-          bg: 'bg-rose-950/70 border-rose-800/50 text-rose-400',
-          dot: 'bg-rose-500',
+          bg: 'bg-surface-neutral border-surface-border text-typography-muted',
+          dot: 'bg-typography-muted',
           icon: XCircle,
           defaultLabel: 'Out of Stock'
         };
       default:
         return {
-          bg: 'bg-emerald-950/70 border-emerald-800/50 text-emerald-400',
-          dot: 'bg-emerald-400',
+          bg: 'bg-green-600/10 border-green-600/30 text-green-600',
+          dot: 'bg-green-600',
           icon: CheckCircle2,
           defaultLabel: 'In Stock'
         };
@@ -63,7 +63,7 @@ export default function AvailabilityBadge({ availability, className = '' }) {
   return (
     <span
       data-testid="product-availability"
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold tracking-wide backdrop-blur-md shadow-sm transition-all duration-200 ${theme.bg} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-pill border text-xs font-semibold tracking-wide shadow-level-1 transition-all duration-200 ${theme.bg} ${className}`}
     >
       <span className={`w-2 h-2 rounded-full ${theme.dot}`} />
       <Icon className="w-3.5 h-3.5 opacity-90" />
