@@ -51,6 +51,7 @@ export default function MediaImage({
         height={height}
         loading={loading}
         decoding={decoding}
+        referrerPolicy="no-referrer"
         onLoad={handleLoad}
         onError={handleError}
         className={`w-full h-full object-cover transition-opacity duration-300 ${

@@ -431,28 +431,48 @@ export default function AdminDashboardPage({ user }) {
     }
   };
 
+  const FALLBACK_PRODUCT_IMAGES = [
+    'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=800&q=80'
+  ];
+
+  const getFallbackImageUrl = (idx = 0) => {
+    return FALLBACK_PRODUCT_IMAGES[Math.abs(idx) % FALLBACK_PRODUCT_IMAGES.length];
+  };
+
   const extractDirectImageUrl = (inputUrl) => {
     if (!inputUrl || typeof inputUrl !== 'string') return '';
     let url = inputUrl.trim();
 
+    // Replace HTML entities like &amp; and strip quotes
+    url = url.replace(/&amp;/g, '&').replace(/^["']|["']$/g, '');
+
     // Check if it's a Google Search / Image referral link
-    if (url.includes('google.com/url?') || url.includes('google.com/imgres?') || url.includes('google.')) {
+    if (url.includes('google.') || url.includes('/imgres') || url.includes('/url?')) {
       try {
         const parsedUrl = new URL(url);
-        const imgUrlParam = parsedUrl.searchParams.get('imgurl') || parsedUrl.searchParams.get('url');
+        const imgUrlParam = parsedUrl.searchParams.get('imgurl')
+          || parsedUrl.searchParams.get('imgrefurl')
+          || parsedUrl.searchParams.get('mediaurl');
         if (imgUrlParam) {
           url = decodeURIComponent(imgUrlParam);
+        } else {
+          const match = url.match(/(?:imgurl|mediaurl)=([^&]+)/i);
+          if (match && match[1]) {
+            url = decodeURIComponent(match[1]);
+          }
         }
       } catch (err) {
-        const match = url.match(/(?:imgurl|url)=([^&]+)/i);
+        const match = url.match(/(?:imgurl|mediaurl)=([^&]+)/i);
         if (match && match[1]) {
           url = decodeURIComponent(match[1]);
         }
       }
     }
 
-    // Strip trailing quotes or quotes around URL string
-    url = url.replace(/^["']|["']$/g, '');
     return url;
   };
 
@@ -502,6 +522,15 @@ export default function AdminDashboardPage({ user }) {
       return;
     }
 
+    if (variantComparePrice && !isNaN(parseFloat(variantComparePrice))) {
+      const selling = parseFloat(variantPrice);
+      const compare = parseFloat(variantComparePrice);
+      if (selling >= compare) {
+        setErrorMessage(`Selling price (Price INR: ₹${selling}) must be strictly less than the Original/Compare-at Price (₹${compare}). Compare-at price must be greater than selling price.`);
+        return;
+      }
+    }
+
     const newV = {
       id: 'v_' + Date.now(),
       variantName: variantName.trim() || 'Variant Pack',
@@ -515,6 +544,8 @@ export default function AdminDashboardPage({ user }) {
     setVariantsList([...variantsList, newV]);
     setVariantSku('SKU-' + (prodTitle || 'PROD').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6) + '-' + (variantsList.length + 1));
     setVariantName('');
+    setVariantPrice('');
+    setVariantComparePrice('');
     setStatusMessage(`Variant "${newV.variantName}" added to product configuration.`);
   };
 
@@ -563,6 +594,27 @@ export default function AdminDashboardPage({ user }) {
         setErrorMessage('At least one valid pricing variant (SKU & Price > 0) is required in Step 5.');
         return;
       }
+
+      if (variantComparePrice && !isNaN(parseFloat(variantComparePrice))) {
+        const selling = parseFloat(variantPrice);
+        const compare = parseFloat(variantComparePrice);
+        if (selling >= compare) {
+          setErrorMessage(`Selling price (Price INR: ₹${selling}) must be strictly less than Compare-at Price (₹${compare}) in Step 5 (Pricing & Stock).`);
+          return;
+        }
+      }
+
+      for (const v of variantsList) {
+        if (v.compareAtPriceInr && !isNaN(parseFloat(v.compareAtPriceInr))) {
+          const s = parseFloat(v.priceInr);
+          const c = parseFloat(v.compareAtPriceInr);
+          if (s >= c) {
+            setErrorMessage(`Variant "${v.variantName}" selling price (₹${s}) must be strictly less than its Compare-at Price (₹${c}).`);
+            return;
+          }
+        }
+      }
+
       setFormTab('media');
     } else if (currentTab === 'media') {
       setFormTab('preview');
@@ -602,6 +654,28 @@ export default function AdminDashboardPage({ user }) {
       setFormTab('pricing');
       setErrorMessage('Valid SKU and Price (INR) are required in Step 5 (Pricing & Stock) to publish product.');
       return;
+    }
+
+    if (variantComparePrice && !isNaN(parseFloat(variantComparePrice))) {
+      const selling = parseFloat(variantPrice);
+      const compare = parseFloat(variantComparePrice);
+      if (selling >= compare) {
+        setFormTab('pricing');
+        setErrorMessage(`Selling price (Price INR: ₹${selling}) must be strictly less than Compare-at Price (₹${compare}) to publish product.`);
+        return;
+      }
+    }
+
+    for (const v of variantsList) {
+      if (v.compareAtPriceInr && !isNaN(parseFloat(v.compareAtPriceInr))) {
+        const s = parseFloat(v.priceInr);
+        const c = parseFloat(v.compareAtPriceInr);
+        if (s >= c) {
+          setFormTab('pricing');
+          setErrorMessage(`Variant "${v.variantName}" selling price (₹${s}) must be strictly less than its Compare-at Price (₹${c}).`);
+          return;
+        }
+      }
     }
 
     try {
@@ -1705,9 +1779,10 @@ export default function AdminDashboardPage({ user }) {
                             <img
                               src={m.url}
                               alt="preview"
+                              referrerPolicy="no-referrer"
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
-                                e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                                e.currentTarget.src = getFallbackImageUrl(m.displayOrder || 0);
                               }}
                               className="w-10 h-10 object-cover rounded-lg border border-surface-border shrink-0"
                             />
@@ -1764,11 +1839,12 @@ export default function AdminDashboardPage({ user }) {
                       <div className="md:col-span-5 space-y-3">
                         <div className="aspect-square bg-surface-white rounded-2xl border border-surface-border overflow-hidden relative shadow-level-1">
                           <img
-                            src={mediaList.find(m => m.isPrimary)?.url || mediaList[0]?.url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop'}
+                            src={mediaList.find(m => m.isPrimary)?.url || mediaList[0]?.url || getFallbackImageUrl(0)}
                             alt="Primary product preview"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.onerror = null;
-                              e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                              e.currentTarget.src = getFallbackImageUrl(0);
                             }}
                             className="w-full h-full object-cover"
                           />
@@ -1789,9 +1865,10 @@ export default function AdminDashboardPage({ user }) {
                                 key={m.id}
                                 src={m.url}
                                 alt="thumb"
+                                referrerPolicy="no-referrer"
                                 onError={(e) => {
                                   e.currentTarget.onerror = null;
-                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                                  e.currentTarget.src = getFallbackImageUrl(m.displayOrder || 1);
                                 }}
                                 className="w-12 h-12 object-cover rounded-xl border border-surface-border shrink-0"
                               />
