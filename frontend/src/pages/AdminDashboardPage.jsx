@@ -531,9 +531,17 @@ export default function AdminDashboardPage({ user }) {
       }
     }
 
+    const baseTitle = prodTitle?.trim() || 'Product';
+    let formattedVariantName = variantName.trim();
+    if (!formattedVariantName) {
+      formattedVariantName = `${baseTitle} - Pack ${variantsList.length + 1}`;
+    } else if (!formattedVariantName.toLowerCase().startsWith(baseTitle.toLowerCase())) {
+      formattedVariantName = `${baseTitle} - ${formattedVariantName}`;
+    }
+
     const newV = {
       id: 'v_' + Date.now(),
-      variantName: variantName.trim() || 'Variant Pack',
+      variantName: formattedVariantName,
       sku: variantSku.trim().toUpperCase(),
       priceInr: variantPrice,
       compareAtPriceInr: variantComparePrice || '',
@@ -716,10 +724,20 @@ export default function AdminDashboardPage({ user }) {
       const res = await adminApi.createProduct(payload);
       const createdProd = res.data?.data || res.data;
 
-      // Add all configured pricing variants (Step 5 Multi-Variant Support)
-      const allVariantsToAdd = variantsList.length > 0 ? variantsList : [
+      const baseTitle = prodTitle?.trim() || 'Product';
+      const rawVariants = variantsList.length > 0 ? variantsList : [
         { variantName, sku: variantSku, priceInr: variantPrice, compareAtPriceInr: variantComparePrice, stockQuantity: variantStock }
       ];
+
+      const allVariantsToAdd = rawVariants.map((v, idx) => {
+        let vName = (v.variantName || '').trim();
+        if (!vName) {
+          vName = `${baseTitle} - Pack ${idx + 1}`;
+        } else if (!vName.toLowerCase().startsWith(baseTitle.toLowerCase())) {
+          vName = `${baseTitle} - ${vName}`;
+        }
+        return { ...v, variantName: vName };
+      });
 
       if (createdProd?.id && allVariantsToAdd.length > 0) {
         for (const v of allVariantsToAdd) {
@@ -1629,6 +1647,9 @@ export default function AdminDashboardPage({ user }) {
                             placeholder="e.g. 500g Value Pack / 1kg Bulk Box"
                             className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-forest-700"
                           />
+                          <span className="text-[10px] text-typography-muted mt-1 block">
+                            💡 Saved as: <strong className="text-forest-800 font-sans">{prodTitle?.trim() || 'Product Name'} - {variantName.trim() || '500g Value Pack'}</strong>
+                          </span>
                         </div>
                         <div>
                           <label className="block text-typography-primary font-bold mb-1">SKU / Item Code *</label>
