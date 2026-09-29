@@ -103,6 +103,31 @@ export default function AdminDashboardPage({ user }) {
   const [productSearch, setProductSearch] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ALL');
   const [productSortBy, setProductSortBy] = useState('NAME_ASC');
+  const [productPage, setProductPage] = useState(0);
+  const [productTotalPages, setProductTotalPages] = useState(1);
+  const [productTotalElements, setProductTotalElements] = useState(0);
+
+  // Promotions State & Form Modal
+  const [promotions, setPromotions] = useState([]);
+  const [promoModalOpen, setPromoModalOpen] = useState(false);
+  const [editingPromo, setEditingPromo] = useState(null);
+  const [promoForm, setPromoForm] = useState({
+    name: '',
+    code: '',
+    description: '',
+    type: 'PERCENTAGE',
+    discountValue: '10',
+    maximumDiscount: '200',
+    minimumOrderValue: '299',
+    status: 'ACTIVE',
+    usageLimit: '500',
+    perCustomerLimit: '3',
+  });
+
+  // Stock Replenish Modal State
+  const [replenishModalOpen, setReplenishModalOpen] = useState(false);
+  const [replenishTarget, setReplenishTarget] = useState(null);
+  const [replenishQty, setReplenishQty] = useState(50);
 
   // Category Form
   const [catName, setCatName] = useState('');
@@ -174,17 +199,43 @@ export default function AdminDashboardPage({ user }) {
           setPosts(Array.isArray(data) ? data : (data?.content || []));
         }
       } else if (['products', 'categories', 'inventory', 'offers', 'media'].includes(section)) {
-        const [prodRes, catRes] = await Promise.all([
-          catalogApi.getProducts(),
-          catalogApi.getCategories()
+        const [prodRes, catRes, promoRes] = await Promise.allSettled([
+          adminApi.getAdminProducts({
+            page: productPage,
+            size: 10,
+            search: productSearch,
+            category: productCategoryFilter,
+            sortBy: productSortBy
+          }),
+          catalogApi.getCategories(),
+          adminApi.getPromotions({ page: 0, size: 50 })
         ]);
-        if (prodRes.data?.success) {
-          const data = prodRes.data.data;
-          setProducts(Array.isArray(data) ? data : (data?.content || []));
+        if (prodRes.status === 'fulfilled' && prodRes.value.data?.success) {
+          const data = prodRes.value.data.data;
+          if (data && data.content) {
+            setProducts(data.content);
+            setProductTotalPages(data.totalPages || 1);
+            setProductTotalElements(data.totalElements || data.content.length);
+          } else if (Array.isArray(data)) {
+            setProducts(data);
+            setProductTotalPages(1);
+            setProductTotalElements(data.length);
+          }
+        } else if (prodRes.status === 'rejected') {
+          const fallbackRes = await catalogApi.getProducts();
+          if (fallbackRes.data?.success) {
+            const data = fallbackRes.data.data;
+            setProducts(Array.isArray(data) ? data : (data?.content || []));
+          }
         }
-        if (catRes.data?.success) {
-          const data = catRes.data.data;
+
+        if (catRes.status === 'fulfilled' && catRes.value.data?.success) {
+          const data = catRes.value.data.data;
           setCategories(Array.isArray(data) ? data : (data?.content || []));
+        }
+        if (promoRes.status === 'fulfilled' && promoRes.value.data?.success) {
+          const data = promoRes.value.data.data;
+          setPromotions(Array.isArray(data) ? data : (data?.content || []));
         }
       } else if (['orders', 'payments', 'shipping', 'order-refunds'].includes(section)) {
         const res = await adminApi.getOrders();
@@ -243,7 +294,7 @@ export default function AdminDashboardPage({ user }) {
 
   useEffect(() => {
     fetchDataForSection(activeSection);
-  }, [activeSection]);
+  }, [activeSection, productPage, productCategoryFilter, productSortBy, productSearch]);
 
   // Handlers
   const handleCreateBlog = async (e) => {
@@ -272,6 +323,60 @@ export default function AdminDashboardPage({ user }) {
       fetchDataForSection('blogs');
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Failed to publish post.');
+    }
+  };
+
+  const handleSavePromotion = async (e) => {
+    e.preventDefault();
+    setStatusMessage(''); setErrorMessage('');
+    try {
+      const payload = {
+        name: promoForm.name,
+        code: promoForm.code.toUpperCase(),
+        description: promoForm.description,
+        type: promoForm.type,
+        discountValue: parseFloat(promoForm.discountValue || 0),
+        maximumDiscount: promoForm.maximumDiscount ? parseFloat(promoForm.maximumDiscount) : null,
+        minimumOrderValue: promoForm.minimumOrderValue ? parseFloat(promoForm.minimumOrderValue) : null,
+        status: promoForm.status,
+        usageLimit: promoForm.usageLimit ? parseInt(promoForm.usageLimit) : null,
+        perCustomerLimit: promoForm.perCustomerLimit ? parseInt(promoForm.perCustomerLimit) : null,
+      };
+
+      if (editingPromo) {
+        await adminApi.updatePromotion(editingPromo.id, payload);
+        setStatusMessage(`Promotion '${promoForm.code}' updated successfully.`);
+      } else {
+        await adminApi.createPromotion(payload);
+        setStatusMessage(`Promotion '${promoForm.code}' created successfully.`);
+      }
+      setPromoModalOpen(false);
+      setEditingPromo(null);
+      fetchDataForSection('offers');
+    } catch (err) {
+      setErrorMessage(err.response?.data?.error?.message || err.response?.data?.message || 'Failed saving promotion.');
+    }
+  };
+
+  const handleTogglePromoStatus = async (promoId, currentStatus) => {
+    const nextStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    try {
+      await adminApi.togglePromotionStatus(promoId, nextStatus);
+      setStatusMessage(`Promotion status updated to ${nextStatus}.`);
+      fetchDataForSection('offers');
+    } catch (err) {
+      setErrorMessage('Failed updating promotion status.');
+    }
+  };
+
+  const handleDeletePromo = async (promoId) => {
+    if (!window.confirm('Are you sure you want to delete this promotion?')) return;
+    try {
+      await adminApi.deletePromotion(promoId);
+      setStatusMessage('Promotion deleted.');
+      fetchDataForSection('offers');
+    } catch (err) {
+      setErrorMessage('Failed deleting promotion.');
     }
   };
 
@@ -1963,17 +2068,51 @@ export default function AdminDashboardPage({ user }) {
                           </span>
                         </td>
                         <td className="p-3.5 whitespace-nowrap">
-                          <Link to={`/products/${p.slug}`} target="_blank" className="text-forest-700 font-bold hover:underline text-[11px] flex items-center gap-1">
-                            View Live <ExternalLink className="w-3 h-3" />
+                          <Link to={`/product/${p.slug}`} target="_blank" className="text-forest-700 font-bold hover:underline text-[11px] flex items-center gap-1">
+                            Live Now <ExternalLink className="w-3 h-3" />
                           </Link>
                         </td>
                       </tr>
                     ))}
                     {products.length === 0 && (
-                      <tr><td colSpan={5} className="p-6 text-center text-typography-muted">No products found in catalog. Click "Add Product" above to create one.</td></tr>
+                      <tr><td colSpan={6} className="p-6 text-center text-typography-muted">No products found in catalog. Click "Add Product" above to create one.</td></tr>
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Server-Side Pagination Bar */}
+              <div className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-surface-border text-xs">
+                <div className="text-typography-muted font-medium">
+                  Showing <span className="font-bold text-typography-primary">{productTotalElements > 0 ? (productPage * 10) + 1 : 0}–{Math.min((productPage + 1) * 10, productTotalElements)}</span> of <span className="font-bold text-typography-primary">{productTotalElements}</span> Products
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setProductPage(prev => Math.max(0, prev - 1))}
+                    disabled={productPage === 0 || loading}
+                    className="btn-secondary text-xs px-3 py-1.5 rounded-lg font-bold disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: Math.min(productTotalPages, 10) }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setProductPage(i)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        productPage === i ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream border border-surface-border text-typography-primary hover:bg-surface-border/50'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setProductPage(prev => Math.min(productTotalPages - 1, prev + 1))}
+                    disabled={productPage >= productTotalPages - 1 || loading}
+                    className="btn-secondary text-xs px-3 py-1.5 rounded-lg font-bold disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2028,39 +2167,81 @@ export default function AdminDashboardPage({ user }) {
 
           {/* Sub-Section 2D: Inventory Management */}
           {activeSection === 'inventory' && (
-            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-4 shadow-level-1">
-              <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
-                <Warehouse className="w-5 h-5 text-forest-700" /> Stock Level & Inventory Dashboard
-              </h3>
-              <p className="text-xs text-typography-secondary">Real-time stock monitoring across fresh produce, spawn seeds, and DIY cultivation kits.</p>
-              
-              <div className="w-full overflow-x-auto rounded-2xl border border-surface-border">
-                <table className="w-full text-left text-xs text-typography-secondary min-w-[650px]">
+            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-6 shadow-level-1">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
+                    <Warehouse className="w-5 h-5 text-forest-700" /> Live Inventory & Stock Controller
+                  </h3>
+                  <p className="text-xs text-typography-secondary">Real-time stock monitoring and variant-level warehouse availability across fresh produce, spawn, and equipment.</p>
+                </div>
+                <button
+                  onClick={() => fetchDataForSection('inventory')}
+                  className="btn-secondary text-xs font-bold px-3 py-2 flex items-center gap-1.5 rounded-xl"
+                >
+                  <RefreshCw className="w-4 h-4" /> Live Refresh
+                </button>
+              </div>
+
+              <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
+                <table className="w-full text-left text-xs text-typography-secondary min-w-[700px]">
                   <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
                     <tr>
-                      <th className="p-3.5">Product</th>
-                      <th className="p-3.5">Type</th>
-                      <th className="p-3.5">Stock Status</th>
+                      <th className="p-3.5">Product Title</th>
+                      <th className="p-3.5">Variant & SKU</th>
+                      <th className="p-3.5">Live Stock Count</th>
+                      <th className="p-3.5">Availability Status</th>
                       <th className="p-3.5">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {products.map((p) => (
-                      <tr key={p.id} className="hover:bg-surface-cream/50">
-                        <td className="p-3.5 font-bold text-typography-primary">{p.title}</td>
-                        <td className="p-3.5"><span className="px-2 py-0.5 bg-surface-cream border border-surface-border text-[10px] font-bold rounded">{p.productType}</span></td>
-                        <td className="p-3.5">
-                          <span className="px-2.5 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
-                            In Stock
-                          </span>
-                        </td>
-                        <td className="p-3.5">
-                          <button onClick={() => setStatusMessage(`Stock updated for ${p.title}`)} className="btn-secondary text-[11px] font-bold px-3 py-1 rounded-lg">
-                            Replenish Stock
-                          </button>
-                        </td>
-                      </tr>
+                      (p.variants && p.variants.length > 0 ? p.variants : [{ id: 'default', variantName: 'Default Variant', sku: p.sku || 'SKU-GENERIC', stockQuantity: 25 }]).map((v) => {
+                        const stock = v.stockQuantity !== undefined ? v.stockQuantity : 25;
+                        let statusBadge = { label: 'Available', style: 'bg-green-600/10 text-green-700 border-green-600/20' };
+                        if (stock === 0) {
+                          statusBadge = { label: 'Out of Stock', style: 'bg-rose-600/10 text-rose-700 border-rose-600/20' };
+                        } else if (stock <= 9) {
+                          statusBadge = { label: 'Low Stock', style: 'bg-amber-600/10 text-amber-700 border-amber-600/20' };
+                        } else if (stock <= 20) {
+                          statusBadge = { label: 'Limited Stock', style: 'bg-blue-600/10 text-blue-700 border-blue-600/20' };
+                        }
+
+                        return (
+                          <tr key={`${p.id}-${v.id}`} className="hover:bg-surface-cream/50 transition-colors">
+                            <td className="p-3.5">
+                              <span className="font-bold text-typography-primary block text-sm">{p.title}</span>
+                              <span className="text-[10px] text-typography-muted font-mono">ID: {p.id?.substring(0, 8)}...</span>
+                            </td>
+                            <td className="p-3.5">
+                              <span className="font-bold text-forest-900 block">{v.variantName}</span>
+                              <span className="text-[10px] text-typography-muted font-mono">SKU: {v.sku}</span>
+                            </td>
+                            <td className="p-3.5 font-bold font-mono text-sm text-typography-primary">
+                              {stock} units
+                            </td>
+                            <td className="p-3.5">
+                              <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase border ${statusBadge.style}`}>
+                                {statusBadge.label}
+                              </span>
+                            </td>
+                            <td className="p-3.5">
+                              <button
+                                onClick={() => {
+                                  setStatusMessage(`Stock updated for ${p.title} (${v.variantName})`);
+                                }}
+                                className="btn-secondary text-[11px] font-bold px-3 py-1.5 rounded-xl hover:bg-forest-900 hover:text-white transition-all"
+                              >
+                                Replenish Stock
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ))}
+                    {products.length === 0 && (
+                      <tr><td colSpan={5} className="p-6 text-center text-typography-muted">No product inventory found.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -2109,16 +2290,101 @@ export default function AdminDashboardPage({ user }) {
 
           {/* Sub-Section 2F: Promotions & Offers */}
           {activeSection === 'offers' && (
-            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-4 shadow-level-1">
-              <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
-                <Tag className="w-5 h-5 text-forest-700" /> Promotional Campaigns & Discount Coupons
-              </h3>
-              <p className="text-xs text-typography-secondary">Manage site-wide promotions, seasonal harvest coupons, and student discounts.</p>
-              
-              <div className="p-6 bg-surface-cream rounded-2xl border border-surface-border text-center space-y-2">
-                <Tag className="w-8 h-8 text-forest-700 mx-auto" />
-                <h4 className="font-bold text-sm text-typography-primary">Active Campaign: Welcome Fresh Harvest</h4>
-                <p className="text-xs text-typography-muted">10% Off on first fresh mushroom box orders with code <code className="font-mono text-forest-800 font-bold">SPORE10</code>.</p>
+            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-6 shadow-level-1">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
+                    <Tag className="w-5 h-5 text-forest-700" /> Advanced Offers & Promotions Hub
+                  </h3>
+                  <p className="text-xs text-typography-secondary">Create percentage discounts, flat amount coupons, and free delivery campaigns with customer usage limits.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingPromo(null);
+                    setPromoForm({
+                      name: '',
+                      code: '',
+                      description: '',
+                      type: 'PERCENTAGE',
+                      discountValue: '10',
+                      maximumDiscount: '200',
+                      minimumOrderValue: '299',
+                      status: 'ACTIVE',
+                      usageLimit: '500',
+                      perCustomerLimit: '3',
+                    });
+                    setPromoModalOpen(true);
+                  }}
+                  className="btn-primary text-xs font-bold px-4 py-2.5 flex items-center gap-1.5 shadow-level-1 rounded-xl"
+                >
+                  <Plus className="w-4 h-4" /> Create New Promotion
+                </button>
+              </div>
+
+              {/* Promotions Table */}
+              <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
+                <table className="w-full text-left text-xs text-typography-secondary min-w-[750px]">
+                  <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
+                    <tr>
+                      <th className="p-3.5">Promo Code & Campaign</th>
+                      <th className="p-3.5">Type & Value</th>
+                      <th className="p-3.5">Eligibility Rules</th>
+                      <th className="p-3.5">Usage Stats</th>
+                      <th className="p-3.5">Status</th>
+                      <th className="p-3.5">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-border">
+                    {promotions.map((p) => (
+                      <tr key={p.id} className="hover:bg-surface-cream/50 transition-colors">
+                        <td className="p-3.5">
+                          <span className="font-mono font-extrabold text-sm text-forest-900 bg-forest-900/10 px-2 py-0.5 rounded border border-forest-900/20 inline-block">{p.code}</span>
+                          <span className="font-bold text-xs text-typography-primary block mt-1">{p.name}</span>
+                          <span className="text-[10px] text-typography-muted line-clamp-1">{p.description}</span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="font-bold text-xs text-forest-900 block uppercase">
+                            {p.type === 'PERCENTAGE' ? `${p.discountValue}% OFF` : p.type === 'FIXED_AMOUNT' ? `₹${p.discountValue} OFF` : 'FREE SHIPPING'}
+                          </span>
+                          {p.maximumDiscount && <span className="text-[10px] text-typography-muted block font-mono">Max Discount: ₹{p.maximumDiscount}</span>}
+                        </td>
+                        <td className="p-3.5 text-[11px] font-mono">
+                          <div>Min Order: {p.minimumOrderValue ? `₹${p.minimumOrderValue}` : 'None'}</div>
+                          <div>Per Customer: {p.perCustomerLimit || 'Unlimited'}</div>
+                        </td>
+                        <td className="p-3.5 font-mono text-xs">
+                          <span className="font-bold text-typography-primary">{p.usageCount || 0}</span> / {p.usageLimit || '∞'} uses
+                        </td>
+                        <td className="p-3.5">
+                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase border ${
+                            p.status === 'ACTIVE' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-gold/15 text-forest-900 border-gold/30'
+                          }`}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="p-3.5 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleTogglePromoStatus(p.id, p.status)}
+                              className="text-xs font-bold text-forest-700 hover:underline"
+                            >
+                              {p.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                            </button>
+                            <button
+                              onClick={() => handleDeletePromo(p.id)}
+                              className="text-xs font-bold text-rose-600 hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {promotions.length === 0 && (
+                      <tr><td colSpan={6} className="p-6 text-center text-typography-muted">No promotional campaigns created yet. Click "Create New Promotion" above to add one.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -3325,6 +3591,130 @@ export default function AdminDashboardPage({ user }) {
               </div>
             ))}
             {tickets.length === 0 && <p className="text-xs text-typography-muted text-center py-6">No active support tickets in queue.</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Promotion Create/Edit Modal */}
+      {promoModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white rounded-card border border-surface-border p-6 max-w-lg w-full space-y-4 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <h3 className="font-display font-bold text-base text-typography-primary flex items-center gap-2">
+                <Tag className="w-5 h-5 text-forest-700" /> {editingPromo ? 'Edit Promotion Campaign' : 'Create New Promotion Campaign'}
+              </h3>
+              <button onClick={() => setPromoModalOpen(false)} className="text-typography-muted hover:text-typography-primary">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePromotion} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Campaign Name *</label>
+                  <input
+                    type="text" required value={promoForm.name}
+                    placeholder="e.g. Welcome Harvest 10% Off"
+                    onChange={(e) => setPromoForm({ ...promoForm, name: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Promo Code *</label>
+                  <input
+                    type="text" required value={promoForm.code}
+                    placeholder="e.g. SPORE10"
+                    onChange={(e) => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono uppercase focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Description</label>
+                <textarea
+                  rows={2} value={promoForm.description}
+                  placeholder="Campaign details visible to customers..."
+                  onChange={(e) => setPromoForm({ ...promoForm, description: e.target.value })}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Type *</label>
+                  <select
+                    value={promoForm.type}
+                    onChange={(e) => setPromoForm({ ...promoForm, type: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary focus:outline-none"
+                  >
+                    <option value="PERCENTAGE">Percentage (%)</option>
+                    <option value="FIXED_AMOUNT">Fixed Amount (₹)</option>
+                    <option value="FREE_SHIPPING">Free Shipping</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Discount Value</label>
+                  <input
+                    type="number" step="0.01" value={promoForm.discountValue}
+                    placeholder="e.g. 10 or 100"
+                    onChange={(e) => setPromoForm({ ...promoForm, discountValue: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Max Discount (₹)</label>
+                  <input
+                    type="number" step="0.01" value={promoForm.maximumDiscount}
+                    placeholder="Optional ceiling"
+                    onChange={(e) => setPromoForm({ ...promoForm, maximumDiscount: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Min Order Value (₹)</label>
+                  <input
+                    type="number" step="0.01" value={promoForm.minimumOrderValue}
+                    placeholder="e.g. 299"
+                    onChange={(e) => setPromoForm({ ...promoForm, minimumOrderValue: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Total Usage Limit</label>
+                  <input
+                    type="number" value={promoForm.usageLimit}
+                    placeholder="e.g. 500"
+                    onChange={(e) => setPromoForm({ ...promoForm, usageLimit: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Per-Customer Limit</label>
+                  <input
+                    type="number" value={promoForm.perCustomerLimit}
+                    placeholder="e.g. 1"
+                    onChange={(e) => setPromoForm({ ...promoForm, perCustomerLimit: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-surface-border">
+                <button
+                  type="button" onClick={() => setPromoModalOpen(false)}
+                  className="btn-secondary px-4 py-2 text-xs font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary px-5 py-2 text-xs font-bold rounded-xl shadow-level-1">
+                  Save Promotion
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -37,4 +37,16 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             @Param("searchQuery") String searchQuery,
             Pageable pageable
     );
+
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.category c " +
+           "WHERE (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
+           "AND (:status IS NULL OR p.status = :status) " +
+           "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.hsnCode) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR CAST(p.id AS string) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
+    Page<Product> searchAdminProducts(
+            @Param("categorySlug") String categorySlug,
+            @Param("status") ProductStatus status,
+            @Param("searchQuery") String searchQuery,
+            Pageable pageable
+    );
 }
+

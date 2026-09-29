@@ -39,6 +39,7 @@ public class OrderService {
     private final CustomerService customerService;
     private final InventoryService inventoryService;
     private final PricingService pricingService;
+    private final com.sporekart.promotion.application.PromotionService promotionService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.application.AuthService authService;
@@ -120,6 +121,8 @@ public class OrderService {
                 .sorted(java.util.Comparator.comparing(CartItem::getVariantId))
                 .toList();
 
+        List<com.sporekart.promotion.application.PromotionService.CartItemContext> itemContexts = new ArrayList<>();
+
         for (CartItem item : sortedItems) {
             ProductVariant variant = catalogApplicationService.findVariantById(item.getVariantId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product variant not found: " + item.getVariantId()));
@@ -158,14 +161,51 @@ public class OrderService {
             subtotal = subtotal.add(lineSubtotal);
             gstTotal = gstTotal.add(lineGst);
             discountTotal = discountTotal.add(lineDiscount);
+
+            itemContexts.add(com.sporekart.promotion.application.PromotionService.CartItemContext.builder()
+                    .productId(product.getId())
+                    .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : null)
+                    .lineTotalInr(lineSubtotal)
+                    .build());
         }
 
-        BigDecimal totalAmount = subtotal.add(gstTotal).add(order.getShippingFeeInr());
+        // Authoritative Server-Side Shipping & Promo Discount Calculation
+        BigDecimal shippingFee = (subtotal.compareTo(new BigDecimal("999")) >= 0) ? BigDecimal.ZERO : new BigDecimal("80.00");
+        BigDecimal promoDiscount = BigDecimal.ZERO;
 
+        if (cart.getAppliedPromoCode() != null && !cart.getAppliedPromoCode().isBlank()) {
+            var promoResult = promotionService.validateAndCalculate(
+                    cart.getAppliedPromoCode(),
+                    userId,
+                    sessionId,
+                    subtotal,
+                    itemContexts
+            );
+            if (promoResult.isValid()) {
+                promoDiscount = promoResult.getDiscountAmountInr() != null ? promoResult.getDiscountAmountInr() : BigDecimal.ZERO;
+                if (promoResult.isFreeShipping()) {
+                    shippingFee = BigDecimal.ZERO;
+                }
+
+                final BigDecimal finalPromoDiscount = promoDiscount;
+                promotionService.findByCode(cart.getAppliedPromoCode()).ifPresent(p -> {
+                    promotionService.recordUsage(p.getId(), userId, sessionId, order.getId(), finalPromoDiscount);
+                });
+            }
+        }
+
+        discountTotal = discountTotal.add(promoDiscount);
+        BigDecimal totalAmount = subtotal.add(gstTotal).add(shippingFee).subtract(promoDiscount);
+        if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            totalAmount = BigDecimal.ZERO;
+        }
+
+        order.setShippingFeeInr(shippingFee.setScale(2, RoundingMode.HALF_UP));
         order.setSubtotalAmountInr(subtotal.setScale(2, RoundingMode.HALF_UP));
         order.setGstTotalAmountInr(gstTotal.setScale(2, RoundingMode.HALF_UP));
         order.setDiscountTotalAmountInr(discountTotal.setScale(2, RoundingMode.HALF_UP));
         order.setTotalAmountInr(totalAmount.setScale(2, RoundingMode.HALF_UP));
+
 
         // 7. Add Initial Order Event
         OrderEvent initialEvent = OrderEvent.builder()

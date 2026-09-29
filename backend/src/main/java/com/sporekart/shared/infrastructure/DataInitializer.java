@@ -36,6 +36,7 @@ public class DataInitializer implements CommandLineRunner {
     private final BlogContentService blogContentService;
     private final BlogPostRepository blogPostRepository;
     private final UserRepository userRepository;
+    private final com.sporekart.promotion.infrastructure.PromotionRepository promotionRepository;
 
     @Override
     @Transactional
@@ -63,7 +64,52 @@ public class DataInitializer implements CommandLineRunner {
         if (blogPostRepository.count() == 0) {
             initBlogContentData();
         }
+        if (promotionRepository.count() == 0) {
+            initPromotionsData();
+        }
     }
+
+    private void initPromotionsData() {
+        promotionRepository.save(com.sporekart.promotion.domain.Promotion.builder()
+                .name("Welcome Harvest 10% Off")
+                .code("SPORE10")
+                .description("Get 10% off on all fresh mushroom & spawn produce")
+                .type(com.sporekart.promotion.domain.PromotionType.PERCENTAGE)
+                .discountValue(new BigDecimal("10.00"))
+                .maximumDiscount(new BigDecimal("200.00"))
+                .minimumOrderValue(new BigDecimal("299.00"))
+                .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
+                .usageLimit(500)
+                .perCustomerLimit(3)
+                .usageCount(14)
+                .build());
+
+        promotionRepository.save(com.sporekart.promotion.domain.Promotion.builder()
+                .name("Flat ₹100 Off Festive Special")
+                .code("FLAT100")
+                .description("Flat ₹100 instant discount on orders above ₹799")
+                .type(com.sporekart.promotion.domain.PromotionType.FIXED_AMOUNT)
+                .discountValue(new BigDecimal("100.00"))
+                .minimumOrderValue(new BigDecimal("799.00"))
+                .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
+                .usageLimit(200)
+                .perCustomerLimit(1)
+                .usageCount(28)
+                .build());
+
+        promotionRepository.save(com.sporekart.promotion.domain.Promotion.builder()
+                .name("Free Delivery Express")
+                .code("FREESHIP")
+                .description("Complimentary temperature-controlled cold chain delivery")
+                .type(com.sporekart.promotion.domain.PromotionType.FREE_SHIPPING)
+                .minimumOrderValue(new BigDecimal("499.00"))
+                .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
+                .usageLimit(1000)
+                .perCustomerLimit(5)
+                .usageCount(62)
+                .build());
+    }
+
 
     private Category getOrCreateCategory(String name, String slug, String description, String imageUrl) {
         return categoryRepository.findBySlug(slug)

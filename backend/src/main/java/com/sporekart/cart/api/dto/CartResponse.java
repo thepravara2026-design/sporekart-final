@@ -17,6 +17,13 @@ public class CartResponse {
     private Integer itemCount;
     private boolean valid;
 
+    private BigDecimal shippingFeeInr;
+    private BigDecimal discountTotalInr;
+    private String appliedPromoCode;
+    private BigDecimal promoDiscountInr;
+    private boolean isFreeShipping;
+    private String promoMessage;
+
     public CartResponse() {}
 
     public UUID getId() { return id; }
@@ -40,9 +47,28 @@ public class CartResponse {
     public BigDecimal getEstimatedTotalInr() { return estimatedTotalInr; }
     public void setEstimatedTotalInr(BigDecimal estimatedTotalInr) { this.estimatedTotalInr = estimatedTotalInr; }
 
+    public BigDecimal getShippingFeeInr() { return shippingFeeInr; }
+    public void setShippingFeeInr(BigDecimal shippingFeeInr) { this.shippingFeeInr = shippingFeeInr; }
+
+    public BigDecimal getDiscountTotalInr() { return discountTotalInr; }
+    public void setDiscountTotalInr(BigDecimal discountTotalInr) { this.discountTotalInr = discountTotalInr; }
+
+    public String getAppliedPromoCode() { return appliedPromoCode; }
+    public void setAppliedPromoCode(String appliedPromoCode) { this.appliedPromoCode = appliedPromoCode; }
+
+    public BigDecimal getPromoDiscountInr() { return promoDiscountInr; }
+    public void setPromoDiscountInr(BigDecimal promoDiscountInr) { this.promoDiscountInr = promoDiscountInr; }
+
+    public boolean isFreeShipping() { return isFreeShipping; }
+    public void setFreeShipping(boolean freeShipping) { isFreeShipping = freeShipping; }
+
+    public String getPromoMessage() { return promoMessage; }
+    public void setPromoMessage(String promoMessage) { this.promoMessage = promoMessage; }
+
     public Integer getItemCount() { return itemCount; }
     public void setItemCount(Integer itemCount) { this.itemCount = itemCount; }
 
     public boolean isValid() { return valid; }
     public void setValid(boolean valid) { this.valid = valid; }
 }
+

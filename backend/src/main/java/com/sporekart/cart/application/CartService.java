@@ -34,6 +34,7 @@ public class CartService {
     private final ProductMediaRepository productMediaRepository;
     private final InventoryRecordRepository inventoryRecordRepository;
     private final PricingService pricingService;
+    private final com.sporekart.promotion.application.PromotionService promotionService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -213,6 +214,27 @@ public class CartService {
     public CartResponse clearCart(UUID userId, String sessionId) {
         Cart cart = getOrCreateCart(userId, sessionId);
         cart.clearItems();
+        cart.setAppliedPromoCode(null);
+        cartRepository.save(cart);
+        return buildCartResponse(cart);
+    }
+
+    @Transactional
+    public CartResponse applyPromotion(UUID userId, String sessionId, String code) {
+        Cart cart = getOrCreateCart(userId, sessionId);
+        if (code == null || code.trim().isEmpty()) {
+            cart.setAppliedPromoCode(null);
+        } else {
+            cart.setAppliedPromoCode(code.trim().toUpperCase());
+        }
+        cartRepository.save(cart);
+        return buildCartResponse(cart);
+    }
+
+    @Transactional
+    public CartResponse removePromotion(UUID userId, String sessionId) {
+        Cart cart = getOrCreateCart(userId, sessionId);
+        cart.setAppliedPromoCode(null);
         cartRepository.save(cart);
         return buildCartResponse(cart);
     }
@@ -288,11 +310,14 @@ public class CartService {
         boolean allValid = true;
 
         List<CartItemResponse> itemResponses = new ArrayList<>();
+        List<com.sporekart.promotion.application.PromotionService.CartItemContext> itemContexts = new ArrayList<>();
 
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             response.setItems(itemResponses);
             response.setSubtotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             response.setGstTotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            response.setShippingFeeInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            response.setDiscountTotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             response.setEstimatedTotalInr(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             response.setItemCount(0);
             response.setValid(false);
@@ -357,8 +382,15 @@ public class CartService {
                     allValid = false;
                 }
 
-                subtotal = subtotal.add(priceResult.getNetPriceInr().multiply(BigDecimal.valueOf(item.getQuantity())));
+                BigDecimal lineSubtotal = priceResult.getNetPriceInr().multiply(BigDecimal.valueOf(item.getQuantity()));
+                subtotal = subtotal.add(lineSubtotal);
                 gstTotal = gstTotal.add(priceResult.getGstAmountInr().multiply(BigDecimal.valueOf(item.getQuantity())));
+
+                itemContexts.add(com.sporekart.promotion.application.PromotionService.CartItemContext.builder()
+                        .productId(product.getId())
+                        .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : null)
+                        .lineTotalInr(lineSubtotal)
+                        .build());
 
                 String imageUrl = primaryImageMap.get(product.getId());
                 if (imageUrl != null) {
@@ -377,15 +409,52 @@ public class CartService {
             itemResponses.add(itemResp);
         }
 
-        BigDecimal estimatedTotal = subtotal.add(gstTotal);
+        // Automatic Free Shipping on orders >= ₹999
+        BigDecimal shippingFee = (subtotal.compareTo(new BigDecimal("999")) >= 0) ? BigDecimal.ZERO : new BigDecimal("80.00");
+        BigDecimal promoDiscount = BigDecimal.ZERO;
+        boolean isFreeShippingPromo = false;
+        String promoMsg = null;
+
+        if (cart.getAppliedPromoCode() != null && !cart.getAppliedPromoCode().isBlank()) {
+            var valResult = promotionService.validateAndCalculate(
+                    cart.getAppliedPromoCode(),
+                    cart.getUserId(),
+                    cart.getSessionId(),
+                    subtotal,
+                    itemContexts
+            );
+            if (valResult.isValid()) {
+                promoDiscount = valResult.getDiscountAmountInr() != null ? valResult.getDiscountAmountInr() : BigDecimal.ZERO;
+                isFreeShippingPromo = valResult.isFreeShipping();
+                if (isFreeShippingPromo) {
+                    shippingFee = BigDecimal.ZERO;
+                }
+                promoMsg = valResult.getMessage();
+                response.setAppliedPromoCode(cart.getAppliedPromoCode());
+            } else {
+                promoMsg = valResult.getMessage();
+                response.setAppliedPromoCode(cart.getAppliedPromoCode());
+            }
+        }
+
+        BigDecimal finalTotal = subtotal.add(gstTotal).add(shippingFee).subtract(promoDiscount);
+        if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
+            finalTotal = BigDecimal.ZERO;
+        }
 
         response.setItems(itemResponses);
         response.setSubtotalInr(subtotal.setScale(2, RoundingMode.HALF_UP));
         response.setGstTotalInr(gstTotal.setScale(2, RoundingMode.HALF_UP));
-        response.setEstimatedTotalInr(estimatedTotal.setScale(2, RoundingMode.HALF_UP));
+        response.setShippingFeeInr(shippingFee.setScale(2, RoundingMode.HALF_UP));
+        response.setDiscountTotalInr(promoDiscount.setScale(2, RoundingMode.HALF_UP));
+        response.setPromoDiscountInr(promoDiscount.setScale(2, RoundingMode.HALF_UP));
+        response.setFreeShipping(isFreeShippingPromo || shippingFee.compareTo(BigDecimal.ZERO) == 0);
+        response.setPromoMessage(promoMsg);
+        response.setEstimatedTotalInr(finalTotal.setScale(2, RoundingMode.HALF_UP));
         response.setItemCount(totalItemCount);
         response.setValid(allValid && !cart.getItems().isEmpty());
 
         return response;
     }
 }
+

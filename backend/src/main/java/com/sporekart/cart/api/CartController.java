@@ -88,6 +88,26 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.success(validation));
     }
 
+    @PostMapping("/apply-promotion")
+    public ResponseEntity<ApiResponse<CartResponse>> applyPromotion(
+            Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
+            @Valid @RequestBody com.sporekart.promotion.api.PromotionDtos.ApplyPromotionRequest request) {
+        UUID userId = extractUserId(authentication);
+        CartResponse cart = cartService.applyPromotion(userId, sessionId, request.getCode());
+        return ResponseEntity.ok(ApiResponse.success(cart));
+    }
+
+    @DeleteMapping("/remove-promotion")
+    public ResponseEntity<ApiResponse<CartResponse>> removePromotion(
+            Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId) {
+        UUID userId = extractUserId(authentication);
+        CartResponse cart = cartService.removePromotion(userId, sessionId);
+        return ResponseEntity.ok(ApiResponse.success(cart));
+    }
+
+
     private UUID extractUserId(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
             try {

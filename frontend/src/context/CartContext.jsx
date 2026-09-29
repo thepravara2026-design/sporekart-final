@@ -174,6 +174,43 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const applyPromotion = async (code) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await cartApi.applyPromotion(code);
+      if (response.data && response.data.success) {
+        const norm = normalizeCartData(response.data.data);
+        setCart(norm);
+        return { success: true, cart: norm, message: norm.promoMessage };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.error?.message || 'Failed to apply promotion code';
+      setError(msg);
+      return { success: false, message: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removePromotion = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await cartApi.removePromotion();
+      if (response.data && response.data.success) {
+        const norm = normalizeCartData(response.data.data);
+        setCart(norm);
+        return { success: true, cart: norm };
+      }
+    } catch (err) {
+      setError('Failed to remove promotion');
+      return { success: false };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -191,6 +228,8 @@ export const CartProvider = ({ children }) => {
         clearCart,
         mergeGuestCart,
         validateCart,
+        applyPromotion,
+        removePromotion,
       }}
     >
       {children}

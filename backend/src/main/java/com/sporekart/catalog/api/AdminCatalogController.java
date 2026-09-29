@@ -67,6 +67,19 @@ public class AdminCatalogController {
         return ResponseEntity.ok(ApiResponse.success(media));
     }
 
+    @GetMapping("/products")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<CatalogDtos.AdminProductDto>>> getAdminProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt_desc") String sortBy) {
+        org.springframework.data.domain.Page<Product> productPage = adminCatalogService.getAdminProductsPaginated(category, status, search, page, size, sortBy);
+        org.springframework.data.domain.Page<CatalogDtos.AdminProductDto> dtoPage = productPage.map(catalogApplicationService::mapToAdminProductDto);
+        return ResponseEntity.ok(ApiResponse.success(dtoPage));
+    }
+
     @PutMapping("/products/{id}/media/reorder")
     public ResponseEntity<ApiResponse<List<ProductMedia>>> reorderMedia(
             @PathVariable("id") UUID productId,
@@ -75,3 +88,4 @@ public class AdminCatalogController {
         return ResponseEntity.ok(ApiResponse.success(mediaList));
     }
 }
+

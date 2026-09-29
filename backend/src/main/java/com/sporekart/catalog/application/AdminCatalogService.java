@@ -273,4 +273,31 @@ public class AdminCatalogService {
 
         return mediaRepository.findByProductIdOrderByDisplayOrderAsc(productId);
     }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Product> getAdminProductsPaginated(
+            String categorySlug,
+            ProductStatus status,
+            String searchQuery,
+            int page,
+            int size,
+            String sortBy
+    ) {
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+        if ("NAME_ASC".equalsIgnoreCase(sortBy) || "title_asc".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "title");
+        } else if ("NAME_DESC".equalsIgnoreCase(sortBy) || "title_desc".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "title");
+        } else if ("CATEGORY".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "category.name");
+        } else if ("PRODUCT_ID".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id");
+        } else if ("STATUS".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "status");
+        }
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 100), sort);
+        return productRepository.searchAdminProducts(categorySlug, status, searchQuery, pageable);
+    }
 }
+

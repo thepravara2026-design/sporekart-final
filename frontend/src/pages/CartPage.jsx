@@ -1,9 +1,86 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShieldCheck, Truck, RefreshCw, AlertTriangle } from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShieldCheck, Truck, RefreshCw, AlertTriangle, Tag, CheckCircle2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import MediaImage from '../components/MediaImage';
 import EmptyState from '../components/EmptyState';
+
+function PromoCodeInput() {
+  const { cart, applyPromotion, removePromotion, loading } = useCart();
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  const handleApply = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    const res = await applyPromotion(code);
+    if (res.success) {
+      setIsError(false);
+      setMessage(res.message || 'Promo code applied!');
+    } else {
+      setIsError(true);
+      setMessage(res.message || 'Invalid promo code');
+    }
+  };
+
+  const handleRemove = async () => {
+    await removePromotion();
+    setCode('');
+    setMessage('');
+  };
+
+  return (
+    <div className="space-y-2 pb-3 border-b border-surface-border">
+      <label className="block text-xs font-bold text-forest-900 flex items-center gap-1.5">
+        <Tag className="w-3.5 h-3.5 text-forest-700" /> Have a Promo Code?
+      </label>
+      
+      {cart.appliedPromoCode ? (
+        <div className="bg-green-50/80 border border-green-200 rounded-xl p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+            <div>
+              <span className="font-mono font-bold text-xs text-green-900 block">{cart.appliedPromoCode}</span>
+              <span className="text-[11px] text-green-700 block">{cart.promoMessage || 'Applied'}</span>
+            </div>
+          </div>
+          <button
+            onClick={handleRemove}
+            disabled={loading}
+            className="text-typography-muted hover:text-rose-600 p-1 transition-colors"
+            title="Remove promo code"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleApply} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="e.g. SPORE10, FLAT100"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            className="flex-1 bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-xs font-mono uppercase focus:outline-none focus:border-forest-700"
+          />
+          <button
+            type="submit"
+            disabled={loading || !code.trim()}
+            className="btn-primary text-xs font-bold px-4 py-2 rounded-xl disabled:opacity-50"
+          >
+            Apply
+          </button>
+        </form>
+      )}
+
+      {message && !cart.appliedPromoCode && (
+        <p className={`text-[11px] font-medium ${isError ? 'text-rose-600' : 'text-green-700'}`}>
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, loading, validateCart } = useCart();
@@ -145,6 +222,9 @@ export default function CartPage() {
                 Order Summary
               </h3>
 
+              {/* Promo Code Box */}
+              <PromoCodeInput />
+
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-typography-secondary">
                   <span>Subtotal ({cart.itemCount} items)</span>
@@ -155,9 +235,22 @@ export default function CartPage() {
                   <span className="font-semibold text-forest-900">₹{cart.gstTotalInr}</span>
                 </div>
                 <div className="flex justify-between text-typography-secondary">
-                  <span>Estimated Shipping</span>
-                  <span className="text-forest-700 font-medium">Calculated at Checkout</span>
+                  <span>Shipping Fee</span>
+                  {cart.shippingFeeInr > 0 ? (
+                    <span className="font-semibold text-forest-900">₹{cart.shippingFeeInr}</span>
+                  ) : (
+                    <span className="text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">FREE</span>
+                  )}
                 </div>
+
+                {cart.promoDiscountInr > 0 && (
+                  <div className="flex justify-between text-green-700 font-semibold bg-green-50/70 p-2 rounded-lg border border-green-200">
+                    <span className="flex items-center gap-1.5 text-xs">
+                      <Tag className="w-3.5 h-3.5" /> Promo ({cart.appliedPromoCode})
+                    </span>
+                    <span>- ₹{cart.promoDiscountInr}</span>
+                  </div>
+                )}
 
                 <div className="border-t border-surface-border pt-3 flex justify-between text-base font-bold text-forest-900">
                   <span>Estimated Total</span>
