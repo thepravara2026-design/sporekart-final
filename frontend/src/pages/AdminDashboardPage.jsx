@@ -171,10 +171,7 @@ export default function AdminDashboardPage({ user }) {
   const [cancelTargetBatch, setCancelTargetBatch] = useState(null);
 
   // Training Refunds & Enrollments State
-  const [enrolledStudents, setEnrolledStudents] = useState([
-    { id: 'e1', studentName: 'Rohan Sharma', email: 'rohan.s@example.com', courseTitle: 'Button & Oyster Commercial Cultivation', batchCode: 'BATCH-2026-OCT-OYSTER', feePaid: 4999, status: 'CONFIRMED', refundStatus: 'NONE' },
-    { id: 'e2', studentName: 'Priya Verma', email: 'priya.v@example.com', courseTitle: 'Masterclass in Mushroom Spawn Production', batchCode: 'BATCH-2026-NOV-SPAWN', feePaid: 4999, status: 'CANCELLED', refundStatus: 'REFUND_PROCESSED', refundId: 'rfnd_trn_99214' }
-  ]);
+  const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [cancelTargetEnrollment, setCancelTargetEnrollment] = useState(null);
   const [enrollmentCourseFilter, setEnrollmentCourseFilter] = useState('ALL');
   const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState('');
@@ -322,17 +319,22 @@ export default function AdminDashboardPage({ user }) {
           setTickets(Array.isArray(data) ? data : (data?.content || []));
         }
       } else if (['training', 'courses', 'batches', 'enrollments', 'batch-refunds'].includes(section)) {
-        const [cRes, custRes] = await Promise.all([
+        const [cRes, custRes, enrRes] = await Promise.allSettled([
           trainingApi.getCourses(),
-          adminApi.getCustomers()
+          adminApi.getCustomers(),
+          adminApi.getEnrollments()
         ]);
-        if (cRes.data?.success) {
-          const data = cRes.data.data;
+        if (cRes.status === 'fulfilled' && cRes.value.data?.success) {
+          const data = cRes.value.data.data;
           setCourses(Array.isArray(data) ? data : (data?.content || []));
         }
-        if (custRes.data?.success) {
-          const data = custRes.data.data;
+        if (custRes.status === 'fulfilled' && custRes.value.data?.success) {
+          const data = custRes.value.data.data;
           setCustomers(Array.isArray(data) ? data : (data?.content || []));
+        }
+        if (enrRes.status === 'fulfilled' && enrRes.value.data?.success) {
+          const data = enrRes.value.data.data;
+          setEnrolledStudents(Array.isArray(data) ? data : (data?.content || []));
         }
       }
     } catch (err) {
@@ -876,20 +878,19 @@ export default function AdminDashboardPage({ user }) {
   };
 
   // ADMIN ENROLLMENT CANCELLATION HANDLER
-  const handleAdminCancelEnrollment = (enrollment) => {
+  const handleAdminCancelEnrollment = async (enrollment) => {
     if (enrollment.status === 'COMPLETED') {
-      setErrorMessage(`Completed enrollment for ${enrollment.studentName} cannot be cancelled.`);
+      setErrorMessage(`Completed enrollment for ${enrollment.studentName || 'student'} cannot be cancelled.`);
       return;
     }
-
-    setEnrolledStudents(enrolledStudents.map(s => {
-      if (s.id === enrollment.id) {
-        return { ...s, status: 'CANCELLED', refundStatus: 'REFUND_PROCESSED', refundId: 'rfnd_enr_' + Date.now().toString().substring(6) };
-      }
-      return s;
-    }));
-
-    setStatusMessage(`Enrollment for ${enrollment.studentName} cancelled. Payment refund of ₹${enrollment.feePaid} processed.`);
+    setStatusMessage(''); setErrorMessage('');
+    try {
+      await trainingApi.cancelEnrollment(enrollment.id, 'Admin cancellation & refund');
+      setStatusMessage(`Enrollment for ${enrollment.studentName || 'student'} cancelled and payment refund processed.`);
+      fetchDataForSection('enrollments');
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed cancelling enrollment.');
+    }
   };
 
   // ADMIN PACKING SLIP PDF DOWNLOAD HANDLER
@@ -3729,7 +3730,7 @@ export default function AdminDashboardPage({ user }) {
                                 <td className="p-3.5 text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     <button
-                                      onClick={() => handleGrantCapability(s.id, 'TRAINING')}
+                                      onClick={() => handleGrantCapability(s.userId || s.id, 'TRAINING')}
                                       className="px-3 py-1.5 btn-secondary text-[11px] font-bold rounded-xl flex items-center gap-1 hover:border-forest-700 transition-all"
                                     >
                                       <Award className="w-3.5 h-3.5 text-forest-700" /> Grant Access
@@ -3850,7 +3851,7 @@ export default function AdminDashboardPage({ user }) {
                           <td className="p-3.5 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => handleGrantCapability(s.id, 'TRAINING')}
+                                onClick={() => handleGrantCapability(s.userId || s.id, 'TRAINING')}
                                 className="px-3 py-1.5 btn-secondary text-[11px] font-bold rounded-xl flex items-center gap-1 hover:border-forest-700 transition-all"
                               >
                                 <Award className="w-3.5 h-3.5 text-forest-700" /> Grant Access

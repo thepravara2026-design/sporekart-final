@@ -310,12 +310,17 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart }) {
           <div className="p-4 rounded-card bg-surface-white border border-surface-border flex items-center justify-between gap-4 flex-wrap shadow-level-1">
             <div>
               <span className="text-xs text-typography-muted block font-medium">Price (incl. GST)</span>
-              <div className="flex items-baseline gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-forest-900 font-display" data-testid="product-price">
                   ₹{selectedVariant?.priceInr || price}
                 </span>
-                {selectedVariant?.compareAtPriceInr && (
-                  <span className="text-sm text-typography-muted line-through">₹{selectedVariant.compareAtPriceInr}</span>
+                {selectedVariant?.compareAtPriceInr && Number(selectedVariant.compareAtPriceInr) > Number(selectedVariant?.priceInr || price) && (
+                  <>
+                    <span className="text-sm text-typography-muted line-through">₹{selectedVariant.compareAtPriceInr}</span>
+                    <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-extrabold rounded-full shadow-sm tracking-wide border border-emerald-500/40" data-testid="discount-badge">
+                      SAVE {Math.round(((Number(selectedVariant.compareAtPriceInr) - Number(selectedVariant.priceInr || price)) / Number(selectedVariant.compareAtPriceInr)) * 100)}%
+                    </span>
+                  </>
                 )}
               </div>
             </div>
@@ -747,23 +752,50 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart }) {
             Related Mushroom Agritech Products
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((rel) => (
-              <Link
-                key={rel.id}
-                to={`/product/${rel.slug}`}
-                className="bg-surface-white p-4 rounded-feature border border-surface-border hover:border-forest-700/40 transition-all group hover-lift shadow-level-1"
-              >
-                <MediaImage
-                  src={rel.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=400&q=80'}
-                  alt={`${rel.title} - Sporekart Mushroom Agritech Produce`}
-                  className="w-full h-40 object-cover rounded-card mb-3 group-hover:scale-105 transition-transform"
-                />
-                <h3 className="font-bold text-sm text-forest-900 group-hover:text-forest-700 transition-colors line-clamp-1">
-                  {rel.title}
-                </h3>
-                <p className="text-xs text-forest-700 font-bold mt-1 font-display">₹{rel.variants?.[0]?.priceInr || '—'}</p>
-              </Link>
-            ))}
+            {relatedProducts.map((rel) => {
+              const relVariant = rel.variants?.[0];
+              const hasRelCompare = relVariant?.compareAtPriceInr && Number(relVariant.compareAtPriceInr) > Number(relVariant.priceInr);
+              const relDiscount = hasRelCompare
+                ? Math.round(((Number(relVariant.compareAtPriceInr) - Number(relVariant.priceInr)) / Number(relVariant.compareAtPriceInr)) * 100)
+                : 0;
+
+              return (
+                <Link
+                  key={rel.id}
+                  to={`/product/${rel.slug}`}
+                  className="bg-surface-white p-4 rounded-feature border border-surface-border hover:border-forest-700/40 transition-all group hover-lift shadow-level-1 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="relative overflow-hidden rounded-card mb-3 bg-surface-cream h-40">
+                      <MediaImage
+                        src={rel.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=400&q=80'}
+                        alt={`${rel.title} - Sporekart Mushroom Agritech Produce`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {relDiscount > 0 && (
+                        <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-gradient-to-r from-emerald-700 to-forest-800 text-white text-[10px] font-extrabold rounded-full shadow-md backdrop-blur-md uppercase tracking-wider" data-testid="discount-badge">
+                          {relDiscount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-sm text-forest-900 group-hover:text-forest-700 transition-colors line-clamp-1">
+                      {rel.title}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <p className="text-xs text-forest-700 font-bold font-display">₹{relVariant?.priceInr || '—'}</p>
+                    {hasRelCompare && (
+                      <>
+                        <span className="text-[10px] text-typography-muted line-through font-medium">₹{relVariant.compareAtPriceInr}</span>
+                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
+                          {relDiscount}% OFF
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

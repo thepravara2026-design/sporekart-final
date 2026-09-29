@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2 } from 'lucide-react';
-import { customerApi, orderApi } from '../api';
+import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag } from 'lucide-react';
+import { customerApi, orderApi, authApi } from '../api';
 import { useCart } from '../context/CartContext';
 import MediaImage from '../components/MediaImage';
 import AuthForm from '../components/AuthForm';
+import PromoCodeSection from '../components/PromoCodeSection';
 
 export default function CheckoutPage({ user, setUser }) {
-  const { cart, validateCart, fetchCart } = useCart();
+  const { cart, validateCart, fetchCart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState([]);
@@ -32,7 +33,17 @@ export default function CheckoutPage({ user, setUser }) {
   const [addressFormErrors, setAddressFormErrors] = useState({});
 
   useEffect(() => {
-    runPreCheckoutValidation();
+    const initCheckout = async () => {
+      setValidating(true);
+      if (localStorage.getItem('sporekart_token')) {
+        await fetchCart();
+      }
+      const result = await validateCart();
+      setValidationResult(result);
+      setValidating(false);
+    };
+    initCheckout();
+
     if (user) {
       fetchAddresses();
       if (user.fullName || user.phone) {
@@ -127,6 +138,17 @@ export default function CheckoutPage({ user, setUser }) {
         setSelectedAddressId(created.id);
         setIsAddingAddress(false);
         setNewAddress({ recipientName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', isDefault: true });
+
+        // Refresh customer profile to reflect updated phone & name in user state
+        try {
+          const userRes = await authApi.getCurrentUser();
+          if (userRes?.data?.success && setUser) {
+            setUser(userRes.data.data);
+          }
+        } catch (uErr) {
+          console.warn('Could not refresh user profile after adding address:', uErr);
+        }
+
         return created;
       }
     } catch (err) {
@@ -181,7 +203,7 @@ export default function CheckoutPage({ user, setUser }) {
     }
   };
 
-  if (validating) {
+  if (validating || cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
@@ -469,7 +491,7 @@ export default function CheckoutPage({ user, setUser }) {
 
             <div className="divide-y divide-surface-border">
               {cart.items.map((item) => (
-                <div key={item.id} className="py-3 flex items-center justify-between">
+                <div key={item.variantId || item.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-input overflow-hidden bg-surface-cream border border-surface-border">
                       <MediaImage src={item.imageUrl} alt={item.productTitle} className="w-full h-full object-cover" />
@@ -497,9 +519,12 @@ export default function CheckoutPage({ user, setUser }) {
               <Lock className="w-4 h-4 text-forest-700" />
             </h3>
 
+            {/* Promo Code Input & Available Coupons */}
+            <PromoCodeSection />
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-typography-secondary">
-                <span>Items Subtotal</span>
+                <span>Items Subtotal ({cart.itemCount} items)</span>
                 <span className="font-semibold text-forest-900 font-display">₹{cart.subtotalInr}</span>
               </div>
               <div className="flex justify-between text-typography-secondary">
@@ -507,9 +532,23 @@ export default function CheckoutPage({ user, setUser }) {
                 <span className="font-semibold text-forest-900 font-display">₹{cart.gstTotalInr}</span>
               </div>
               <div className="flex justify-between text-typography-secondary">
-                <span>Shiprocket Express Delivery</span>
-                <span className="text-forest-700 font-semibold">FREE</span>
+                <span>Express Cold-Chain Delivery</span>
+                {cart.shippingFeeInr > 0 ? (
+                  <span className="font-semibold text-forest-900 font-display">₹{cart.shippingFeeInr}</span>
+                ) : (
+                  <span className="text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded text-xs">FREE</span>
+                )}
               </div>
+
+              {cart.promoDiscountInr > 0 && (
+                <div className="flex justify-between text-green-700 font-semibold bg-green-50/80 p-2.5 rounded-xl border border-green-200">
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <Tag className="w-3.5 h-3.5 text-green-600" />
+                    <span>Promo Discount ({cart.appliedPromoCode})</span>
+                  </span>
+                  <span className="font-mono font-bold">- ₹{cart.promoDiscountInr}</span>
+                </div>
+              )}
 
               <div className="border-t border-surface-border pt-3 flex justify-between text-base font-bold text-forest-900">
                 <span>Total Amount Payable</span>

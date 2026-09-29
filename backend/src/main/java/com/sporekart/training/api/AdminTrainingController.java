@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/training")
 @PreAuthorize("hasRole('ADMIN')")
@@ -16,6 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class AdminTrainingController {
 
     private final TrainingService trainingService;
+
+    @GetMapping("/enrollments")
+    public ResponseEntity<ApiResponse<List<TrainingDtos.AdminEnrollmentResponse>>> getEnrollments() {
+        List<TrainingDtos.AdminEnrollmentResponse> enrollments = trainingService.getAllEnrollmentsForAdmin();
+        return ResponseEntity.ok(ApiResponse.success(enrollments));
+    }
 
     @PostMapping("/categories")
     public ResponseEntity<ApiResponse<CourseCategory>> createCategory(@Valid @RequestBody TrainingDtos.CreateCategoryRequest request) {

@@ -260,30 +260,58 @@ public class AuthService {
 
     @Transactional
     public void linkPhoneToUser(UUID userId, String rawPhone) {
-        if (userId == null || rawPhone == null || rawPhone.isBlank()) return;
+        linkPhoneAndNameFromAddress(userId, rawPhone, null);
+    }
+
+    @Transactional
+    public void linkPhoneAndNameFromAddress(UUID userId, String rawPhone, String recipientName) {
+        if (userId == null) return;
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return;
 
-        String phoneToSet = normalizePhone(rawPhone);
+        boolean updated = false;
 
-        if (user.getPhone() == null || user.getPhone().isBlank()) {
-            Optional<User> existing = findUserByPhoneFlexible(phoneToSet);
-            if (existing.isEmpty() || existing.get().getId().equals(userId)) {
-                user.setPhone(phoneToSet);
-                user.setPhoneVerified(true);
-                userRepository.save(user);
+        if (rawPhone != null && !rawPhone.isBlank()) {
+            String phoneToSet = normalizePhone(rawPhone);
+            if (user.getPhone() == null || user.getPhone().isBlank()) {
+                Optional<User> existing = findUserByPhoneFlexible(phoneToSet);
+                if (existing.isEmpty() || existing.get().getId().equals(userId)) {
+                    user.setPhone(phoneToSet);
+                    user.setPhoneVerified(true);
+                    updated = true;
+                }
+            }
+
+            Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
+                    IdentityProvider.PHONE_OTP, phoneToSet);
+            if (existingIdentity.isEmpty()) {
+                CustomerIdentity newIdentity = CustomerIdentity.builder()
+                        .userId(userId)
+                        .provider(IdentityProvider.PHONE_OTP)
+                        .providerSubject(phoneToSet)
+                        .build();
+                customerIdentityRepository.save(newIdentity);
             }
         }
 
-        Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
-                IdentityProvider.PHONE_OTP, phoneToSet);
-        if (existingIdentity.isEmpty()) {
-            CustomerIdentity newIdentity = CustomerIdentity.builder()
-                    .userId(userId)
-                    .provider(IdentityProvider.PHONE_OTP)
-                    .providerSubject(phoneToSet)
-                    .build();
-            customerIdentityRepository.save(newIdentity);
+        if (recipientName != null && !recipientName.isBlank()) {
+            String trimmedName = recipientName.trim();
+            if (user.getFullName() == null || user.getFullName().isBlank() 
+                    || "Google User".equalsIgnoreCase(user.getFullName()) 
+                    || "Google Grower".equalsIgnoreCase(user.getFullName())
+                    || "Google Agri Customer".equalsIgnoreCase(user.getFullName())) {
+                user.setFullName(trimmedName);
+                String[] parts = trimmedName.split("\\s+");
+                user.setFirstName(parts[0]);
+                if (parts.length > 1) {
+                    user.setLastName(String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)));
+                }
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            userRepository.save(user);
         }
     }
 

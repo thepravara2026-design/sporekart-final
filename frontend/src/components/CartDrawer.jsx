@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { X, Trash2, Plus, Minus, ShoppingBag, ShieldCheck, ArrowRight, AlertTriangle, Truck } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ShieldCheck, ArrowRight, AlertTriangle, Truck, Tag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import MediaImage from './MediaImage';
+import PromoCodeSection from './PromoCodeSection';
 
 export default function CartDrawer() {
   const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeFromCart, clearCart, loading } = useCart();
@@ -117,7 +118,7 @@ export default function CartDrawer() {
             ) : (
               cart.items.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.variantId || item.id}
                   className="p-4 rounded-card bg-surface-white border border-surface-border flex gap-4 relative group hover:border-forest-700/40 shadow-level-1 transition-all"
                 >
                   {/* Thumbnail */}
@@ -188,6 +189,8 @@ export default function CartDrawer() {
           {/* Footer Summary & Checkout */}
           {cart.items.length > 0 && (
             <div className="p-6 border-t border-surface-border bg-surface-offwhite space-y-4">
+              <PromoCodeSection compact={true} />
+
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between text-typography-secondary">
                   <span>Subtotal</span>
@@ -200,9 +203,20 @@ export default function CartDrawer() {
                 <div className="flex justify-between text-typography-secondary">
                   <span>Delivery Fee</span>
                   <span className="text-forest-700 font-semibold">
-                    {currentTotal >= freeDeliveryThreshold ? 'FREE' : 'Calculated at Checkout'}
+                    {cart.shippingFeeInr === 0 || currentTotal >= freeDeliveryThreshold ? 'FREE' : `₹${cart.shippingFeeInr}`}
                   </span>
                 </div>
+
+                {cart.promoDiscountInr > 0 && (
+                  <div className="flex justify-between text-green-700 font-semibold bg-green-50/80 p-2 rounded-lg border border-green-200">
+                    <span className="flex items-center gap-1 text-[11px]">
+                      <Tag className="w-3 h-3 text-green-600" />
+                      <span>Promo ({cart.appliedPromoCode})</span>
+                    </span>
+                    <span className="font-mono font-bold">- ₹{cart.promoDiscountInr}</span>
+                  </div>
+                )}
+
                 <div className="border-t border-surface-border pt-2 flex justify-between text-sm font-bold text-forest-900">
                   <span>Estimated Total</span>
                   <span className="text-forest-700 text-lg font-display">₹{cart.estimatedTotalInr}</span>

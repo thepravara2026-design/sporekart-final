@@ -78,6 +78,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/shipping/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/seo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/promotions/available", "/promotions/**").permitAll()
                     .requestMatchers("/cart/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()

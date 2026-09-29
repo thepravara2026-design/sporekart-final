@@ -84,6 +84,7 @@ export const cartApi = {
   validateCart: () => api.post('/cart/validate'),
   applyPromotion: (code) => api.post('/cart/apply-promotion', { code }),
   removePromotion: () => api.delete('/cart/remove-promotion'),
+  getAvailablePromotions: () => api.get('/promotions/available'),
 };
 
 export const customerApi = {
@@ -167,6 +168,7 @@ export const adminApi = {
   addBatchSchedule: (data) => api.post('/admin/training/schedules', data),
   markAttendance: (data) => api.post('/admin/training/attendance', data),
   completeCourse: (data) => api.post('/admin/training/complete-course', data),
+  getEnrollments: () => api.get('/admin/training/enrollments'),
   getCustomers: (params) => api.get('/admin/customers', { params }),
   grantCapability: (userId, capability) => api.post(`/admin/customers/${userId}/capability`, { capability }),
   getTickets: (params) => api.get('/admin/support/tickets', { params }),

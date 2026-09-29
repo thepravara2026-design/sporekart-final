@@ -3,6 +3,9 @@ package com.sporekart.training.application;
 import com.sporekart.training.domain.*;
 import com.sporekart.training.domain.event.EnrollmentConfirmedEvent;
 import com.sporekart.training.infrastructure.*;
+import com.sporekart.identity.domain.User;
+import com.sporekart.identity.infrastructure.UserRepository;
+import com.sporekart.training.api.TrainingDtos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,6 +35,7 @@ public class TrainingService {
     private final AttendanceRepository attendanceRepository;
     private final CompletionRepository completionRepository;
     private final CertificateRepository certificateRepository;
+    private final UserRepository userRepository;
     private final com.sporekart.wallet.application.WalletService walletService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -212,6 +217,87 @@ public class TrainingService {
     @Transactional(readOnly = true)
     public List<Enrollment> getUserEnrollments(UUID userId) {
         return enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingDtos.AdminEnrollmentResponse> getAllEnrollmentsForAdmin() {
+        List<Enrollment> enrollments = enrollmentRepository.findAllByOrderByEnrolledAtDesc();
+        if (enrollments.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> userIds = enrollments.stream()
+                .map(Enrollment::getUserId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        java.util.Map<UUID, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        return enrollments.stream().map(e -> {
+            User user = userMap.get(e.getUserId());
+            String name = null;
+            String email = null;
+            String phone = null;
+
+            if (user != null) {
+                if (user.getFullName() != null && !user.getFullName().trim().isEmpty()) {
+                    name = user.getFullName().trim();
+                } else if (user.getFirstName() != null) {
+                    name = (user.getFirstName() + " " + (user.getLastName() != null ? user.getLastName() : "")).trim();
+                }
+                email = user.getEmail();
+                phone = user.getPhone();
+            }
+
+            if (name == null || name.isEmpty()) {
+                name = email != null ? email.split("@")[0] : "Student Trainee";
+            }
+            if (email == null) {
+                email = "N/A";
+            }
+            if (phone == null) {
+                phone = "N/A";
+            }
+
+            String courseTitle = e.getCourse() != null ? e.getCourse().getTitle() : "Masterclass";
+            UUID courseId = e.getCourse() != null ? e.getCourse().getId() : null;
+            String batchCode = e.getBatch() != null ? e.getBatch().getBatchCode() : "UPCOMING";
+            UUID batchId = e.getBatch() != null ? e.getBatch().getId() : null;
+            LocalDate startDate = e.getBatch() != null ? e.getBatch().getStartDate() : null;
+            LocalDate endDate = e.getBatch() != null ? e.getBatch().getEndDate() : null;
+
+            String refundStatus = "NONE";
+            String refundId = null;
+            if (e.getStatus() == EnrollmentStatus.CANCELLED) {
+                refundStatus = "REFUND_PROCESSED";
+                refundId = "rfnd_tr_" + e.getId().toString().substring(0, 8);
+            }
+
+            BigDecimal fee = e.getFeePaidInr() != null ? e.getFeePaidInr() : BigDecimal.ZERO;
+
+            return TrainingDtos.AdminEnrollmentResponse.builder()
+                    .id(e.getId())
+                    .userId(e.getUserId())
+                    .studentName(name)
+                    .email(email)
+                    .phone(phone)
+                    .courseId(courseId)
+                    .courseTitle(courseTitle)
+                    .batchId(batchId)
+                    .batchCode(batchCode)
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .status(e.getStatus())
+                    .feePaid(fee)
+                    .feePaidInr(fee)
+                    .paymentReference(e.getPaymentReference())
+                    .refundStatus(refundStatus)
+                    .refundId(refundId)
+                    .enrolledAt(e.getEnrolledAt())
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

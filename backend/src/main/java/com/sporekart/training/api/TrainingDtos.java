@@ -230,4 +230,29 @@ public class TrainingDtos {
         private LocalDate issueDate;
         private String certificateUrl;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminEnrollmentResponse {
+        private UUID id;
+        private UUID userId;
+        private String studentName;
+        private String email;
+        private String phone;
+        private UUID courseId;
+        private String courseTitle;
+        private UUID batchId;
+        private String batchCode;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private EnrollmentStatus status;
+        private BigDecimal feePaid;
+        private BigDecimal feePaidInr;
+        private String paymentReference;
+        private String refundStatus;
+        private String refundId;
+        private ZonedDateTime enrolledAt;
+    }
 }

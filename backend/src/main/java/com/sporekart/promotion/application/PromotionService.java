@@ -106,6 +106,11 @@ public class PromotionService {
     }
 
     @Transactional(readOnly = true)
+    public List<Promotion> getActivePromotions() {
+        return promotionRepository.findByStatus(PromotionStatus.ACTIVE);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<Promotion> findByCode(String code) {
         if (code == null || code.trim().isEmpty()) return Optional.empty();
         return promotionRepository.findByCodeIgnoreCase(code.trim());

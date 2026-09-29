@@ -270,6 +270,10 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
               label: (stock > 0 || !activeVariant) ? 'In Stock' : 'Out of Stock'
             };
             const isAvailable = availability.status !== 'OUT_OF_STOCK' && stock > 0;
+            const hasComparePrice = activeVariant?.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr);
+            const discountPercent = hasComparePrice
+              ? Math.round(((Number(activeVariant.compareAtPriceInr) - Number(activeVariant.priceInr)) / Number(activeVariant.compareAtPriceInr)) * 100)
+              : 0;
 
             return (
               <div 
@@ -290,6 +294,12 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                     <div className="absolute top-3 right-3">
                       <AvailabilityBadge availability={availability} />
                     </div>
+                    {discountPercent > 0 && (
+                      <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-emerald-700 to-forest-800 text-white text-[10px] font-extrabold rounded-full shadow-lg border border-emerald-500/30 backdrop-blur-md uppercase tracking-wider group-hover:scale-105 transition-transform" data-testid="discount-badge-overlay">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>{discountPercent}% OFF</span>
+                      </div>
+                    )}
                   </Link>
 
                   <div className="p-5 space-y-3">
@@ -321,14 +331,19 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
                 <div className="p-5 pt-0 flex items-center justify-between gap-3 border-t border-surface-border mt-2">
                   <div>
                     <span className="text-[10px] text-typography-muted block font-medium">Price</span>
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-display font-bold text-xl text-forest-900">
                         ₹{activeVariant?.priceInr || 0}
                       </span>
-                      {activeVariant?.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr) && (
-                        <span className="text-xs text-typography-muted line-through font-medium" data-testid="strikeout-price">
-                          ₹{activeVariant.compareAtPriceInr}
-                        </span>
+                      {hasComparePrice && (
+                        <>
+                          <span className="text-xs text-typography-muted line-through font-medium" data-testid="strikeout-price">
+                            ₹{activeVariant.compareAtPriceInr}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-100/90 text-emerald-800 text-[11px] font-extrabold rounded-md border border-emerald-300/80 shadow-2xs" data-testid="discount-badge">
+                            {discountPercent}% OFF
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>

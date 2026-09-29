@@ -169,8 +169,7 @@ public class OrderService {
                     .build());
         }
 
-        // Authoritative Server-Side Shipping & Promo Discount Calculation
-        BigDecimal shippingFee = (subtotal.compareTo(new BigDecimal("999")) >= 0) ? BigDecimal.ZERO : new BigDecimal("80.00");
+        BigDecimal shippingFee = BigDecimal.ZERO;
         BigDecimal promoDiscount = BigDecimal.ZERO;
 
         if (cart.getAppliedPromoCode() != null && !cart.getAppliedPromoCode().isBlank()) {
@@ -186,11 +185,6 @@ public class OrderService {
                 if (promoResult.isFreeShipping()) {
                     shippingFee = BigDecimal.ZERO;
                 }
-
-                final BigDecimal finalPromoDiscount = promoDiscount;
-                promotionService.findByCode(cart.getAppliedPromoCode()).ifPresent(p -> {
-                    promotionService.recordUsage(p.getId(), userId, sessionId, order.getId(), finalPromoDiscount);
-                });
             }
         }
 
@@ -218,6 +212,13 @@ public class OrderService {
         order.addEvent(initialEvent);
 
         Order savedOrder = orderRepository.save(order);
+
+        if (cart.getAppliedPromoCode() != null && !cart.getAppliedPromoCode().isBlank() && promoDiscount.compareTo(BigDecimal.ZERO) > 0) {
+            final BigDecimal finalPromoDiscount = promoDiscount;
+            promotionService.findByCode(cart.getAppliedPromoCode()).ifPresent(p -> {
+                promotionService.recordUsage(p.getId(), userId, sessionId, savedOrder.getId(), finalPromoDiscount);
+            });
+        }
 
         // Publish OrderCreatedEvent
         eventPublisher.publishEvent(com.sporekart.analytics.domain.events.OrderCreatedEvent.builder()
@@ -414,9 +415,7 @@ public class OrderService {
                 ? OrderStatus.REFUND_PENDING
                 : OrderStatus.CANCELLED;
 
-        String formattedReason = (reason != null && !reason.trim().isEmpty())
-                ? (reason.startsWith("Cancelled by") ? reason : "Cancelled by Customer: " + reason)
-                : "Cancelled by Customer";
+        String formattedReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Cancelled by Customer";
 
         // Release reserved stock back to available inventory
         for (OrderItem item : order.getItems()) {
@@ -494,7 +493,7 @@ public class OrderService {
         response.setRazorpayOrderId(order.getRazorpayOrderId());
         response.setRazorpayPaymentId(order.getRazorpayPaymentId());
         
-        String defaultAwb = "AWB-897" + order.getId().toString().substring(0, 6).toUpperCase();
+        String defaultAwb = order.getId() != null ? "AWB-897" + order.getId().toString().substring(0, 6).toUpperCase() : "AWB-897000000";
         response.setCourierPartner(order.getCourierPartner() != null ? order.getCourierPartner() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? "BlueDart Express" : null));
         response.setTrackingNumber(order.getTrackingNumber() != null ? order.getTrackingNumber() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? defaultAwb : null));
         response.setTrackingUrl(order.getTrackingUrl() != null ? order.getTrackingUrl() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? "https://track.shiprocket.in/" + defaultAwb : null));

@@ -21,6 +21,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     @EntityGraph(attributePaths = {"course", "batch"})
     Optional<Enrollment> findById(UUID id);
 
+    @EntityGraph(attributePaths = {"course", "batch"})
+    List<Enrollment> findAllByOrderByEnrolledAtDesc();
+
     List<Enrollment> findByBatchId(UUID batchId);
     List<Enrollment> findByBatchIdAndStatus(UUID batchId, EnrollmentStatus status);
 }

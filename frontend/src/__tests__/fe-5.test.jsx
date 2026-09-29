@@ -9,6 +9,9 @@ import { customerApi, cartApi } from '../api';
 vi.mock('../components/SeoHead', () => ({ default: () => null }));
 
 vi.mock('../api', () => ({
+  authApi: {
+    getCurrentUser: vi.fn(),
+  },
   customerApi: {
     getAddresses: vi.fn(),
     addAddress: vi.fn(),
@@ -16,6 +19,7 @@ vi.mock('../api', () => ({
   cartApi: {
     getCart: vi.fn(),
     validateCart: vi.fn(),
+    getAvailablePromotions: vi.fn().mockResolvedValue({ data: { success: true, data: [] } }),
   },
   orderApi: {
     createOrder: vi.fn(),

@@ -117,8 +117,8 @@ export default function AuthForm({
       }
 
       localStorage.setItem('sporekart_token', authData.token);
-      if (setUser) setUser(authData);
       if (mergeGuestCart && !isAdminMode) await mergeGuestCart();
+      if (setUser) setUser(authData);
 
       if (onSuccess) {
         onSuccess(authData);
@@ -142,13 +142,36 @@ export default function AuthForm({
     setOtpSent(true);
   };
 
-  // Triggered when Google Auth payload is received (stops to prompt for profile name)
-  const handleGoogleAuthReceived = (googleAuthData) => {
+  // Triggered when Google Auth payload is received (logs in immediately and merges cart)
+  const handleGoogleAuthReceived = async (googleAuthData) => {
     setAuthError('');
     setAuthMessage('');
-    setPendingGoogleAuth(googleAuthData);
-    const initialName = googleAuthData.fullName || `${googleAuthData.firstName || ''} ${googleAuthData.lastName || ''}`.trim() || 'Google Grower';
-    setGoogleProfileName(initialName);
+    setLoading(true);
+    try {
+      const defaultName = googleAuthData.fullName || `${googleAuthData.firstName || ''} ${googleAuthData.lastName || ''}`.trim() || 'Google Grower';
+      const parts = defaultName.split(' ');
+      const firstName = parts[0] || defaultName;
+      const lastName = parts.slice(1).join(' ') || '';
+
+      const finalPayload = {
+        ...googleAuthData,
+        fullName: defaultName,
+        firstName,
+        lastName,
+      };
+
+      const res = await authApi.loginWithGoogle(finalPayload);
+      const authData = res.data.data;
+      localStorage.setItem('sporekart_token', authData.token);
+      if (mergeGuestCart) await mergeGuestCart();
+      if (setUser) setUser(authData);
+      if (onSuccess) onSuccess(authData);
+      setPendingGoogleAuth(null);
+    } catch (err) {
+      setAuthError(err.response?.data?.message || 'Google Auth Failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Submits Google Auth using default Google account profile name without forcing custom input
@@ -171,8 +194,8 @@ export default function AuthForm({
       const res = await authApi.loginWithGoogle(finalPayload);
       const authData = res.data.data;
       localStorage.setItem('sporekart_token', authData.token);
-      if (setUser) setUser(authData);
       if (mergeGuestCart) await mergeGuestCart();
+      if (setUser) setUser(authData);
       if (onSuccess) onSuccess(authData);
       setPendingGoogleAuth(null);
     } catch (err) {
@@ -208,8 +231,8 @@ export default function AuthForm({
       const res = await authApi.loginWithGoogle(finalPayload);
       const authData = res.data.data;
       localStorage.setItem('sporekart_token', authData.token);
-      if (setUser) setUser(authData);
       if (mergeGuestCart) await mergeGuestCart();
+      if (setUser) setUser(authData);
       if (onSuccess) onSuccess(authData);
       setPendingGoogleAuth(null);
     } catch (err) {

@@ -65,8 +65,8 @@ public class CustomerService {
 
     @Transactional
     public CustomerDtos.AddressDto addAddress(UUID userId, CustomerDtos.AddressRequest request) {
-        if (userId != null && request.getPhone() != null && !request.getPhone().isBlank()) {
-            authService.linkPhoneToUser(userId, request.getPhone());
+        if (userId != null) {
+            authService.linkPhoneAndNameFromAddress(userId, request.getPhone(), request.getRecipientName());
         }
 
         if (request.isDefault()) {
@@ -107,8 +107,8 @@ public class CustomerService {
         CustomerAddress address = customerAddressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Address not found or unauthorized"));
 
-        if (userId != null && request.getPhone() != null && !request.getPhone().isBlank()) {
-            authService.linkPhoneToUser(userId, request.getPhone());
+        if (userId != null) {
+            authService.linkPhoneAndNameFromAddress(userId, request.getPhone(), request.getRecipientName());
         }
 
         if (request.isDefault() && !address.isDefault()) {

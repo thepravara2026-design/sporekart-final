@@ -46,20 +46,27 @@ public class CartService {
     @Transactional
     public Cart getOrCreateCart(UUID userId, String sessionId) {
         if (userId != null) {
-            Optional<Cart> userCart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
-            if (userCart.isPresent()) {
-                return userCart.get();
+            Optional<Cart> userCartOpt = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
+            Cart userCart;
+            if (userCartOpt.isPresent()) {
+                userCart = userCartOpt.get();
+            } else {
+                userCart = cartRepository.save(new Cart(userId, sessionId));
             }
-            // Check if there is a guest cart with sessionId to claim
+
             if (sessionId != null && !sessionId.trim().isEmpty()) {
-                Optional<Cart> sessionCart = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
-                if (sessionCart.isPresent() && sessionCart.get().getUserId() == null) {
-                    Cart cart = sessionCart.get();
-                    cart.setUserId(userId);
-                    return cartRepository.save(cart);
+                Optional<Cart> guestCartOpt = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+                if (guestCartOpt.isPresent()) {
+                    Cart guestCart = guestCartOpt.get();
+                    if (!guestCart.getId().equals(userCart.getId())) {
+                        mergeGuestItemsIntoUserCart(guestCart, userCart);
+                        guestCart.setStatus(CartStatus.CONVERTED);
+                        cartRepository.save(guestCart);
+                        return cartRepository.save(userCart);
+                    }
                 }
             }
-            return cartRepository.save(new Cart(userId, null));
+            return userCart;
         }
 
         if (sessionId != null && !sessionId.trim().isEmpty()) {
@@ -164,25 +171,10 @@ public class CartService {
         return buildCartResponse(cart);
     }
 
-    @Transactional
-    public CartResponse mergeGuestCart(String sessionId, UUID userId) {
-        if (sessionId == null || sessionId.trim().isEmpty() || userId == null) {
-            return getCartResponse(userId, sessionId);
+    private void mergeGuestItemsIntoUserCart(Cart guestCart, Cart userCart) {
+        if (guestCart == null || guestCart.getItems() == null || guestCart.getItems().isEmpty()) {
+            return;
         }
-
-        Optional<Cart> guestCartOpt = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
-        if (guestCartOpt.isEmpty()) {
-            return getCartResponse(userId, sessionId);
-        }
-
-        Cart guestCart = guestCartOpt.get();
-        if (userId.equals(guestCart.getUserId())) {
-            return buildCartResponse(guestCart);
-        }
-
-        Cart userCart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
-                .orElseGet(() -> cartRepository.save(new Cart(userId, null)));
-
         for (CartItem guestItem : guestCart.getItems()) {
             Optional<CartItem> userItemOpt = cartItemRepository.findByCartIdAndVariantId(userCart.getId(), guestItem.getVariantId());
             ProductVariant variant = variantRepository.findById(guestItem.getVariantId()).orElse(null);
@@ -202,12 +194,18 @@ public class CartService {
                 }
             }
         }
+        if (userCart.getAppliedPromoCode() == null && guestCart.getAppliedPromoCode() != null) {
+            userCart.setAppliedPromoCode(guestCart.getAppliedPromoCode());
+        }
+    }
 
-        guestCart.setStatus(CartStatus.CONVERTED);
-        cartRepository.save(guestCart);
-        Cart savedUserCart = cartRepository.save(userCart);
-
-        return buildCartResponse(savedUserCart);
+    @Transactional
+    public CartResponse mergeGuestCart(String sessionId, UUID userId) {
+        if (userId == null) {
+            return getCartResponse(null, sessionId);
+        }
+        Cart userCart = getOrCreateCart(userId, sessionId);
+        return buildCartResponse(userCart);
     }
 
     @Transactional
@@ -409,8 +407,7 @@ public class CartService {
             itemResponses.add(itemResp);
         }
 
-        // Automatic Free Shipping on orders >= ₹999
-        BigDecimal shippingFee = (subtotal.compareTo(new BigDecimal("999")) >= 0) ? BigDecimal.ZERO : new BigDecimal("80.00");
+        BigDecimal shippingFee = BigDecimal.ZERO;
         BigDecimal promoDiscount = BigDecimal.ZERO;
         boolean isFreeShippingPromo = false;
         String promoMsg = null;

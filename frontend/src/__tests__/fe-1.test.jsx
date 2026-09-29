@@ -33,8 +33,8 @@ describe('FE-1: Catalog & Product Display Component Tests', () => {
       categoryName: 'Mushroom Spawn',
       images: ['https://example.com/oyster.jpg'],
       variants: [
-        { id: 'var-1', name: '1 kg Pack', priceInr: 250, availableStock: 50 },
-        { id: 'var-2', name: '5 kg Pack', priceInr: 1100, availableStock: 20 },
+        { id: 'var-1', name: '1 kg Pack', priceInr: 250, compareAtPriceInr: 500, availableStock: 50 },
+        { id: 'var-2', name: '5 kg Pack', priceInr: 1100, compareAtPriceInr: 1500, availableStock: 20 },
       ],
     },
   ];
@@ -76,6 +76,25 @@ describe('FE-1: Catalog & Product Display Component Tests', () => {
     });
 
     expect(screen.getByText('₹250')).toBeInTheDocument();
+  });
+
+  it('renders discount percentage highlight badge when selling price is lower than compareAtPrice', async () => {
+    render(
+      <BrowserRouter>
+        <CartProvider>
+          <CatalogPage />
+        </CartProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Oyster Mushroom Spawn (Master Grain)')).toBeInTheDocument();
+    });
+
+    // 500 original price -> 250 selling price = 50% OFF
+    const discountBadges = screen.getAllByTestId('discount-badge');
+    expect(discountBadges.length).toBeGreaterThan(0);
+    expect(discountBadges[0]).toHaveTextContent('50% OFF');
   });
 
   it('triggers cart addition when variant selected and Add to Cart is clicked', async () => {
