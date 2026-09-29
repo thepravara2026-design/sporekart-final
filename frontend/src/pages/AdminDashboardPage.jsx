@@ -267,17 +267,53 @@ export default function AdminDashboardPage({ user }) {
     }
   };
 
+  const extractDirectImageUrl = (inputUrl) => {
+    if (!inputUrl || typeof inputUrl !== 'string') return '';
+    let url = inputUrl.trim();
+
+    // Check if it's a Google Search / Image referral link
+    if (url.includes('google.com/url?') || url.includes('google.com/imgres?') || url.includes('google.')) {
+      try {
+        const parsedUrl = new URL(url);
+        const imgUrlParam = parsedUrl.searchParams.get('imgurl') || parsedUrl.searchParams.get('url');
+        if (imgUrlParam) {
+          url = decodeURIComponent(imgUrlParam);
+        }
+      } catch (err) {
+        const match = url.match(/(?:imgurl|url)=([^&]+)/i);
+        if (match && match[1]) {
+          url = decodeURIComponent(match[1]);
+        }
+      }
+    }
+
+    // Strip trailing quotes or quotes around URL string
+    url = url.replace(/^["']|["']$/g, '');
+    return url;
+  };
+
   const handleAddMedia = () => {
     if (!mediaUrlInput || !mediaUrlInput.trim()) return;
+
+    const extractedUrl = extractDirectImageUrl(mediaUrlInput);
+
+    if (!extractedUrl.startsWith('http://') && !extractedUrl.startsWith('https://') && !extractedUrl.startsWith('data:image/')) {
+      setErrorMessage('Please enter a valid image web URL starting with http:// or https://');
+      return;
+    }
+
     const newMedia = {
       id: 'temp_' + Date.now(),
-      url: mediaUrlInput.trim(),
+      url: extractedUrl,
       role: mediaRoleInput,
       isPrimary: mediaRoleInput === 'PRIMARY' || mediaList.length === 0,
       displayOrder: mediaList.length
     };
     setMediaList([...mediaList, newMedia]);
     setMediaUrlInput('');
+    if (extractedUrl !== mediaUrlInput.trim()) {
+      setStatusMessage('Extracted direct image URL from Google search link!');
+    }
   };
 
   const handleRemoveMedia = (id) => {
@@ -1379,6 +1415,9 @@ export default function AdminDashboardPage({ user }) {
                           Add Image
                         </button>
                       </div>
+                      <p className="text-[11px] text-typography-muted">
+                        💡 <span className="font-bold text-forest-800">Google Images Tip:</span> You can paste Google Search result links directly—we automatically extract the direct image file URL!
+                      </p>
                     </div>
 
                     {/* Gallery List */}
@@ -1386,7 +1425,15 @@ export default function AdminDashboardPage({ user }) {
                       {mediaList.map((m) => (
                         <div key={m.id} className="p-3 bg-surface-cream rounded-xl border border-surface-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                           <div className="flex items-center gap-3 overflow-hidden max-w-full">
-                            <img src={m.url} alt="preview" className="w-10 h-10 object-cover rounded-lg border border-surface-border shrink-0" />
+                            <img
+                              src={m.url}
+                              alt="preview"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                              }}
+                              className="w-10 h-10 object-cover rounded-lg border border-surface-border shrink-0"
+                            />
                             <div className="min-w-0">
                               <span className="text-[11px] text-typography-primary font-mono block truncate max-w-xs">{m.url}</span>
                               <span className="text-[10px] text-forest-700 font-bold uppercase">{m.role} {m.isPrimary && '• PRIMARY'}</span>
@@ -1442,6 +1489,10 @@ export default function AdminDashboardPage({ user }) {
                           <img
                             src={mediaList.find(m => m.isPrimary)?.url || mediaList[0]?.url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop'}
                             alt="Primary product preview"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                            }}
                             className="w-full h-full object-cover"
                           />
                           <span className="absolute top-3 left-3 px-2.5 py-1 bg-forest-900/90 backdrop-blur-md text-white font-bold rounded-lg text-[10px]">
@@ -1457,7 +1508,16 @@ export default function AdminDashboardPage({ user }) {
                         {mediaList.length > 1 && (
                           <div className="flex gap-2 overflow-x-auto pb-1">
                             {mediaList.map((m) => (
-                              <img key={m.id} src={m.url} alt="thumb" className="w-12 h-12 object-cover rounded-xl border border-surface-border shrink-0" />
+                              <img
+                                key={m.id}
+                                src={m.url}
+                                alt="thumb"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+                                }}
+                                className="w-12 h-12 object-cover rounded-xl border border-surface-border shrink-0"
+                              />
                             ))}
                           </div>
                         )}
