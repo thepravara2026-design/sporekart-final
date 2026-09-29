@@ -89,12 +89,20 @@ export default function AdminDashboardPage({ user }) {
   const [mediaRoleInput, setMediaRoleInput] = useState('PRIMARY');
   const [mediaList, setMediaList] = useState([]);
 
-  // Pricing & Variant State (Step 5)
+  // Pricing & Multi-Variant State (Step 5)
   const [variantName, setVariantName] = useState('Standard Pack (200g)');
   const [variantSku, setVariantSku] = useState('SKU-BM-200G');
   const [variantPrice, setVariantPrice] = useState('149.00');
   const [variantComparePrice, setVariantComparePrice] = useState('199.00');
   const [variantStock, setVariantStock] = useState(50);
+  const [variantsList, setVariantsList] = useState([
+    { id: 'v_1', variantName: 'Standard Pack (200g)', sku: 'SKU-BM-200G', priceInr: '149.00', compareAtPriceInr: '199.00', stockQuantity: 50, isPrimary: true }
+  ]);
+
+  // Product Catalog Registry Filter & Sort State
+  const [productSearch, setProductSearch] = useState('');
+  const [productCategoryFilter, setProductCategoryFilter] = useState('ALL');
+  const [productSortBy, setProductSortBy] = useState('NAME_ASC');
 
   // Category Form
   const [catName, setCatName] = useState('');
@@ -328,6 +336,40 @@ export default function AdminDashboardPage({ user }) {
     })));
   };
 
+  const handleAddVariantToList = () => {
+    if (!variantSku || !variantSku.trim()) {
+      setErrorMessage('SKU / Item Code is required for the variant.');
+      return;
+    }
+    if (!variantPrice || isNaN(parseFloat(variantPrice)) || parseFloat(variantPrice) <= 0) {
+      setErrorMessage('Valid Price (INR) > 0 is required for the variant.');
+      return;
+    }
+
+    const newV = {
+      id: 'v_' + Date.now(),
+      variantName: variantName.trim() || 'Variant Pack',
+      sku: variantSku.trim().toUpperCase(),
+      priceInr: variantPrice,
+      compareAtPriceInr: variantComparePrice || '',
+      stockQuantity: parseInt(variantStock) || 0,
+      isPrimary: variantsList.length === 0
+    };
+
+    setVariantsList([...variantsList, newV]);
+    setVariantSku('SKU-' + (prodTitle || 'PROD').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6) + '-' + (variantsList.length + 1));
+    setVariantName('');
+    setStatusMessage(`Variant "${newV.variantName}" added to product configuration.`);
+  };
+
+  const handleRemoveVariantFromList = (id) => {
+    setVariantsList(variantsList.filter(v => v.id !== id));
+  };
+
+  const handleSetPrimaryVariant = (id) => {
+    setVariantsList(variantsList.map(v => ({ ...v, isPrimary: v.id === id })));
+  };
+
   const handleNextStep = (currentTab) => {
     setStatusMessage(''); setErrorMessage('');
     if (currentTab === 'basic') {
@@ -361,12 +403,8 @@ export default function AdminDashboardPage({ user }) {
     } else if (currentTab === 'storage') {
       setFormTab('pricing');
     } else if (currentTab === 'pricing') {
-      if (!variantSku || !variantSku.trim()) {
-        setErrorMessage('SKU / Item Code is required in Step 5 (Pricing & Stock).');
-        return;
-      }
-      if (!variantPrice || isNaN(parseFloat(variantPrice)) || parseFloat(variantPrice) <= 0) {
-        setErrorMessage('Valid Price (INR) > 0 is required in Step 5.');
+      if (variantsList.length === 0 && (!variantSku || !variantSku.trim() || !variantPrice || parseFloat(variantPrice) <= 0)) {
+        setErrorMessage('At least one valid pricing variant (SKU & Price > 0) is required in Step 5.');
         return;
       }
       setFormTab('media');
@@ -448,19 +486,26 @@ export default function AdminDashboardPage({ user }) {
       const res = await adminApi.createProduct(payload);
       const createdProd = res.data?.data || res.data;
 
-      // Add default pricing variant (Step 5)
-      if (createdProd?.id && variantSku && variantPrice) {
-        try {
-          await adminApi.addVariant(createdProd.id, {
-            variantName: variantName || 'Standard Pack',
-            sku: variantSku.trim(),
-            priceInr: parseFloat(variantPrice),
-            compareAtPriceInr: variantComparePrice ? parseFloat(variantComparePrice) : null,
-            stockQuantity: isNaN(parseInt(variantStock)) ? 50 : parseInt(variantStock),
-            isActive: true
-          });
-        } catch (vErr) {
-          console.warn('Failed adding default variant:', vErr);
+      // Add all configured pricing variants (Step 5 Multi-Variant Support)
+      const allVariantsToAdd = variantsList.length > 0 ? variantsList : [
+        { variantName, sku: variantSku, priceInr: variantPrice, compareAtPriceInr: variantComparePrice, stockQuantity: variantStock }
+      ];
+
+      if (createdProd?.id && allVariantsToAdd.length > 0) {
+        for (const v of allVariantsToAdd) {
+          if (!v.sku || !v.priceInr) continue;
+          try {
+            await adminApi.addVariant(createdProd.id, {
+              variantName: v.variantName || 'Standard Pack',
+              sku: v.sku.trim(),
+              priceInr: parseFloat(v.priceInr),
+              compareAtPriceInr: v.compareAtPriceInr ? parseFloat(v.compareAtPriceInr) : null,
+              stockQuantity: isNaN(parseInt(v.stockQuantity)) ? 50 : parseInt(v.stockQuantity),
+              isActive: true
+            });
+          } catch (vErr) {
+            console.warn('Failed adding product variant:', vErr);
+          }
         }
       }
 
@@ -1326,57 +1371,133 @@ export default function AdminDashboardPage({ user }) {
                   </div>
                 )}
 
-                {/* STEP 5: PRICING, STOCK & VARIANT SETUP */}
+                {/* STEP 5: PRICING, STOCK & MULTI-VARIANT SETUP */}
                 {formTab === 'pricing' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border text-xs text-typography-secondary leading-relaxed font-medium flex items-center gap-3">
-                      <Tag className="w-5 h-5 text-forest-700 shrink-0" />
-                      <span>Configure initial pricing and warehouse stock quantity for the default product variant. Products require at least 1 variant before publishing.</span>
+                  <div className="space-y-5">
+                    <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border text-xs text-typography-secondary leading-relaxed font-medium flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <Tag className="w-5 h-5 text-forest-700 shrink-0" />
+                        <span>Configure multiple weight/size pack variants (pricing, stock & SKU). Customers can select between these variants on the storefront.</span>
+                      </div>
+                      <span className="px-3 py-1 bg-forest-900 text-gold font-mono font-bold rounded-full text-[10px]">
+                        {variantsList.length} Variant(s) Configured
+                      </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">SKU / Item Code *</label>
-                        <input
-                          type="text" required value={variantSku} onChange={(e) => setVariantSku(e.target.value)}
-                          placeholder="e.g. SKU-BM-200G"
-                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
-                        />
+                    {/* Variant Creation Card Form */}
+                    <div className="p-4 sm:p-5 bg-surface-cream/50 rounded-2xl border border-surface-border space-y-4">
+                      <h4 className="font-bold text-typography-primary text-xs flex items-center justify-between">
+                        <span>Add Product Size / Pack Variant</span>
+                        <span className="text-[10px] text-typography-secondary">Only pricing, weight/pack name, SKU & stock differ.</span>
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-typography-primary font-bold mb-1">Variant / Pack Name *</label>
+                          <input
+                            type="text" value={variantName} onChange={(e) => setVariantName(e.target.value)}
+                            placeholder="e.g. 500g Value Pack / 1kg Bulk Box"
+                            className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-forest-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-typography-primary font-bold mb-1">SKU / Item Code *</label>
+                          <input
+                            type="text" value={variantSku} onChange={(e) => setVariantSku(e.target.value)}
+                            placeholder="e.g. SKU-BM-500G"
+                            className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary font-mono text-xs focus:outline-none focus:border-forest-700"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Variant / Pack Name</label>
-                        <input
-                          type="text" value={variantName} onChange={(e) => setVariantName(e.target.value)}
-                          placeholder="e.g. Standard Pack (200g)"
-                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
-                        />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-typography-primary font-bold mb-1">Selling Price (INR ₹) *</label>
+                          <input
+                            type="number" step="0.01" value={variantPrice} onChange={(e) => setVariantPrice(e.target.value)}
+                            placeholder="149.00"
+                            className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary font-bold text-xs focus:outline-none focus:border-forest-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-typography-primary font-bold mb-1">Compare Price (MSRP ₹)</label>
+                          <input
+                            type="number" step="0.01" value={variantComparePrice} onChange={(e) => setVariantComparePrice(e.target.value)}
+                            placeholder="199.00"
+                            className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-forest-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-typography-primary font-bold mb-1">Inventory Stock *</label>
+                          <input
+                            type="number" value={variantStock} onChange={(e) => setVariantStock(e.target.value)}
+                            placeholder="50"
+                            className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-forest-700"
+                          />
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddVariantToList}
+                        className="btn-primary text-xs font-bold px-4 py-2 flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Variant to Product</span>
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Price (INR ₹) *</label>
-                        <input
-                          type="number" step="0.01" required value={variantPrice} onChange={(e) => setVariantPrice(e.target.value)}
-                          placeholder="149.00"
-                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-bold focus:outline-none focus:border-forest-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Compare-at Price (MSRP ₹)</label>
-                        <input
-                          type="number" step="0.01" value={variantComparePrice} onChange={(e) => setVariantComparePrice(e.target.value)}
-                          placeholder="199.00"
-                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Initial Inventory Stock *</label>
-                        <input
-                          type="number" required value={variantStock} onChange={(e) => setVariantStock(e.target.value)}
-                          placeholder="50"
-                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
-                        />
+                    {/* Active Variants Table */}
+                    <div className="space-y-2">
+                      <span className="font-bold text-typography-primary block text-xs">Configured Variants Registry</span>
+                      <div className="space-y-2">
+                        {variantsList.map((v) => (
+                          <div key={v.id} className="p-3.5 bg-surface-white rounded-xl border border-surface-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-typography-primary text-xs">{v.variantName}</span>
+                                {v.isPrimary && (
+                                  <span className="px-2 py-0.5 bg-gold/20 text-forest-900 border border-gold/40 text-[9px] font-extrabold rounded-md uppercase">DEFAULT</span>
+                                )}
+                              </div>
+                              <span className="text-[11px] font-mono text-typography-muted block">SKU: {v.sku}</span>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-xs">
+                              <div>
+                                <span className="font-bold text-forest-900 font-display text-sm">₹{v.priceInr}</span>
+                                {v.compareAtPriceInr && parseFloat(v.compareAtPriceInr) > parseFloat(v.priceInr) && (
+                                  <span className="text-[10px] text-typography-muted line-through ml-1.5">₹{v.compareAtPriceInr}</span>
+                                )}
+                              </div>
+                              <span className="px-2.5 py-1 bg-surface-cream text-forest-800 font-mono font-bold text-[10px] rounded-lg">
+                                Stock: {v.stockQuantity} pcs
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {!v.isPrimary && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetPrimaryVariant(v.id)}
+                                    className="px-2 py-1 btn-secondary text-[10px] font-bold"
+                                  >
+                                    Set Default
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveVariantFromList(v.id)}
+                                  className="px-2 py-1 bg-red-600/10 text-red-700 border border-red-600/20 text-[10px] font-bold rounded-lg"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {variantsList.length === 0 && (
+                          <p className="text-typography-muted text-xs text-center py-6">No variants added yet. Fill out the fields above and click "Add Variant".</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1693,22 +1814,67 @@ export default function AdminDashboardPage({ user }) {
             </div>
           ) : null}
 
-          {/* Sub-Section 2B: Products List View */}
+          {/* Sub-Section 2B: Products List View with FAANG Control Ribbon */}
           {activeSection === 'products' && activeMode !== 'add' && (
-            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-4 shadow-level-1 w-full max-w-full overflow-hidden">
+            <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-5 shadow-level-1 w-full max-w-full overflow-hidden">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h3 className="font-display font-extrabold text-lg text-typography-primary flex items-center gap-2">
                     <Package className="w-5 h-5 text-forest-700 shrink-0" /> Catalog Products Registry ({products.length})
                   </h3>
-                  <p className="text-xs text-typography-secondary">Live inventory items, pricing, and compliance status.</p>
+                  <p className="text-xs text-typography-secondary mt-0.5">Live inventory items, multi-variants, pricing, and compliance status.</p>
                 </div>
                 <Link
                   to="/admin/products?mode=add"
-                  className="btn-primary text-xs font-bold px-4 py-2.5 flex items-center gap-1.5"
+                  className="btn-primary text-xs font-bold px-4 py-2.5 flex items-center gap-1.5 shadow-level-1"
                 >
-                  <Plus className="w-4 h-4" /> Add Product
+                  <Plus className="w-4 h-4" /> Add New Product
                 </Link>
+              </div>
+
+              {/* FAANG CONTROL RIBBON: Instant Search, Category Filter & Sorting */}
+              <div className="p-4 bg-surface-cream/70 rounded-2xl border border-surface-border grid grid-cols-1 sm:grid-cols-12 gap-3 text-xs">
+                {/* Search Bar */}
+                <div className="sm:col-span-5 relative">
+                  <Search className="w-4 h-4 text-typography-muted absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    placeholder="Search title, SKU, HSN, or Product ID..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl pl-9 pr-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+
+                {/* Filter by Category */}
+                <div className="sm:col-span-3">
+                  <select
+                    value={productCategoryFilter}
+                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                  >
+                    <option value="ALL">All Categories ({categories.length})</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort By Dropdown */}
+                <div className="sm:col-span-4 flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-typography-muted shrink-0">Sort:</span>
+                  <select
+                    value={productSortBy}
+                    onChange={(e) => setProductSortBy(e.target.value)}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                  >
+                    <option value="NAME_ASC">Name (A-Z)</option>
+                    <option value="NAME_DESC">Name (Z-A)</option>
+                    <option value="CATEGORY">Category Name</option>
+                    <option value="PRODUCT_ID">Product ID / UUID</option>
+                    <option value="STATUS">Status (Active First)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Products Table */}
@@ -1716,26 +1882,72 @@ export default function AdminDashboardPage({ user }) {
                 <table className="w-full text-left text-xs text-typography-secondary min-w-[750px]">
                   <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
                     <tr>
-                      <th className="p-3.5">Product Title</th>
-                      <th className="p-3.5">Category & Type</th>
-                      <th className="p-3.5">HSN & FSSAI</th>
+                      <th className="p-3.5">Product Title & ID</th>
+                      <th className="p-3.5">Category & Classification</th>
+                      <th className="p-3.5">Variants & Pricing</th>
+                      <th className="p-3.5">HSN & FSSAI Lic</th>
                       <th className="p-3.5">Status</th>
                       <th className="p-3.5">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {products
-                      .filter(p => !searchQuery || p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.slug?.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .filter(p => {
+                        const matchSearch = !productSearch ||
+                          p.title?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          p.slug?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          p.id?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                          p.hsnCode?.toLowerCase().includes(productSearch.toLowerCase());
+                        
+                        const matchCategory = productCategoryFilter === 'ALL' ||
+                          p.categoryName === productCategoryFilter ||
+                          p.categorySlug === productCategoryFilter ||
+                          p.category?.id === productCategoryFilter;
+
+                        return matchSearch && matchCategory;
+                      })
+                      .sort((a, b) => {
+                        if (productSortBy === 'NAME_ASC') {
+                          return (a.title || '').localeCompare(b.title || '');
+                        } else if (productSortBy === 'NAME_DESC') {
+                          return (b.title || '').localeCompare(a.title || '');
+                        } else if (productSortBy === 'CATEGORY') {
+                          return (a.categoryName || '').localeCompare(b.categoryName || '');
+                        } else if (productSortBy === 'PRODUCT_ID') {
+                          return (a.id || '').localeCompare(b.id || '');
+                        } else if (productSortBy === 'STATUS') {
+                          return (a.status || '').localeCompare(b.status || '');
+                        }
+                        return 0;
+                      })
                       .map((p) => (
-                      <tr key={p.id} className="hover:bg-surface-cream/50">
+                      <tr key={p.id} className="hover:bg-surface-cream/50 transition-colors">
                         <td className="p-3.5">
                           <span className="font-bold text-sm text-typography-primary font-display block">{p.title}</span>
-                          <span className="text-[11px] text-typography-muted font-mono">/{p.slug}</span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-typography-muted font-mono bg-surface-cream px-1.5 py-0.5 rounded">ID: {p.id?.substring(0, 8)}...</span>
+                            <span className="text-[10px] text-forest-700 font-mono">/{p.slug}</span>
+                          </div>
                         </td>
                         <td className="p-3.5">
-                          <span className="px-2.5 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[10px] font-bold rounded-lg uppercase block w-fit">
+                          <span className="font-bold text-typography-primary block text-xs">{p.categoryName || 'General'}</span>
+                          <span className="px-2 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[9px] font-bold rounded-md uppercase mt-1 inline-block">
                             {p.productType}
                           </span>
+                        </td>
+                        <td className="p-3.5">
+                          {p.variants && p.variants.length > 0 ? (
+                            <div className="space-y-1">
+                              <span className="font-bold text-forest-900 font-display text-xs">
+                                ₹{p.variants[0].priceInr || p.variants[0].calculatedFinalPriceInr}
+                              </span>
+                              <span className="text-[10px] text-typography-muted block font-mono">
+                                {p.variants.length} Variant(s) • SKU: {p.variants[0].sku}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-typography-muted italic">No variants</span>
+                          )}
                         </td>
                         <td className="p-3.5 font-mono text-[11px]">
                           <div>HSN: {p.hsnCode || '07095900'}</div>
@@ -1744,7 +1956,7 @@ export default function AdminDashboardPage({ user }) {
                           )}
                         </td>
                         <td className="p-3.5">
-                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg uppercase ${
+                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase ${
                             p.status === 'ACTIVE' ? 'bg-green-600/10 text-green-700 border border-green-600/20' : 'bg-gold/15 text-forest-900 border border-gold/30'
                           }`}>
                             {p.status || 'ACTIVE'}
