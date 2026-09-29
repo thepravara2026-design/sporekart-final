@@ -1,5 +1,6 @@
 package com.sporekart.catalog.api;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.sporekart.catalog.domain.MediaType;
 import com.sporekart.catalog.domain.ProductMediaRole;
 import com.sporekart.catalog.domain.ProductStatus;
@@ -271,12 +272,15 @@ public class CatalogDtos {
         private String foodCategory;
         private boolean isVegetarian = true;
         private String ingredients;
+        @JsonAlias({"allergenInformation", "allergen_info"})
         private String allergenInfo;
         private String nutritionalInfoJson;
         private String servingSize;
         
+        @JsonAlias({"scientificName", "species", "mushroom_species"})
         private String mushroomSpecies;
         private String cultivationMethod;
+        @JsonAlias({"strainName", "strain", "strain_variety"})
         private String strainVariety;
         private String recommendedSubstrate;
         private String inoculationGuidance;
@@ -285,6 +289,7 @@ public class CatalogDtos {
         private String environmentRequirements;
         
         private String storageInstructions;
+        @JsonAlias({"temperatureGuidance", "storage_temperature_guidance"})
         private String storageTemperatureGuidance;
         private String shelfLifeGuidance;
         private String handlingInstructions;

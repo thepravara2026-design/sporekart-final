@@ -69,6 +69,18 @@ public class Order {
     @Column(name = "shipping_address_json", columnDefinition = "TEXT", nullable = false)
     private String shippingAddressJson;
 
+    @Column(name = "courier_partner")
+    private String courierPartner;
+
+    @Column(name = "tracking_number")
+    private String trackingNumber;
+
+    @Column(name = "tracking_url")
+    private String trackingUrl;
+
+    @Column(name = "shipped_at")
+    private OffsetDateTime shippedAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();

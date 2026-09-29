@@ -62,11 +62,11 @@ export default function HeroSection() {
         {/* Global ambient dark tone for rich cinematic contrast */}
         <div className="absolute inset-0 z-1 bg-forest-950/30 pointer-events-none" />
 
-        {/* Desktop & Tablet: Left-to-Right Gradient (Dark on left, fading smoothly to 0% transparency on right to expose mushroom imagery) */}
+        {/* Desktop & Tablet: Left-to-Right Gradient (Dark on sleft, fading smoothly to 0% transparency on right to expose mushroom imagery) */}
         <div 
           className="hidden md:block absolute inset-0 z-2 pointer-events-none" 
           style={{
-            background: 'linear-gradient(90deg, rgba(14, 36, 19, 0.94) 0%, rgba(6, 61, 2, 1) 0%, rgba(0, 210, 102, 0) 60%, rgba(15, 31, 23, 0.05) 85%, transparent 100%)'
+            background: 'linear-gradient(90deg, rgba(38, 90, 4, 0.99) 0%, rgba(4, 137, 4, 1) 0%, rgba(0, 210, 102, 0) 60%, rgba(15, 31, 23, 0.05) 85%, transparent 30%)'
           }}
         />
 

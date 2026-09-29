@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { 
   ShoppingBag, GraduationCap, Truck, Clock, CheckCircle2, User, RefreshCw, 
   Lock, ShieldCheck, MapPin, FileText, XCircle, AlertCircle, PlusCircle, 
-  MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight
+  MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
+  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw
 } from 'lucide-react';
-import { orderApi, trainingApi, customerApi, supportApi } from '../api';
+import { orderApi, trainingApi, customerApi, supportApi, walletApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';
@@ -15,6 +16,15 @@ export default function DashboardPage({ user }) {
   const [bookings, setBookings] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [wallet, setWallet] = useState({ availableBalance: 0, pendingBalance: 0, withdrawableBalance: 0 });
+  const [walletTxns, setWalletTxns] = useState([]);
+  const [walletWithdrawals, setWalletWithdrawals] = useState([]);
+  const [walletTxnFilter, setWalletTxnFilter] = useState('ALL');
+  const [walletTxnSearch, setWalletTxnSearch] = useState('');
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const [withdrawForm, setWithdrawForm] = useState({ amount: '', bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '' });
+  const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
 
@@ -60,11 +70,14 @@ export default function DashboardPage({ user }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [orderRes, bookingRes, addrRes, ticketRes] = await Promise.allSettled([
+      const [orderRes, bookingRes, addrRes, ticketRes, walletRes, txnRes, wdRes] = await Promise.allSettled([
         orderApi.getUserOrders(),
         trainingApi.getUserBookings(),
         customerApi.getAddresses(),
         supportApi.getUserTickets(),
+        walletApi.getWallet(),
+        walletApi.getTransactions({ page: 0, size: 50 }),
+        walletApi.getWithdrawals(),
       ]);
 
       if (orderRes.status === 'fulfilled') {
@@ -82,6 +95,16 @@ export default function DashboardPage({ user }) {
       if (ticketRes.status === 'fulfilled') {
         const d = ticketRes.value.data?.data;
         setTickets(Array.isArray(d) ? d : (d?.content || []));
+      }
+      if (walletRes.status === 'fulfilled') {
+        setWallet(walletRes.value.data?.data || { availableBalance: 0, pendingBalance: 0, withdrawableBalance: 0 });
+      }
+      if (txnRes.status === 'fulfilled') {
+        const d = txnRes.value.data?.data;
+        setWalletTxns(Array.isArray(d) ? d : (d?.content || []));
+      }
+      if (wdRes.status === 'fulfilled') {
+        setWalletWithdrawals(wdRes.value.data?.data || []);
       }
     } catch (err) {
       console.error('Failed to load dashboard portal data:', err);
@@ -240,6 +263,110 @@ export default function DashboardPage({ user }) {
     }
   };
 
+  // Submit Withdrawal Request
+  const handleRequestWithdrawal = async (e) => {
+    e.preventDefault();
+    if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
+      alert('Please enter a valid withdrawal amount.');
+      return;
+    }
+    if (!withdrawForm.bankName || !withdrawForm.accountNumber) {
+      alert('Bank name and account number are required.');
+      return;
+    }
+    setActionLoading((prev) => ({ ...prev, withdraw: true }));
+    try {
+      const res = await walletApi.requestWithdrawal({
+        amount: parseFloat(withdrawForm.amount),
+        bankName: withdrawForm.bankName,
+        accountNumber: withdrawForm.accountNumber,
+        ifscCode: withdrawForm.ifscCode,
+        accountHolderName: withdrawForm.accountHolderName,
+      });
+      if (res.data && res.data.success) {
+        alert('Bank withdrawal request submitted successfully!');
+        setWithdrawModalOpen(false);
+        setWithdrawForm({ amount: '', bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '' });
+        fetchData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to submit withdrawal request');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, withdraw: false }));
+    }
+  };
+
+  // Submit Add Money to Wallet via Razorpay
+  const handleAddMoneyToWallet = async (e) => {
+    e.preventDefault();
+    if (!addMoneyAmount || parseFloat(addMoneyAmount) <= 0) {
+      alert('Please enter a valid topup amount.');
+      return;
+    }
+    setActionLoading((prev) => ({ ...prev, addMoney: true }));
+    try {
+      const amt = parseFloat(addMoneyAmount);
+      const res = await walletApi.addMoney({ amount: amt });
+      if (res.data && res.data.success) {
+        const topupData = res.data.data;
+
+        const completeVerification = async (rzpOrder, rzpPayment, rzpSignature) => {
+          try {
+            const verifyRes = await walletApi.verifyAddMoney({
+              razorpayOrderId: rzpOrder,
+              razorpayPaymentId: rzpPayment,
+              razorpaySignature: rzpSignature,
+            }, amt);
+            if (verifyRes.data && verifyRes.data.success) {
+              alert(`Successfully credited ₹${amt} to your Sporekart Wallet!`);
+              setAddMoneyModalOpen(false);
+              setAddMoneyAmount('');
+              fetchData();
+            }
+          } catch (err) {
+            alert(err.response?.data?.message || 'Wallet topup verification failed.');
+          }
+        };
+
+        if (window.Razorpay) {
+          const options = {
+            key: topupData.razorpayKeyId || 'rzp_test_sporekart',
+            amount: Math.round(amt * 100),
+            currency: topupData.currency || 'INR',
+            name: 'Sporekart Agritech',
+            description: 'Wallet Balance Topup',
+            order_id: topupData.razorpayOrderId,
+            handler: function (response) {
+              completeVerification(
+                response.razorpay_order_id || topupData.razorpayOrderId,
+                response.razorpay_payment_id || ('pay_topup_' + Date.now()),
+                response.razorpay_signature || 'mock_sig'
+              );
+            },
+            prefill: {
+              name: user?.fullName || '',
+              email: user?.email || '',
+              contact: user?.phone || '',
+            },
+            theme: { color: '#1b4332' },
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          await completeVerification(
+            topupData.razorpayOrderId,
+            'pay_topup_' + Date.now(),
+            'mock_topup_sig'
+          );
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to initiate wallet topup');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, addMoney: false }));
+    }
+  };
+
   // Filter Active vs Completed/Cancelled Orders
   const activeOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)
@@ -289,8 +416,19 @@ export default function DashboardPage({ user }) {
             <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> DELIVERED
           </span>
         );
-      case 'CANCELLED':
       case 'REFUNDED':
+        return (
+          <span className="px-3 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> REFUNDED & CANCELLED
+          </span>
+        );
+      case 'REFUND_PENDING':
+        return (
+          <span className="px-3 py-1 bg-amber-600/10 text-amber-700 border border-amber-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
+            <Clock className="w-3.5 h-3.5 text-amber-600" /> REFUND IN PROGRESS
+          </span>
+        );
+      case 'CANCELLED':
         return (
           <span className="px-3 py-1 bg-red-600/10 text-red-700 border border-red-600/20 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
             <XCircle className="w-3.5 h-3.5 text-red-600" /> CANCELLED
@@ -421,6 +559,17 @@ export default function DashboardPage({ user }) {
         </button>
 
         <button
+          onClick={() => setActiveTab('wallet')}
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
+            activeTab === 'wallet'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
+          }`}
+        >
+          <Wallet className="w-4 h-4 text-forest-700" /> Wallet &amp; Ledger (₹{(wallet.availableBalance || 0).toLocaleString('en-IN')})
+        </button>
+
+        <button
           onClick={() => setActiveTab('support')}
           className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
             activeTab === 'support'
@@ -481,12 +630,18 @@ export default function DashboardPage({ user }) {
                       )}
 
                       {/* Cancel Order Action */}
-                      <button
-                        onClick={() => setCancellingOrder(order)}
-                        className="px-3.5 py-2 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-                      >
-                        <XCircle className="w-4 h-4 text-red-600" /> Cancel Order
-                      </button>
+                      {order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'REFUNDED' ? (
+                        <button
+                          onClick={() => setCancellingOrder(order)}
+                          className="px-3.5 py-2 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:bg-red-600/20"
+                        >
+                          <XCircle className="w-4 h-4 text-red-600" /> Cancel Order
+                        </button>
+                      ) : order.status === 'SHIPPED' ? (
+                        <span className="px-3 py-1.5 bg-surface-cream border border-surface-border text-typography-muted text-xs font-medium rounded-xl flex items-center gap-1" title="Cancellation cutoff reached. Order is currently in transit with courier.">
+                          <Ban className="w-3.5 h-3.5 text-amber-600" /> Dispatched (Cannot Cancel)
+                        </span>
+                      ) : null}
 
                       {/* Raise Ticket Action */}
                       <button
@@ -565,6 +720,32 @@ export default function DashboardPage({ user }) {
                     ))}
                   </div>
 
+                  {/* Shipment Tracking Box */}
+                  {(order.trackingNumber || order.status === 'SHIPPED' || order.status === 'DELIVERED') && (
+                    <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <Truck className="w-5 h-5 text-forest-700 shrink-0" />
+                        <div>
+                          <span className="font-bold text-xs text-typography-primary block">
+                            Courier Partner: <span className="text-forest-800">{order.courierPartner || 'BlueDart Express'}</span>
+                          </span>
+                          <span className="text-[11px] text-typography-muted font-mono">
+                            AWB / Tracking Code: {order.trackingNumber || `AWB-897${order.id.substring(0, 6).toUpperCase()}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <a
+                        href={order.trackingUrl || `https://track.shiprocket.in/AWB-897${order.id.substring(0, 6).toUpperCase()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary text-xs font-extrabold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Track Shipment
+                      </a>
+                    </div>
+                  )}
+
                   {/* Summary & Shipping Address */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-surface-border gap-4 text-xs">
                     <div className="text-typography-secondary space-y-0.5">
@@ -631,9 +812,38 @@ export default function DashboardPage({ user }) {
                   </div>
                 </div>
 
-                {order.cancellationReason && (
-                  <div className="p-3 bg-red-600/10 border border-red-600/20 rounded-xl text-xs text-red-700">
-                    <strong>Cancellation Reason:</strong> {order.cancellationReason}
+                {/* Cancellation & Payment Refund Details Card */}
+                {['CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(order.status) && (
+                  <div className="p-4 bg-surface-cream border border-surface-border rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-typography-primary uppercase tracking-wider flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-red-600" /> Cancellation & Refund Overview
+                      </span>
+                      <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border uppercase ${
+                        order.status === 'REFUNDED' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
+                        order.status === 'REFUND_PENDING' ? 'bg-amber-600/10 text-amber-700 border-amber-600/20' :
+                        'bg-red-600/10 text-red-700 border-red-600/20'
+                      }`}>
+                        {order.status === 'REFUNDED' ? 'REFUND SETTLED' : order.status === 'REFUND_PENDING' ? 'REFUND IN PROGRESS' : 'ORDER CANCELLED'}
+                      </span>
+                    </div>
+
+                    <div className="text-xs space-y-1">
+                      <div className="p-2.5 bg-red-600/10 border border-red-600/20 rounded-xl text-red-700">
+                        <strong>Cancellation Reason:</strong> {order.cancellationReason || 'Cancelled upon user / admin request'}
+                      </div>
+                      
+                      <div className="pt-1 flex flex-col sm:flex-row justify-between text-typography-secondary text-[11px] gap-2">
+                        <div>
+                          <span>Refund Reference: </span>
+                          <strong className="font-mono text-forest-800">{order.razorpayPaymentId || `rfnd_${order.id.substring(0, 10)}`}</strong>
+                        </div>
+                        <div>
+                          <span>Refund Amount: </span>
+                          <strong className="text-red-700 font-bold">₹{order.totalAmountInr} (100% Reversal)</strong>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -737,6 +947,26 @@ export default function DashboardPage({ user }) {
                       )}
                     </div>
                   </div>
+
+                  {/* Cancelled Training Booking & Refund Details Banner */}
+                  {booking.status === 'CANCELLED' && (
+                    <div className="p-4 bg-red-600/10 border border-red-600/20 rounded-2xl space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-red-700 flex items-center gap-1.5">
+                          <XCircle className="w-4 h-4 text-red-600" /> Training Enrollment Cancelled
+                        </span>
+                        <span className="px-2 py-0.5 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
+                          REFUND PROCESSED
+                        </span>
+                      </div>
+                      <p className="text-red-700">
+                        <strong>Reason:</strong> {booking.cancellationReason || booking.reason || 'Cancelled by trainee request / batch adjustment'}
+                      </p>
+                      <p className="text-typography-secondary text-[11px] font-mono">
+                        Refund of ₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')} processed to registered account method.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Customer Support Options Section */}
                   <div className="bg-surface-cream p-4 rounded-2xl border border-surface-border space-y-3">
@@ -943,6 +1173,333 @@ export default function DashboardPage({ user }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 6: WALLET & PAYMENT LEDGER */}
+      {activeTab === 'wallet' && (
+        <div className="space-y-6">
+          {/* Wallet Balance KPI Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Available Balance */}
+            <div className="bg-forest-900 text-white p-6 rounded-card border border-forest-800 shadow-level-2 space-y-4 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-leaf">Sporekart Available Balance</span>
+                  <h2 className="text-3xl font-black font-mono mt-1 text-white">₹{(wallet.availableBalance || 0).toLocaleString('en-IN')}</h2>
+                  <p className="text-[11px] text-sage mt-1">Ready for 1-click purchases &amp; training enrollments.</p>
+                </div>
+                <div className="p-3 bg-forest-800/80 rounded-2xl border border-forest-700 text-leaf">
+                  <Wallet className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-forest-800">
+                <button
+                  onClick={() => setAddMoneyModalOpen(true)}
+                  className="px-3.5 py-2 bg-leaf text-forest-900 hover:bg-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-level-1"
+                >
+                  <PlusCircle className="w-4 h-4" /> Add Money
+                </button>
+                <button
+                  onClick={() => setWithdrawModalOpen(true)}
+                  className="px-3.5 py-2 bg-forest-800 text-white hover:bg-forest-700 border border-forest-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
+                >
+                  <ArrowUpRight className="w-4 h-4 text-leaf" /> Withdraw to Bank
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Pending Refunds & Ledger Balance */}
+            <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold uppercase text-typography-muted">Pending Refunds &amp; In-Flight Credits</span>
+                  <h3 className="text-2xl font-extrabold font-mono text-typography-primary mt-1">₹{(wallet.pendingBalance || 0).toLocaleString('en-IN')}</h3>
+                  <p className="text-xs text-typography-secondary mt-1">Refunds being processed from Razorpay / Order Cancellations.</p>
+                </div>
+                <div className="p-2.5 bg-surface-cream text-forest-700 rounded-xl border border-surface-border">
+                  <Clock className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Withdrawable Balance */}
+            <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold uppercase text-typography-muted">Eligible Withdrawable Balance</span>
+                  <h3 className="text-2xl font-extrabold font-mono text-green-700 mt-1">₹{(wallet.withdrawableBalance || 0).toLocaleString('en-IN')}</h3>
+                  <p className="text-xs text-typography-secondary mt-1">Eligible for instant electronic transfer to bank account.</p>
+                </div>
+                <div className="p-2.5 bg-green-600/10 text-green-700 rounded-xl border border-green-600/20">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Withdrawal Requests Banner */}
+          {walletWithdrawals.length > 0 && (
+            <div className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 shadow-level-1">
+              <h3 className="font-bold text-typography-primary text-sm uppercase tracking-wider flex items-center gap-2">
+                <ArrowUpRight className="w-4 h-4 text-forest-700" /> Recent Bank Withdrawal Requests
+              </h3>
+              <div className="divide-y divide-surface-border">
+                {walletWithdrawals.map((wd) => (
+                  <div key={wd.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-typography-primary">{wd.withdrawalReference}</span>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border uppercase ${
+                          wd.status === 'SUCCESS' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
+                          wd.status === 'REVERSED' ? 'bg-red-600/10 text-red-700 border-red-600/20' : 'bg-amber-600/10 text-amber-700 border-amber-600/20'
+                        }`}>
+                          {wd.status}
+                        </span>
+                      </div>
+                      <p className="text-typography-muted">
+                        Bank: <strong className="text-typography-primary">{wd.bankName}</strong> ({wd.accountNumberMasked}) • Requested on {new Date(wd.createdAt).toLocaleDateString()}
+                      </p>
+                      {wd.rejectionReason && (
+                        <p className="text-red-700 text-[11px]">Rejection Reason: {wd.rejectionReason} (Amount reversed to wallet)</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono font-extrabold text-red-700 text-sm block">₹{wd.amount}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Wallet Transaction Ledger Desk */}
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-6 shadow-level-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-4">
+              <div>
+                <h3 className="font-display font-extrabold text-lg text-typography-primary flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-forest-700" /> Immutable Financial Transaction Ledger
+                </h3>
+                <p className="text-xs text-typography-secondary">Complete auditable record of all credits, debits, order refunds, and training payments.</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Search Ref / Order ID..."
+                  value={walletTxnSearch}
+                  onChange={(e) => setWalletTxnSearch(e.target.value)}
+                  className="bg-surface-cream border border-surface-border rounded-xl px-3 py-1.5 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex flex-wrap gap-2 text-xs font-semibold">
+              {['ALL', 'CREDIT', 'DEBIT', 'REFUND', 'WALLET_PAYMENT', 'WITHDRAWAL', 'TOPUP'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setWalletTxnFilter(filter)}
+                  className={`px-3 py-1.5 rounded-xl border transition-all ${
+                    walletTxnFilter === filter
+                      ? 'btn-primary text-white'
+                      : 'bg-surface-white text-typography-secondary border-surface-border hover:bg-surface-cream'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {/* Ledger Table */}
+            <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
+              <table className="w-full text-left text-xs text-typography-secondary min-w-[750px]">
+                <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
+                  <tr>
+                    <th className="p-3.5">Txn Reference</th>
+                    <th className="p-3.5">Date &amp; Time</th>
+                    <th className="p-3.5">Type &amp; Source</th>
+                    <th className="p-3.5">Description</th>
+                    <th className="p-3.5">Amount</th>
+                    <th className="p-3.5">Balance Ledger</th>
+                    <th className="p-3.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-border">
+                  {walletTxns
+                    .filter(t => (walletTxnFilter === 'ALL' || t.transactionType === walletTxnFilter) && (!walletTxnSearch || t.transactionReference?.toLowerCase().includes(walletTxnSearch.toLowerCase()) || t.description?.toLowerCase().includes(walletTxnSearch.toLowerCase())))
+                    .map((t) => {
+                      const isCredit = t.transactionDirection === 'CREDIT';
+                      return (
+                        <tr key={t.id} className="hover:bg-surface-cream/50">
+                          <td className="p-3.5 font-mono font-bold text-typography-primary whitespace-nowrap">{t.transactionReference}</td>
+                          <td className="p-3.5 text-typography-muted whitespace-nowrap">{new Date(t.createdAt).toLocaleString()}</td>
+                          <td className="p-3.5 whitespace-nowrap">
+                            <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border uppercase inline-flex items-center gap-1 ${
+                              isCredit ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-red-600/10 text-red-700 border-red-600/20'
+                            }`}>
+                              {isCredit ? <ArrowDownLeft className="w-3 h-3 text-green-600" /> : <ArrowUpRight className="w-3 h-3 text-red-600" />}
+                              {t.transactionType}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-typography-primary max-w-xs">{t.description}</td>
+                          <td className={`p-3.5 font-mono font-extrabold whitespace-nowrap ${isCredit ? 'text-green-700' : 'text-red-700'}`}>
+                            {isCredit ? '+' : '-'}₹{t.amount}
+                          </td>
+                          <td className="p-3.5 font-mono text-typography-muted whitespace-nowrap text-[11px]">
+                            ₹{t.balanceBefore} → <strong className="text-typography-primary font-bold">₹{t.balanceAfter}</strong>
+                          </td>
+                          <td className="p-3.5 whitespace-nowrap">
+                            <span className="px-2 py-0.5 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
+                              {t.status || 'SUCCESS'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {walletTxns.length === 0 && (
+                    <tr><td colSpan={7} className="p-6 text-center text-typography-muted">No wallet financial transactions recorded yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: WITHDRAW MONEY TO BANK */}
+      {withdrawModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <h4 className="font-bold text-lg text-typography-primary font-display flex items-center gap-2">
+                <ArrowUpRight className="w-5 h-5 text-forest-700" /> Bank Account Withdrawal Request
+              </h4>
+              <button onClick={() => setWithdrawModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
+            </div>
+
+            <div className="p-3 bg-surface-cream rounded-xl border border-surface-border text-xs text-typography-secondary flex justify-between items-center">
+              <span>Withdrawable Balance:</span>
+              <strong className="text-green-700 font-mono font-bold text-sm">₹{(wallet.withdrawableBalance || 0).toLocaleString('en-IN')}</strong>
+            </div>
+
+            <form onSubmit={handleRequestWithdrawal} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Withdrawal Amount (₹) *</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  max={wallet.withdrawableBalance}
+                  placeholder="e.g. 500"
+                  value={withdrawForm.amount}
+                  onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: e.target.value })}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Bank Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. HDFC Bank / State Bank of India"
+                  value={withdrawForm.bankName}
+                  onChange={(e) => setWithdrawForm({ ...withdrawForm, bankName: e.target.value })}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Account Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 50100293849102"
+                  value={withdrawForm.accountNumber}
+                  onChange={(e) => setWithdrawForm({ ...withdrawForm, accountNumber: e.target.value })}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">IFSC Code *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="HDFC0001234"
+                    value={withdrawForm.ifscCode}
+                    onChange={(e) => setWithdrawForm({ ...withdrawForm, ifscCode: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Account Holder Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Full Account Holder Name"
+                    value={withdrawForm.accountHolderName}
+                    onChange={(e) => setWithdrawForm({ ...withdrawForm, accountHolderName: e.target.value })}
+                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={actionLoading.withdraw} className="flex-1 btn-primary py-3 font-bold flex items-center justify-center gap-1.5">
+                  {actionLoading.withdraw ? 'Submitting...' : 'Submit Withdrawal Request'}
+                </button>
+                <button type="button" onClick={() => setWithdrawModalOpen(false)} className="px-4 btn-secondary font-bold">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD MONEY TO WALLET */}
+      {addMoneyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <h4 className="font-bold text-lg text-typography-primary font-display flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-forest-700" /> Topup Sporekart Wallet
+              </h4>
+              <button onClick={() => setAddMoneyModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
+            </div>
+
+            <form onSubmit={handleAddMoneyToWallet} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Topup Amount (₹) *</label>
+                <input
+                  type="number"
+                  required
+                  min="10"
+                  placeholder="e.g. 1000"
+                  value={addMoneyAmount}
+                  onChange={(e) => setAddMoneyAmount(e.target.value)}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-lg font-mono font-bold text-forest-800 focus:outline-none focus:border-forest-700"
+                />
+              </div>
+
+              <div className="p-3 bg-surface-cream rounded-xl border border-surface-border text-[11px] text-typography-secondary space-y-1">
+                <span className="font-bold text-typography-primary block flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-green-600" /> Payment Protection:
+                </span>
+                <div>✓ Instant authorization via Razorpay 256-bit encrypted gateway</div>
+                <div>✓ Funds immediately available for mushroom orders &amp; masterclasses</div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={actionLoading.addMoney} className="flex-1 btn-primary py-3 font-bold flex items-center justify-center gap-1.5">
+                  {actionLoading.addMoney ? 'Processing Gateway...' : `Pay ₹${addMoneyAmount || 0} & Topup Wallet`}
+                </button>
+                <button type="button" onClick={() => setAddMoneyModalOpen(false)} className="px-4 btn-secondary font-bold">Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

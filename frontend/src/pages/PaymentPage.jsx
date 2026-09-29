@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, CreditCard, Smartphone, Building2, CheckCircle2, 
-  AlertCircle, Lock, ArrowLeft, Loader2, Sparkles
+  AlertCircle, Lock, ArrowLeft, Loader2, Sparkles, Wallet
 } from 'lucide-react';
-import { paymentApi } from '../api';
+import { paymentApi, walletApi } from '../api';
 import { useCart } from '../context/CartContext';
 
 export default function PaymentPage() {
@@ -18,6 +18,9 @@ export default function PaymentPage() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [wallet, setWallet] = useState({ availableBalance: 0 });
+  const [useWallet, setUseWallet] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI', 'CARD', 'NETBANKING'
   const [upiId, setUpiId] = useState('');
@@ -36,7 +39,17 @@ export default function PaymentPage() {
       return;
     }
     loadSummary();
+    loadWallet();
   }, [type, id]);
+
+  const loadWallet = async () => {
+    try {
+      const res = await walletApi.getWallet();
+      if (res.data && res.data.success) {
+        setWallet(res.data.data);
+      }
+    } catch (ignored) {}
+  };
 
   const loadSummary = async () => {
     try {
@@ -54,58 +67,103 @@ export default function PaymentPage() {
     }
   };
 
+  // Financial calculation for Wallet & Gateway contributions
+  const orderTotal = summary?.amountInr || 0;
+  const availableBal = wallet?.availableBalance || 0;
+  const walletDeduction = useWallet ? Math.min(availableBal, orderTotal) : 0;
+  const remainingGatewayAmount = Math.max(0, orderTotal - walletDeduction);
+  const isFullyPaidByWallet = useWallet && walletDeduction >= orderTotal;
+
   const handleProcessPayment = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setError(null);
 
-    // Simulate payment gateway authorization delay
-    setTimeout(async () => {
-      try {
-        if (type === 'enrollment') {
-          const res = await paymentApi.verifyEnrollmentPayment(
-            id,
-            `MOCK_${paymentMethod}`,
-            `TXN-${Date.now()}`
-          );
-          if (res.data && res.data.success) {
-            setPaymentSuccess(true);
-            setTimeout(() => {
-              navigate(`/training/confirmation/${id}`);
-            }, 1200);
-          } else {
-            setError(res.data?.message || 'Payment verification failed');
-          }
-        } else {
-          // For product order mock payment verification:
-          // Initiate payment order and verify with mock payment ID
-          const initRes = await paymentApi.initiatePayment(id);
-          const razorpayOrderId = initRes.data?.data?.razorpayOrderId || `order_mock_${Date.now()}`;
-          const mockPaymentId = `pay_mock_${Date.now()}`;
+    try {
+      if (useWallet && walletDeduction > 0) {
+        // Execute wallet deduction or partial wallet payment
+        const walletPayRes = await walletApi.checkoutPay({
+          orderId: type === 'order' ? id : null,
+          enrollmentId: type === 'enrollment' ? id : null,
+          type,
+          amountFromWallet: walletDeduction,
+          amountFromGateway: remainingGatewayAmount,
+        });
 
-          const verifyRes = await paymentApi.verifyPayment(
-            id,
-            razorpayOrderId,
-            mockPaymentId,
-            'mock_signature_bypass'
-          );
-
-          if (verifyRes.data && verifyRes.data.success) {
-            await fetchCart();
-            setPaymentSuccess(true);
-            setTimeout(() => {
-              navigate(`/order-confirmation/${id}`);
-            }, 1200);
-          } else {
-            setError(verifyRes.data?.message || 'Payment verification failed');
-          }
+        if (!walletPayRes.data || !walletPayRes.data.success) {
+          setError(walletPayRes.data?.message || 'Wallet payment deduction failed');
+          setProcessing(false);
+          return;
         }
-      } catch (err) {
-        setError(err.response?.data?.error?.message || err.response?.data?.message || 'Payment transaction failed. Please try again.');
-      } finally {
-        setProcessing(false);
+
+        if (isFullyPaidByWallet) {
+          // If fully paid by wallet, complete checkout immediately!
+          if (type === 'enrollment') {
+            await paymentApi.verifyEnrollmentPayment(id, 'SPOREKART_WALLET', `WALLET_TXN_${Date.now()}`);
+          } else {
+            const initRes = await paymentApi.initiatePayment(id);
+            const razorpayOrderId = initRes.data?.data?.razorpayOrderId || `order_wallet_${Date.now()}`;
+            await paymentApi.verifyPayment(id, razorpayOrderId, `pay_wallet_${Date.now()}`, 'mock_wallet_sig');
+          }
+          await fetchCart();
+          setPaymentSuccess(true);
+          setTimeout(() => {
+            navigate(type === 'enrollment' ? `/training/confirmation/${id}` : `/order-confirmation/${id}`);
+          }, 1200);
+          setProcessing(false);
+          return;
+        }
       }
-    }, 1500);
+
+      // Process remaining amount via Gateway
+      setTimeout(async () => {
+        try {
+          if (type === 'enrollment') {
+            const res = await paymentApi.verifyEnrollmentPayment(
+              id,
+              useWallet ? `MIXED_WALLET_${paymentMethod}` : `MOCK_${paymentMethod}`,
+              `TXN-${Date.now()}`
+            );
+            if (res.data && res.data.success) {
+              setPaymentSuccess(true);
+              setTimeout(() => {
+                navigate(`/training/confirmation/${id}`);
+              }, 1200);
+            } else {
+              setError(res.data?.message || 'Payment verification failed');
+            }
+          } else {
+            const initRes = await paymentApi.initiatePayment(id);
+            const razorpayOrderId = initRes.data?.data?.razorpayOrderId || `order_mock_${Date.now()}`;
+            const mockPaymentId = `pay_mock_${Date.now()}`;
+
+            const verifyRes = await paymentApi.verifyPayment(
+              id,
+              razorpayOrderId,
+              mockPaymentId,
+              'mock_signature_bypass'
+            );
+
+            if (verifyRes.data && verifyRes.data.success) {
+              await fetchCart();
+              setPaymentSuccess(true);
+              setTimeout(() => {
+                navigate(`/order-confirmation/${id}`);
+              }, 1200);
+            } else {
+              setError(verifyRes.data?.message || 'Payment verification failed');
+            }
+          }
+        } catch (err) {
+          setError(err.response?.data?.error?.message || err.response?.data?.message || 'Payment transaction failed. Please try again.');
+        } finally {
+          setProcessing(false);
+        }
+      }, 1200);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed processing checkout payment.');
+      setProcessing(false);
+    }
   };
 
   if (loading) {
@@ -168,9 +226,55 @@ export default function PaymentPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Payment Methods Section */}
         <div className="md:col-span-7 space-y-6">
-          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1">
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1 space-y-6">
+            {/* Sporekart Wallet Option Card */}
+            <div className="mb-6 p-4 bg-surface-cream rounded-card border border-surface-border space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useWallet}
+                    onChange={(e) => setUseWallet(e.target.checked)}
+                    disabled={availableBal <= 0}
+                    className="w-4 h-4 text-forest-700 rounded border-surface-border focus:ring-forest-700"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="font-bold text-typography-primary text-xs flex items-center gap-1.5">
+                      <Wallet className="w-4 h-4 text-forest-700" /> Use Sporekart Wallet Balance
+                    </span>
+                    <span className="text-[11px] text-typography-muted block">
+                      Available Balance: <strong className="text-forest-800 font-mono">₹{availableBal.toLocaleString('en-IN')}</strong>
+                    </span>
+                  </div>
+                </label>
+
+                {useWallet && (
+                  <span className="px-2.5 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
+                    {isFullyPaidByWallet ? '100% COVERED BY WALLET' : `₹${walletDeduction} APPLIED`}
+                  </span>
+                )}
+              </div>
+
+              {useWallet && (
+                <div className="p-3 bg-surface-white rounded-xl border border-surface-border text-xs text-typography-secondary space-y-1 font-mono">
+                  <div className="flex justify-between">
+                    <span>Order Total:</span>
+                    <span>₹{orderTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-green-700 font-bold">
+                    <span>Wallet Contribution:</span>
+                    <span>-₹{walletDeduction.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-typography-primary font-bold border-t border-surface-border pt-1">
+                    <span>Remaining Gateway Amount:</span>
+                    <span>₹{remainingGatewayAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <h3 className="text-sm font-bold text-forest-900 mb-4 uppercase tracking-wider">
-              Select Payment Method
+              {isFullyPaidByWallet ? 'Confirm Checkout' : 'Select Gateway Payment Method'}
             </h3>
 
             {/* Payment Method Selector Tabs */}

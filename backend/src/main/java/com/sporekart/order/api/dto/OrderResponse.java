@@ -24,11 +24,27 @@ public class OrderResponse {
     private String cancellationReason;
     private String razorpayOrderId;
     private String razorpayPaymentId;
+    private String courierPartner;
+    private String trackingNumber;
+    private String trackingUrl;
+    private OffsetDateTime shippedAt;
     private OrderAddressSnapshot shippingAddress;
     private List<OrderItemResponse> items = new ArrayList<>();
     private List<OrderEventResponse> events = new ArrayList<>();
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+
+    public String getCourierPartner() { return courierPartner; }
+    public void setCourierPartner(String courierPartner) { this.courierPartner = courierPartner; }
+
+    public String getTrackingNumber() { return trackingNumber; }
+    public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+
+    public String getTrackingUrl() { return trackingUrl; }
+    public void setTrackingUrl(String trackingUrl) { this.trackingUrl = trackingUrl; }
+
+    public OffsetDateTime getShippedAt() { return shippedAt; }
+    public void setShippedAt(OffsetDateTime shippedAt) { this.shippedAt = shippedAt; }
 
     public OrderResponse() {}
 

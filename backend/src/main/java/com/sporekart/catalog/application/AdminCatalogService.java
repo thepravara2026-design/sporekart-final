@@ -42,9 +42,13 @@ public class AdminCatalogService {
 
     @Transactional
     public Product createProduct(CatalogDtos.CreateProductRequest request) {
-        String slug = request.getSlug().trim().toLowerCase();
+        String rawSlug = request.getSlug() != null && !request.getSlug().isBlank() ? request.getSlug() : request.getTitle();
+        String slug = rawSlug.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+        if (slug.isBlank()) {
+            slug = "product-" + UUID.randomUUID().toString().substring(0, 8);
+        }
         if (productRepository.existsBySlug(slug)) {
-            throw new IllegalArgumentException("Duplicate product slug: " + slug);
+            slug = slug + "-" + System.currentTimeMillis() % 10000;
         }
 
         Category category = null;

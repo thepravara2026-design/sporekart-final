@@ -35,6 +35,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final com.sporekart.training.application.TrainingService trainingService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final com.sporekart.wallet.application.WalletService walletService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -248,6 +249,19 @@ public class PaymentService {
         });
 
         orderService.updateOrderStatus(orderId, OrderStatus.REFUNDED, "Refund processed: " + refundResult.getRefundId(), "SYSTEM_REFUND");
+
+        if (order.getUserId() != null) {
+            BigDecimal refundAmt = (amountInr != null) ? amountInr : order.getTotalAmountInr();
+            walletService.processRefundToWallet(
+                    order.getUserId(),
+                    refundAmt,
+                    orderId,
+                    null,
+                    refundResult.getRefundId(),
+                    reason != null ? reason : "Order Cancellation Refund",
+                    "SYSTEM_REFUND"
+            );
+        }
 
         return refundResult;
     }

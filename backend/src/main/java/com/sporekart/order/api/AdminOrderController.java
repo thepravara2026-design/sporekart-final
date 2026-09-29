@@ -79,6 +79,20 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
+    @GetMapping("/{id}/packing-slip")
+    public ResponseEntity<byte[]> downloadPackingSlip(@PathVariable("id") UUID id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + id));
+        byte[] pdfBytes = com.sporekart.order.application.PackingSlipPdfGenerator.generatePackingSlipPdf(order);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Sporekart_PackingSlip_" + order.getOrderNumber() + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+    }
+
     private UUID getAdminId(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) {
             return UUID.fromString("00000000-0000-0000-0000-000000000000");

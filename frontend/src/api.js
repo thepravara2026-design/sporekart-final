@@ -153,6 +153,7 @@ export const adminApi = {
   getOrders: (params) => api.get('/admin/orders', { params }),
   getOrderById: (id) => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (orderId, status, reason) => api.put(`/admin/orders/${orderId}/status`, { status, reason }),
+  downloadPackingSlip: (id) => api.get(`/admin/orders/${id}/packing-slip`, { responseType: 'blob' }),
   createCourse: (data) => api.post('/admin/training/courses', data),
   createBatch: (data) => api.post('/admin/training/batches', data),
   addBatchSchedule: (data) => api.post('/admin/training/schedules', data),
@@ -166,6 +167,26 @@ export const adminApi = {
   updateTicketStatus: (ticketId, status, priority) => api.put(`/admin/support/tickets/${ticketId}/status`, { status, priority }),
   getAnalyticsOverview: () => api.get('/admin/analytics/overview'),
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
+};
+
+export const walletApi = {
+  getWallet: () => api.get('/wallet'),
+  getBalance: () => api.get('/wallet/balance'),
+  getTransactions: (params) => api.get('/wallet/transactions', { params }),
+  requestWithdrawal: (data) => api.post('/wallet/withdraw', data),
+  getWithdrawals: () => api.get('/wallet/withdrawals'),
+  addMoney: (data) => api.post('/wallet/add-money', data),
+  verifyAddMoney: (data, amount) => api.post('/wallet/verify-add-money', data, { params: { amount } }),
+  checkoutPay: (data) => api.post('/wallet/checkout-pay', data),
+};
+
+export const adminFinanceApi = {
+  getOverview: () => api.get('/admin/finance/overview'),
+  getTransactions: (params) => api.get('/admin/finance/transactions', { params }),
+  getWithdrawals: (params) => api.get('/admin/finance/withdrawals', { params }),
+  approveWithdrawal: (id, notes) => api.post(`/admin/finance/withdrawals/${id}/approve`, { notes }),
+  rejectWithdrawal: (id, rejectionReason) => api.post(`/admin/finance/withdrawals/${id}/reject`, { rejectionReason }),
+  performManualAdjustment: (data) => api.post('/admin/finance/manual-adjustment', data),
 };
 
 export const analyticsApi = {

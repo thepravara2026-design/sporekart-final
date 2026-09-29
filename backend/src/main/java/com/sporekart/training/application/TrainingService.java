@@ -31,6 +31,7 @@ public class TrainingService {
     private final AttendanceRepository attendanceRepository;
     private final CompletionRepository completionRepository;
     private final CertificateRepository certificateRepository;
+    private final com.sporekart.wallet.application.WalletService walletService;
     private final ApplicationEventPublisher eventPublisher;
 
     // --- Categories & Courses ---
@@ -249,8 +250,22 @@ public class TrainingService {
         }
 
         enrollment.setStatus(EnrollmentStatus.CANCELLED);
+        Enrollment saved = enrollmentRepository.save(enrollment);
+
+        if (saved.getUserId() != null && saved.getFeePaidInr() != null && saved.getFeePaidInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            walletService.processRefundToWallet(
+                    saved.getUserId(),
+                    saved.getFeePaidInr(),
+                    null,
+                    saved.getId(),
+                    "rfnd_tr_" + saved.getId().toString().substring(0, 8),
+                    reason != null ? reason : "Masterclass Training Enrollment Cancellation",
+                    "TRAINING_REFUND_SYSTEM"
+            );
+        }
+
         log.info("Enrollment ID {} cancelled for user ID {}. Reason: {}", enrollmentId, userId, reason);
-        return enrollmentRepository.save(enrollment);
+        return saved;
     }
 
     // --- Attendance, Completion & Certificates ---

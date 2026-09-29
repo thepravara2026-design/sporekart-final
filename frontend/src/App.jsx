@@ -125,7 +125,11 @@ export default function App() {
                   <Route path="/admin/offers" element={adminElement} />
                   <Route path="/admin/media" element={adminElement} />
                   <Route path="/admin/orders" element={adminElement} />
+                  <Route path="/admin/order-refunds" element={adminElement} />
+                  <Route path="/admin/batch-refunds" element={adminElement} />
                   <Route path="/admin/payments" element={adminElement} />
+                  <Route path="/admin/finance" element={adminElement} />
+                  <Route path="/admin/platform-wallets" element={adminElement} />
                   <Route path="/admin/shipping" element={adminElement} />
                   <Route path="/admin/training" element={adminElement} />
                   <Route path="/admin/courses" element={adminElement} />
