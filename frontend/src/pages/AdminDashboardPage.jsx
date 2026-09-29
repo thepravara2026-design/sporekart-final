@@ -8,7 +8,7 @@ import {
   Search, Filter, Layers, ArrowUpRight, Sparkles, TrendingUp,
   Clock, SlidersHorizontal, Eye, Edit3, Trash2, Copy, ExternalLink,
   ChevronRight, Check, AlertTriangle, Layers2, Sparkle, Download,
-  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award
+  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award, X
 } from 'lucide-react';
 import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi } from '../api';
 import SeoHead from '../components/SeoHead';

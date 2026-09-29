@@ -60,7 +60,7 @@ public class ProductVariant {
         if (priceInr == null || priceInr.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Variant price cannot be null or negative");
         }
-        if (compareAtPriceInr != null && priceInr.compareTo(compareAtPriceInr) >= 0) {
+        if (compareAtPriceInr != null && compareAtPriceInr.compareTo(BigDecimal.ZERO) > 0 && priceInr.compareTo(compareAtPriceInr) >= 0) {
             throw new IllegalArgumentException("Selling price must be strictly less than compare-at price (MRP).");
         }
     }
