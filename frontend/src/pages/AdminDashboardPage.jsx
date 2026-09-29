@@ -89,6 +89,13 @@ export default function AdminDashboardPage({ user }) {
   const [mediaRoleInput, setMediaRoleInput] = useState('PRIMARY');
   const [mediaList, setMediaList] = useState([]);
 
+  // Pricing & Variant State (Step 5)
+  const [variantName, setVariantName] = useState('Standard Pack (200g)');
+  const [variantSku, setVariantSku] = useState('SKU-BM-200G');
+  const [variantPrice, setVariantPrice] = useState('149.00');
+  const [variantComparePrice, setVariantComparePrice] = useState('199.00');
+  const [variantStock, setVariantStock] = useState(50);
+
   // Category Form
   const [catName, setCatName] = useState('');
   const [catSlug, setCatSlug] = useState('');
@@ -285,12 +292,60 @@ export default function AdminDashboardPage({ user }) {
     })));
   };
 
+  const handleNextStep = (currentTab) => {
+    setStatusMessage(''); setErrorMessage('');
+    if (currentTab === 'basic') {
+      if (!prodTitle || !prodTitle.trim()) {
+        setErrorMessage('Product Title is required in Step 1 (Basic & SEO).');
+        return;
+      }
+      const rawSlug = (prodSlug && prodSlug.trim()) ? prodSlug : prodTitle;
+      const formattedSlug = rawSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      if (!formattedSlug) {
+        setErrorMessage('Valid SEO URL Slug is required in Step 1.');
+        return;
+      }
+      setFormTab('compliance');
+    } else if (currentTab === 'compliance') {
+      if ((prodType === 'FRESH_MUSHROOM' || prodType === 'DRY_MUSHROOM') && (!fssaiLic || !fssaiLic.trim())) {
+        setErrorMessage('FSSAI License Number (14 digits) is required for food products in Step 2.');
+        return;
+      }
+      setFormTab('agri');
+    } else if (currentTab === 'agri') {
+      if (prodType === 'SPAWN_SEED' && (!species || !species.trim()) && (!strain || !strain.trim())) {
+        setErrorMessage('Species or Strain Variety is required for spawn seed products in Step 3.');
+        return;
+      }
+      if (prodType === 'GROWING_KIT' && (!kitContents || !kitContents.trim())) {
+        setErrorMessage('DIY Kit Package Contents are required for growing kit products in Step 3.');
+        return;
+      }
+      setFormTab('storage');
+    } else if (currentTab === 'storage') {
+      setFormTab('pricing');
+    } else if (currentTab === 'pricing') {
+      if (!variantSku || !variantSku.trim()) {
+        setErrorMessage('SKU / Item Code is required in Step 5 (Pricing & Stock).');
+        return;
+      }
+      if (!variantPrice || isNaN(parseFloat(variantPrice)) || parseFloat(variantPrice) <= 0) {
+        setErrorMessage('Valid Price (INR) > 0 is required in Step 5.');
+        return;
+      }
+      setFormTab('media');
+    } else if (currentTab === 'media') {
+      setFormTab('preview');
+    }
+  };
+
   const handleCreateProduct = async (e, publishImmediately = false) => {
     if (e) e.preventDefault();
     setStatusMessage(''); setErrorMessage('');
 
     if (!prodTitle || !prodTitle.trim()) {
-      setErrorMessage('Product Title is required.');
+      setFormTab('basic');
+      setErrorMessage('Product Title is required in Step 1.');
       return;
     }
 
@@ -302,7 +357,20 @@ export default function AdminDashboardPage({ user }) {
       .replace(/(^-|-$)/g, '');
 
     if (!formattedSlug) {
-      setErrorMessage('Valid SEO URL Slug is required.');
+      setFormTab('basic');
+      setErrorMessage('Valid SEO URL Slug is required in Step 1.');
+      return;
+    }
+
+    if (publishImmediately && (prodType === 'FRESH_MUSHROOM' || prodType === 'DRY_MUSHROOM') && (!fssaiLic || !fssaiLic.trim())) {
+      setFormTab('compliance');
+      setErrorMessage('FSSAI License Number (14 digits) is required to publish food products.');
+      return;
+    }
+
+    if (publishImmediately && (!variantSku || !variantSku.trim() || !variantPrice || parseFloat(variantPrice) <= 0)) {
+      setFormTab('pricing');
+      setErrorMessage('Valid SKU and Price (INR) are required in Step 5 (Pricing & Stock) to publish product.');
       return;
     }
 
@@ -344,6 +412,23 @@ export default function AdminDashboardPage({ user }) {
       const res = await adminApi.createProduct(payload);
       const createdProd = res.data?.data || res.data;
 
+      // Add default pricing variant (Step 5)
+      if (createdProd?.id && variantSku && variantPrice) {
+        try {
+          await adminApi.addVariant(createdProd.id, {
+            variantName: variantName || 'Standard Pack',
+            sku: variantSku.trim(),
+            priceInr: parseFloat(variantPrice),
+            compareAtPriceInr: variantComparePrice ? parseFloat(variantComparePrice) : null,
+            stockQuantity: isNaN(parseInt(variantStock)) ? 50 : parseInt(variantStock),
+            isActive: true
+          });
+        } catch (vErr) {
+          console.warn('Failed adding default variant:', vErr);
+        }
+      }
+
+      // Add Media gallery images (Step 6)
       if (mediaList.length > 0 && createdProd?.id) {
         for (const m of mediaList) {
           try {
@@ -377,7 +462,7 @@ export default function AdminDashboardPage({ user }) {
     } catch (err) {
       console.error('Create product error:', err);
       const backendMsg = err.response?.data?.message || err.response?.data?.error;
-      setErrorMessage(backendMsg || 'Failed creating product. Ensure FSSAI license & required fields are valid.');
+      setErrorMessage(backendMsg || 'Failed creating product. Ensure all required fields are valid.');
     }
   };
 
@@ -966,59 +1051,71 @@ export default function AdminDashboardPage({ user }) {
                 </button>
               </div>
 
-              {/* Form Navigation Tabs */}
-              <div className="flex gap-1 overflow-x-auto pb-1 border-b border-surface-border text-xs scrollbar-thin max-w-full">
-                <button
-                  type="button"
-                  onClick={() => setFormTab('basic')}
-                  className={`px-4 py-2.5 rounded-t-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 ${
-                    formTab === 'basic' ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream text-typography-muted hover:text-typography-primary'
-                  }`}
-                >
-                  <span>1. Basic & SEO</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormTab('compliance')}
-                  className={`px-4 py-2.5 rounded-t-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 ${
-                    formTab === 'compliance' ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream text-typography-muted hover:text-typography-primary'
-                  }`}
-                >
-                  <span>2. FSSAI Compliance</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormTab('agri')}
-                  className={`px-4 py-2.5 rounded-t-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 ${
-                    formTab === 'agri' ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream text-typography-muted hover:text-typography-primary'
-                  }`}
-                >
-                  <span>3. Mushroom & Agritech</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormTab('storage')}
-                  className={`px-4 py-2.5 rounded-t-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 ${
-                    formTab === 'storage' ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream text-typography-muted hover:text-typography-primary'
-                  }`}
-                >
-                  <span>4. Storage & Care</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormTab('media')}
-                  className={`px-4 py-2.5 rounded-t-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 ${
-                    formTab === 'media' ? 'bg-forest-900 text-white shadow-level-1' : 'bg-surface-cream text-typography-muted hover:text-typography-primary'
-                  }`}
-                >
-                  <span>5. Multi-Image Gallery</span>
-                  {mediaList.length > 0 && <span className="bg-gold text-forest-950 px-1.5 py-0.5 rounded-full text-[10px]">{mediaList.length}</span>}
-                </button>
+              {/* 7-Step FAANG Form Navigation Stepper */}
+              <div className="space-y-3 pb-2 border-b border-surface-border">
+                <div className="flex items-center justify-between text-xs font-bold text-typography-secondary">
+                  <span className="flex items-center gap-1.5 text-forest-800">
+                    <Sparkles className="w-4 h-4 text-gold shrink-0" />
+                    <span>Step {['basic', 'compliance', 'agri', 'storage', 'pricing', 'media', 'preview'].indexOf(formTab) + 1} of 7:</span>
+                    <span className="text-typography-primary font-black">
+                      {formTab === 'basic' && 'Basic & SEO Setup'}
+                      {formTab === 'compliance' && 'FSSAI Regulatory Compliance'}
+                      {formTab === 'agri' && 'Mushroom & Agritech Specifications'}
+                      {formTab === 'storage' && 'Storage & Shelf Life Guidance'}
+                      {formTab === 'pricing' && 'Pricing, Stock & Variant Setup'}
+                      {formTab === 'media' && 'Multi-Image Gallery'}
+                      {formTab === 'preview' && 'Review & Live Storefront Preview'}
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-mono text-typography-muted">
+                    {Math.round(((['basic', 'compliance', 'agri', 'storage', 'pricing', 'media', 'preview'].indexOf(formTab) + 1) / 7) * 100)}% Complete
+                  </span>
+                </div>
+
+                <div className="flex gap-1 overflow-x-auto pb-1 text-xs scrollbar-thin max-w-full">
+                  {[
+                    { id: 'basic', label: '1. Basic & SEO' },
+                    { id: 'compliance', label: '2. FSSAI Compliance' },
+                    { id: 'agri', label: '3. Agritech Specs' },
+                    { id: 'storage', label: '4. Storage & Care' },
+                    { id: 'pricing', label: '5. Pricing & Stock' },
+                    { id: 'media', label: '6. Gallery Media' },
+                    { id: 'preview', label: '7. Review & Live Preview' }
+                  ].map((tab, idx) => {
+                    const currentIdx = ['basic', 'compliance', 'agri', 'storage', 'pricing', 'media', 'preview'].indexOf(formTab);
+                    const isCompleted = idx < currentIdx;
+                    const isActive = formTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setFormTab(tab.id)}
+                        className={`px-3.5 py-2.5 rounded-xl font-extrabold transition-all whitespace-nowrap flex items-center gap-2 text-xs ${
+                          isActive
+                            ? 'bg-forest-900 text-white shadow-level-1 ring-2 ring-gold/40'
+                            : isCompleted
+                            ? 'bg-green-600/10 text-forest-900 border border-green-600/20 hover:bg-green-600/20'
+                            : 'bg-surface-cream text-typography-muted hover:text-typography-primary border border-surface-border'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                        ) : (
+                          <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold ${isActive ? 'bg-gold text-forest-950' : 'bg-surface-border text-typography-muted'}`}>{idx + 1}</span>
+                        )}
+                        <span>{tab.label}</span>
+                        {tab.id === 'media' && mediaList.length > 0 && (
+                          <span className="bg-gold text-forest-950 px-1.5 py-0.5 rounded-full text-[10px] font-mono">{mediaList.length}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <form className="space-y-6 text-xs w-full max-w-full">
                 
-                {/* TAB 1: BASIC & SEO */}
+                {/* STEP 1: BASIC & SEO */}
                 {formTab === 'basic' && (
                   <div className="space-y-4">
                     <div>
@@ -1028,6 +1125,7 @@ export default function AdminDashboardPage({ user }) {
                         onChange={(e) => {
                           setProdTitle(e.target.value);
                           if (!prodSlug) setProdSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+                          if (!variantSku) setVariantSku('SKU-' + e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8));
                         }}
                         placeholder="e.g. Button Mushroom 200g Pack"
                         className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-3 text-typography-primary focus:outline-none focus:border-forest-700 text-sm"
@@ -1083,17 +1181,17 @@ export default function AdminDashboardPage({ user }) {
                   </div>
                 )}
 
-                {/* TAB 2: FSSAI COMPLIANCE */}
+                {/* STEP 2: FSSAI COMPLIANCE */}
                 {formTab === 'compliance' && (
                   <div className="space-y-4" data-testid="product-compliance-form">
                     <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border text-xs text-typography-secondary leading-relaxed font-medium flex items-center gap-3">
                       <ShieldCheck className="w-5 h-5 text-forest-700 shrink-0" />
-                      <span>FSSAI License Number (14 digits) is required for food compliance verification before publishing.</span>
+                      <span>FSSAI License Number (14 digits) is mandatory for food safety compliance verification before publishing fresh or dry mushrooms.</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">FSSAI Lic. No. (14 Digits)</label>
+                        <label className="block text-typography-primary font-bold mb-1.5">FSSAI Lic. No. (14 Digits) *</label>
                         <input type="text" value={fssaiLic} onChange={(e) => setFssaiLic(e.target.value)} placeholder="10020011000123" className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-mono focus:outline-none focus:border-forest-700" />
                       </div>
                       <div>
@@ -1133,7 +1231,7 @@ export default function AdminDashboardPage({ user }) {
                   </div>
                 )}
 
-                {/* TAB 3: MUSHROOM AGRITECH */}
+                {/* STEP 3: MUSHROOM AGRITECH */}
                 {formTab === 'agri' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1154,14 +1252,14 @@ export default function AdminDashboardPage({ user }) {
 
                     {prodType === 'GROWING_KIT' && (
                       <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">DIY Kit Package Contents</label>
+                        <label className="block text-typography-primary font-bold mb-1.5">DIY Kit Package Contents *</label>
                         <textarea rows={2} value={kitContents} onChange={(e) => setKitContents(e.target.value)} placeholder="e.g. Substrate block, spray bottle, cultivation bag, instruction manual" className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* TAB 4: STORAGE & PRODUCER */}
+                {/* STEP 4: STORAGE & PRODUCER */}
                 {formTab === 'storage' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1192,7 +1290,63 @@ export default function AdminDashboardPage({ user }) {
                   </div>
                 )}
 
-                {/* TAB 5: MULTI-IMAGE GALLERY MANAGER */}
+                {/* STEP 5: PRICING, STOCK & VARIANT SETUP */}
+                {formTab === 'pricing' && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border text-xs text-typography-secondary leading-relaxed font-medium flex items-center gap-3">
+                      <Tag className="w-5 h-5 text-forest-700 shrink-0" />
+                      <span>Configure initial pricing and warehouse stock quantity for the default product variant. Products require at least 1 variant before publishing.</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-typography-primary font-bold mb-1.5">SKU / Item Code *</label>
+                        <input
+                          type="text" required value={variantSku} onChange={(e) => setVariantSku(e.target.value)}
+                          placeholder="e.g. SKU-BM-200G"
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-mono focus:outline-none focus:border-forest-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-typography-primary font-bold mb-1.5">Variant / Pack Name</label>
+                        <input
+                          type="text" value={variantName} onChange={(e) => setVariantName(e.target.value)}
+                          placeholder="e.g. Standard Pack (200g)"
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-typography-primary font-bold mb-1.5">Price (INR ₹) *</label>
+                        <input
+                          type="number" step="0.01" required value={variantPrice} onChange={(e) => setVariantPrice(e.target.value)}
+                          placeholder="149.00"
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-bold focus:outline-none focus:border-forest-700 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-typography-primary font-bold mb-1.5">Compare-at Price (MSRP ₹)</label>
+                        <input
+                          type="number" step="0.01" value={variantComparePrice} onChange={(e) => setVariantComparePrice(e.target.value)}
+                          placeholder="199.00"
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-typography-primary font-bold mb-1.5">Initial Inventory Stock *</label>
+                        <input
+                          type="number" required value={variantStock} onChange={(e) => setVariantStock(e.target.value)}
+                          placeholder="50"
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 6: MULTI-IMAGE GALLERY MANAGER */}
                 {formTab === 'media' && (
                   <div className="space-y-4">
                     <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-3">
@@ -1227,7 +1381,7 @@ export default function AdminDashboardPage({ user }) {
                       </div>
                     </div>
 
-                    {/* Preview Cards */}
+                    {/* Gallery List */}
                     <div className="space-y-2">
                       {mediaList.map((m) => (
                         <div key={m.id} className="p-3 bg-surface-cream rounded-xl border border-surface-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -1266,24 +1420,214 @@ export default function AdminDashboardPage({ user }) {
                   </div>
                 )}
 
-                {/* Form Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-surface-border">
-                  <button
-                    type="button"
-                    onClick={(e) => handleCreateProduct(e, false)}
-                    data-testid="product-save"
-                    className="flex-1 btn-secondary font-bold py-3.5 rounded-2xl"
-                  >
-                    Save Draft Product
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => handleCreateProduct(e, true)}
-                    data-testid="product-publish"
-                    className="flex-1 btn-primary font-extrabold py-3.5 rounded-2xl shadow-level-2"
-                  >
-                    Validate & Publish Product ➔
-                  </button>
+                {/* STEP 7: LIVE FAANG STOREFRONT PREVIEW STUDIO */}
+                {formTab === 'preview' && (
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="p-4 bg-forest-900/10 border border-forest-900/20 rounded-2xl flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <Eye className="w-5 h-5 text-forest-800 shrink-0" />
+                        <div>
+                          <h4 className="font-bold text-typography-primary text-xs">FAANG Storefront Live Render Preview</h4>
+                          <p className="text-[11px] text-typography-secondary">Review all configured specs, pricing, compliance labels, and media before final publication.</p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 bg-gold text-forest-950 font-black rounded-full text-[10px] uppercase tracking-wider">Ready for Review</span>
+                    </div>
+
+                    {/* LIVE CARD RENDERING */}
+                    <div className="bg-surface-cream/50 p-5 sm:p-6 rounded-3xl border border-surface-border grid grid-cols-1 md:grid-cols-12 gap-6">
+                      {/* Left: Product Image & Gallery */}
+                      <div className="md:col-span-5 space-y-3">
+                        <div className="aspect-square bg-surface-white rounded-2xl border border-surface-border overflow-hidden relative shadow-level-1">
+                          <img
+                            src={mediaList.find(m => m.isPrimary)?.url || mediaList[0]?.url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop'}
+                            alt="Primary product preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute top-3 left-3 px-2.5 py-1 bg-forest-900/90 backdrop-blur-md text-white font-bold rounded-lg text-[10px]">
+                            {prodType.replace('_', ' ')}
+                          </span>
+                          {isVeg && (
+                            <span className="absolute top-3 right-3 px-2 py-1 bg-white border border-green-600 rounded-md flex items-center gap-1 shadow-sm">
+                              <span className="w-2 h-2 rounded-full bg-green-600" />
+                              <span className="text-[9px] font-bold text-green-800">100% VEG</span>
+                            </span>
+                          )}
+                        </div>
+                        {mediaList.length > 1 && (
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {mediaList.map((m) => (
+                              <img key={m.id} src={m.url} alt="thumb" className="w-12 h-12 object-cover rounded-xl border border-surface-border shrink-0" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Product Details & Specs */}
+                      <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-extrabold uppercase text-forest-700 tracking-wider">
+                              {categories.find(c => c.id === prodCatId)?.name || 'Mushroom Agritech'}
+                            </span>
+                            <span className="text-typography-muted">•</span>
+                            <span className="text-[10px] font-mono text-typography-muted">HSN: {prodHsn || '07095900'}</span>
+                          </div>
+
+                          <h2 className="font-display font-black text-xl sm:text-2xl text-typography-primary leading-tight">
+                            {prodTitle || 'Button Mushroom 200g Pack'}
+                          </h2>
+
+                          {/* Pricing Ribbon */}
+                          <div className="flex items-baseline gap-3 p-3.5 bg-surface-white rounded-2xl border border-surface-border">
+                            <span className="text-2xl font-black text-forest-900 font-display">₹{variantPrice || '149.00'}</span>
+                            {variantComparePrice && parseFloat(variantComparePrice) > parseFloat(variantPrice || 0) && (
+                              <span className="text-sm text-typography-muted line-through">₹{variantComparePrice}</span>
+                            )}
+                            <span className="text-[11px] font-bold text-green-700 bg-green-600/10 px-2 py-0.5 rounded-md">
+                              + {prodGst || '5.00'}% GST
+                            </span>
+                            <span className="ml-auto text-xs font-mono font-bold text-forest-800 bg-forest-900/5 px-2.5 py-1 rounded-lg">
+                              Stock: {variantStock || 50} units
+                            </span>
+                          </div>
+
+                          {/* Regulatory & Agritech Badges */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="p-3 bg-surface-white rounded-xl border border-surface-border space-y-1">
+                              <span className="text-[10px] font-bold uppercase text-typography-muted block">FSSAI Compliance</span>
+                              <span className="font-mono font-bold text-forest-800 block text-xs">Lic #{fssaiLic || '10020011000123'}</span>
+                              <span className="text-[10px] text-typography-secondary block">Net Qty: {netQty} {uom}</span>
+                            </div>
+                            <div className="p-3 bg-surface-white rounded-xl border border-surface-border space-y-1">
+                              <span className="text-[10px] font-bold uppercase text-typography-muted block">Agritech Strain</span>
+                              <span className="font-bold text-typography-primary block text-xs">{species || 'Agaricus bisporus'}</span>
+                              <span className="text-[10px] text-typography-secondary block">Substrate: {substrate || 'Wheat Straw'}</span>
+                            </div>
+                          </div>
+
+                          {/* Storage Guidance */}
+                          <div className="p-3 bg-surface-white rounded-xl border border-surface-border text-xs leading-relaxed">
+                            <span className="font-bold text-typography-primary block text-[11px] mb-0.5">Storage & Care:</span>
+                            <span className="text-typography-secondary">{storageInst || 'Refrigerate between 2°C - 4°C'} • Shelf life: {shelfLife}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* STRUCTURED STEP REVIEW CARDS WITH EDIT BUTTONS */}
+                    <div className="space-y-3">
+                      <h4 className="font-bold text-typography-primary text-xs flex items-center justify-between">
+                        <span>Configured Sections Checklist</span>
+                        <span className="text-[11px] font-normal text-typography-secondary">Click 'Edit Step' to quickly adjust any section.</span>
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 1: Basic & SEO</span>
+                            <span className="font-bold text-typography-primary text-xs block truncate">{prodTitle || 'Untitled'}</span>
+                            <span className="text-[10px] font-mono text-typography-muted block truncate">Slug: /{prodSlug}</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('basic')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 1</button>
+                        </div>
+
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 2: FSSAI Compliance</span>
+                            <span className="font-mono font-bold text-typography-primary text-xs block">Lic: {fssaiLic}</span>
+                            <span className="text-[10px] text-typography-secondary block">{isVeg ? '100% Vegetarian' : 'Non-Veg'} • {netQty}{uom}</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('compliance')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 2</button>
+                        </div>
+
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 3: Agritech Specs</span>
+                            <span className="font-bold text-typography-primary text-xs block truncate">{species}</span>
+                            <span className="text-[10px] text-typography-secondary block truncate">Strain: {strain}</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('agri')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 3</button>
+                        </div>
+
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 4: Storage & Producer</span>
+                            <span className="text-xs font-bold text-typography-primary block truncate">{tempGuidance}</span>
+                            <span className="text-[10px] text-typography-secondary block truncate">Packer: {mfrDetails}</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('storage')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 4</button>
+                        </div>
+
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 5: Pricing & Stock</span>
+                            <span className="font-mono font-bold text-typography-primary text-xs block">SKU: {variantSku} • ₹{variantPrice}</span>
+                            <span className="text-[10px] text-typography-secondary block">Stock: {variantStock} units</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('pricing')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 5</button>
+                        </div>
+
+                        <div className="p-3.5 bg-surface-white rounded-2xl border border-surface-border flex flex-col justify-between space-y-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-forest-700 uppercase block">Step 6: Gallery Media</span>
+                            <span className="font-bold text-typography-primary text-xs block">{mediaList.length} High-Res Images</span>
+                            <span className="text-[10px] text-typography-secondary block">Primary image set</span>
+                          </div>
+                          <button type="button" onClick={() => setFormTab('media')} className="btn-secondary text-[10px] font-bold py-1 px-2.5 self-start">Edit Step 6</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Navigation Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-surface-border">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {['compliance', 'agri', 'storage', 'pricing', 'media', 'preview'].includes(formTab) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tabs = ['basic', 'compliance', 'agri', 'storage', 'pricing', 'media', 'preview'];
+                          const prevIdx = Math.max(0, tabs.indexOf(formTab) - 1);
+                          setFormTab(tabs[prevIdx]);
+                        }}
+                        className="btn-secondary font-bold py-3 px-5 rounded-2xl text-xs flex-1 sm:flex-none"
+                      >
+                        ← Back
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleCreateProduct(e, false)}
+                      data-testid="product-save"
+                      className="btn-secondary font-bold py-3 px-5 rounded-2xl text-xs flex-1 sm:flex-none"
+                    >
+                      Save Draft Product
+                    </button>
+                  </div>
+
+                  <div className="w-full sm:w-auto flex justify-end">
+                    {formTab !== 'preview' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleNextStep(formTab)}
+                        className="btn-primary font-extrabold py-3 px-6 rounded-2xl text-xs shadow-level-1 w-full sm:w-auto flex items-center justify-center gap-2"
+                      >
+                        <span>Next Step ➔</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => handleCreateProduct(e, true)}
+                        data-testid="product-publish"
+                        className="btn-primary font-black py-3.5 px-8 rounded-2xl text-sm shadow-level-2 bg-gradient-to-r from-forest-900 via-forest-800 to-forest-900 text-gold border border-gold/40 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+                        <span>Validate & Publish Product ➔</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </form>
             </div>

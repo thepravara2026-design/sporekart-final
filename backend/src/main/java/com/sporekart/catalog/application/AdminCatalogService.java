@@ -163,6 +163,11 @@ public class AdminCatalogService {
                 throw new IllegalArgumentException("Kit contents details are required for publishing growing kit products");
             }
         }
+
+        // Ensure product has at least one pricing variant for purchasing
+        if (product.getVariants() == null || product.getVariants().isEmpty()) {
+            throw new IllegalArgumentException("Product must have at least one pricing variant configured before publishing.");
+        }
     }
 
     @Transactional
