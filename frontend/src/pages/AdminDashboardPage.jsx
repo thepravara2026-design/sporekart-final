@@ -8,7 +8,7 @@ import {
   Search, Filter, Layers, ArrowUpRight, Sparkles, TrendingUp,
   Clock, SlidersHorizontal, Eye, Edit3, Trash2, Copy, ExternalLink,
   ChevronRight, Check, AlertTriangle, Layers2, Sparkle, Download,
-  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet
+  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award
 } from 'lucide-react';
 import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi } from '../api';
 import SeoHead from '../components/SeoHead';
@@ -176,6 +176,57 @@ export default function AdminDashboardPage({ user }) {
     { id: 'e2', studentName: 'Priya Verma', email: 'priya.v@example.com', courseTitle: 'Masterclass in Mushroom Spawn Production', batchCode: 'BATCH-2026-NOV-SPAWN', feePaid: 4999, status: 'CANCELLED', refundStatus: 'REFUND_PROCESSED', refundId: 'rfnd_trn_99214' }
   ]);
   const [cancelTargetEnrollment, setCancelTargetEnrollment] = useState(null);
+  const [enrollmentCourseFilter, setEnrollmentCourseFilter] = useState('ALL');
+  const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState('');
+  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState('ALL');
+
+  const registeredCoursesList = React.useMemo(() => {
+    const courseMap = new Map();
+    (courses || []).forEach((c) => {
+      if (c.title) {
+        courseMap.set(c.title.trim().toLowerCase(), {
+          id: c.id || c.title,
+          title: c.title,
+          slug: c.slug,
+          feeInr: c.feeInr || c.fee,
+          durationDays: c.durationDays
+        });
+      }
+    });
+    (enrolledStudents || []).forEach((s) => {
+      if (s.courseTitle && !courseMap.has(s.courseTitle.trim().toLowerCase())) {
+        courseMap.set(s.courseTitle.trim().toLowerCase(), {
+          id: s.courseId || s.courseTitle,
+          title: s.courseTitle,
+          slug: s.courseTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          feeInr: s.feePaid || 4999,
+          durationDays: 7
+        });
+      }
+    });
+    return Array.from(courseMap.values());
+  }, [courses, enrolledStudents]);
+
+  const filteredEnrolledStudents = React.useMemo(() => {
+    return (enrolledStudents || []).filter((s) => {
+      if (enrollmentCourseFilter !== 'ALL') {
+        const matchCourse = s.courseTitle?.trim().toLowerCase() === enrollmentCourseFilter.trim().toLowerCase() || s.courseId === enrollmentCourseFilter;
+        if (!matchCourse) return false;
+      }
+      if (enrollmentStatusFilter === 'CONFIRMED' && s.status === 'CANCELLED') return false;
+      if (enrollmentStatusFilter === 'CANCELLED' && s.status !== 'CANCELLED') return false;
+
+      if (enrollmentSearchQuery && enrollmentSearchQuery.trim()) {
+        const q = enrollmentSearchQuery.trim().toLowerCase();
+        const nameMatch = s.studentName?.toLowerCase().includes(q);
+        const emailMatch = s.email?.toLowerCase().includes(q);
+        const batchMatch = s.batchCode?.toLowerCase().includes(q);
+        const courseMatch = s.courseTitle?.toLowerCase().includes(q);
+        if (!nameMatch && !emailMatch && !batchMatch && !courseMatch) return false;
+      }
+      return true;
+    });
+  }, [enrolledStudents, enrollmentCourseFilter, enrollmentStatusFilter, enrollmentSearchQuery]);
 
   const fetchDataForSection = async (section) => {
     setLoading(true);
@@ -3307,53 +3358,426 @@ export default function AdminDashboardPage({ user }) {
         </div>
       )}
 
-      {/* 4D: STUDENT ROSTER & ENROLLMENTS */}
+      {/* 4D: STUDENT ROSTER & ENROLLMENTS BY REGISTERED COURSE */}
       {activeSection === 'enrollments' && (
-        <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-4 shadow-level-1">
-          <h3 className="font-display font-bold text-base text-typography-primary flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-forest-700 shrink-0" /> Trainee Enrollments & Capability Verification
-          </h3>
-          <p className="text-xs text-typography-secondary">Manage student course enrollment records, cancel enrollments, and grant platform capabilities.</p>
+        <div className="space-y-6 w-full max-w-full">
+          {/* FAANG HEADER & OVERALL METRICS BANNER */}
+          <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase bg-forest-800/10 text-forest-800 rounded-full tracking-wider">
+                    Course-Driven Roster Engine
+                  </span>
+                </div>
+                <h3 className="font-display font-extrabold text-xl text-typography-primary flex items-center gap-2.5 mt-1">
+                  <GraduationCap className="w-6 h-6 text-forest-700 shrink-0" /> Trainee Roster & Registered Course Management
+                </h3>
+                <p className="text-xs text-typography-secondary mt-0.5">
+                  Real-time student roster grouped by masterclass courses registered in Admin Dashboard. Monitor enrollments, grant platform access, and manage cancellations per course.
+                </p>
+              </div>
 
-          <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
-            <table className="w-full text-left text-xs text-typography-secondary min-w-[700px]">
-              <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
-                <tr>
-                  <th className="p-3.5">Student Name</th>
-                  <th className="p-3.5">Contact Email</th>
-                  <th className="p-3.5">Batch Code</th>
-                  <th className="p-3.5">Fee Status</th>
-                  <th className="p-3.5">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-border">
-                {enrolledStudents.map((s) => (
-                  <tr key={s.id} className="hover:bg-surface-cream/50">
-                    <td className="p-3.5 font-bold text-typography-primary">{s.studentName}</td>
-                    <td className="p-3.5 font-mono text-typography-muted">{s.email}</td>
-                    <td className="p-3.5 font-mono text-forest-800 font-bold">{s.batchCode}</td>
-                    <td className="p-3.5">
-                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase ${
-                        s.status === 'CANCELLED' ? 'bg-red-600/10 text-red-700 border border-red-600/20' : 'bg-green-600/10 text-green-700 border border-green-600/20'
-                      }`}>
-                        {s.status === 'CANCELLED' ? 'CANCELLED / REFUNDED' : 'CONFIRMED (₹' + s.feePaid + ')'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 flex items-center gap-2">
-                      <button onClick={() => handleGrantCapability(s.id, 'TRAINING')} className="px-3 py-1 btn-secondary text-[11px] font-bold">
-                        Grant TRAINING Access
-                      </button>
-                      {s.status !== 'CANCELLED' && (
-                        <button onClick={() => handleAdminCancelEnrollment(s)} className="px-2.5 py-1 bg-red-600/10 text-red-700 border border-red-600/20 text-[10px] font-bold rounded-lg hover:bg-red-600/20 transition-all">
-                          Cancel & Refund
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              {/* Global Action Badges */}
+              <div className="flex items-center gap-3">
+                <Link to="/admin/courses" className="btn-secondary text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-bold">
+                  <BookOpen className="w-3.5 h-3.5" /> Manage Masterclasses
+                </Link>
+                <Link to="/admin/batches" className="btn-primary text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-bold">
+                  <Calendar className="w-3.5 h-3.5" /> Schedule Batches
+                </Link>
+              </div>
+            </div>
+
+            {/* Platform Level Enrollment Metrics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-1">
+                <div className="flex items-center justify-between text-typography-muted">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Registered Courses</span>
+                  <BookOpen className="w-4 h-4 text-forest-700" />
+                </div>
+                <p className="text-2xl font-black text-typography-primary font-display">{registeredCoursesList.length}</p>
+                <span className="text-[10px] text-typography-muted block">Active Masterclasses</span>
+              </div>
+
+              <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-1">
+                <div className="flex items-center justify-between text-typography-muted">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Total Enrolled Trainees</span>
+                  <Users className="w-4 h-4 text-forest-700" />
+                </div>
+                <p className="text-2xl font-black text-typography-primary font-display">{enrolledStudents.length}</p>
+                <span className="text-[10px] text-green-700 font-bold block">
+                  {enrolledStudents.filter(s => s.status !== 'CANCELLED').length} Confirmed Seats
+                </span>
+              </div>
+
+              <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-1">
+                <div className="flex items-center justify-between text-typography-muted">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Tuition Revenue</span>
+                  <DollarSign className="w-4 h-4 text-forest-700" />
+                </div>
+                <p className="text-2xl font-black text-forest-800 font-display">
+                  ₹{enrolledStudents.filter(s => s.status !== 'CANCELLED').reduce((acc, curr) => acc + (curr.feePaid || 0), 0).toLocaleString('en-IN')}
+                </p>
+                <span className="text-[10px] text-typography-muted block">Gross Collected Tuition</span>
+              </div>
+
+              <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-1">
+                <div className="flex items-center justify-between text-typography-muted">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Cancellation Rate</span>
+                  <XCircle className="w-4 h-4 text-red-600" />
+                </div>
+                <p className="text-2xl font-black text-red-700 font-display">
+                  {enrolledStudents.length > 0 ? Math.round((enrolledStudents.filter(s => s.status === 'CANCELLED').length / enrolledStudents.length) * 100) : 0}%
+                </p>
+                <span className="text-[10px] text-red-600 font-medium block">
+                  {enrolledStudents.filter(s => s.status === 'CANCELLED').length} Refunded Students
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* COURSE NAVIGATION RIBBON & SEARCH FILTERS */}
+          <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 space-y-4">
+            {/* Course Selection Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin border-b border-surface-border">
+              <button
+                onClick={() => setEnrollmentCourseFilter('ALL')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                  enrollmentCourseFilter === 'ALL'
+                    ? 'bg-forest-800 text-white shadow-level-1'
+                    : 'bg-surface-cream text-typography-secondary hover:text-typography-primary hover:bg-surface-border/50'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                All Registered Courses
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  enrollmentCourseFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-surface-border text-typography-primary'
+                }`}>
+                  {enrolledStudents.length}
+                </span>
+              </button>
+
+              {registeredCoursesList.map((course) => {
+                const courseEnrolled = enrolledStudents.filter(s => 
+                  s.courseTitle?.trim().toLowerCase() === course.title.trim().toLowerCase() || s.courseId === course.id
+                );
+                const isSelected = enrollmentCourseFilter.trim().toLowerCase() === course.title.trim().toLowerCase() || enrollmentCourseFilter === course.id;
+
+                return (
+                  <button
+                    key={course.id || course.title}
+                    onClick={() => setEnrollmentCourseFilter(course.title)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                      isSelected
+                        ? 'bg-forest-800 text-white shadow-level-1'
+                        : 'bg-surface-cream text-typography-secondary hover:text-typography-primary hover:bg-surface-border/50'
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span className="truncate max-w-[200px]">{course.title}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-forest-800/10 text-forest-800'
+                    }`}>
+                      {courseEnrolled.length}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search & Status Filter Bar */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+              <div className="relative w-full md:w-96">
+                <Search className="w-4 h-4 text-typography-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter trainees by name, email, batch code..."
+                  value={enrollmentSearchQuery}
+                  onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
+                  className="w-full bg-surface-cream border border-surface-border rounded-xl pl-10 pr-4 py-2 text-xs text-typography-primary placeholder:text-typography-muted focus:outline-none focus:border-forest-700"
+                />
+                {enrollmentSearchQuery && (
+                  <button
+                    onClick={() => setEnrollmentSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-typography-muted hover:text-typography-primary text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Filter className="w-4 h-4 text-typography-muted shrink-0" />
+                <select
+                  value={enrollmentStatusFilter}
+                  onChange={(e) => setEnrollmentStatusFilter(e.target.value)}
+                  className="bg-surface-cream border border-surface-border rounded-xl px-3 py-2 text-xs text-typography-primary font-bold focus:outline-none focus:border-forest-700 w-full md:w-auto"
+                >
+                  <option value="ALL">All Enrollment Statuses</option>
+                  <option value="CONFIRMED">Confirmed Seats Only</option>
+                  <option value="CANCELLED">Cancelled & Refunded Only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* COURSE-BASED ROSTER DISPLAY */}
+          {/* MODE 1: ALL REGISTERED COURSES (GROUPED VIEW) */}
+          {enrollmentCourseFilter === 'ALL' ? (
+            <div className="space-y-6">
+              {registeredCoursesList.map((course) => {
+                const courseStudents = (enrolledStudents || []).filter((s) => {
+                  const matchCourse = s.courseTitle?.trim().toLowerCase() === course.title.trim().toLowerCase() || s.courseId === course.id;
+                  if (!matchCourse) return false;
+
+                  if (enrollmentStatusFilter === 'CONFIRMED' && s.status === 'CANCELLED') return false;
+                  if (enrollmentStatusFilter === 'CANCELLED' && s.status !== 'CANCELLED') return false;
+
+                  if (enrollmentSearchQuery && enrollmentSearchQuery.trim()) {
+                    const q = enrollmentSearchQuery.trim().toLowerCase();
+                    const nameMatch = s.studentName?.toLowerCase().includes(q);
+                    const emailMatch = s.email?.toLowerCase().includes(q);
+                    const batchMatch = s.batchCode?.toLowerCase().includes(q);
+                    if (!nameMatch && !emailMatch && !batchMatch) return false;
+                  }
+                  return true;
+                });
+
+                const confirmedCount = courseStudents.filter(s => s.status !== 'CANCELLED').length;
+                const courseRev = courseStudents.filter(s => s.status !== 'CANCELLED').reduce((acc, curr) => acc + (curr.feePaid || 0), 0);
+
+                return (
+                  <div key={course.id || course.title} className="bg-surface-white rounded-card border border-surface-border overflow-hidden shadow-level-1">
+                    {/* Course Header Banner */}
+                    <div className="p-4 sm:p-5 bg-gradient-to-r from-surface-cream to-surface-white border-b border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-forest-800/10 flex items-center justify-center text-forest-800 shrink-0">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-display font-extrabold text-base text-typography-primary flex items-center gap-2">
+                            {course.title}
+                          </h4>
+                          <div className="flex items-center gap-3 text-[11px] text-typography-muted font-mono mt-0.5">
+                            <span>Fee: <strong className="text-forest-800 font-sans">₹{course.feeInr?.toLocaleString('en-IN') || 4999}</strong></span>
+                            {course.durationDays && <span>• Duration: {course.durationDays} Days</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-3 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-[11px] font-extrabold rounded-lg">
+                          {confirmedCount} Active Trainees
+                        </span>
+                        <span className="px-3 py-1 bg-forest-800/10 text-forest-800 border border-forest-800/20 text-[11px] font-extrabold rounded-lg">
+                          ₹{courseRev.toLocaleString('en-IN')} Revenue
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Course Students Roster Table */}
+                    {courseStudents.length > 0 ? (
+                      <div className="w-full overflow-x-auto scrollbar-thin">
+                        <table className="w-full text-left text-xs text-typography-secondary min-w-[700px]">
+                          <thead className="bg-surface-cream/50 text-typography-primary uppercase font-bold text-[11px] border-b border-surface-border">
+                            <tr>
+                              <th className="p-3.5">Student Trainee</th>
+                              <th className="p-3.5">Batch Code</th>
+                              <th className="p-3.5">Fee & Payment</th>
+                              <th className="p-3.5">Status</th>
+                              <th className="p-3.5 text-right">Roster Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-surface-border">
+                            {courseStudents.map((s) => (
+                              <tr key={s.id} className="hover:bg-surface-cream/40 transition-colors">
+                                <td className="p-3.5">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-forest-800/10 font-bold text-forest-800 flex items-center justify-center text-xs shrink-0 font-display">
+                                      {s.studentName ? s.studentName.charAt(0).toUpperCase() : 'S'}
+                                    </div>
+                                    <div>
+                                      <span className="font-bold text-typography-primary block">{s.studentName}</span>
+                                      <span className="text-[11px] font-mono text-typography-muted">{s.email}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-3.5">
+                                  <span className="font-mono text-xs font-bold text-forest-800 px-2.5 py-1 bg-surface-cream rounded-md border border-surface-border inline-block">
+                                    {s.batchCode}
+                                  </span>
+                                </td>
+                                <td className="p-3.5">
+                                  <span className="font-bold text-typography-primary block">₹{s.feePaid?.toLocaleString('en-IN') || 4999}</span>
+                                  <span className="text-[10px] text-green-700 font-bold uppercase">PAID (ONLINE)</span>
+                                </td>
+                                <td className="p-3.5">
+                                  <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider inline-flex items-center gap-1 ${
+                                    s.status === 'CANCELLED' 
+                                      ? 'bg-red-600/10 text-red-700 border border-red-600/20' 
+                                      : 'bg-green-600/10 text-green-700 border border-green-600/20'
+                                  }`}>
+                                    {s.status === 'CANCELLED' ? (
+                                      <><XCircle className="w-3 h-3" /> CANCELLED & REFUNDED</>
+                                    ) : (
+                                      <><CheckCircle2 className="w-3 h-3" /> CONFIRMED</>
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="p-3.5 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      onClick={() => handleGrantCapability(s.id, 'TRAINING')}
+                                      className="px-3 py-1.5 btn-secondary text-[11px] font-bold rounded-xl flex items-center gap-1 hover:border-forest-700 transition-all"
+                                    >
+                                      <Award className="w-3.5 h-3.5 text-forest-700" /> Grant Access
+                                    </button>
+                                    {s.status !== 'CANCELLED' && (
+                                      <button
+                                        onClick={() => handleAdminCancelEnrollment(s)}
+                                        className="px-3 py-1.5 bg-red-600/10 text-red-700 border border-red-600/20 text-[11px] font-bold rounded-xl hover:bg-red-600 hover:text-white transition-all flex items-center gap-1"
+                                      >
+                                        <RotateCcw className="w-3.5 h-3.5" /> Cancel & Refund
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center bg-surface-cream/30 space-y-2">
+                        <Users className="w-8 h-8 text-typography-muted mx-auto opacity-50" />
+                        <p className="text-xs font-bold text-typography-primary">No student enrollments found for this masterclass.</p>
+                        <p className="text-[11px] text-typography-muted">Schedule a new batch or adjust your search filter.</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* MODE 2: SINGLE SELECTED REGISTERED COURSE VIEW */
+            <div className="bg-surface-white rounded-card border border-surface-border overflow-hidden shadow-level-1 space-y-0">
+              {/* Selected Course Detail Banner */}
+              <div className="p-6 bg-gradient-to-r from-forest-800/5 via-surface-cream to-surface-white border-b border-surface-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase bg-forest-800 text-white rounded-full">
+                      Active Masterclass Roster
+                    </span>
+                    <button 
+                      onClick={() => setEnrollmentCourseFilter('ALL')}
+                      className="text-[11px] font-bold text-forest-700 hover:underline flex items-center gap-1"
+                    >
+                      ← Back to All Courses
+                    </button>
+                  </div>
+                  <h3 className="font-display font-black text-xl text-typography-primary">
+                    {enrollmentCourseFilter}
+                  </h3>
+                  <p className="text-xs text-typography-secondary">
+                    Managing student enrollments and training access for {enrollmentCourseFilter}.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-surface-white rounded-xl border border-surface-border text-center min-w-[100px]">
+                    <span className="text-[10px] uppercase font-bold text-typography-muted block">Enrolled Students</span>
+                    <strong className="text-lg font-black text-typography-primary font-display">{filteredEnrolledStudents.length}</strong>
+                  </div>
+                  <div className="p-3 bg-surface-white rounded-xl border border-surface-border text-center min-w-[120px]">
+                    <span className="text-[10px] uppercase font-bold text-typography-muted block">Course Revenue</span>
+                    <strong className="text-lg font-black text-forest-800 font-display">
+                      ₹{filteredEnrolledStudents.filter(s => s.status !== 'CANCELLED').reduce((acc, curr) => acc + (curr.feePaid || 0), 0).toLocaleString('en-IN')}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Roster Table */}
+              {filteredEnrolledStudents.length > 0 ? (
+                <div className="w-full overflow-x-auto scrollbar-thin">
+                  <table className="w-full text-left text-xs text-typography-secondary min-w-[700px]">
+                    <thead className="bg-surface-cream text-typography-primary uppercase font-bold text-[11px] border-b border-surface-border">
+                      <tr>
+                        <th className="p-3.5">Student Trainee</th>
+                        <th className="p-3.5">Batch Code</th>
+                        <th className="p-3.5">Fee Paid</th>
+                        <th className="p-3.5">Status</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-border">
+                      {filteredEnrolledStudents.map((s) => (
+                        <tr key={s.id} className="hover:bg-surface-cream/50 transition-colors">
+                          <td className="p-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-forest-800/10 font-bold text-forest-800 flex items-center justify-center text-xs shrink-0 font-display">
+                                {s.studentName ? s.studentName.charAt(0).toUpperCase() : 'S'}
+                              </div>
+                              <div>
+                                <span className="font-bold text-typography-primary block text-xs">{s.studentName}</span>
+                                <span className="text-[11px] font-mono text-typography-muted">{s.email}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3.5">
+                            <span className="font-mono text-xs font-bold text-forest-800 px-2.5 py-1 bg-surface-cream rounded-md border border-surface-border inline-block">
+                              {s.batchCode}
+                            </span>
+                          </td>
+                          <td className="p-3.5 font-bold text-typography-primary text-xs">
+                            ₹{s.feePaid?.toLocaleString('en-IN') || 4999}
+                          </td>
+                          <td className="p-3.5">
+                            <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider inline-flex items-center gap-1 ${
+                              s.status === 'CANCELLED' 
+                                ? 'bg-red-600/10 text-red-700 border border-red-600/20' 
+                                : 'bg-green-600/10 text-green-700 border border-green-600/20'
+                            }`}>
+                              {s.status === 'CANCELLED' ? (
+                                <><XCircle className="w-3 h-3" /> CANCELLED & REFUNDED</>
+                              ) : (
+                                <><CheckCircle2 className="w-3 h-3" /> CONFIRMED</>
+                              )}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleGrantCapability(s.id, 'TRAINING')}
+                                className="px-3 py-1.5 btn-secondary text-[11px] font-bold rounded-xl flex items-center gap-1 hover:border-forest-700 transition-all"
+                              >
+                                <Award className="w-3.5 h-3.5 text-forest-700" /> Grant Access
+                              </button>
+                              {s.status !== 'CANCELLED' && (
+                                <button
+                                  onClick={() => handleAdminCancelEnrollment(s)}
+                                  className="px-3 py-1.5 bg-red-600/10 text-red-700 border border-red-600/20 text-[11px] font-bold rounded-xl hover:bg-red-600 hover:text-white transition-all flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" /> Cancel & Refund
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-12 text-center bg-surface-cream/30 space-y-3">
+                  <Users className="w-10 h-10 text-typography-muted mx-auto opacity-40" />
+                  <p className="text-sm font-bold text-typography-primary">No students matching the current criteria.</p>
+                  <p className="text-xs text-typography-muted">Try adjusting your search query or status filter.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
