@@ -658,13 +658,16 @@ export default function AdminDashboardPage({ user }) {
       return;
     }
 
-    if (publishImmediately && (!variantSku || !variantSku.trim() || !variantPrice || parseFloat(variantPrice) <= 0)) {
+    const hasConfiguredVariants = variantsList.length > 0;
+    const hasValidUnaddedVariantInput = variantSku && variantSku.trim() && variantPrice && parseFloat(variantPrice) > 0;
+
+    if (publishImmediately && !hasConfiguredVariants && !hasValidUnaddedVariantInput) {
       setFormTab('pricing');
-      setErrorMessage('Valid SKU and Price (INR) are required in Step 5 (Pricing & Stock) to publish product.');
+      setErrorMessage('At least one valid pricing variant (SKU & Price > 0) is required in Step 5 (Pricing & Stock) to publish product.');
       return;
     }
 
-    if (variantComparePrice && !isNaN(parseFloat(variantComparePrice))) {
+    if (variantPrice && parseFloat(variantPrice) > 0 && variantComparePrice && !isNaN(parseFloat(variantComparePrice))) {
       const selling = parseFloat(variantPrice);
       const compare = parseFloat(variantComparePrice);
       if (selling >= compare) {
