@@ -78,17 +78,17 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-leaf flex-shrink-0" />
-                <a href="tel:+917804709870" className="hover:text-white font-medium transition-colors">+91 7804709870</a>
+                <a href="tel:+917204709870" className="hover:text-white font-medium transition-colors">+91 7204709870</a>
               </div>
               <div className="flex items-center gap-2.5">
                 <WhatsAppIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <a 
-                  href="https://wa.me/917804709870" 
+                  href="https://wa.me/917204709870" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-emerald-300 hover:text-emerald-200 font-semibold transition-colors flex items-center gap-1"
                 >
-                  WhatsApp: +91 7804709870 ↗
+                  WhatsApp: +91 7204709870 ↗
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
@@ -142,13 +142,13 @@ export default function Footer() {
             {/* Social Integration Quick Buttons */}
             <div className="space-y-2.5 mb-5">
               <a
-                href="https://wa.me/917804709870"
+                href="https://wa.me/917204709870"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-level-1 transition-all button-press"
               >
                 <WhatsAppIcon className="w-4 h-4 text-white" />
-                <span>Chat on WhatsApp (+91 7804709870)</span>
+                <span>Chat on WhatsApp (+91 7204709870)</span>
               </a>
 
               <a

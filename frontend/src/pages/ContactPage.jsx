@@ -90,7 +90,7 @@ export default function ContactPage() {
               <Phone className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-typography-primary text-sm">Phone Helpline</h4>
-                <a href="tel:+917804709870" className="text-forest-700 font-bold hover:underline text-sm block">+91 7804709870</a>
+                <a href="tel:+917204709870" className="text-forest-700 font-bold hover:underline text-sm block">+91 7204709870</a>
                 <span className="text-[11px] text-typography-muted">(Mon-Sat, 9AM-6PM IST)</span>
               </div>
             </div>
@@ -99,9 +99,9 @@ export default function ContactPage() {
               <WhatsAppIcon className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <h4 className="font-bold text-emerald-900 text-sm">WhatsApp Assistance</h4>
-                <p className="text-emerald-800 text-xs">+91 7804709870</p>
+                <p className="text-emerald-800 text-xs">+91 7204709870</p>
                 <a
-                  href="https://wa.me/917804709870"
+                  href="https://wa.me/917204709870"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all button-press mt-1"

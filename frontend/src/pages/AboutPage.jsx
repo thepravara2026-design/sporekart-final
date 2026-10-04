@@ -71,13 +71,13 @@ export default function AboutPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-surface-border">
           <a
-            href="https://wa.me/917804709870"
+            href="https://wa.me/917204709870"
             target="_blank"
             rel="noopener noreferrer"
             className="p-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all button-press"
           >
             <WhatsAppIcon className="w-4 h-4 text-white" />
-            <span>WhatsApp: +91 7804709870</span>
+            <span>WhatsApp: +91 7204709870</span>
           </a>
 
           <a

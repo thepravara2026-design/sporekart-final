@@ -3,7 +3,7 @@ import React from 'react';
 export default function WhatsAppFloatingButton() {
   return (
     <a
-      href="https://wa.me/917804709870?text=Hello%20Sporekart%2C%20I%20have%20an%20inquiry%20regarding%20mushroom%20products%2Ftraining."
+      href="https://wa.me/917204709870?text=Hello%20Sporekart%2C%20I%20have%20an%20inquiry%20regarding%20mushroom%20products%2Ftraining."
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with Sporekart on WhatsApp"

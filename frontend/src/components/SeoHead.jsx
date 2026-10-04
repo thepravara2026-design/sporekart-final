@@ -20,11 +20,11 @@ export default function SeoHead({
     "logo": "https://sporekart.in/logo.png",
     "sameAs": [
       "https://www.instagram.com/sporekart",
-      "https://wa.me/917804709870"
+      "https://wa.me/917204709870"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-7804709870",
+      "telephone": "+91-7204709870",
       "contactType": "customer service",
       "areaServed": "IN",
       "availableLanguage": ["en", "hi", "kn"]
@@ -48,7 +48,7 @@ export default function SeoHead({
     "@type": "LocalBusiness",
     "name": "Sporekart — Shriyap Enterprise",
     "image": ogImage,
-    "telephone": "+91-7804709870",
+    "telephone": "+91-7204709870",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Basapura village, Behind Taralabalu school",
