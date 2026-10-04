@@ -296,7 +296,15 @@ export default function Navbar({ user, setUser }) {
               setUser={setUser}
               onSuccess={() => {
                 setIsAuthModalOpen(false);
-                navigate('/dashboard');
+                const currentPath = window.location.pathname;
+                const hasCartItems = cart?.items?.length > 0 || cart?.itemCount > 0;
+                if (hasCartItems) {
+                  if (currentPath !== '/checkout' && currentPath !== '/cart') {
+                    navigate('/checkout');
+                  }
+                } else if (currentPath !== '/checkout' && currentPath !== '/cart') {
+                  navigate('/dashboard');
+                }
               }}
             />
           </div>

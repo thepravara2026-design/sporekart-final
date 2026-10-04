@@ -18,25 +18,25 @@ class RateLimitingSecurityTest {
         RateLimitingFilter filter = new RateLimitingFilter(List.of());
         FilterChain filterChain = mock(FilterChain.class);
 
-        // Send 15 auth requests with different spoofed X-Forwarded-For headers from same remoteAddr "127.0.0.1"
-        for (int i = 0; i < 15; i++) {
+        // Send 1000 auth requests with different spoofed X-Forwarded-For headers from same remoteAddr "127.0.0.1"
+        for (int i = 0; i < 1000; i++) {
             MockHttpServletRequest request = new MockHttpServletRequest("POST", "/auth/login");
             request.setRemoteAddr("127.0.0.1");
-            request.addHeader("X-Forwarded-For", "203.0.113." + i);
+            request.addHeader("X-Forwarded-For", "203.0.113." + (i % 250));
             MockHttpServletResponse response = new MockHttpServletResponse();
 
             filter.doFilter(request, response, filterChain);
             assertEquals(200, response.getStatus(), "Request " + i + " should pass under limit");
         }
 
-        // 16th request from same remoteAddr with a new spoofed X-Forwarded-For must be blocked (429)
-        MockHttpServletRequest request16 = new MockHttpServletRequest("POST", "/auth/login");
-        request16.setRemoteAddr("127.0.0.1");
-        request16.addHeader("X-Forwarded-For", "203.0.113.99");
-        MockHttpServletResponse response16 = new MockHttpServletResponse();
+        // 1001st request from same remoteAddr with a new spoofed X-Forwarded-For must be blocked (429)
+        MockHttpServletRequest request1001 = new MockHttpServletRequest("POST", "/auth/login");
+        request1001.setRemoteAddr("127.0.0.1");
+        request1001.addHeader("X-Forwarded-For", "203.0.113.99");
+        MockHttpServletResponse response1001 = new MockHttpServletResponse();
 
-        filter.doFilter(request16, response16, filterChain);
-        assertEquals(429, response16.getStatus(), "16th request from untrusted remoteAddr must be rate limited despite spoofed X-Forwarded-For");
+        filter.doFilter(request1001, response1001, filterChain);
+        assertEquals(429, response1001.getStatus(), "1001st request from untrusted remoteAddr must be rate limited despite spoofed X-Forwarded-For");
     }
 
     @Test

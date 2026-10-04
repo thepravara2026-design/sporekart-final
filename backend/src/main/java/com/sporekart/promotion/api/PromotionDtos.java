@@ -1,6 +1,7 @@
 package com.sporekart.promotion.api;
 
 import com.sporekart.promotion.domain.PromotionStatus;
+import com.sporekart.promotion.domain.PromotionTargetAudience;
 import com.sporekart.promotion.domain.PromotionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,8 +42,13 @@ public class PromotionDtos {
         private Boolean stackable;
         private Integer priority;
 
+        private PromotionTargetAudience targetAudience;
+
         private String targetCategorySlug;
         private UUID targetProductId;
+        private String targetType;
+        private UUID targetBatchId;
+        private UUID targetCourseId;
     }
 
     @Data
@@ -58,12 +64,25 @@ public class PromotionDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    public static class BatchPromotionValidationRequest {
+        @NotBlank(message = "Promo code is required")
+        private String code;
+        private UUID batchId;
+        private UUID courseId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class PromotionValidationResult {
         private boolean valid;
         private String code;
         private String name;
         private PromotionType type;
+        private PromotionTargetAudience targetAudience;
         private BigDecimal discountAmountInr;
+        private BigDecimal finalAmountInr;
         private boolean isFreeShipping;
         private String message;
     }

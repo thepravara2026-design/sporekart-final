@@ -86,6 +86,7 @@ public class TrainingDtos {
     public static class EnrollRequest {
         private UUID batchId;
         private UUID slotId;
+        private String promoCode;
 
         public UUID getTargetBatchId() {
             return batchId != null ? batchId : slotId;
@@ -255,4 +256,79 @@ public class TrainingDtos {
         private String refundId;
         private ZonedDateTime enrolledAt;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateTrainingReviewRequest {
+        @NotNull(message = "Enrollment ID is required")
+        private UUID enrollmentId;
+
+        @NotNull(message = "Rating is required")
+        @jakarta.validation.constraints.Min(value = 1, message = "Rating must be at least 1 star")
+        @jakarta.validation.constraints.Max(value = 5, message = "Rating cannot exceed 5 stars")
+        private Integer rating;
+
+        @jakarta.validation.constraints.Min(value = 1, message = "Instructor rating must be at least 1 star")
+        @jakarta.validation.constraints.Max(value = 5, message = "Instructor rating cannot exceed 5 stars")
+        private Integer instructorRating;
+
+        private String reviewTitle;
+
+        @NotBlank(message = "Review text is required")
+        private String reviewText;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TrainingReviewResponse {
+        private UUID id;
+        private UUID courseId;
+        private String courseTitle;
+        private UUID batchId;
+        private String batchCode;
+        private UUID enrollmentId;
+        private UUID userId;
+        private String reviewerName;
+        private Integer rating;
+        private Integer instructorRating;
+        private String reviewTitle;
+        private String reviewText;
+        private String status;
+        private boolean isVerifiedTrainee;
+        private ZonedDateTime createdAt;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CourseReviewSummary {
+        private Double averageRating;
+        private Double averageInstructorRating;
+        private Long totalReviews;
+        private Long fiveStarCount;
+        private Long fourStarCount;
+        private Long threeStarCount;
+        private Long twoStarCount;
+        private Long oneStarCount;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PendingTrainingReviewResponse {
+        private UUID enrollmentId;
+        private UUID courseId;
+        private String courseTitle;
+        private UUID batchId;
+        private String batchCode;
+        private ZonedDateTime enrolledAt;
+        private EnrollmentStatus status;
+    }
 }
+

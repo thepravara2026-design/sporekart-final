@@ -6,13 +6,22 @@ const API_BASE = '/api/v1';
 export const getOrCreateSessionId = () => {
   let sessionId = localStorage.getItem('sporekart_session_id');
   if (!sessionId) {
-    sessionId = 'sess_' + crypto.randomUUID();
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      sessionId = 'sess_' + crypto.randomUUID();
+    } else {
+      sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
     localStorage.setItem('sporekart_session_id', sessionId);
   }
   return sessionId;
 };
 
-// Helper to completely clear authentication tokens & session ID on logout
+// Helper to clear token only on 401 unauthorized without wiping guest session cart
+export const clearTokenOnly = () => {
+  localStorage.removeItem('sporekart_token');
+};
+
+// Helper to completely clear authentication tokens & session ID on explicit logout
 export const clearSessionAndTokens = () => {
   localStorage.removeItem('sporekart_token');
   localStorage.removeItem('sporekart_session_id');
@@ -65,6 +74,8 @@ export const authApi = {
 
 export const catalogApi = {
   getProducts: (type, category, page = 0, size = 24) => api.get('/catalog/products', { params: { type, category, page, size } }),
+  getPopularProducts: (category, limit = 6) => api.get('/products/popular', { params: { category, limit } }),
+  getBestSellingProducts: (category, limit = 6) => api.get('/products/bestsellers', { params: { category, limit } }),
   searchProducts: (params) => api.get('/products/search', { params }),
   getProductBySlug: (slug) => api.get(`/catalog/products/${slug}`),
   getCategories: () => api.get('/catalog/categories'),
@@ -84,7 +95,7 @@ export const cartApi = {
   validateCart: () => api.post('/cart/validate'),
   applyPromotion: (code) => api.post('/cart/apply-promotion', { code }),
   removePromotion: () => api.delete('/cart/remove-promotion'),
-  getAvailablePromotions: () => api.get('/promotions/available'),
+  getAvailablePromotions: (audience = 'CUSTOMER') => api.get('/promotions/available', { params: { audience } }),
 };
 
 export const customerApi = {
@@ -99,10 +110,17 @@ export const customerApi = {
 export const trainingApi = {
   getCourses: (category) => api.get('/training/courses', { params: { category } }),
   getCourseBySlug: (slug) => api.get(`/training/courses/${slug}`),
-  bookSlot: (slotId) => api.post('/training/enroll', { batchId: slotId, slotId }),
+  bookSlot: (slotId, promoCode) => api.post('/training/enroll', { batchId: slotId, slotId, promoCode }),
+  validateBatchPromotion: (code, batchId, courseId) => api.post('/promotions/validate-batch', { code, batchId, courseId }),
+  getAvailableBatchPromotions: () => api.get('/promotions/available', { params: { audience: 'TRAINEE' } }),
   getUserBookings: () => api.get('/training/my-bookings'),
   getEnrollmentById: (enrollmentId) => api.get(`/training/enrollments/${enrollmentId}`),
   cancelEnrollment: (enrollmentId, reason) => api.post(`/training/enrollments/${enrollmentId}/cancel`, null, { params: { reason } }),
+  getCourseReviews: (courseId) => api.get(`/training/courses/${courseId}/reviews`),
+  getCourseReviewSummary: (courseId) => api.get(`/training/courses/${courseId}/reviews/summary`),
+  createReview: (data) => api.post('/training/reviews', data),
+  getMyReviews: () => api.get('/training/my-reviews'),
+  getPendingReviews: () => api.get('/training/pending-reviews'),
 };
 
 export const orderApi = {
@@ -114,6 +132,22 @@ export const orderApi = {
   getOrderById: (id) => api.get(`/orders/${id}`),
   cancelOrder: (id, reason) => api.post(`/orders/${id}/cancel`, null, { params: { reason } }),
   downloadInvoice: (id) => api.get(`/orders/${id}/invoice`, { responseType: 'blob' }),
+};
+
+export const reviewApi = {
+  getLatestReviews: (limit = 5) => api.get('/reviews/latest', { params: { limit } }),
+  getAllPublishedReviews: (page = 0, size = 10) => api.get('/reviews', { params: { page, size } }),
+  getProductReviews: (productId, page = 0, size = 10) => api.get(`/products/${productId}/reviews`, { params: { page, size } }),
+  getProductReviewSummary: (productId) => api.get(`/products/${productId}/reviews/summary`),
+  createReview: (data) => api.post('/customer/reviews', data),
+  getCustomerReviews: (page = 0, size = 10) => api.get('/customer/reviews', { params: { page, size } }),
+  getPendingReviews: () => api.get('/customer/reviews/pending'),
+  skipInvitation: (orderItemId) => api.post(`/customer/reviews/invitations/${orderItemId}/skip`),
+  updateReview: (reviewId, data) => api.put(`/customer/reviews/${reviewId}`, data),
+  getAdminReviews: (params) => api.get('/admin/reviews', { params }),
+  getAdminReviewSummary: () => api.get('/admin/reviews/summary'),
+  getAdminReviewById: (id) => api.get(`/admin/reviews/${id}`),
+  moderateReview: (id, status, reason) => api.patch(`/admin/reviews/${id}/status`, { status, moderationReason: reason }),
 };
 
 
@@ -147,10 +181,12 @@ export const adminApi = {
   deleteBlogPost: (id) => api.delete(`/admin/content/posts/${id}`),
   getAdminProducts: (params) => api.get('/admin/catalog/products', { params }),
   createCategory: (data) => api.post('/admin/catalog/categories', data),
+  updateCategory: (id, data) => api.put(`/admin/catalog/categories/${id}`, data),
   createProduct: (data) => api.post('/admin/catalog/products', data),
   updateProductInformation: (productId, data) => api.post(`/admin/catalog/products/${productId}/information`, data),
   publishProduct: (productId) => api.post(`/admin/catalog/products/${productId}/publish`),
   addVariant: (productId, data) => api.post(`/admin/catalog/products/${productId}/variants`, data),
+  replenishStock: (variantId, quantity, reason) => api.post(`/admin/catalog/inventory/${variantId}/replenish`, { quantity, reason }),
   createOffer: (data) => api.post('/admin/catalog/offers', data),
   addMedia: (data) => api.post('/admin/catalog/media', data),
   reorderMedia: (productId, items) => api.put(`/admin/catalog/products/${productId}/media/reorder`, { items }),

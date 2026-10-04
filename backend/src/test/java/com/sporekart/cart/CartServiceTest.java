@@ -200,4 +200,21 @@ public class CartServiceTest {
         assertEquals(5, cart.getItemCount());
         assertTrue(cart.isValid());
     }
+
+    @Test
+    void testIneligiblePromoCodeThrowsExceptionWithEligibilityGuidelines() {
+        String sessionId = "session-promo-" + UUID.randomUUID();
+
+        // Add 1 item worth ~100 INR (< 799 INR required for FLAT100)
+        cartService.addItemToCart(null, sessionId, testVariant.getId(), 1);
+
+        // Attempt to apply FLAT100 promo code
+        Exception ex = assertThrows(IllegalArgumentException.class, () ->
+                cartService.applyPromotion(null, sessionId, "FLAT100")
+        );
+
+        assertTrue(ex.getMessage().contains("FLAT100"), "Error message should mention promo code FLAT100");
+        assertTrue(ex.getMessage().contains("799"), "Error message should mention minimum order requirement ₹799");
+        assertTrue(ex.getMessage().contains("qualify") || ex.getMessage().contains("more"), "Error message should instruct user with eligibility guidelines");
+    }
 }

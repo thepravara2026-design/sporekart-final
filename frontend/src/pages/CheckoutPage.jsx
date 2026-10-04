@@ -35,9 +35,7 @@ export default function CheckoutPage({ user, setUser }) {
   useEffect(() => {
     const initCheckout = async () => {
       setValidating(true);
-      if (localStorage.getItem('sporekart_token')) {
-        await fetchCart();
-      }
+      await fetchCart();
       const result = await validateCart();
       setValidationResult(result);
       setValidating(false);
@@ -113,6 +111,8 @@ export default function CheckoutPage({ user, setUser }) {
     return errors;
   };
 
+  const [guestAddress, setGuestAddress] = useState(null);
+
   const handleCreateAddress = async (e) => {
     if (e) e.preventDefault();
     setAddressFormErrors({});
@@ -127,6 +127,7 @@ export default function CheckoutPage({ user, setUser }) {
       // Unauthenticated guest user: validate form and pass inline address object
       setIsAddingAddress(false);
       setSelectedAddressId('guest_inline');
+      setGuestAddress(newAddress);
       return { isGuest: true, address: newAddress };
     }
 
@@ -157,6 +158,7 @@ export default function CheckoutPage({ user, setUser }) {
         // Fallback for guest/unauthenticated user
         setIsAddingAddress(false);
         setSelectedAddressId('guest_inline');
+        setGuestAddress(newAddress);
         return { isGuest: true, address: newAddress };
       }
       const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to add address';
@@ -170,7 +172,10 @@ export default function CheckoutPage({ user, setUser }) {
     let targetAddressId = selectedAddressId;
     let inlineShippingAddress = null;
 
-    if (isAddingAddress || !targetAddressId || targetAddressId === 'guest_inline') {
+    if (selectedAddressId === 'guest_inline' && guestAddress) {
+      targetAddressId = null;
+      inlineShippingAddress = guestAddress;
+    } else if (isAddingAddress || !targetAddressId) {
       const addrResult = await handleCreateAddress();
       if (!addrResult) {
         return; // Validation or saving failed, block order submission
@@ -278,6 +283,7 @@ export default function CheckoutPage({ user, setUser }) {
                 subtitle="Enter your mobile number or email to register your customer account and proceed to shipping details."
                 setUser={setUser}
                 onSuccess={(authData) => {
+                  fetchCart();
                   fetchAddresses();
                   if (authData.fullName || authData.phone) {
                     setNewAddress(prev => ({

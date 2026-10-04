@@ -72,11 +72,25 @@ public class Promotion {
     @Column(nullable = false)
     private Integer priority = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_audience", nullable = false)
+    @Builder.Default
+    private PromotionTargetAudience targetAudience = PromotionTargetAudience.BOTH;
+
     @Column(name = "target_category_slug")
     private String targetCategorySlug;
 
     @Column(name = "target_product_id")
     private UUID targetProductId;
+
+    @Column(name = "target_type")
+    private String targetType;
+
+    @Column(name = "target_batch_id")
+    private UUID targetBatchId;
+
+    @Column(name = "target_course_id")
+    private UUID targetCourseId;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

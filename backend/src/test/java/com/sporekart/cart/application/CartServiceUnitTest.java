@@ -69,6 +69,7 @@ class CartServiceUnitTest {
         variantId = UUID.randomUUID();
 
         testCart = new Cart(userId, sessionId);
+        testCart.setId(UUID.randomUUID());
 
         testProduct = Product.builder()
                 .id(UUID.randomUUID())
@@ -234,6 +235,7 @@ class CartServiceUnitTest {
     void CART_9_mergeGuestCart_success() {
         String guestSession = "guest-123";
         Cart guestCart = new Cart(null, guestSession);
+        guestCart.setId(UUID.randomUUID());
         CartItem guestItem = new CartItem(guestCart, variantId, 3, new BigDecimal("105.00"));
         guestCart.addItem(guestItem);
 

@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import com.sporekart.identity.domain.User;
+import com.sporekart.identity.infrastructure.UserRepository;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,6 +23,7 @@ public class TrainingController {
 
     private final TrainingService trainingService;
     private final com.sporekart.customer.application.CapabilityService capabilityService;
+    private final UserRepository userRepository;
 
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<List<TrainingDtos.CourseResponse>>> getCourses() {
@@ -58,7 +62,7 @@ public class TrainingController {
             throw new IllegalArgumentException("Batch ID or Slot ID is required for enrollment");
         }
 
-        Enrollment enrollment = trainingService.enrollCustomer(userId, targetBatchId);
+        Enrollment enrollment = trainingService.enrollCustomer(userId, targetBatchId, request.getPromoCode());
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
     }
 
@@ -264,4 +268,101 @@ public class TrainingController {
                 .certificateUrl(cert.getCertificateUrl())
                 .build();
     }
+
+    // --- Training Reviews & Feedback Endpoints ---
+    @GetMapping("/courses/{courseId}/reviews")
+    public ResponseEntity<ApiResponse<List<TrainingDtos.TrainingReviewResponse>>> getCourseReviews(
+            @PathVariable UUID courseId) {
+        List<TrainingReview> reviews = trainingService.getCourseReviews(courseId);
+        List<TrainingDtos.TrainingReviewResponse> response = reviews.stream()
+                .map(this::mapTrainingReview)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/courses/{courseId}/reviews/summary")
+    public ResponseEntity<ApiResponse<TrainingDtos.CourseReviewSummary>> getCourseReviewSummary(
+            @PathVariable UUID courseId) {
+        TrainingDtos.CourseReviewSummary summary = trainingService.getCourseReviewSummary(courseId);
+        return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    @PostMapping("/reviews")
+    public ResponseEntity<ApiResponse<TrainingDtos.TrainingReviewResponse>> createReview(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody TrainingDtos.CreateTrainingReviewRequest request) {
+
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Authentication required to submit review"));
+        }
+
+        TrainingReview review = trainingService.createTrainingReview(userId, request);
+        return ResponseEntity.ok(ApiResponse.success(mapTrainingReview(review)));
+    }
+
+    @GetMapping("/my-reviews")
+    public ResponseEntity<ApiResponse<List<TrainingDtos.TrainingReviewResponse>>> getMyReviews(
+            org.springframework.security.core.Authentication authentication) {
+
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            return ResponseEntity.ok(ApiResponse.success(List.of()));
+        }
+
+        List<TrainingReview> reviews = trainingService.getUserTrainingReviews(userId);
+        List<TrainingDtos.TrainingReviewResponse> response = reviews.stream()
+                .map(this::mapTrainingReview)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/pending-reviews")
+    public ResponseEntity<ApiResponse<List<TrainingDtos.PendingTrainingReviewResponse>>> getPendingReviews(
+            org.springframework.security.core.Authentication authentication) {
+
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            return ResponseEntity.ok(ApiResponse.success(List.of()));
+        }
+
+        List<TrainingDtos.PendingTrainingReviewResponse> pending = trainingService.getPendingTrainingReviewsForUser(userId);
+        return ResponseEntity.ok(ApiResponse.success(pending));
+    }
+
+    private TrainingDtos.TrainingReviewResponse mapTrainingReview(TrainingReview review) {
+        String reviewerName = "Verified Trainee";
+        if (review.getUserId() != null) {
+            Optional<User> userOpt = userRepository.findById(review.getUserId());
+            if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                if (u.getFullName() != null && !u.getFullName().isBlank()) {
+                    reviewerName = u.getFullName();
+                } else if (u.getFirstName() != null && !u.getFirstName().isBlank()) {
+                    reviewerName = (u.getFirstName() + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                } else if (u.getEmail() != null) {
+                    reviewerName = u.getEmail().split("@")[0];
+                }
+            }
+        }
+
+        return TrainingDtos.TrainingReviewResponse.builder()
+                .id(review.getId())
+                .courseId(review.getCourse() != null ? review.getCourse().getId() : null)
+                .courseTitle(review.getCourse() != null ? review.getCourse().getTitle() : "Masterclass")
+                .batchId(review.getBatch() != null ? review.getBatch().getId() : null)
+                .batchCode(review.getBatch() != null ? review.getBatch().getBatchCode() : "UPCOMING")
+                .enrollmentId(review.getEnrollment() != null ? review.getEnrollment().getId() : null)
+                .userId(review.getUserId())
+                .reviewerName(reviewerName)
+                .rating(review.getRating())
+                .instructorRating(review.getInstructorRating())
+                .reviewTitle(review.getReviewTitle())
+                .reviewText(review.getReviewText())
+                .status(review.getStatus())
+                .isVerifiedTrainee(review.isVerifiedTrainee())
+                .createdAt(review.getCreatedAt())
+                .build();
+    }
 }
+

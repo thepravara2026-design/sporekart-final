@@ -33,4 +33,16 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByUserIdOrSessionIdOrderByCreatedAtDesc(@Param("userId") UUID userId, @Param("sessionId") String sessionId);
 
     List<Order> findByStatus(OrderStatus status);
+
+    @Query("""
+        SELECT pv.product.id, SUM(oi.quantity) as totalSales
+        FROM OrderItem oi
+        JOIN oi.order o
+        JOIN ProductVariant pv ON oi.variantId = pv.id
+        WHERE o.status IN (com.sporekart.order.domain.OrderStatus.PAID, com.sporekart.order.domain.OrderStatus.CONFIRMED, com.sporekart.order.domain.OrderStatus.PROCESSING, com.sporekart.order.domain.OrderStatus.SHIPPED, com.sporekart.order.domain.OrderStatus.DELIVERED)
+          AND pv.product.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE
+        GROUP BY pv.product.id
+        ORDER BY totalSales DESC
+    """)
+    List<Object[]> findTopSellingProductIds();
 }

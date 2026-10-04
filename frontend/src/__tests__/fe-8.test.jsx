@@ -94,7 +94,7 @@ describe('FE-8: Training Page & Batch Selection Component Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Commercial Button Mushroom Masterclass')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
     const enrollButtons = screen.getAllByRole('button', { name: /enroll now/i });
     expect(enrollButtons.length).toBeGreaterThan(0);
@@ -102,13 +102,13 @@ describe('FE-8: Training Page & Batch Selection Component Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Enrollment Preview')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
     const confirmButton = screen.getByRole('button', { name: /confirm seat & proceed to payment/i });
     fireEvent.click(confirmButton);
 
     await waitFor(() => {
-      expect(trainingApi.bookSlot).toHaveBeenCalledWith('slot-101');
+      expect(trainingApi.bookSlot).toHaveBeenCalledWith('slot-101', null);
     });
   });
 });

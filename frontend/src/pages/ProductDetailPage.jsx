@@ -12,10 +12,12 @@ import AvailabilityBadge from '../components/AvailabilityBadge';
 import PageSkeleton from '../components/PageSkeleton';
 import EmptyState from '../components/EmptyState';
 import MediaImage from '../components/MediaImage';
+import ProductReviewsSection from '../components/ProductReviewsSection';
+import ProductCarousel from '../components/ProductCarousel';
 
 import { useCart } from '../context/CartContext';
 
-export default function ProductDetailPage({ onAddToCart: propOnAddToCart }) {
+export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, onOpenReviewModal }) {
   const { addToCart, cart } = useCart();
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
@@ -70,10 +72,15 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart }) {
 
   const handlePincodeCheck = async (e) => {
     e.preventDefault();
-    if (!pincode) return;
+    const cleanPin = (pincode || '').trim();
+    if (!cleanPin) return;
+    if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setPincodeResult({ isServiceable: false, message: 'Please enter a valid 6-digit Indian PIN code (e.g. 411001)' });
+      return;
+    }
     setCheckingPincode(true);
     try {
-      const res = await shippingApi.checkPincode(pincode);
+      const res = await shippingApi.checkPincode(cleanPin);
       setPincodeResult(res.data.data);
     } catch (err) {
       setPincodeResult({ isServiceable: false, message: 'Verification failed' });
@@ -745,59 +752,21 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart }) {
         </div>
       </section>
 
-      {/* Related Products Section */}
-      {relatedProducts.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="font-display font-bold text-2xl text-forest-900">
-            Related Mushroom Agritech Products
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((rel) => {
-              const relVariant = rel.variants?.[0];
-              const hasRelCompare = relVariant?.compareAtPriceInr && Number(relVariant.compareAtPriceInr) > Number(relVariant.priceInr);
-              const relDiscount = hasRelCompare
-                ? Math.round(((Number(relVariant.compareAtPriceInr) - Number(relVariant.priceInr)) / Number(relVariant.compareAtPriceInr)) * 100)
-                : 0;
+      {/* Product Ratings & Reviews Section */}
+      <ProductReviewsSection
+        productId={product.id}
+        productTitle={product.title}
+        user={user}
+        onOpenReviewModal={onOpenReviewModal}
+      />
 
-              return (
-                <Link
-                  key={rel.id}
-                  to={`/product/${rel.slug}`}
-                  className="bg-surface-white p-4 rounded-feature border border-surface-border hover:border-forest-700/40 transition-all group hover-lift shadow-level-1 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="relative overflow-hidden rounded-card mb-3 bg-surface-cream h-40">
-                      <MediaImage
-                        src={rel.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=400&q=80'}
-                        alt={`${rel.title} - Sporekart Mushroom Agritech Produce`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {relDiscount > 0 && (
-                        <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-gradient-to-r from-emerald-700 to-forest-800 text-white text-[10px] font-extrabold rounded-full shadow-md backdrop-blur-md uppercase tracking-wider" data-testid="discount-badge">
-                          {relDiscount}% OFF
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-sm text-forest-900 group-hover:text-forest-700 transition-colors line-clamp-1">
-                      {rel.title}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <p className="text-xs text-forest-700 font-bold font-display">₹{relVariant?.priceInr || '—'}</p>
-                    {hasRelCompare && (
-                      <>
-                        <span className="text-[10px] text-typography-muted line-through font-medium">₹{relVariant.compareAtPriceInr}</span>
-                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
-                          {relDiscount}% OFF
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+      {/* Related Products Carousel */}
+      {relatedProducts.length > 0 && (
+        <ProductCarousel
+          title="Related Mushroom Agritech Products"
+          products={relatedProducts}
+          onAddToCart={propOnAddToCart}
+        />
       )}
     </div>
   );

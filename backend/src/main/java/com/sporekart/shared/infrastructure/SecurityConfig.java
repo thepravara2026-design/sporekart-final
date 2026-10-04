@@ -71,7 +71,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
                 auth.requestMatchers("/auth/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**", "/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/search", "/search/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/training/**").permitAll()
@@ -104,7 +104,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(allowedOrigins);
+        } else {
+            configuration.setAllowedOriginPatterns(List.of("*"));
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("X-Request-ID"));

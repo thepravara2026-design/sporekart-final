@@ -47,6 +47,17 @@ public class CatalogDtos {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class ReplenishStockRequest {
+        @NotNull(message = "Quantity to add is required")
+        @Min(value = 1, message = "Replenishment quantity must be at least 1")
+        private Integer quantity;
+        private String reason;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MediaDto {
         private UUID id;
         private UUID variantId;
@@ -174,6 +185,11 @@ public class CatalogDtos {
         private List<OfferDto> activeOffers;
         private ProductInformationDto productInformation;
         private boolean isActive;
+        private boolean isPopular;
+        private boolean isBestSeller;
+        private Double averageRating;
+        private Long reviewCount;
+        private Long totalUnitsSold;
     }
 
     @Data
@@ -200,6 +216,11 @@ public class CatalogDtos {
         private List<OfferDto> activeOffers;
         private ProductInformationDto productInformation;
         private boolean isActive;
+        private boolean isPopular;
+        private boolean isBestSeller;
+        private Double averageRating;
+        private Long reviewCount;
+        private Long totalUnitsSold;
     }
 
     @Data
@@ -225,8 +246,21 @@ public class CatalogDtos {
         @NotBlank(message = "Category slug is required")
         private String slug;
         private String description;
+        @JsonAlias({"imageUrl", "image_url", "mediaUrl", "url"})
         private String imageUrl;
         private boolean isActive = true;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateCategoryRequest {
+        private String name;
+        private String slug;
+        private String description;
+        @JsonAlias({"imageUrl", "image_url", "mediaUrl", "url"})
+        private String imageUrl;
+        private Boolean isActive;
     }
 
     @Data
@@ -339,8 +373,10 @@ public class CatalogDtos {
         private UUID productId;
         private UUID variantId;
         @NotBlank(message = "Media URL is required")
+        @JsonAlias({"mediaUrl", "url", "imageUrl", "image_url"})
         private String mediaUrl;
         private MediaType mediaType = MediaType.IMAGE;
+        @JsonAlias({"role", "mediaRole", "productMediaRole"})
         private ProductMediaRole role = ProductMediaRole.GALLERY;
         private boolean isPrimary;
         private int displayOrder;

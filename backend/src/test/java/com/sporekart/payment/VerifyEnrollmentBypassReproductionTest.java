@@ -122,7 +122,7 @@ public class VerifyEnrollmentBypassReproductionTest {
         mockMvc.perform(post("/payment/verify-enrollment")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPayload)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         Enrollment enrollmentAfter = enrollmentRepository.findById(pendingEnrollment.getId()).orElseThrow();
         assertEquals(EnrollmentStatus.PENDING_PAYMENT, enrollmentAfter.getStatus(), "Unauthenticated attack must not confirm enrollment!");

@@ -1,18 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, 
+  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, Flame, Star,
   Building2, Layers, ShieldCheck, HeartHandshake, BookOpen, FileText, 
   Clock, User, CheckCircle, Users, ChevronRight, HelpCircle, Plus, Minus,
-  ChevronDown, Phone, Mail, MapPin, Send, MessageSquare
+  ChevronDown, Phone, Mail, MapPin, Send, MessageSquare, Wrench
 } from 'lucide-react';
 import { catalogApi, trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import AvailabilityBadge from '../components/AvailabilityBadge';
 import MediaImage from '../components/MediaImage';
 import HeroSection from '../components/HeroSection';
+import LatestCustomerReviews from '../components/LatestCustomerReviews';
+import ProductCard from '../components/ProductCard';
+import ProductCarousel from '../components/ProductCarousel';
+import CategoryCarousel from '../components/CategoryCarousel';
+import TrainingCarousel from '../components/TrainingCarousel';
 import { BLOG_POSTS } from './BlogIndexPage';
 import { useCart } from '../context/CartContext';
+
+const PRESET_CAT_MAP = {
+  'fresh-mushrooms': {
+    defaultDesc: 'Daily harvested Button, Oyster & Milky varieties.',
+    defaultImg: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80',
+    icon: Sprout
+  },
+  'dry-mushrooms': {
+    defaultDesc: 'Sun-dried & dehydrated rich umami mushroom slices.',
+    defaultImg: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80',
+    icon: Layers
+  },
+  'spawn-seeds': {
+    defaultDesc: '1st gen pure wheat grain master spawn for growers.',
+    defaultImg: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
+    icon: Zap
+  },
+  'growing-kits': {
+    defaultDesc: 'Harvest mushrooms at home in 10-14 days.',
+    defaultImg: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+    icon: Award
+  },
+  'equipment-supplies': {
+    defaultDesc: 'Autoclave bags, PP bags, sprayers & lab tools.',
+    defaultImg: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+    icon: Wrench
+  }
+};
+
+const DEFAULT_CATEGORY_IMG = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+
+const getCategoryIcon = (slug = '', name = '') => {
+  const norm = (slug + ' ' + name).toLowerCase();
+  if (norm.includes('fresh')) return Sprout;
+  if (norm.includes('dry') || norm.includes('dried')) return Layers;
+  if (norm.includes('spawn') || norm.includes('seed')) return Zap;
+  if (norm.includes('kit') || norm.includes('grow')) return Award;
+  if (norm.includes('equipment') || norm.includes('tool') || norm.includes('supply')) return Wrench;
+  if (norm.includes('medicinal') || norm.includes('health') || norm.includes('extract')) return ShieldCheck;
+  if (norm.includes('course') || norm.includes('train')) return GraduationCap;
+  return Layers;
+};
+
 
 export default function HomePage({ onAddToCart: propOnAddToCart }) {
   const { addToCart } = useCart();
@@ -21,7 +69,33 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [categories, setCategories] = useState([]);
   const [selectedVariants, setSelectedVariants] = useState({});
+
+  const displayCategories = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return categories.map((cat) => {
+        const preset = PRESET_CAT_MAP[cat.slug] || {};
+        return {
+          id: cat.id || cat.slug,
+          slug: cat.slug,
+          name: cat.name,
+          desc: cat.description || preset.defaultDesc || `Explore our laboratory-certified ${cat.name} offerings.`,
+          imgUrl: cat.imageUrl || preset.defaultImg || DEFAULT_CATEGORY_IMG,
+          IconComp: preset.icon || getCategoryIcon(cat.slug, cat.name)
+        };
+      });
+    }
+
+    return Object.entries(PRESET_CAT_MAP).map(([slug, preset]) => ({
+      id: slug,
+      slug,
+      name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      desc: preset.defaultDesc,
+      imgUrl: preset.defaultImg,
+      IconComp: preset.icon
+    }));
+  }, [categories]);
 
   // FAQ State
   const [openFaq, setOpenFaq] = useState(0);
@@ -43,6 +117,13 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         setProducts(prodRes.data?.data || []);
       } catch (err) {
         console.error('Failed to fetch products for home page', err);
+      }
+
+      try {
+        const catRes = await catalogApi.getCategories();
+        setCategories(catRes.data?.data || []);
+      } catch (err) {
+        console.error('Failed to fetch categories for home page', err);
       }
 
       try {
@@ -130,254 +211,30 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
 
       {/* 2. CATEGORY SECTION */}
       <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-          <h2 className="font-display font-bold text-3xl text-forest-900">Explore Agriculture Categories</h2>
-          <p className="text-typography-secondary text-sm">Select from our laboratory-certified mushroom offerings</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/products/fresh-mushrooms" className="bg-surface-white p-6 rounded-feature group block border border-surface-border hover:border-forest-700/40 shadow-level-1 hover-lift transition-all">
-            <div className="w-12 h-12 rounded-container bg-surface-cream border border-surface-border flex items-center justify-center text-forest-700 mb-4 group-hover:scale-110 transition-transform">
-              <Sprout className="w-6 h-6" />
-            </div>
-            <h3 className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors">Fresh Mushrooms</h3>
-            <p className="text-xs text-typography-secondary mt-1">Daily harvested Button, Oyster & Milky varieties.</p>
-          </Link>
-
-          <Link to="/products/dry-mushrooms" className="bg-surface-white p-6 rounded-feature group block border border-surface-border hover:border-forest-700/40 shadow-level-1 hover-lift transition-all">
-            <div className="w-12 h-12 rounded-container bg-surface-cream border border-surface-border flex items-center justify-center text-forest-700 mb-4 group-hover:scale-110 transition-transform">
-              <Layers className="w-6 h-6 text-forest-700" />
-            </div>
-            <h3 className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors">Dry Mushrooms</h3>
-            <p className="text-xs text-typography-secondary mt-1">Sun-dried & dehydrated rich umami mushroom slices.</p>
-          </Link>
-
-          <Link to="/products/spawn-seeds" className="bg-surface-white p-6 rounded-feature group block border border-surface-border hover:border-forest-700/40 shadow-level-1 hover-lift transition-all">
-            <div className="w-12 h-12 rounded-container bg-surface-cream border border-surface-border flex items-center justify-center text-gold mb-4 group-hover:scale-110 transition-transform">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h3 className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors">Spawn Seeds</h3>
-            <p className="text-xs text-typography-secondary mt-1">1st gen pure wheat grain master spawn for growers.</p>
-          </Link>
-
-          <Link to="/products/growing-kits" className="bg-surface-white p-6 rounded-feature group block border border-surface-border hover:border-forest-700/40 shadow-level-1 hover-lift transition-all">
-            <div className="w-12 h-12 rounded-container bg-surface-cream border border-surface-border flex items-center justify-center text-forest-700 mb-4 group-hover:scale-110 transition-transform">
-              <Award className="w-6 h-6" />
-            </div>
-            <h3 className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors">DIY Growing Kits</h3>
-            <p className="text-xs text-typography-secondary mt-1">Harvest mushrooms at home in 10-14 days.</p>
-          </Link>
-        </div>
+        <CategoryCarousel categories={displayCategories} />
       </section>
 
       {/* 3. PRODUCTS SECTION */}
       <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-          <div>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-forest-900">Featured Products & Seeds</h2>
-            <p className="text-typography-secondary text-xs sm:text-sm">High-demand mushroom products available across India</p>
-          </div>
-          <Link to="/products" className="text-xs font-bold text-forest-700 hover:text-forest-900 flex items-center gap-1.5 hover-lift">
-            View Full Catalog <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-surface-white p-6 rounded-feature animate-pulse h-80 border border-surface-border"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-surface-white p-4 rounded-2xl animate-pulse h-64 border border-surface-border"></div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.slice(0, 3).map((product) => {
-              const activeVariant = selectedVariants[product.id] || product.variants?.[0] || { priceInr: 0, variantName: 'Default' };
-              const primaryImg = product.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=600&q=80';
-              const availability = activeVariant.availability || {
-                status: (activeVariant.stockQuantity > 0 || !activeVariant) ? 'AVAILABLE' : 'OUT_OF_STOCK',
-                label: (activeVariant.stockQuantity > 0 || !activeVariant) ? 'In Stock' : 'Out of Stock'
-              };
-              const isAvailable = availability.status !== 'OUT_OF_STOCK' && (activeVariant.stockQuantity === undefined || activeVariant.stockQuantity > 0);
-              const hasComparePrice = activeVariant.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr);
-              const discountPercent = hasComparePrice
-                ? Math.round(((Number(activeVariant.compareAtPriceInr) - Number(activeVariant.priceInr)) / Number(activeVariant.compareAtPriceInr)) * 100)
-                : 0;
-
-              return (
-                <div key={product.id} className="bg-surface-white rounded-feature overflow-hidden flex flex-col justify-between border border-surface-border shadow-level-1 group hover-lift">
-                  <div>
-                    <Link to={`/product/${product.slug}`} className="relative h-52 overflow-hidden block bg-surface-cream">
-                      <MediaImage
-                        src={primaryImg}
-                        alt={`${product.title} - Fresh mushroom & spawn supply India`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <span className="absolute top-3 left-3 px-3 py-1 bg-surface-white/90 backdrop-blur-md text-forest-900 text-[10px] font-bold rounded-input border border-surface-border shadow-level-1">
-                        {product.categoryName}
-                      </span>
-                      <div className="absolute top-3 right-3">
-                        <AvailabilityBadge availability={availability} />
-                      </div>
-                      {discountPercent > 0 && (
-                        <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-emerald-700 to-forest-800 text-white text-[10px] font-extrabold rounded-full shadow-lg border border-emerald-500/30 backdrop-blur-md uppercase tracking-wider group-hover:scale-105 transition-transform" data-testid="discount-badge-overlay">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>{discountPercent}% OFF</span>
-                        </div>
-                      )}
-                    </Link>
-                    <div className="p-5 space-y-2">
-                      <Link to={`/product/${product.slug}`} className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors block">
-                        {product.title}
-                      </Link>
-                      <p className="text-xs text-typography-secondary line-clamp-2">{product.description}</p>
-
-                      {product.variants && product.variants.length > 1 && (
-                        <div className="flex flex-wrap gap-1.5 pt-2" data-testid="landing-product-variants">
-                          {product.variants.map((v) => (
-                            <button
-                              key={v.id}
-                              type="button"
-                              onClick={() => setSelectedVariants({ ...selectedVariants, [product.id]: v })}
-                              className={`px-2.5 py-1 rounded-compact text-[11px] font-medium border transition-all button-press ${
-                                activeVariant?.id === v.id
-                                  ? 'bg-surface-cream border-forest-700 text-forest-900 font-bold shadow-level-1'
-                                  : 'bg-surface-neutral border-surface-border text-typography-secondary hover:border-surface-border'
-                              }`}
-                            >
-                              {v.variantName}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-5 pt-0 flex items-center justify-between border-t border-surface-border mt-4">
-                    <div>
-                      <span className="text-[10px] text-typography-muted block font-medium">{activeVariant.variantName}</span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xl font-bold text-forest-900 font-display">₹{activeVariant.priceInr}</span>
-                        {hasComparePrice && (
-                          <>
-                            <span className="text-xs text-typography-muted line-through font-medium" data-testid="strikeout-price">
-                              ₹{activeVariant.compareAtPriceInr}
-                            </span>
-                            <span className="px-2 py-0.5 bg-emerald-100/90 text-emerald-800 text-[11px] font-extrabold rounded-md border border-emerald-300/80 shadow-2xs" data-testid="discount-badge">
-                              {discountPercent}% OFF
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (isAvailable && activeVariant) {
-                          if (propOnAddToCart) propOnAddToCart(product, activeVariant);
-                          else addToCart(activeVariant.id, 1);
-                        }
-                      }}
-                      disabled={!isAvailable}
-                      className={`font-semibold text-xs px-4 py-2.5 rounded-input transition-all button-press ${
-                        isAvailable
-                          ? 'btn-primary shadow-level-1'
-                          : 'bg-surface-neutral text-typography-muted cursor-not-allowed border border-surface-border'
-                      }`}
-                    >
-                      {isAvailable ? 'Add to Cart' : 'Out of Stock'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ProductCarousel
+            title="Featured Products & Seeds"
+            subtitle="High-demand laboratory-certified mushroom products available across India"
+            products={[...products].sort((a, b) => Boolean(b.isPopular) - Boolean(a.isPopular))}
+            onAddToCart={propOnAddToCart}
+          />
         )}
       </section>
 
       {/* 4. TRAINING SECTION */}
       <section id="training" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-forest-900 text-white rounded-hero p-8 sm:p-12 border border-forest-800 relative overflow-hidden shadow-level-2 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-forest-700/60 pb-6">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-pill bg-forest-800 text-sage text-xs font-bold border border-forest-700/60 shadow-level-1">
-                <GraduationCap className="w-4 h-4 text-leaf" />
-                <span>Certified Agribusiness Masterclasses</span>
-              </div>
-              <h2 className="font-display font-bold text-3xl sm:text-4xl text-white leading-tight">
-                Mushroom Cultivation & <br />
-                <span className="text-gold">Spawn Production Masterclasses</span>
-              </h2>
-              <p className="text-surface-cream/90 text-sm max-w-2xl leading-relaxed">
-                Join our expert agronomist-led online and offline laboratory workshops. Gain practical knowledge on substrate pasteurization, tissue isolation, cleanroom operations, and direct buyback market linkage.
-              </p>
-            </div>
-
-            <Link
-              to="/training"
-              className="btn-premium text-xs font-bold px-6 py-3.5 shadow-level-2 shrink-0 flex items-center justify-center gap-2"
-            >
-              <span>Explore All Masterclasses</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {courses.length > 0 ? (
-              courses.slice(0, 3).map((c) => (
-                <div key={c.id} className="p-6 rounded-card bg-forest-800/80 border border-forest-700/60 flex flex-col justify-between space-y-4 hover-lift">
-                  <div className="space-y-3">
-                    <span className="px-2.5 py-1 rounded-pill bg-forest-900 border border-forest-700 text-sage text-[10px] font-bold uppercase">
-                      {c.mode || 'ONLINE & OFFLINE'}
-                    </span>
-                    <h3 className="font-bold text-white text-base font-display">{c.title}</h3>
-                    <p className="text-xs text-sage line-clamp-2 leading-relaxed">{c.description}</p>
-                  </div>
-
-                  <div className="pt-4 border-t border-forest-700/60 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-sage block font-medium">Course Fee</span>
-                      <span className="text-lg font-bold text-gold font-display">₹{c.priceInr?.toLocaleString('en-IN') || c.feeInr?.toLocaleString('en-IN')}</span>
-                    </div>
-                    <Link
-                      to={`/training/${c.slug}`}
-                      className="px-4 py-2 bg-leaf hover:bg-green-600 text-forest-900 font-bold rounded-input text-xs transition-colors"
-                    >
-                      Enroll Now
-                    </Link>
-                  </div>
-                </div>
-              ))
-            ) : (
-              [
-                { title: 'Commercial Oyster Mushroom Cultivation Masterclass', duration: '7 Days', fee: '2,999', slug: 'commercial-oyster-mushroom-masterclass' },
-                { title: 'Spawn Production & Lab Setup Workshop', duration: '10 Days', fee: '4,999', slug: 'spawn-production-lab-setup' },
-                { title: 'Button Mushroom Environmental Control Course', duration: '5 Days', fee: '3,499', slug: 'button-mushroom-environmental-control' }
-              ].map((c, idx) => (
-                <div key={idx} className="p-6 rounded-card bg-forest-800/80 border border-forest-700/60 flex flex-col justify-between space-y-4 hover-lift">
-                  <div className="space-y-3">
-                    <span className="px-2.5 py-1 rounded-pill bg-forest-900 border border-forest-700 text-sage text-[10px] font-bold uppercase">
-                      CERTIFIED WORKSHOP
-                    </span>
-                    <h3 className="font-bold text-white text-base font-display">{c.title}</h3>
-                    <p className="text-xs text-sage leading-relaxed">Hands-on practical substrate preparation, inoculation techniques, and buyback market linkages.</p>
-                  </div>
-
-                  <div className="pt-4 border-t border-forest-700/60 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-sage block font-medium">Fee</span>
-                      <span className="text-lg font-bold text-gold font-display">₹{c.fee}</span>
-                    </div>
-                    <Link
-                      to="/training"
-                      className="px-4 py-2 bg-leaf hover:bg-green-600 text-forest-900 font-bold rounded-input text-xs transition-colors"
-                    >
-                      Enroll Now
-                    </Link>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <TrainingCarousel courses={courses} />
       </section>
 
       {/* 5. ABOUT SECTION */}
@@ -551,6 +408,9 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
           </div>
         </div>
       </section>
+
+      {/* 7.5. LATEST CUSTOMER REVIEWS SECTION */}
+      <LatestCustomerReviews />
 
       {/* 8. CONTACT SECTION */}
       <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

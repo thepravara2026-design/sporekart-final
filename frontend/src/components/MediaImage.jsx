@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
 
@@ -18,6 +18,13 @@ export default function MediaImage({
     isLoading: true,
     isError: false,
   });
+
+  useEffect(() => {
+    setImageState({
+      isLoading: true,
+      isError: false,
+    });
+  }, [src]);
 
   const handleLoad = () => {
     setImageState({ isLoading: false, isError: false });

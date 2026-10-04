@@ -156,10 +156,13 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await cartApi.mergeGuestCart();
       if (response.data && response.data.success) {
-        setCart(normalizeCartData(response.data.data));
+        const normalized = normalizeCartData(response.data.data);
+        setCart(normalized);
+        return normalized;
       }
     } catch (err) {
       console.error('Failed to merge guest cart:', err);
+      return await fetchCart();
     }
   };
 

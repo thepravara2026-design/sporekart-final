@@ -19,6 +19,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.sporekart.training.api.TrainingDtos;
+
 @SpringBootTest
 @ActiveProfiles("test")
 public class TrainingModuleTest {
@@ -53,12 +55,16 @@ public class TrainingModuleTest {
     @Autowired
     private CertificateRepository certificateRepository;
 
+    @Autowired
+    private TrainingReviewRepository trainingReviewRepository;
+
     private UUID userId;
     private Course testCourse;
     private Batch testBatch;
 
     @BeforeEach
     void setUp() {
+        trainingReviewRepository.deleteAll();
         certificateRepository.deleteAll();
         completionRepository.deleteAll();
         attendanceRepository.deleteAll();
@@ -207,4 +213,61 @@ public class TrainingModuleTest {
         Batch batchAfterCancel = batchRepository.findById(futureBatch.getId()).orElseThrow();
         assertEquals(0, batchAfterCancel.getEnrolledCount());
     }
+
+    @Test
+    void testTrainingReviewSubmissionAndSummary() {
+        Enrollment enrollment = trainingService.enrollCustomer(userId, testBatch.getId());
+        trainingService.confirmEnrollmentPayment(enrollment.getId(), "PAY_REF_REV");
+
+        TrainingDtos.CreateTrainingReviewRequest request = TrainingDtos.CreateTrainingReviewRequest.builder()
+                .enrollmentId(enrollment.getId())
+                .rating(5)
+                .instructorRating(5)
+                .reviewTitle("Outstanding Oyster Mushroom Training!")
+                .reviewText("The live hands-on substrate sterilization tutorial was super practical. Highly recommended!")
+                .build();
+
+        TrainingReview review = trainingService.createTrainingReview(userId, request);
+        assertNotNull(review.getId());
+        assertEquals("PUBLISHED", review.getStatus());
+        assertTrue(review.isVerifiedTrainee());
+        assertEquals(5, review.getRating());
+
+        List<TrainingReview> courseReviews = trainingService.getCourseReviews(testCourse.getId());
+        assertEquals(1, courseReviews.size());
+        assertEquals("Outstanding Oyster Mushroom Training!", courseReviews.get(0).getReviewTitle());
+
+        TrainingDtos.CourseReviewSummary summary = trainingService.getCourseReviewSummary(testCourse.getId());
+        assertEquals(5.0, summary.getAverageRating());
+        assertEquals(5.0, summary.getAverageInstructorRating());
+        assertEquals(1L, summary.getTotalReviews());
+        assertEquals(1L, summary.getFiveStarCount());
+    }
+
+    @Test
+    void testTrainingReviewEnforcesConfirmedEnrollmentAndPreventsDuplicates() {
+        // Pending payment enrollment attempt must fail review submission
+        Enrollment pendingEnrollment = trainingService.enrollCustomer(userId, testBatch.getId());
+        TrainingDtos.CreateTrainingReviewRequest pendingRequest = TrainingDtos.CreateTrainingReviewRequest.builder()
+                .enrollmentId(pendingEnrollment.getId())
+                .rating(4)
+                .reviewText("Premature review")
+                .build();
+
+        assertThrows(IllegalStateException.class, () -> trainingService.createTrainingReview(userId, pendingRequest));
+
+        // Confirm enrollment and submit valid review
+        trainingService.confirmEnrollmentPayment(pendingEnrollment.getId(), "PAY_REF_DUP");
+        TrainingDtos.CreateTrainingReviewRequest validRequest = TrainingDtos.CreateTrainingReviewRequest.builder()
+                .enrollmentId(pendingEnrollment.getId())
+                .rating(5)
+                .reviewText("Great course content!")
+                .build();
+
+        trainingService.createTrainingReview(userId, validRequest);
+
+        // Duplicate review attempt must fail
+        assertThrows(IllegalStateException.class, () -> trainingService.createTrainingReview(userId, validRequest));
+    }
 }
+

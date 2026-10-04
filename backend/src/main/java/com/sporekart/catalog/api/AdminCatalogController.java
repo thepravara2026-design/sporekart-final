@@ -19,10 +19,19 @@ public class AdminCatalogController {
 
     private final AdminCatalogService adminCatalogService;
     private final CatalogApplicationService catalogApplicationService;
+    private final com.sporekart.catalog.application.InventoryService inventoryService;
 
     @PostMapping("/categories")
     public ResponseEntity<ApiResponse<Category>> createCategory(@Valid @RequestBody CatalogDtos.CreateCategoryRequest request) {
         Category category = adminCatalogService.createCategory(request);
+        return ResponseEntity.ok(ApiResponse.success(category));
+    }
+
+    @PutMapping("/categories/{id}")
+    public ResponseEntity<ApiResponse<Category>> updateCategory(
+            @PathVariable("id") UUID categoryId,
+            @RequestBody CatalogDtos.UpdateCategoryRequest request) {
+        Category category = adminCatalogService.updateCategory(categoryId, request);
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
@@ -86,6 +95,21 @@ public class AdminCatalogController {
             @RequestBody CatalogDtos.UpdateMediaOrderRequest request) {
         List<ProductMedia> mediaList = adminCatalogService.updateMediaOrder(productId, request);
         return ResponseEntity.ok(ApiResponse.success(mediaList));
+    }
+
+    @PostMapping("/inventory/{variantId}/replenish")
+    public ResponseEntity<ApiResponse<InventoryRecord>> replenishStock(
+            @PathVariable("variantId") UUID variantId,
+            @Valid @RequestBody CatalogDtos.ReplenishStockRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        String adminUser = authentication != null ? authentication.getName() : "ADMIN";
+        InventoryRecord record = inventoryService.replenishInventory(
+                variantId,
+                request.getQuantity(),
+                request.getReason(),
+                adminUser
+        );
+        return ResponseEntity.ok(ApiResponse.success(record));
     }
 }
 

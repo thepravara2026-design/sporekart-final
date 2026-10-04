@@ -38,6 +38,8 @@ class PricingServiceUnitTest {
     private CategoryRepository categoryRepository;
     @Mock
     private ProductVariantRepository variantRepository;
+    @Mock
+    private ProductRankingService rankingService;
 
     @InjectMocks
     private CatalogApplicationService catalogApplicationService;
@@ -48,6 +50,8 @@ class PricingServiceUnitTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(rankingService.enrichAndRankProducts(any(), any(), any()))
+                .thenAnswer(inv -> inv.getArgument(0));
         variantId = UUID.randomUUID();
 
         testProduct = Product.builder()
@@ -211,7 +215,9 @@ class PricingServiceUnitTest {
     @DisplayName("CAT-11: CatalogApplicationService searchProducts paginates and returns Page")
     void CAT_11_searchProducts() {
         Page<Product> productPage = new PageImpl<>(List.of(testProduct));
-        when(productRepository.searchProducts(any(), any(), any(), any(Pageable.class)))
+        lenient().when(productRepository.searchProducts(any(), any(), any(), any(Pageable.class)))
+                .thenReturn(productPage);
+        lenient().when(productRepository.searchProductsOrderByPriceAsc(any(), any(), any(), any(Pageable.class)))
                 .thenReturn(productPage);
 
         Page<CatalogDtos.ProductDto> result = catalogApplicationService.searchProducts(

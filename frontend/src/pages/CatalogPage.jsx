@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useParams, Link } from 'react-router-dom';
-import { Sprout, Search, ShoppingBag, X, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { useSearchParams, useParams, useLocation, Link } from 'react-router-dom';
+import { Sprout, Search, ShoppingBag, X, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles, Flame, Star } from 'lucide-react';
 import { catalogApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
@@ -9,14 +9,19 @@ import PageSkeleton from '../components/PageSkeleton';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import MediaImage from '../components/MediaImage';
+import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 
 export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
   const { addToCart, cart } = useCart();
+  const location = useLocation();
   const { categorySlug } = useParams();
   const [searchParams] = useSearchParams();
 
-  const categoryParam = searchParams.get('category') || categorySlug || '';
+  // Multi-tier category extraction from URL searchParams, route params, or path segment
+  const rawPath = location.pathname.replace(/^\/products\/?/, '').replace(/^\/catalog\/?/, '').trim();
+  const pathCategory = rawPath.split('/')[0] || '';
+  const categoryParam = searchParams.get('category') || categorySlug || (pathCategory && pathCategory !== 'products' && pathCategory !== 'catalog' ? pathCategory : '');
   const typeParam = searchParams.get('type') || '';
 
   const [categories, setCategories] = useState([]);
@@ -117,11 +122,14 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
       {/* Catalog Header, Controls & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="font-display font-bold text-3xl text-forest-900 flex items-center gap-3">
-            <Sprout className="w-8 h-8 text-forest-700" /> Sporekart Product Catalog
+          <h1 className="font-display font-bold text-3xl text-forest-900 flex items-center gap-3 capitalize">
+            <Sprout className="w-8 h-8 text-forest-700 shrink-0" />
+            {categoryParam
+              ? `${categoryParam.replace(/[-_]/g, ' ')} Catalog`
+              : 'Sporekart Product Catalog'}
           </h1>
           <p className="text-typography-secondary text-xs sm:text-sm mt-1">
-            Showing <strong className="text-forest-700">{totalElements}</strong> laboratory-certified mushroom products
+            Showing <strong className="text-forest-700">{totalElements}</strong> {categoryParam ? categoryParam.replace(/[-_]/g, ' ') : 'laboratory-certified mushroom'} products
           </p>
         </div>
 
@@ -176,7 +184,18 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
         </Link>
         {categories.length > 0 ? (
           categories.map((cat) => {
-            const isSelected = categoryParam.toLowerCase() === cat.slug.toLowerCase() || categoryParam.toLowerCase() === cat.name.toLowerCase();
+            const catSlugNorm = cat.slug.toLowerCase().replace('_', '-');
+            const paramNorm = categoryParam.toLowerCase().replace('_', '-');
+
+            const isSelected = 
+              paramNorm === catSlugNorm || 
+              categoryParam.toLowerCase() === cat.name.toLowerCase() ||
+              (catSlugNorm === 'fresh-mushrooms' && (paramNorm === 'fresh-mushroom' || paramNorm === 'fresh_mushroom' || categoryParam === 'FRESH_MUSHROOM')) ||
+              (catSlugNorm === 'dry-mushrooms' && (paramNorm === 'dry-mushroom' || paramNorm === 'dry_mushroom' || categoryParam === 'DRY_MUSHROOM')) ||
+              (catSlugNorm === 'spawn-seeds' && (paramNorm === 'spawn-seed' || paramNorm === 'spawn_seed' || categoryParam === 'SPAWN_SEED' || paramNorm === 'mushroom-spawn')) ||
+              (catSlugNorm === 'growing-kits' && (paramNorm === 'growing-kit' || paramNorm === 'growing_kit' || categoryParam === 'GROWING_KIT')) ||
+              (catSlugNorm === 'equipment-supplies' && (paramNorm === 'equipment-supplies' || paramNorm === 'cultivation-supplies' || paramNorm === 'cultivation-equipment-supplies' || paramNorm === 'equipment_supplies' || categoryParam === 'EQUIPMENT_SUPPLIES'));
+
             return (
               <Link
                 key={cat.id}
@@ -233,6 +252,16 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
             >
               DIY Growing Kits
             </Link>
+            <Link
+              to="/products/equipment-supplies"
+              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
+                categoryParam === 'equipment-supplies' || categoryParam === 'cultivation-supplies' || categoryParam === 'EQUIPMENT_SUPPLIES'
+                  ? 'btn-primary shadow-level-1'
+                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
+              }`}
+            >
+              Cultivation Equipment & Supplies
+            </Link>
           </>
         )}
       </div>
@@ -258,118 +287,14 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
           actionLink="/products"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => {
-            const activeVariant = selectedVariants[product.id] || product.variants?.[0];
-            const stock = activeVariant?.stockQuantity !== undefined ? activeVariant.stockQuantity : 999;
-            const currentInCart = cart?.items?.find((i) => i.variantId === activeVariant?.id)?.quantity || 0;
-            const isMaxInCart = currentInCart >= stock && stock > 0;
-            const image = product.imageUrls?.[0] || 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=600&q=80';
-            const availability = activeVariant?.availability || {
-              status: (stock > 0 || !activeVariant) ? 'AVAILABLE' : 'OUT_OF_STOCK',
-              label: (stock > 0 || !activeVariant) ? 'In Stock' : 'Out of Stock'
-            };
-            const isAvailable = availability.status !== 'OUT_OF_STOCK' && stock > 0;
-            const hasComparePrice = activeVariant?.compareAtPriceInr && Number(activeVariant.compareAtPriceInr) > Number(activeVariant.priceInr);
-            const discountPercent = hasComparePrice
-              ? Math.round(((Number(activeVariant.compareAtPriceInr) - Number(activeVariant.priceInr)) / Number(activeVariant.compareAtPriceInr)) * 100)
-              : 0;
-
-            return (
-              <div 
-                key={product.id} 
-                data-testid="product-card"
-                className="bg-surface-white rounded-feature overflow-hidden flex flex-col justify-between border border-surface-border shadow-level-1 group hover-lift transition-all"
-              >
-                <div>
-                  <Link to={`/product/${product.slug}`} className="relative h-56 overflow-hidden block bg-surface-cream">
-                    <MediaImage
-                      src={image}
-                      alt={`${product.title} - Fresh mushroom supply India`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <span className="absolute top-3 left-3 px-3 py-1 bg-surface-white/90 backdrop-blur-md text-forest-900 text-[10px] font-bold rounded-input border border-surface-border uppercase tracking-wider shadow-level-1">
-                      {product.categoryName}
-                    </span>
-                    <div className="absolute top-3 right-3">
-                      <AvailabilityBadge availability={availability} />
-                    </div>
-                    {discountPercent > 0 && (
-                      <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-emerald-700 to-forest-800 text-white text-[10px] font-extrabold rounded-full shadow-lg border border-emerald-500/30 backdrop-blur-md uppercase tracking-wider group-hover:scale-105 transition-transform" data-testid="discount-badge-overlay">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>{discountPercent}% OFF</span>
-                      </div>
-                    )}
-                  </Link>
-
-                  <div className="p-5 space-y-3">
-                    <Link to={`/product/${product.slug}`} className="font-display font-bold text-lg text-forest-900 group-hover:text-forest-700 transition-colors block">
-                      {product.title}
-                    </Link>
-                    <p className="text-xs text-typography-secondary leading-relaxed line-clamp-2">{product.description}</p>
-
-                    {product.variants && product.variants.length > 1 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {product.variants.map((v) => (
-                          <button
-                            key={v.id}
-                            onClick={() => setSelectedVariants({ ...selectedVariants, [product.id]: v })}
-                            className={`px-2.5 py-1 rounded-compact text-[11px] font-medium border transition-all ${
-                              activeVariant?.id === v.id
-                                ? 'bg-surface-cream border-forest-700 text-forest-900 font-bold shadow-level-1'
-                                : 'bg-surface-neutral border-surface-border text-typography-secondary hover:border-surface-border'
-                            }`}
-                          >
-                            {v.variantName}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="p-5 pt-0 flex items-center justify-between gap-3 border-t border-surface-border mt-2">
-                  <div>
-                    <span className="text-[10px] text-typography-muted block font-medium">Price</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-display font-bold text-xl text-forest-900">
-                        ₹{activeVariant?.priceInr || 0}
-                      </span>
-                      {hasComparePrice && (
-                        <>
-                          <span className="text-xs text-typography-muted line-through font-medium" data-testid="strikeout-price">
-                            ₹{activeVariant.compareAtPriceInr}
-                          </span>
-                          <span className="px-2 py-0.5 bg-emerald-100/90 text-emerald-800 text-[11px] font-extrabold rounded-md border border-emerald-300/80 shadow-2xs" data-testid="discount-badge">
-                            {discountPercent}% OFF
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    data-testid="add-to-cart"
-                    onClick={() => {
-                      if (isAvailable && activeVariant && !isMaxInCart) {
-                        if (propOnAddToCart) propOnAddToCart(product, activeVariant);
-                        else addToCart(activeVariant.id, 1, stock);
-                      }
-                    }}
-                    disabled={!isAvailable || !activeVariant || isMaxInCart}
-                    className={`px-4 py-2.5 rounded-input font-bold text-xs flex items-center gap-2 transition-all button-press ${
-                      isAvailable && activeVariant && !isMaxInCart
-                        ? 'btn-primary shadow-level-1'
-                        : 'bg-surface-neutral text-typography-muted cursor-not-allowed border border-surface-border'
-                    }`}
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    {!isAvailable ? 'Out of Stock' : isMaxInCart ? `Max Stock (${currentInCart})` : 'Add to Cart'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={propOnAddToCart}
+            />
+          ))}
         </div>
       )}
 

@@ -38,7 +38,7 @@ class AdminTrainingSecurityTest {
         mockMvc.perform(post("/admin/training/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Test\",\"slug\":\"test\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -115,7 +115,7 @@ class CustomerServiceUnitTest {
 
         assertNotNull(dto);
         assertEquals("Jane Doe", dto.getRecipientName());
-        verify(authService).linkPhoneToUser(userId, "9876543210");
+        verify(authService).linkPhoneAndNameFromAddress(userId, "9876543210", "Jane Doe");
         verify(customerAddressRepository).save(any(CustomerAddress.class));
     }
 

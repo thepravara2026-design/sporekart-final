@@ -8,10 +8,13 @@ import {
   Search, Filter, Layers, ArrowUpRight, Sparkles, TrendingUp,
   Clock, SlidersHorizontal, Eye, Edit3, Trash2, Copy, ExternalLink,
   ChevronRight, Check, AlertTriangle, Layers2, Sparkle, Download,
-  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award, X
+  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award, X,
+  ShoppingCart, Globe, Star
 } from 'lucide-react';
 import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi } from '../api';
 import SeoHead from '../components/SeoHead';
+import LocalImageUploader from '../components/LocalImageUploader';
+import AdminReviewsManager from '../components/AdminReviewsManager';
 
 export default function AdminDashboardPage({ user }) {
   const location = useLocation();
@@ -111,6 +114,7 @@ export default function AdminDashboardPage({ user }) {
   const [promotions, setPromotions] = useState([]);
   const [promoModalOpen, setPromoModalOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState(null);
+  const [promoAudienceFilter, setPromoAudienceFilter] = useState('ALL');
   const [promoForm, setPromoForm] = useState({
     name: '',
     code: '',
@@ -122,17 +126,34 @@ export default function AdminDashboardPage({ user }) {
     status: 'ACTIVE',
     usageLimit: '500',
     perCustomerLimit: '3',
+    targetAudience: 'BOTH',
+    targetType: 'ALL',
+    targetBatchId: '',
+    targetCourseId: '',
   });
 
   // Stock Replenish Modal State
   const [replenishModalOpen, setReplenishModalOpen] = useState(false);
   const [replenishTarget, setReplenishTarget] = useState(null);
-  const [replenishQty, setReplenishQty] = useState(50);
+  const [replenishQty, setReplenishQty] = useState('10');
+  const [replenishReason, setReplenishReason] = useState('Supplier Stock Replenishment');
+  const [replenishError, setReplenishError] = useState('');
+  const [replenishConfirmStep, setReplenishConfirmStep] = useState(false);
+  const [isSubmittingReplenish, setIsSubmittingReplenish] = useState(false);
 
   // Category Form
   const [catName, setCatName] = useState('');
   const [catSlug, setCatSlug] = useState('');
   const [catDesc, setCatDesc] = useState('');
+  const [catImageUrl, setCatImageUrl] = useState('');
+
+  // Edit Category Modal State
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatSlug, setEditCatSlug] = useState('');
+  const [editCatDesc, setEditCatDesc] = useState('');
+  const [editCatImageUrl, setEditCatImageUrl] = useState('');
+  const [editCatIsActive, setEditCatIsActive] = useState(true);
 
   // Orders State & Filters
   const [orders, setOrders] = useState([]);
@@ -148,8 +169,15 @@ export default function AdminDashboardPage({ user }) {
   // Customers State
   const [customers, setCustomers] = useState([]);
 
-  // Support Tickets State
+  // Support Tickets State & Interactive Workspace
   const [tickets, setTickets] = useState([]);
+  const [selectedSupportTicket, setSelectedSupportTicket] = useState(null);
+  const [adminReplyText, setAdminReplyText] = useState('');
+  const [supportSearchQuery, setSupportSearchQuery] = useState('');
+  const [supportStatusFilter, setSupportStatusFilter] = useState('ALL');
+  const [supportPriorityFilter, setSupportPriorityFilter] = useState('ALL');
+  const [supportCategoryFilter, setSupportCategoryFilter] = useState('ALL');
+  const [isSubmittingSupportReply, setIsSubmittingSupportReply] = useState(false);
 
   // Courses & Training State
   const [courses, setCourses] = useState([]);
@@ -394,6 +422,10 @@ export default function AdminDashboardPage({ user }) {
         status: promoForm.status,
         usageLimit: promoForm.usageLimit ? parseInt(promoForm.usageLimit) : null,
         perCustomerLimit: promoForm.perCustomerLimit ? parseInt(promoForm.perCustomerLimit) : null,
+        targetAudience: promoForm.targetAudience || 'BOTH',
+        targetType: promoForm.targetType || 'ALL',
+        targetBatchId: promoForm.targetBatchId || null,
+        targetCourseId: promoForm.targetCourseId || null,
       };
 
       if (editingPromo) {
@@ -580,6 +612,10 @@ export default function AdminDashboardPage({ user }) {
         setErrorMessage('Valid SEO URL Slug is required in Step 1.');
         return;
       }
+      if (!prodCatId || !prodCatId.trim()) {
+        setErrorMessage('Product Category selection is required in Step 1 (Basic & SEO).');
+        return;
+      }
       setFormTab('compliance');
     } else if (currentTab === 'compliance') {
       if ((prodType === 'FRESH_MUSHROOM' || prodType === 'DRY_MUSHROOM') && (!fssaiLic || !fssaiLic.trim())) {
@@ -651,6 +687,12 @@ export default function AdminDashboardPage({ user }) {
     if (!formattedSlug) {
       setFormTab('basic');
       setErrorMessage('Valid SEO URL Slug is required in Step 1.');
+      return;
+    }
+
+    if (!prodCatId || !prodCatId.trim()) {
+      setFormTab('basic');
+      setErrorMessage('Product Category selection is required in Step 1.');
       return;
     }
 
@@ -804,12 +846,46 @@ export default function AdminDashboardPage({ user }) {
     e.preventDefault();
     setStatusMessage(''); setErrorMessage('');
     try {
-      await adminApi.createCategory({ name: catName, slug: catSlug, description: catDesc });
+      await adminApi.createCategory({ 
+        name: catName, 
+        slug: catSlug, 
+        description: catDesc,
+        imageUrl: catImageUrl 
+      });
       setStatusMessage('Category created successfully.');
-      setCatName(''); setCatSlug(''); setCatDesc('');
+      setCatName(''); setCatSlug(''); setCatDesc(''); setCatImageUrl('');
       fetchDataForSection('categories');
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Failed creating category.');
+    }
+  };
+
+  const handleStartEditCategory = (category) => {
+    setEditingCategory(category);
+    setEditCatName(category.name || '');
+    setEditCatSlug(category.slug || '');
+    setEditCatDesc(category.description || '');
+    setEditCatImageUrl(category.imageUrl || '');
+    setEditCatIsActive(category.isActive !== false);
+  };
+
+  const handleUpdateCategory = async (e) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    setStatusMessage(''); setErrorMessage('');
+    try {
+      await adminApi.updateCategory(editingCategory.id, {
+        name: editCatName,
+        slug: editCatSlug,
+        description: editCatDesc,
+        imageUrl: editCatImageUrl,
+        isActive: editCatIsActive
+      });
+      setStatusMessage(`Category "${editCatName}" updated successfully.`);
+      setEditingCategory(null);
+      fetchDataForSection('categories');
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed updating category.');
     }
   };
 
@@ -975,16 +1051,93 @@ export default function AdminDashboardPage({ user }) {
     }
   };
 
-  const handleUpdateTicketStatus = async (ticketId, status) => {
+  const handleSelectSupportTicket = async (ticket) => {
+    setSelectedSupportTicket(ticket);
+    try {
+      const res = await adminApi.getTicketById(ticket.id);
+      if (res.data?.success) {
+        setSelectedSupportTicket(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed loading support ticket details:', err);
+    }
+  };
+
+  const handleAdminReplyToTicket = async (e, statusOverride = null) => {
+    if (e) e.preventDefault();
+    if (!adminReplyText || !adminReplyText.trim() || !selectedSupportTicket) return;
+    setIsSubmittingSupportReply(true);
     setStatusMessage(''); setErrorMessage('');
     try {
-      await adminApi.updateTicketStatus(ticketId, status);
-      setStatusMessage(`Ticket status updated to ${status}.`);
+      await adminApi.replyToTicket(selectedSupportTicket.id, adminReplyText.trim());
+      if (statusOverride) {
+        await adminApi.updateTicketStatus(selectedSupportTicket.id, statusOverride, null);
+      }
+      setStatusMessage(`Reply sent to customer successfully.${statusOverride ? ` Status updated to ${statusOverride}.` : ''}`);
+      setAdminReplyText('');
+      const updated = await adminApi.getTicketById(selectedSupportTicket.id);
+      if (updated.data?.success) {
+        setSelectedSupportTicket(updated.data.data);
+      }
+      fetchDataForSection('support');
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed sending support ticket reply.');
+    } finally {
+      setIsSubmittingSupportReply(false);
+    }
+  };
+
+  const handleUpdateTicketStatus = async (ticketId, status, priority) => {
+    setStatusMessage(''); setErrorMessage('');
+    try {
+      const targetTicket = (selectedSupportTicket && selectedSupportTicket.id === ticketId) ? selectedSupportTicket : tickets.find(t => t.id === ticketId);
+      const newStatus = status !== undefined && status !== null ? status : targetTicket?.status;
+      const newPriority = priority !== undefined && priority !== null ? priority : targetTicket?.priority;
+      
+      const res = await adminApi.updateTicketStatus(ticketId, newStatus, newPriority);
+      setStatusMessage(`Ticket ${targetTicket?.ticketNumber || ''} updated to ${newStatus}${newPriority ? ` (${newPriority})` : ''}.`);
+      
+      if (selectedSupportTicket && selectedSupportTicket.id === ticketId) {
+        if (res.data?.success) {
+          setSelectedSupportTicket(res.data.data);
+        } else {
+          setSelectedSupportTicket(prev => ({ ...prev, status: newStatus, priority: newPriority }));
+        }
+      }
       fetchDataForSection('support');
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Failed updating ticket status.');
     }
   };
+
+  const supportStats = React.useMemo(() => {
+    const total = tickets.length;
+    const active = tickets.filter(t => ['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'].includes(t.status)).length;
+    const urgent = tickets.filter(t => ['URGENT', 'HIGH'].includes(t.priority) && !['RESOLVED', 'CLOSED'].includes(t.status)).length;
+    const waiting = tickets.filter(t => t.status === 'WAITING_ON_CUSTOMER').length;
+    const resolved = tickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status)).length;
+    const rate = total > 0 ? Math.round((resolved / total) * 100) : 100;
+    return { total, active, urgent, waiting, resolved, rate };
+  }, [tickets]);
+
+  const filteredSupportTickets = React.useMemo(() => {
+    return (tickets || []).filter(t => {
+      if (supportStatusFilter === 'ACTIVE' && !['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'].includes(t.status)) return false;
+      if (supportStatusFilter !== 'ALL' && supportStatusFilter !== 'ACTIVE' && t.status !== supportStatusFilter) return false;
+      if (supportPriorityFilter !== 'ALL' && t.priority !== supportPriorityFilter) return false;
+      if (supportCategoryFilter !== 'ALL' && t.category !== supportCategoryFilter) return false;
+      
+      if (supportSearchQuery && supportSearchQuery.trim()) {
+        const q = supportSearchQuery.trim().toLowerCase();
+        const numMatch = t.ticketNumber?.toLowerCase().includes(q) || t.id?.toLowerCase().includes(q);
+        const subjMatch = t.subject?.toLowerCase().includes(q);
+        const msgMatch = t.message?.toLowerCase().includes(q);
+        const userMatch = t.userId?.toLowerCase().includes(q);
+        if (!numMatch && !subjMatch && !msgMatch && !userMatch) return false;
+      }
+      return true;
+    });
+  }, [tickets, supportStatusFilter, supportPriorityFilter, supportCategoryFilter, supportSearchQuery]);
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
@@ -1043,7 +1196,8 @@ export default function AdminDashboardPage({ user }) {
         { id: 'categories', label: 'Categories', path: '/admin/categories', icon: FolderTree },
         { id: 'inventory', label: 'Inventory Management', path: '/admin/inventory', icon: Warehouse },
         { id: 'media', label: 'Media Library', path: '/admin/media', icon: Image },
-        { id: 'offers', label: 'Promotions & Offers', path: '/admin/offers', icon: Tag }
+        { id: 'offers', label: 'Promotions & Offers', path: '/admin/offers', icon: Tag },
+        { id: 'reviews', label: 'Reviews & Ratings', path: '/admin/reviews', icon: Star }
       ]
     },
     {
@@ -1476,13 +1630,33 @@ export default function AdminDashboardPage({ user }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Product Type Classification *</label>
-                        <select value={prodType} onChange={(e) => setProdType(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700">
-                          <option value="FRESH_MUSHROOM">Fresh Mushroom (Perishable)</option>
-                          <option value="DRY_MUSHROOM">Dry Mushroom (Dehydrated)</option>
-                          <option value="SPAWN_SEED">Mushroom Spawn / Seed</option>
-                          <option value="GROWING_KIT">DIY Growing Kit</option>
+                        <label className="block text-typography-primary font-bold mb-1.5">Product Category *</label>
+                        <select
+                          value={prodCatId}
+                          required
+                          onChange={(e) => {
+                            const catId = e.target.value;
+                            setProdCatId(catId);
+                            const matchedCat = categories.find(c => c.id === catId || c.slug === catId);
+                            if (matchedCat) {
+                              const slug = (matchedCat.slug || '').toLowerCase();
+                              if (slug.includes('fresh')) setProdType('FRESH_MUSHROOM');
+                              else if (slug.includes('dry')) setProdType('DRY_MUSHROOM');
+                              else if (slug.includes('spawn') || slug.includes('seed')) setProdType('SPAWN_SEED');
+                              else if (slug.includes('kit') || slug.includes('growing')) setProdType('GROWING_KIT');
+                              else if (slug.includes('equipment') || slug.includes('supplies')) setProdType('EQUIPMENT_SUPPLIES');
+                            }
+                          }}
+                          className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary font-semibold focus:outline-none focus:border-forest-700"
+                        >
+                          <option value="">Select Category *</option>
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
                         </select>
+                        <p className="text-[10px] text-typography-muted mt-1">
+                          Select the primary catalog category for routing & storefront display.
+                        </p>
                       </div>
                     </div>
 
@@ -1495,16 +1669,6 @@ export default function AdminDashboardPage({ user }) {
                         <label className="block text-typography-primary font-bold mb-1.5">GST Tax Rate (%)</label>
                         <input type="number" step="0.01" value={prodGst} onChange={(e) => setProdGst(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-typography-primary font-bold mb-1.5">Category Association</label>
-                      <select value={prodCatId} onChange={(e) => setProdCatId(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700">
-                        <option value="">Select Category (Optional)</option>
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
                     </div>
 
                     <div>
@@ -1538,11 +1702,12 @@ export default function AdminDashboardPage({ user }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Net Quantity</label>
-                        <input type="text" value={netQty} onChange={(e) => setNetQty(e.target.value)} placeholder="200" className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
+                        <label className="block text-typography-primary font-bold mb-1.5">Net Content Weight / Pack Volume (FSSAI Net Quantity)</label>
+                        <input type="text" value={netQty} onChange={(e) => setNetQty(e.target.value)} placeholder="e.g. 200" className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
+                        <span className="text-[10px] text-typography-muted mt-1 block">Declared net weight/volume per retail pack (FSSAI / Packaged Commodity compliance). Note: Available warehouse inventory stock is managed in Step 5 (Pricing & Stock).</span>
                       </div>
                       <div>
-                        <label className="block text-typography-primary font-bold mb-1.5">Unit of Measure</label>
+                        <label className="block text-typography-primary font-bold mb-1.5">Unit of Measure (UOM)</label>
                         <select value={uom} onChange={(e) => setUom(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-4 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700">
                           <option value="g">Grams (g)</option>
                           <option value="kg">Kilograms (kg)</option>
@@ -1761,8 +1926,23 @@ export default function AdminDashboardPage({ user }) {
                 {/* STEP 6: MULTI-IMAGE GALLERY MANAGER */}
                 {formTab === 'media' && (
                   <div className="space-y-4">
+                    {/* Local File Picker & Preview Uploader (Enhancement C) */}
+                    <LocalImageUploader
+                      onUploadSuccess={(uploadedItems) => {
+                        const newItems = (uploadedItems || []).map((item, idx) => ({
+                          id: 'local_' + Date.now() + '_' + idx,
+                          url: item.mediaUrl || item.url,
+                          role: item.role || 'GALLERY',
+                          isPrimary: mediaList.length === 0 && idx === 0,
+                          displayOrder: mediaList.length + idx
+                        }));
+                        setMediaList((prev) => [...prev, ...newItems]);
+                        setStatusMessage(`Added ${newItems.length} local image(s) to gallery.`);
+                      }}
+                    />
+
                     <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-3">
-                      <span className="font-bold text-typography-primary block text-xs">Add Product Image URL</span>
+                      <span className="font-bold text-typography-primary block text-xs">Option 2: Add Product Web Image URL</span>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="url"
@@ -1788,7 +1968,7 @@ export default function AdminDashboardPage({ user }) {
                           onClick={handleAddMedia}
                           className="btn-primary text-xs font-bold px-4 py-2 shrink-0"
                         >
-                          Add Image
+                          Add Image URL
                         </button>
                       </div>
                       <p className="text-[11px] text-typography-muted">
@@ -2160,7 +2340,13 @@ export default function AdminDashboardPage({ user }) {
                         const matchCategory = productCategoryFilter === 'ALL' ||
                           p.categoryName === productCategoryFilter ||
                           p.categorySlug === productCategoryFilter ||
-                          p.category?.id === productCategoryFilter;
+                          p.category?.slug === productCategoryFilter ||
+                          p.category?.id === productCategoryFilter ||
+                          p.productType === productCategoryFilter ||
+                          (productCategoryFilter === 'fresh-mushrooms' && (p.productType === 'FRESH_MUSHROOM' || p.categorySlug === 'fresh-mushroom')) ||
+                          (productCategoryFilter === 'dry-mushrooms' && (p.productType === 'DRY_MUSHROOM' || p.categorySlug === 'dry-mushroom')) ||
+                          (productCategoryFilter === 'spawn-seeds' && (p.productType === 'SPAWN_SEED' || p.categorySlug === 'spawn-seed' || p.categorySlug === 'mushroom-spawn')) ||
+                          (productCategoryFilter === 'growing-kits' && (p.productType === 'GROWING_KIT' || p.categorySlug === 'growing-kit'));
 
                         return matchSearch && matchCategory;
                       })
@@ -2297,6 +2483,22 @@ export default function AdminDashboardPage({ user }) {
                     <label className="block text-typography-primary font-bold mb-1">Description</label>
                     <textarea rows={3} value={catDesc} onChange={(e) => setCatDesc(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
                   </div>
+                  <div>
+                    <label className="block text-typography-primary font-bold mb-1">Category Cover Image</label>
+                    <LocalImageUploader onImageSelected={(url) => setCatImageUrl(url)} />
+                    <input 
+                      type="text" 
+                      placeholder="Or paste image URL (e.g. https://...)" 
+                      value={catImageUrl} 
+                      onChange={(e) => setCatImageUrl(e.target.value)} 
+                      className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700 mt-2 font-mono text-[11px]" 
+                    />
+                    {catImageUrl && (
+                      <div className="mt-2 relative h-24 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream">
+                        <img src={catImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
                   <button type="submit" className="w-full btn-primary py-3 rounded-xl font-bold">Save Category</button>
                 </form>
               </div>
@@ -2305,12 +2507,40 @@ export default function AdminDashboardPage({ user }) {
                 <h3 className="font-display font-bold text-base text-typography-primary flex items-center gap-2">
                   <FolderTree className="w-5 h-5 text-forest-700" /> Active Categories ({categories.length})
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {categories.map((c) => (
-                    <div key={c.id} className="p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-1">
-                      <h4 className="font-bold text-sm text-typography-primary font-display">{c.name}</h4>
-                      <span className="text-[11px] text-typography-muted font-mono block">/{c.slug}</span>
-                      <p className="text-xs text-typography-secondary line-clamp-2 mt-1">{c.description || 'No description provided.'}</p>
+                    <div key={c.id} className="bg-surface-cream rounded-2xl border border-surface-border overflow-hidden flex flex-col justify-between shadow-level-1 hover:border-forest-700/40 transition-all">
+                      <div>
+                        {/* Image Thumbnail */}
+                        <div className="h-28 w-full bg-surface-white border-b border-surface-border relative overflow-hidden">
+                          {c.imageUrl ? (
+                            <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-typography-muted bg-surface-cream">
+                              <FolderTree className="w-8 h-8 text-forest-700/40 mb-1" />
+                              <span className="text-[10px]">No image assigned</span>
+                            </div>
+                          )}
+                          <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${c.isActive !== false ? 'bg-forest-700 text-white' : 'bg-surface-border text-typography-secondary'}`}>
+                            {c.isActive !== false ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+
+                        <div className="p-4 space-y-1">
+                          <h4 className="font-bold text-sm text-typography-primary font-display">{c.name}</h4>
+                          <span className="text-[11px] text-typography-muted font-mono block">/{c.slug}</span>
+                          <p className="text-xs text-typography-secondary line-clamp-2 mt-1">{c.description || 'No description provided.'}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-surface-white/60 border-t border-surface-border flex justify-end">
+                        <button
+                          onClick={() => handleStartEditCategory(c)}
+                          className="btn-secondary px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-forest-700" /> Edit Category
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2381,7 +2611,11 @@ export default function AdminDashboardPage({ user }) {
                             <td className="p-3.5">
                               <button
                                 onClick={() => {
-                                  setStatusMessage(`Stock updated for ${p.title} (${v.variantName})`);
+                                  setReplenishTarget({ product: p, variant: v });
+                                  setReplenishQty('10');
+                                  setReplenishError('');
+                                  setReplenishConfirmStep(false);
+                                  setReplenishModalOpen(true);
                                 }}
                                 className="btn-secondary text-[11px] font-bold px-3 py-1.5 rounded-xl hover:bg-forest-900 hover:text-white transition-all"
                               >
@@ -2401,6 +2635,172 @@ export default function AdminDashboardPage({ user }) {
             </div>
           )}
 
+          {/* Stock Replenish Modal */}
+          {replenishModalOpen && replenishTarget && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-surface-white rounded-card border border-surface-border max-w-md w-full p-6 space-y-5 shadow-level-3">
+                <div className="flex items-center justify-between border-b border-surface-border pb-3">
+                  <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
+                    <Warehouse className="w-5 h-5 text-forest-700" /> Replenish Stock
+                  </h3>
+                  <button
+                    onClick={() => setReplenishModalOpen(false)}
+                    className="p-1 text-typography-muted hover:text-typography-primary rounded-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-3 bg-surface-cream rounded-xl border border-surface-border space-y-1 text-xs">
+                  <div className="font-bold text-typography-primary">{replenishTarget.product.title}</div>
+                  <div className="text-typography-secondary font-mono">{replenishTarget.variant.variantName} (SKU: {replenishTarget.variant.sku || 'N/A'})</div>
+                  <div className="text-forest-800 font-bold">Current Stock: {replenishTarget.variant.stockQuantity} units</div>
+                </div>
+
+                {replenishError && (
+                  <div className="p-3 bg-red-50 text-red-700 rounded-xl text-xs flex items-center gap-2 border border-red-200">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{replenishError}</span>
+                  </div>
+                )}
+
+                {!replenishConfirmStep ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-typography-primary mb-1">
+                        Enter quantity to add:
+                      </label>
+                      <input
+                        type="text"
+                        value={replenishQty}
+                        onChange={(e) => setReplenishQty(e.target.value)}
+                        placeholder="e.g. 10"
+                        className="w-full bg-surface-cream border border-surface-border rounded-xl px-4 py-2.5 text-sm text-typography-primary focus:outline-none focus:border-forest-700"
+                      />
+                      <p className="text-[11px] text-typography-muted mt-1">
+                        Must be a positive integer (e.g. 10 adds 10 units to current stock).
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-typography-primary mb-1">
+                        Reason / Reference (Optional):
+                      </label>
+                      <input
+                        type="text"
+                        value={replenishReason}
+                        onChange={(e) => setReplenishReason(e.target.value)}
+                        placeholder="e.g. Supplier Restock PO-99"
+                        className="w-full bg-surface-cream border border-surface-border rounded-xl px-4 py-2.5 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <button
+                        onClick={() => setReplenishModalOpen(false)}
+                        className="btn-secondary text-xs font-bold px-4 py-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          const parsed = parseInt(replenishQty, 10);
+                          if (isNaN(parsed) || parsed <= 0 || replenishQty.includes('.')) {
+                            setReplenishError('Please enter a valid positive integer quantity greater than zero.');
+                            return;
+                          }
+                          if (parsed > 1000000) {
+                            setReplenishError('Quantity is too large. Maximum replenishment limit is 1,000,000 units.');
+                            return;
+                          }
+                          setReplenishError('');
+                          setReplenishConfirmStep(true);
+                        }}
+                        className="btn-primary text-xs font-bold px-5 py-2"
+                      >
+                        Continue to Confirm
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2 text-xs text-emerald-900">
+                      <div className="font-bold text-sm">Confirmation Summary:</div>
+                      <div className="flex justify-between">
+                        <span>Current Stock:</span>
+                        <span className="font-bold">{replenishTarget.variant.stockQuantity} units</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Quantity to Add:</span>
+                        <span className="font-bold text-emerald-700">+{parseInt(replenishQty, 10)} units</span>
+                      </div>
+                      <div className="border-t border-emerald-200 pt-1 flex justify-between font-bold text-sm">
+                        <span>New Stock:</span>
+                        <span className="text-forest-900">{replenishTarget.variant.stockQuantity + parseInt(replenishQty, 10)} units</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-700 pt-1">
+                        Are you sure you want to replenish {parseInt(replenishQty, 10)} units for this item?
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        disabled={isSubmittingReplenish}
+                        onClick={() => setReplenishConfirmStep(false)}
+                        className="btn-secondary text-xs font-bold px-4 py-2"
+                      >
+                        Back
+                      </button>
+                      <button
+                        disabled={isSubmittingReplenish}
+                        onClick={async () => {
+                          setIsSubmittingReplenish(true);
+                          setReplenishError('');
+                          try {
+                            const addQty = parseInt(replenishQty, 10);
+                            const res = await adminApi.replenishStock(replenishTarget.variant.id, addQty, replenishReason);
+                            const newStockVal = res?.data?.data?.availableQuantity ?? (replenishTarget.variant.stockQuantity + addQty);
+                            
+                            // Update local React products state immediately
+                            setProducts((prev) =>
+                              prev.map((p) => {
+                                if (p.id === replenishTarget.product.id) {
+                                  return {
+                                    ...p,
+                                    variants: p.variants.map((v) =>
+                                      v.id === replenishTarget.variant.id ? { ...v, stockQuantity: newStockVal } : v
+                                    ),
+                                  };
+                                }
+                                return p;
+                              })
+                            );
+
+                            setStatusMessage(`Stock replenished successfully! ${addQty} units added. New stock: ${newStockVal}`);
+                            setReplenishModalOpen(false);
+                          } catch (err) {
+                            setReplenishError(err.response?.data?.message || 'Failed to replenish stock. Please check server logs.');
+                          } finally {
+                            setIsSubmittingReplenish(false);
+                          }
+                        }}
+                        className="btn-primary text-xs font-bold px-5 py-2 flex items-center gap-2"
+                      >
+                        {isSubmittingReplenish ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" /> Processing...
+                          </>
+                        ) : (
+                          'Confirm Replenishment'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Sub-Section 2E: Media Library */}
           {activeSection === 'media' && (
             <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-6 shadow-level-1">
@@ -2412,6 +2812,12 @@ export default function AdminDashboardPage({ user }) {
                   <p className="text-xs text-typography-secondary">High-resolution photography, packaging graphics, and instruction manual assets.</p>
                 </div>
               </div>
+
+              {/* Local Image Upload with Pre-Upload Preview Component */}
+              <LocalImageUploader onUploadSuccess={() => {
+                fetchDataForSection('catalog');
+                setStatusMessage('Local image upload completed successfully.');
+              }} />
 
               {/* Media URL add tool */}
               <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border flex flex-col sm:flex-row gap-3">
@@ -2449,7 +2855,7 @@ export default function AdminDashboardPage({ user }) {
                   <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
                     <Tag className="w-5 h-5 text-forest-700" /> Advanced Offers & Promotions Hub
                   </h3>
-                  <p className="text-xs text-typography-secondary">Create percentage discounts, flat amount coupons, and free delivery campaigns with customer usage limits.</p>
+                  <p className="text-xs text-typography-secondary">Manage promotions with strict distinction between Customer Store buyers and Trainee Batch enrollments.</p>
                 </div>
                 <button
                   onClick={() => {
@@ -2465,6 +2871,7 @@ export default function AdminDashboardPage({ user }) {
                       status: 'ACTIVE',
                       usageLimit: '500',
                       perCustomerLimit: '3',
+                      targetAudience: 'BOTH',
                     });
                     setPromoModalOpen(true);
                   }}
@@ -2474,12 +2881,60 @@ export default function AdminDashboardPage({ user }) {
                 </button>
               </div>
 
+              {/* Filter Tabs by Target Audience */}
+              <div className="flex items-center gap-2 flex-wrap bg-surface-cream/60 p-1.5 rounded-2xl border border-surface-border">
+                <button
+                  onClick={() => setPromoAudienceFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    promoAudienceFilter === 'ALL'
+                      ? 'bg-forest-900 text-white shadow-sm'
+                      : 'text-typography-secondary hover:text-typography-primary hover:bg-surface-white'
+                  }`}
+                >
+                  All Promos ({promotions.length})
+                </button>
+                <button
+                  onClick={() => setPromoAudienceFilter('CUSTOMER')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    promoAudienceFilter === 'CUSTOMER'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-indigo-900 hover:bg-indigo-50'
+                  }`}
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>🛒 Customer Only ({promotions.filter(p => p.targetAudience === 'CUSTOMER').length})</span>
+                </button>
+                <button
+                  onClick={() => setPromoAudienceFilter('TRAINEE')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    promoAudienceFilter === 'TRAINEE'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'text-purple-900 hover:bg-purple-50'
+                  }`}
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>🎓 Trainee Only ({promotions.filter(p => p.targetAudience === 'TRAINEE').length})</span>
+                </button>
+                <button
+                  onClick={() => setPromoAudienceFilter('BOTH')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    promoAudienceFilter === 'BOTH'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-emerald-900 hover:bg-emerald-50'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>🌐 Both / Universal ({promotions.filter(p => p.targetAudience === 'BOTH' || !p.targetAudience).length})</span>
+                </button>
+              </div>
+
               {/* Promotions Table */}
               <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
-                <table className="w-full text-left text-xs text-typography-secondary min-w-[750px]">
+                <table className="w-full text-left text-xs text-typography-secondary min-w-[800px]">
                   <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
                     <tr>
                       <th className="p-3.5">Promo Code & Campaign</th>
+                      <th className="p-3.5">Target Audience</th>
                       <th className="p-3.5">Type & Value</th>
                       <th className="p-3.5">Eligibility Rules</th>
                       <th className="p-3.5">Usage Stats</th>
@@ -2488,12 +2943,29 @@ export default function AdminDashboardPage({ user }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-border">
-                    {promotions.map((p) => (
+                    {promotions
+                      .filter(p => promoAudienceFilter === 'ALL' || (p.targetAudience || 'BOTH') === promoAudienceFilter)
+                      .map((p) => (
                       <tr key={p.id} className="hover:bg-surface-cream/50 transition-colors">
                         <td className="p-3.5">
                           <span className="font-mono font-extrabold text-sm text-forest-900 bg-forest-900/10 px-2 py-0.5 rounded border border-forest-900/20 inline-block">{p.code}</span>
                           <span className="font-bold text-xs text-typography-primary block mt-1">{p.name}</span>
                           <span className="text-[10px] text-typography-muted line-clamp-1">{p.description}</span>
+                        </td>
+                        <td className="p-3.5">
+                          {p.targetAudience === 'CUSTOMER' ? (
+                            <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-800 text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-indigo-200">
+                              <ShoppingCart className="w-3 h-3 text-indigo-600" /> Customer Store
+                            </span>
+                          ) : p.targetAudience === 'TRAINEE' ? (
+                            <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-purple-200">
+                              <GraduationCap className="w-3 h-3 text-purple-600" /> Trainee Batch
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-emerald-200">
+                              <Globe className="w-3 h-3 text-emerald-600" /> Both (Universal)
+                            </span>
+                          )}
                         </td>
                         <td className="p-3.5">
                           <span className="font-bold text-xs text-forest-900 block uppercase">
@@ -2518,6 +2990,28 @@ export default function AdminDashboardPage({ user }) {
                         <td className="p-3.5 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <button
+                              onClick={() => {
+                                setEditingPromo(p);
+                                setPromoForm({
+                                  name: p.name || '',
+                                  code: p.code || '',
+                                  description: p.description || '',
+                                  type: p.type || 'PERCENTAGE',
+                                  discountValue: p.discountValue ? p.discountValue.toString() : '10',
+                                  maximumDiscount: p.maximumDiscount ? p.maximumDiscount.toString() : '',
+                                  minimumOrderValue: p.minimumOrderValue ? p.minimumOrderValue.toString() : '',
+                                  status: p.status || 'ACTIVE',
+                                  usageLimit: p.usageLimit ? p.usageLimit.toString() : '',
+                                  perCustomerLimit: p.perCustomerLimit ? p.perCustomerLimit.toString() : '',
+                                  targetAudience: p.targetAudience || 'BOTH',
+                                });
+                                setPromoModalOpen(true);
+                              }}
+                              className="text-xs font-bold text-indigo-600 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
                               onClick={() => handleTogglePromoStatus(p.id, p.status)}
                               className="text-xs font-bold text-forest-700 hover:underline"
                             >
@@ -2534,7 +3028,7 @@ export default function AdminDashboardPage({ user }) {
                       </tr>
                     ))}
                     {promotions.length === 0 && (
-                      <tr><td colSpan={6} className="p-6 text-center text-typography-muted">No promotional campaigns created yet. Click "Create New Promotion" above to add one.</td></tr>
+                      <tr><td colSpan={7} className="p-6 text-center text-typography-muted">No promotional campaigns created yet. Click "Create New Promotion" above to add one.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -4066,59 +4560,419 @@ export default function AdminDashboardPage({ user }) {
       )}
 
       {activeSection === 'support' && (
-        <div className="bg-surface-white p-5 sm:p-8 rounded-card border border-surface-border space-y-4 shadow-level-1">
-          <h3 className="font-display font-bold text-base text-typography-primary flex items-center gap-2">
-            <LifeBuoy className="w-5 h-5 text-forest-700 shrink-0" /> Enterprise Support Desk ({tickets.length})
-          </h3>
-          <div className="space-y-4">
-            {tickets.map((t) => (
-              <div key={t.id} className="p-5 bg-surface-cream rounded-2xl border border-surface-border space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-forest-700">{t.ticketNumber || ('TKT-' + t.id.substring(0, 8))}</span>
-                    <h4 className="font-bold text-sm text-typography-primary font-display">{t.subject}</h4>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="px-2.5 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[10px] font-bold rounded-lg uppercase">
-                      Category: {t.category || 'GENERAL'}
-                    </span>
-                    <span className="px-2.5 py-0.5 bg-gold/15 text-forest-900 border border-gold/30 text-[10px] font-bold rounded-lg uppercase">
-                      Status: {t.status || 'OPEN'}
-                    </span>
-                  </div>
+        <div className="space-y-6">
+          {/* Header & KPI Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Total Complaints</p>
+                <h3 className="text-2xl font-black font-mono text-typography-primary mt-1">{supportStats.total}</h3>
+                <span className="text-[11px] text-typography-muted">All customer tickets</span>
+              </div>
+              <div className="p-3 bg-surface-cream rounded-2xl border border-surface-border text-forest-700">
+                <LifeBuoy className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Active Queue</p>
+                <h3 className="text-2xl font-black font-mono text-amber-600 mt-1">{supportStats.active}</h3>
+                <span className="text-[11px] text-typography-muted">Open / In Progress</span>
+              </div>
+              <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-600">
+                <Clock className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Urgent Escalations</p>
+                <h3 className="text-2xl font-black font-mono text-red-600 mt-1">{supportStats.urgent}</h3>
+                <span className="text-[11px] text-typography-muted">High &amp; Urgent priority</span>
+              </div>
+              <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 text-red-600">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Resolution Rate</p>
+                <h3 className="text-2xl font-black font-mono text-emerald-600 mt-1">{supportStats.rate}%</h3>
+                <span className="text-[11px] text-typography-muted">{supportStats.resolved} tickets resolved</span>
+              </div>
+              <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-600">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filter Toolbar */}
+          <div className="bg-surface-white p-4 sm:p-5 rounded-card border border-surface-border shadow-level-1 space-y-4">
+            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+              {/* Search input */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-typography-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by Ticket # (e.g. TKT-2026), customer, subject, or message..."
+                  value={supportSearchQuery}
+                  onChange={(e) => setSupportSearchQuery(e.target.value)}
+                  className="w-full bg-surface-cream border border-surface-border rounded-xl pl-10 pr-4 py-2 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+                {supportSearchQuery && (
+                  <button onClick={() => setSupportSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-typography-muted hover:text-typography-primary text-xs">
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Status Tabs */}
+              <div className="flex flex-wrap items-center gap-1 bg-surface-cream p-1 rounded-xl border border-surface-border text-xs font-medium">
+                {[
+                  { id: 'ALL', label: 'All' },
+                  { id: 'ACTIVE', label: `Active (${supportStats.active})` },
+                  { id: 'WAITING_ON_CUSTOMER', label: 'Waiting Cust' },
+                  { id: 'RESOLVED', label: 'Resolved' },
+                  { id: 'CLOSED', label: 'Closed' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSupportStatusFilter(tab.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      supportStatusFilter === tab.id
+                        ? 'bg-surface-white text-forest-800 shadow-level-1 border border-surface-border'
+                        : 'text-typography-muted hover:text-typography-primary'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dropdown Filters for Priority & Category */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-surface-border text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-typography-muted" />
+                  <span className="font-bold text-typography-muted">Priority:</span>
+                  <select
+                    value={supportPriorityFilter}
+                    onChange={(e) => setSupportPriorityFilter(e.target.value)}
+                    className="bg-surface-cream border border-surface-border text-typography-primary rounded-xl px-2.5 py-1 text-xs focus:outline-none"
+                  >
+                    <option value="ALL">All Priorities</option>
+                    <option value="URGENT">🔴 URGENT</option>
+                    <option value="HIGH">🟠 HIGH</option>
+                    <option value="MEDIUM">🔵 MEDIUM</option>
+                    <option value="LOW">⚪ LOW</option>
+                  </select>
                 </div>
 
-                <p className="text-xs text-typography-secondary leading-relaxed bg-surface-white p-3.5 rounded-2xl border border-surface-border">{t.message}</p>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-typography-muted font-medium">Update Status:</span>
-                    <select
-                      value={t.status || 'OPEN'}
-                      onChange={(e) => handleUpdateTicketStatus(t.id, e.target.value)}
-                      className="bg-surface-white border border-surface-border text-typography-primary rounded-xl px-3 py-1.5 text-xs focus:outline-none"
-                    >
-                      <option value="OPEN">OPEN</option>
-                      <option value="IN_PROGRESS">IN_PROGRESS</option>
-                      <option value="WAITING_ON_CUSTOMER">WAITING_ON_CUSTOMER</option>
-                      <option value="RESOLVED">RESOLVED</option>
-                      <option value="CLOSED">CLOSED</option>
-                    </select>
-                  </div>
-                  {t.status !== 'RESOLVED' && t.status !== 'CLOSED' && (
-                    <button
-                      onClick={() => handleUpdateTicketStatus(t.id, 'RESOLVED')}
-                      className="px-3.5 py-1.5 btn-primary font-bold text-xs"
-                    >
-                      Mark Resolved
-                    </button>
-                  )}
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-typography-muted">Category:</span>
+                  <select
+                    value={supportCategoryFilter}
+                    onChange={(e) => setSupportCategoryFilter(e.target.value)}
+                    className="bg-surface-cream border border-surface-border text-typography-primary rounded-xl px-2.5 py-1 text-xs focus:outline-none"
+                  >
+                    <option value="ALL">All Categories</option>
+                    <option value="ORDER_ISSUE">Order Issue</option>
+                    <option value="PAYMENT_FAILURE">Payment Failure</option>
+                    <option value="SHIPMENT_DELAY">Shipment Delay</option>
+                    <option value="COURSE_QUERY">Course Query</option>
+                    <option value="REFUND_REQUEST">Refund Request</option>
+                    <option value="GENERAL_SUPPORT">General Support</option>
+                    <option value="PRODUCT_QUALITY">Product Quality</option>
+                  </select>
                 </div>
               </div>
-            ))}
-            {tickets.length === 0 && <p className="text-xs text-typography-muted text-center py-6">No active support tickets in queue.</p>}
+
+              <div className="text-xs text-typography-muted">
+                Showing <strong className="text-typography-primary">{filteredSupportTickets.length}</strong> of {tickets.length} tickets
+              </div>
+            </div>
+          </div>
+
+          {/* Master-Detail Split Workspace */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+            {/* Left Column: Ticket Cards List (5 cols) */}
+            <div className="lg:col-span-5 bg-surface-white rounded-card border border-surface-border p-4 shadow-level-1 space-y-3 flex flex-col max-h-[750px]">
+              <div className="flex justify-between items-center pb-2 border-b border-surface-border flex-shrink-0">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-typography-muted flex items-center gap-1.5">
+                  <LifeBuoy className="w-4 h-4 text-forest-700" /> Complaint Queue ({filteredSupportTickets.length})
+                </h4>
+                <button onClick={() => fetchDataForSection('support')} className="text-typography-muted hover:text-typography-primary text-xs flex items-center gap-1">
+                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                {filteredSupportTickets.length === 0 ? (
+                  <div className="text-center py-12 space-y-2">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto opacity-70" />
+                    <p className="text-xs font-bold text-typography-secondary">No complaints found matching filter.</p>
+                    <p className="text-[11px] text-typography-muted">Adjust status, priority, or search terms.</p>
+                  </div>
+                ) : (
+                  filteredSupportTickets.map((t) => {
+                    const isSelected = selectedSupportTicket?.id === t.id;
+                    const isUrgent = t.priority === 'URGENT';
+                    const isHigh = t.priority === 'HIGH';
+                    const isResolved = ['RESOLVED', 'CLOSED'].includes(t.status);
+
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => handleSelectSupportTicket(t)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 relative ${
+                          isSelected
+                            ? 'bg-surface-cream border-forest-700 shadow-level-2 ring-1 ring-forest-700/30'
+                            : 'bg-surface-white border-surface-border hover:border-forest-700/50 hover:bg-surface-cream/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            {isUrgent && <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" title="Urgent Priority" />}
+                            {isHigh && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" title="High Priority" />}
+                            <span className="font-mono text-xs font-black text-forest-800">{t.ticketNumber || ('TKT-' + t.id.substring(0, 8))}</span>
+                          </div>
+
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase border ${
+                            isResolved
+                              ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                              : t.status === 'WAITING_ON_CUSTOMER'
+                              ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+                              : t.status === 'IN_PROGRESS'
+                              ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                              : 'bg-red-500/10 text-red-700 border-red-500/20'
+                          }`}>
+                            {t.status}
+                          </span>
+                        </div>
+
+                        <h5 className="font-bold text-xs text-typography-primary line-clamp-1 font-display">{t.subject}</h5>
+                        <p className="text-[11px] text-typography-secondary line-clamp-2 leading-relaxed">{t.message}</p>
+
+                        <div className="flex items-center justify-between pt-1 text-[10px] text-typography-muted border-t border-surface-border/60">
+                          <span className="font-medium uppercase tracking-tight text-forest-900 bg-forest-900/5 px-2 py-0.5 rounded-md">
+                            {t.category || 'GENERAL'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(t.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Ticket Conversation & Actions Workspace (7 cols) */}
+            <div className="lg:col-span-7 bg-surface-white rounded-card border border-surface-border p-5 shadow-level-1 flex flex-col justify-between max-h-[750px]">
+              {selectedSupportTicket ? (
+                <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
+                  {/* Selected Ticket Top Header */}
+                  <div className="pb-3 border-b border-surface-border space-y-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 bg-forest-900 text-white font-mono text-xs font-bold rounded-lg shadow-level-1">
+                          {selectedSupportTicket.ticketNumber || ('TKT-' + selectedSupportTicket.id.substring(0, 8))}
+                        </span>
+                        <h3 className="font-display font-extrabold text-sm text-typography-primary">{selectedSupportTicket.subject}</h3>
+                      </div>
+
+                      {/* Status Changer & Quick Resolution Buttons */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={selectedSupportTicket.status}
+                          onChange={(e) => handleUpdateTicketStatus(selectedSupportTicket.id, e.target.value, null)}
+                          className="bg-surface-cream border border-surface-border text-typography-primary rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="OPEN">Status: OPEN</option>
+                          <option value="IN_PROGRESS">Status: IN_PROGRESS</option>
+                          <option value="WAITING_ON_CUSTOMER">Status: WAITING_ON_CUSTOMER</option>
+                          <option value="RESOLVED">Status: RESOLVED</option>
+                          <option value="CLOSED">Status: CLOSED</option>
+                        </select>
+
+                        <select
+                          value={selectedSupportTicket.priority}
+                          onChange={(e) => handleUpdateTicketStatus(selectedSupportTicket.id, null, e.target.value)}
+                          className="bg-surface-cream border border-surface-border text-typography-primary rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="LOW">Priority: LOW</option>
+                          <option value="MEDIUM">Priority: MEDIUM</option>
+                          <option value="HIGH">Priority: HIGH</option>
+                          <option value="URGENT">Priority: URGENT 🔴</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Metadata Context Badges (Order ID, User ID, Category) */}
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1">
+                      <span className="px-2 py-0.5 bg-surface-cream text-typography-secondary rounded-lg border border-surface-border font-bold">
+                        Category: {selectedSupportTicket.category}
+                      </span>
+                      {selectedSupportTicket.orderId && (
+                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-700 rounded-lg border border-blue-500/20 font-mono font-bold flex items-center gap-1">
+                          <ShoppingBag className="w-3 h-3" /> Order Ref: {selectedSupportTicket.orderId.substring(0, 8)}
+                        </span>
+                      )}
+                      {selectedSupportTicket.courseId && (
+                        <span className="px-2 py-0.5 bg-purple-500/10 text-purple-700 rounded-lg border border-purple-500/20 font-bold flex items-center gap-1">
+                          <GraduationCap className="w-3 h-3" /> Masterclass Linked
+                        </span>
+                      )}
+                      {selectedSupportTicket.userId && (
+                        <span className="px-2 py-0.5 bg-surface-cream text-typography-muted rounded-lg font-mono text-[10px]">
+                          User ID: {selectedSupportTicket.userId.substring(0, 8)}...
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Conversation History Timeline */}
+                  <div className="flex-1 overflow-y-auto space-y-3 p-4 bg-surface-cream/70 rounded-2xl border border-surface-border min-h-[240px]">
+                    {/* Message history */}
+                    {(selectedSupportTicket.messages || []).map((msg) => {
+                      const isAgent = msg.senderType === 'SUPPORT_AGENT' || msg.senderType === 'ADMIN';
+                      const isSystem = msg.senderType === 'SYSTEM';
+
+                      if (isSystem) {
+                        return (
+                          <div key={msg.id} className="text-center my-2">
+                            <span className="px-3 py-1 bg-surface-white border border-surface-border text-typography-muted text-[10px] rounded-full font-bold">
+                              {msg.message}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[88%] shadow-level-1 ${
+                            isAgent
+                              ? 'ml-auto bg-forest-900 text-white rounded-tr-none'
+                              : 'mr-auto bg-surface-white text-typography-primary border border-surface-border rounded-tl-none'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between text-[10px] gap-3 opacity-90 border-b pb-1 mb-1 border-current/15">
+                            <span className="font-bold flex items-center gap-1">
+                              {isAgent ? <ShieldCheck className="w-3 h-3 text-leaf" /> : <Users className="w-3 h-3 text-forest-700" />}
+                              {msg.senderName || (isAgent ? 'Support Specialist' : 'Customer')}
+                            </span>
+                            <span className="text-[9px] font-mono">
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="whitespace-pre-wrap leading-relaxed text-xs">{msg.message}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Canned Quick Reply Macros */}
+                  <div className="space-y-1 flex-shrink-0 pt-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-typography-muted">Quick Reply Templates (Macros):</span>
+                    <div className="flex flex-wrap gap-1.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setAdminReplyText("Hello! Your order has been dispatched via our logistics partner. You can track live updates under your customer dashboard.")}
+                        className="px-2.5 py-1 bg-surface-cream hover:bg-surface-white border border-surface-border rounded-lg text-typography-primary transition-all font-medium"
+                      >
+                        📦 Order Dispatched
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminReplyText("We have verified your transaction and initiated a full refund to your Sporekart Wallet / original payment method.")}
+                        className="px-2.5 py-1 bg-surface-cream hover:bg-surface-white border border-surface-border rounded-lg text-typography-primary transition-all font-medium"
+                      >
+                        💳 Refund Initiated
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminReplyText("Greetings! We have resent your upcoming masterclass batch schedule and access instructions to your registered email.")}
+                        className="px-2.5 py-1 bg-surface-cream hover:bg-surface-white border border-surface-border rounded-lg text-typography-primary transition-all font-medium"
+                      >
+                        🎓 Batch Details Sent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminReplyText("Greetings! Your complaint has been investigated and resolved by our customer care team. Thank you for choosing Sporekart.")}
+                        className="px-2.5 py-1 bg-surface-cream hover:bg-surface-white border border-surface-border rounded-lg text-typography-primary transition-all font-medium"
+                      >
+                        ✅ Query Resolved
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Rich Reply Composer Form */}
+                  <form onSubmit={(e) => handleAdminReplyToTicket(e)} className="space-y-2 flex-shrink-0 pt-1">
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Type response to customer..."
+                      value={adminReplyText}
+                      onChange={(e) => setAdminReplyText(e.target.value)}
+                      className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
+                    />
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isSubmittingSupportReply || !adminReplyText.trim()}
+                          onClick={(e) => handleAdminReplyToTicket(e, 'WAITING_ON_CUSTOMER')}
+                          className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 border border-amber-500/30 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          Reply &amp; Ask Customer
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSubmittingSupportReply || !adminReplyText.trim()}
+                          onClick={(e) => handleAdminReplyToTicket(e, 'RESOLVED')}
+                          className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          Reply &amp; Mark Resolved
+                        </button>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingSupportReply || !adminReplyText.trim()}
+                        className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{isSubmittingSupportReply ? 'Sending...' : 'Send Reply'}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3 my-auto">
+                  <div className="p-4 bg-surface-cream rounded-full border border-surface-border text-forest-700">
+                    <LifeBuoy className="w-10 h-10" />
+                  </div>
+                  <h4 className="font-display font-bold text-sm text-typography-primary">Select a Complaint Ticket</h4>
+                  <p className="text-xs text-typography-muted max-w-sm">
+                    Click any support ticket on the left list queue to view full message history, issue details, macros, and send responses.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      )}
+
+      {/* REVIEWS & RATINGS MODERATION SECTION */}
+      {activeSection === 'reviews' && (
+        <AdminReviewsManager />
       )}
 
       {/* Promotion Create/Edit Modal */}
@@ -4164,6 +5018,53 @@ export default function AdminDashboardPage({ user }) {
                   onChange={(e) => setPromoForm({ ...promoForm, description: e.target.value })}
                   className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
                 />
+              </div>
+
+              <div>
+                <label className="block text-typography-primary font-bold mb-1.5">Target Audience *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPromoForm({ ...promoForm, targetAudience: 'CUSTOMER' })}
+                    className={`p-2.5 border rounded-xl flex flex-col items-center justify-center transition-all ${
+                      promoForm.targetAudience === 'CUSTOMER'
+                        ? 'border-forest-700 bg-forest-50/60 text-forest-800 font-bold shadow-sm ring-1 ring-forest-700'
+                        : 'border-surface-border hover:bg-surface-cream/50 text-typography-secondary'
+                    }`}
+                  >
+                    <ShoppingCart className="w-4 h-4 mb-1 text-emerald-600" />
+                    <span className="text-[11px]">Customers Only</span>
+                    <span className="text-[9px] text-typography-muted font-normal">Product Checkout</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPromoForm({ ...promoForm, targetAudience: 'TRAINEE' })}
+                    className={`p-2.5 border rounded-xl flex flex-col items-center justify-center transition-all ${
+                      promoForm.targetAudience === 'TRAINEE'
+                        ? 'border-indigo-700 bg-indigo-50/60 text-indigo-900 font-bold shadow-sm ring-1 ring-indigo-700'
+                        : 'border-surface-border hover:bg-surface-cream/50 text-typography-secondary'
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4 mb-1 text-indigo-600" />
+                    <span className="text-[11px]">Trainees Only</span>
+                    <span className="text-[9px] text-typography-muted font-normal">Batch Enrollment</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPromoForm({ ...promoForm, targetAudience: 'BOTH' })}
+                    className={`p-2.5 border rounded-xl flex flex-col items-center justify-center transition-all ${
+                      promoForm.targetAudience === 'BOTH'
+                        ? 'border-purple-700 bg-purple-50/60 text-purple-900 font-bold shadow-sm ring-1 ring-purple-700'
+                        : 'border-surface-border hover:bg-surface-cream/50 text-typography-secondary'
+                    }`}
+                  >
+                    <Globe className="w-4 h-4 mb-1 text-purple-600" />
+                    <span className="text-[11px]">Both (Universal)</span>
+                    <span className="text-[9px] text-typography-muted font-normal">Product & Batch</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -4238,6 +5139,87 @@ export default function AdminDashboardPage({ user }) {
                 </button>
                 <button type="submit" className="btn-primary px-5 py-2 text-xs font-bold rounded-xl shadow-level-1">
                   Save Promotion
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {editingCategory && (
+        <div className="fixed inset-0 bg-forest-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white rounded-card p-6 sm:p-8 max-w-lg w-full border border-surface-border shadow-level-2 space-y-4">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-forest-700" /> Edit Category: {editingCategory.name}
+              </h3>
+              <button onClick={() => setEditingCategory(null)} className="p-1 hover:bg-surface-cream rounded-lg">
+                <X className="w-5 h-5 text-typography-secondary" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCategory} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Category Name *</label>
+                <input
+                  type="text" required value={editCatName}
+                  onChange={(e) => setEditCatName(e.target.value)}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Category Slug *</label>
+                <input
+                  type="text" required value={editCatSlug}
+                  onChange={(e) => setEditCatSlug(e.target.value)}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Description</label>
+                <textarea
+                  rows={3} value={editCatDesc}
+                  onChange={(e) => setEditCatDesc(e.target.value)}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
+                />
+              </div>
+              <div>
+                <label className="block text-typography-primary font-bold mb-1">Category Cover Image</label>
+                <LocalImageUploader onImageSelected={(url) => setEditCatImageUrl(url)} />
+                <input 
+                  type="text" 
+                  placeholder="Or paste image URL" 
+                  value={editCatImageUrl} 
+                  onChange={(e) => setEditCatImageUrl(e.target.value)} 
+                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700 mt-2 font-mono text-[11px]" 
+                />
+                {editCatImageUrl && (
+                  <div className="mt-2 relative h-28 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream">
+                    <img src={editCatImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="editCatIsActive"
+                  checked={editCatIsActive}
+                  onChange={(e) => setEditCatIsActive(e.target.checked)}
+                  className="w-4 h-4 text-forest-700 rounded focus:ring-forest-700 border-surface-border"
+                />
+                <label htmlFor="editCatIsActive" className="text-typography-primary font-bold">Category Active</label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-surface-border">
+                <button
+                  type="button" onClick={() => setEditingCategory(null)}
+                  className="btn-secondary px-4 py-2 text-xs font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary px-5 py-2 text-xs font-bold rounded-xl shadow-level-1">
+                  Update Category
                 </button>
               </div>
             </form>

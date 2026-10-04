@@ -3,12 +3,14 @@ import {
   ShoppingBag, GraduationCap, Truck, Clock, CheckCircle2, User, RefreshCw, 
   Lock, ShieldCheck, MapPin, FileText, XCircle, AlertCircle, PlusCircle, 
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
-  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw
+  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star
 } from 'lucide-react';
 import { orderApi, trainingApi, customerApi, supportApi, walletApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';
+import MyReviewsTab from '../components/MyReviewsTab';
+import ProductReviewFormModal from '../components/ProductReviewFormModal';
 
 export default function DashboardPage({ user }) {
   const [activeTab, setActiveTab] = useState('activeTrack');
@@ -27,6 +29,7 @@ export default function DashboardPage({ user }) {
   const [addMoneyAmount, setAddMoneyAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
+  const [reviewModalItem, setReviewModalItem] = useState(null);
 
   // Cancel Order Modal State
   const [cancellingOrder, setCancellingOrder] = useState(null);
@@ -494,7 +497,7 @@ export default function DashboardPage({ user }) {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => {
-                setTicketForm({ subject: '', category: 'GENERAL_INQUIRY', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
+                setTicketForm({ subject: '', category: 'GENERAL_SUPPORT', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
                 setTicketModalOpen(true);
               }}
               className="btn-primary px-4 py-2.5 text-xs font-bold flex items-center gap-2 shadow-level-1"
@@ -578,6 +581,17 @@ export default function DashboardPage({ user }) {
           }`}
         >
           <MessageSquare className="w-4 h-4 text-forest-700" /> Helpdesk & Complaints ({tickets.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('reviews')}
+          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
+            activeTab === 'reviews'
+              ? 'btn-primary text-white shadow-level-1'
+              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
+          }`}
+        >
+          <Star className="w-4 h-4 text-amber-500 fill-amber-400" /> My Reviews
         </button>
       </div>
 
@@ -981,7 +995,7 @@ export default function DashboardPage({ user }) {
                         onClick={() => {
                           setTicketForm({
                             subject: `Batch & Schedule Query: ${booking.courseTitle}`,
-                            category: 'COURSE_QUERY',
+                            category: 'TRAINING_ISSUE',
                             priority: 'MEDIUM',
                             message: `Hi Sporekart Agronomist Support,\n\nI need assistance regarding batch timing, rescheduling, or google meet link for ${booking.courseTitle} (Batch: ${booking.batchCode || 'Masterclass'}).`,
                             orderId: null,
@@ -1000,7 +1014,7 @@ export default function DashboardPage({ user }) {
                         onClick={() => {
                           setTicketForm({
                             subject: `Course Materials & Study Notes: ${booking.courseTitle}`,
-                            category: 'COURSE_QUERY',
+                            category: 'TRAINING_ISSUE',
                             priority: 'MEDIUM',
                             message: `Hi Sporekart Agronomist Support,\n\nI need assistance accessing study guides, substrate formulas, or class recordings for ${booking.courseTitle}.`,
                             orderId: null,
@@ -1019,7 +1033,7 @@ export default function DashboardPage({ user }) {
                         onClick={() => {
                           setTicketForm({
                             subject: `Training Payment & Refund Query: ${booking.courseTitle}`,
-                            category: 'PAYMENT_FAILURE',
+                            category: 'PAYMENT_ISSUE',
                             priority: 'MEDIUM',
                             message: `Hi Sporekart Customer Support,\n\nI have a query regarding workshop fee payment, GST invoice, or refund status for ${booking.courseTitle} (Ref: ${booking.paymentReference || 'N/A'}).`,
                             orderId: null,
@@ -1120,7 +1134,7 @@ export default function DashboardPage({ user }) {
             <h2 className="text-lg font-display font-bold text-typography-primary">Support Tickets & Complaint Tracker</h2>
             <button
               onClick={() => {
-                setTicketForm({ subject: '', category: 'GENERAL_INQUIRY', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
+                setTicketForm({ subject: '', category: 'GENERAL_SUPPORT', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
                 setTicketModalOpen(true);
               }}
               className="btn-primary px-4 py-2.5 text-xs font-bold flex items-center gap-2"
@@ -1138,7 +1152,7 @@ export default function DashboardPage({ user }) {
               description="Have a question or complaint regarding an order or masterclass? Our support team is ready to assist."
               actionText="Raise a Support Ticket"
               onAction={() => {
-                setTicketForm({ subject: '', category: 'GENERAL_INQUIRY', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
+                setTicketForm({ subject: '', category: 'GENERAL_SUPPORT', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
                 setTicketModalOpen(true);
               }}
             />
@@ -1162,7 +1176,15 @@ export default function DashboardPage({ user }) {
                     </div>
 
                     <button
-                      onClick={() => setSelectedTicket(t)}
+                      onClick={async () => {
+                        setSelectedTicket(t);
+                        try {
+                          const res = await supportApi.getTicketById(t.id);
+                          if (res.data?.success) setSelectedTicket(res.data.data);
+                        } catch (err) {
+                          console.error('Failed loading ticket thread details:', err);
+                        }
+                      }}
                       className="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5"
                     >
                       <span>View Message Thread ({t.messages?.length || 0})</span>
@@ -1366,6 +1388,11 @@ export default function DashboardPage({ user }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB: MY REVIEWS */}
+      {activeTab === 'reviews' && (
+        <MyReviewsTab onOpenReviewModal={(item) => setReviewModalItem(item)} />
       )}
 
       {/* MODAL: WITHDRAW MONEY TO BANK */}
@@ -1688,11 +1715,12 @@ export default function DashboardPage({ user }) {
                     onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
                     className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
                   >
-                    <option value="ORDER_ISSUE">Order Issue</option>
-                    <option value="PAYMENT_FAILURE">Payment Query</option>
-                    <option value="SHIPMENT_DELAY">Shipment / Delivery Delay</option>
-                    <option value="COURSE_QUERY">Training / Workshop Query</option>
-                    <option value="GENERAL_INQUIRY">General Inquiry</option>
+                    <option value="ORDER_ISSUE">Order Issue / Complaint</option>
+                    <option value="PAYMENT_ISSUE">Payment Query & GST Invoice</option>
+                    <option value="SHIPPING_ISSUE">Shipment & Delivery Delay</option>
+                    <option value="TRAINING_ISSUE">Training / Workshop Inquiry</option>
+                    <option value="PRODUCT_INQUIRY">Spawn & Product Inquiry</option>
+                    <option value="GENERAL_SUPPORT">General Support / Helpdesk</option>
                   </select>
                 </div>
                 <div>
@@ -1757,23 +1785,30 @@ export default function DashboardPage({ user }) {
             </div>
 
             {/* Message History */}
-            <div className="flex-1 overflow-y-auto space-y-3 p-3 bg-surface-cream rounded-2xl border border-surface-border">
-              {selectedTicket.messages?.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[85%] ${
-                    msg.senderRole === 'CUSTOMER'
-                      ? 'ml-auto bg-forest-900/10 border border-forest-900/20 text-forest-900'
-                      : 'bg-surface-white border border-surface-border text-typography-secondary'
-                  }`}
-                >
-                  <div className="flex justify-between items-center text-[10px] text-typography-muted gap-4">
-                    <span className="font-bold">{msg.senderName} ({msg.senderRole})</span>
-                    <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <div className="flex-1 overflow-y-auto space-y-3 p-3.5 bg-surface-cream rounded-2xl border border-surface-border">
+              {selectedTicket.messages?.map((msg) => {
+                const isCustomerMsg = msg.senderType === 'CUSTOMER' || msg.senderType === 'GUEST' || msg.senderRole === 'CUSTOMER';
+                const isAgentMsg = msg.senderType === 'SUPPORT_AGENT' || msg.senderType === 'ADMIN';
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[85%] shadow-level-1 ${
+                      isCustomerMsg
+                        ? 'ml-auto bg-forest-900 text-white rounded-tr-none'
+                        : 'mr-auto bg-surface-white border border-surface-border text-typography-primary rounded-tl-none'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center text-[10px] opacity-90 border-b pb-1 mb-1 border-current/15 gap-4">
+                      <span className="font-bold flex items-center gap-1">
+                        {isAgentMsg ? '🛡️ Support Agent' : `👤 ${msg.senderName || 'Customer'}`}
+                      </span>
+                      <span className="font-mono text-[9px]">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>
                   </div>
-                  <p className="whitespace-pre-wrap">{msg.message}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Reply Input */}
@@ -1918,6 +1953,17 @@ export default function DashboardPage({ user }) {
             </form>
           </div>
         </div>
+      )}
+      {/* PRODUCT REVIEW FORM MODAL */}
+      {reviewModalItem && (
+        <ProductReviewFormModal
+          item={reviewModalItem}
+          onClose={() => setReviewModalItem(null)}
+          onSuccess={() => {
+            setReviewModalItem(null);
+            fetchData();
+          }}
+        />
       )}
     </div>
   );

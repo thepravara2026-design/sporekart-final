@@ -51,7 +51,7 @@ public class CartService {
             if (userCartOpt.isPresent()) {
                 userCart = userCartOpt.get();
             } else {
-                userCart = cartRepository.save(new Cart(userId, sessionId));
+                userCart = cartRepository.save(new Cart(userId, null));
             }
 
             if (sessionId != null && !sessionId.trim().isEmpty()) {
@@ -61,6 +61,7 @@ public class CartService {
                     if (!guestCart.getId().equals(userCart.getId())) {
                         mergeGuestItemsIntoUserCart(guestCart, userCart);
                         guestCart.setStatus(CartStatus.CONVERTED);
+                        guestCart.setSessionId(null);
                         cartRepository.save(guestCart);
                         return cartRepository.save(userCart);
                     }
@@ -191,6 +192,7 @@ public class CartService {
                 if (initQty > 0) {
                     CartItem newItem = new CartItem(userCart, guestItem.getVariantId(), initQty, guestItem.getUnitPriceInr());
                     userCart.addItem(newItem);
+                    cartItemRepository.save(newItem);
                 }
             }
         }
@@ -222,9 +224,38 @@ public class CartService {
         Cart cart = getOrCreateCart(userId, sessionId);
         if (code == null || code.trim().isEmpty()) {
             cart.setAppliedPromoCode(null);
-        } else {
-            cart.setAppliedPromoCode(code.trim().toUpperCase());
+            cartRepository.save(cart);
+            return buildCartResponse(cart);
         }
+
+        String cleanCode = code.trim().toUpperCase();
+
+        // Calculate current cart totals and item context for validation
+        CartResponse preview = buildCartResponse(cart);
+        List<com.sporekart.promotion.application.PromotionService.CartItemContext> itemContexts = new ArrayList<>();
+        if (preview.getItems() != null) {
+            for (CartItemResponse item : preview.getItems()) {
+                itemContexts.add(com.sporekart.promotion.application.PromotionService.CartItemContext.builder()
+                        .productId(item.getProductId())
+                        .categorySlug(null) // checked via product
+                        .lineTotalInr(item.getLineTotalInr())
+                        .build());
+            }
+        }
+
+        var valResult = promotionService.validateAndCalculate(
+                cleanCode,
+                userId,
+                sessionId,
+                preview.getSubtotalInr(),
+                itemContexts
+        );
+
+        if (!valResult.isValid()) {
+            throw new IllegalArgumentException(valResult.getMessage());
+        }
+
+        cart.setAppliedPromoCode(cleanCode);
         cartRepository.save(cart);
         return buildCartResponse(cart);
     }
@@ -429,8 +460,11 @@ public class CartService {
                 promoMsg = valResult.getMessage();
                 response.setAppliedPromoCode(cart.getAppliedPromoCode());
             } else {
+                // Previously applied promo code is no longer eligible (e.g. subtotal dropped below minimum order value)
+                cart.setAppliedPromoCode(null);
+                cartRepository.save(cart);
+                response.setAppliedPromoCode(null);
                 promoMsg = valResult.getMessage();
-                response.setAppliedPromoCode(cart.getAppliedPromoCode());
             }
         }
 

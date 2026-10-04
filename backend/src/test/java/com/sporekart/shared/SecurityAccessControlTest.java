@@ -23,13 +23,13 @@ public class SecurityAccessControlTest {
     @Test
     void testAnalyticsFunnelRequiresAuth() throws Exception {
         mockMvc.perform(get("/analytics/funnel"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void testAnalyticsEventsRequiresAuth() throws Exception {
         mockMvc.perform(get("/analytics/events"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -37,7 +37,7 @@ public class SecurityAccessControlTest {
         mockMvc.perform(post("/payment/refund")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"orderId\":\"00000000-0000-0000-0000-000000000000\",\"amountInr\":10.00}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

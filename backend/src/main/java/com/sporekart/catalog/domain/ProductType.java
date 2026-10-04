@@ -4,5 +4,6 @@ public enum ProductType {
     FRESH_MUSHROOM,
     DRY_MUSHROOM,
     SPAWN_SEED,
-    GROWING_KIT
+    GROWING_KIT,
+    EQUIPMENT_SUPPLIES
 }

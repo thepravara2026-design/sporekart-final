@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import com.sporekart.promotion.domain.PromotionTargetAudience;
+
 @RestController
 @RequestMapping("/admin/promotions")
 @PreAuthorize("hasRole('ADMIN')")
@@ -24,10 +26,11 @@ public class AdminPromotionController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Promotion>>> getPromotions(
             @RequestParam(required = false) PromotionStatus status,
+            @RequestParam(required = false) PromotionTargetAudience audience,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<Promotion> promotions = promotionService.getAllPromotions(status, search, page, size);
+        Page<Promotion> promotions = promotionService.getAllPromotions(status, audience, search, page, size);
         return ResponseEntity.ok(ApiResponse.success(promotions));
     }
 

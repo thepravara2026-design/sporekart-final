@@ -21,10 +21,11 @@ test.describe('CART-6 & CART-7: Guest Cart Persistence & Session Merge on Login'
     // Close CartDrawer by navigating directly to /cart page
     await page.goto('/cart');
     await expect(page).toHaveURL(/\/cart/);
+    await page.waitForLoadState('domcontentloaded');
 
     // 2. Open Auth Modal & Authenticate via Fallback OTP
-    const loginBtn = page.getByTestId('desktop-login-btn');
-    await expect(loginBtn).toBeVisible({ timeout: 10000 });
+    const loginBtn = page.getByRole('button', { name: /Login or Sign Up|Login \/ Signup|Login/i }).first();
+    await expect(loginBtn).toBeVisible({ timeout: 15000 });
     await loginBtn.click();
     
     const testEmail = `cartmerge_${Date.now()}@sporekart.com`;

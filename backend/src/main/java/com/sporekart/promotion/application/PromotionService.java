@@ -28,8 +28,8 @@ public class PromotionService {
 
     @Transactional
     public Promotion createPromotion(PromotionDtos.CreatePromotionRequest req) {
-        String cleanCode = req.getCode().trim().toUpperCase();
-        if (promotionRepository.existsByCodeIgnoreCase(cleanCode)) {
+        String cleanCode = req.getCode().trim();
+        if (promotionRepository.existsByCode(cleanCode)) {
             throw new IllegalArgumentException("Promo code already exists: " + cleanCode);
         }
 
@@ -49,8 +49,12 @@ public class PromotionService {
                 .usageCount(0)
                 .stackable(req.getStackable() != null ? req.getStackable() : false)
                 .priority(req.getPriority() != null ? req.getPriority() : 0)
+                .targetAudience(req.getTargetAudience() != null ? req.getTargetAudience() : PromotionTargetAudience.BOTH)
                 .targetCategorySlug(req.getTargetCategorySlug())
                 .targetProductId(req.getTargetProductId())
+                .targetType(req.getTargetType())
+                .targetBatchId(req.getTargetBatchId())
+                .targetCourseId(req.getTargetCourseId())
                 .build();
 
         return promotionRepository.save(promotion);
@@ -61,8 +65,8 @@ public class PromotionService {
         Promotion promotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
 
-        String cleanCode = req.getCode().trim().toUpperCase();
-        if (!promotion.getCode().equalsIgnoreCase(cleanCode) && promotionRepository.existsByCodeIgnoreCase(cleanCode)) {
+        String cleanCode = req.getCode().trim();
+        if (!promotion.getCode().equals(cleanCode) && promotionRepository.existsByCode(cleanCode)) {
             throw new IllegalArgumentException("Promo code already exists: " + cleanCode);
         }
 
@@ -80,8 +84,12 @@ public class PromotionService {
         promotion.setPerCustomerLimit(req.getPerCustomerLimit());
         if (req.getStackable() != null) promotion.setStackable(req.getStackable());
         if (req.getPriority() != null) promotion.setPriority(req.getPriority());
+        if (req.getTargetAudience() != null) promotion.setTargetAudience(req.getTargetAudience());
         promotion.setTargetCategorySlug(req.getTargetCategorySlug());
         promotion.setTargetProductId(req.getTargetProductId());
+        promotion.setTargetType(req.getTargetType());
+        promotion.setTargetBatchId(req.getTargetBatchId());
+        promotion.setTargetCourseId(req.getTargetCourseId());
 
         return promotionRepository.save(promotion);
     }
@@ -100,20 +108,23 @@ public class PromotionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Promotion> getAllPromotions(PromotionStatus status, String query, int page, int size) {
+    public Page<Promotion> getAllPromotions(PromotionStatus status, PromotionTargetAudience audience, String query, int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        return promotionRepository.searchPromotions(status, query, PageRequest.of(page, size, sort));
+        return promotionRepository.searchPromotions(status, audience, query, PageRequest.of(page, size, sort));
     }
 
     @Transactional(readOnly = true)
-    public List<Promotion> getActivePromotions() {
+    public List<Promotion> getActivePromotions(PromotionTargetAudience audience) {
+        if (audience != null) {
+            return promotionRepository.findActiveByAudience(PromotionStatus.ACTIVE, audience);
+        }
         return promotionRepository.findByStatus(PromotionStatus.ACTIVE);
     }
 
     @Transactional(readOnly = true)
     public Optional<Promotion> findByCode(String code) {
         if (code == null || code.trim().isEmpty()) return Optional.empty();
-        return promotionRepository.findByCodeIgnoreCase(code.trim());
+        return promotionRepository.findByCode(code.trim());
     }
 
     @Data
@@ -139,7 +150,7 @@ public class PromotionService {
                     .build();
         }
 
-        Optional<Promotion> promoOpt = promotionRepository.findByCodeIgnoreCase(code.trim());
+        Optional<Promotion> promoOpt = promotionRepository.findByCode(code.trim());
         if (promoOpt.isEmpty()) {
             return PromotionDtos.PromotionValidationResult.builder()
                     .valid(false)
@@ -150,11 +161,22 @@ public class PromotionService {
 
         Promotion promo = promoOpt.get();
 
+        if (promo.getTargetAudience() == PromotionTargetAudience.TRAINEE) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Promo code '" + promo.getCode() + "' is dedicated for training batch enrollments and cannot be applied to product purchases.")
+                    .build();
+        }
+
         if (promo.getStatus() != PromotionStatus.ACTIVE) {
             return PromotionDtos.PromotionValidationResult.builder()
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
                     .message("This promo code is currently " + promo.getStatus().name().toLowerCase())
                     .build();
         }
@@ -165,6 +187,7 @@ public class PromotionService {
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
                     .message("This offer is not active yet")
                     .build();
         }
@@ -174,6 +197,7 @@ public class PromotionService {
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
                     .message("This promo code has expired")
                     .build();
         }
@@ -183,6 +207,7 @@ public class PromotionService {
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
                     .message("Usage limit reached for this promo code")
                     .build();
         }
@@ -194,6 +219,7 @@ public class PromotionService {
                         .valid(false)
                         .code(promo.getCode())
                         .name(promo.getName())
+                        .targetAudience(promo.getTargetAudience())
                         .message("You have already used this promo code")
                         .build();
             }
@@ -205,7 +231,8 @@ public class PromotionService {
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
-                    .message("Add ₹" + diff.setScale(2, RoundingMode.HALF_UP) + " more to apply offer '" + promo.getCode() + "'")
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Promo code '" + promo.getCode() + "' is valid on orders ₹" + promo.getMinimumOrderValue().setScale(2, RoundingMode.HALF_UP) + " and above. Add ₹" + diff.setScale(2, RoundingMode.HALF_UP) + " more to qualify.")
                     .build();
         }
 
@@ -229,6 +256,7 @@ public class PromotionService {
                     .valid(false)
                     .code(promo.getCode())
                     .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
                     .message("This promo code is not applicable to any items in your cart")
                     .build();
         }
@@ -251,9 +279,168 @@ public class PromotionService {
                 .code(promo.getCode())
                 .name(promo.getName())
                 .type(promo.getType())
+                .targetAudience(promo.getTargetAudience())
                 .discountAmountInr(discountAmount)
                 .isFreeShipping(isFreeShipping)
                 .message("Offer '" + promo.getCode() + "' applied successfully!")
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PromotionDtos.PromotionValidationResult validateAndCalculateForBatch(
+            String code,
+            UUID userId,
+            UUID batchId,
+            UUID courseId,
+            BigDecimal originalFee
+    ) {
+        if (code == null || code.trim().isEmpty()) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .message("No promo code provided")
+                    .build();
+        }
+
+        Optional<Promotion> promoOpt = promotionRepository.findByCode(code.trim());
+        if (promoOpt.isEmpty()) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(code)
+                    .message("This promo code is invalid")
+                    .build();
+        }
+
+        Promotion promo = promoOpt.get();
+
+        if (promo.getTargetAudience() == PromotionTargetAudience.CUSTOMER) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Promo code '" + promo.getCode() + "' is dedicated for product store purchases and cannot be applied to training batch enrollments.")
+                    .build();
+        }
+
+        if (promo.getStatus() != PromotionStatus.ACTIVE) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code is currently " + promo.getStatus().name().toLowerCase())
+                    .build();
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This offer is not active yet")
+                    .build();
+        }
+
+        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code has expired")
+                    .build();
+        }
+
+        if (promo.getUsageLimit() != null && promo.getUsageCount() >= promo.getUsageLimit()) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Usage limit reached for this promo code")
+                    .build();
+        }
+
+        if (userId != null && promo.getPerCustomerLimit() != null) {
+            long userUsageCount = promotionUsageRepository.countByPromotionIdAndUserId(promo.getId(), userId);
+            if (userUsageCount >= promo.getPerCustomerLimit()) {
+                return PromotionDtos.PromotionValidationResult.builder()
+                        .valid(false)
+                        .code(promo.getCode())
+                        .name(promo.getName())
+                        .targetAudience(promo.getTargetAudience())
+                        .message("You have already used this promo code")
+                        .build();
+            }
+        }
+
+        if (promo.getMinimumOrderValue() != null && originalFee != null && originalFee.compareTo(promo.getMinimumOrderValue()) < 0) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Minimum order/enrollment fee of ₹" + promo.getMinimumOrderValue() + " required to use this promo code")
+                    .build();
+        }
+
+        if (promo.getTargetBatchId() != null && !promo.getTargetBatchId().equals(batchId)) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code is not eligible for the selected training batch")
+                    .build();
+        }
+
+        if (promo.getTargetCourseId() != null && !promo.getTargetCourseId().equals(courseId)) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code is not eligible for the selected course")
+                    .build();
+        }
+
+        if ("PRODUCT".equalsIgnoreCase(promo.getTargetType()) || "CATEGORY".equalsIgnoreCase(promo.getTargetType())) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code is only valid for physical products")
+                    .build();
+        }
+
+        BigDecimal baseFee = originalFee != null ? originalFee : BigDecimal.ZERO;
+        BigDecimal discountAmount = BigDecimal.ZERO;
+
+        if (promo.getType() == PromotionType.PERCENTAGE) {
+            BigDecimal percent = promo.getDiscountValue().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+            discountAmount = baseFee.multiply(percent).setScale(2, RoundingMode.HALF_UP);
+            if (promo.getMaximumDiscount() != null && discountAmount.compareTo(promo.getMaximumDiscount()) > 0) {
+                discountAmount = promo.getMaximumDiscount();
+            }
+        } else if (promo.getType() == PromotionType.FIXED_AMOUNT) {
+            discountAmount = promo.getDiscountValue().min(baseFee).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal finalFee = baseFee.subtract(discountAmount).max(BigDecimal.ZERO);
+
+        return PromotionDtos.PromotionValidationResult.builder()
+                .valid(true)
+                .code(promo.getCode())
+                .name(promo.getName())
+                .type(promo.getType())
+                .targetAudience(promo.getTargetAudience())
+                .discountAmountInr(discountAmount)
+                .finalAmountInr(finalFee)
+                .isFreeShipping(false)
+                .message("Promo code '" + promo.getCode() + "' applied successfully!")
                 .build();
     }
 

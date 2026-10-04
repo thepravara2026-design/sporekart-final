@@ -5,6 +5,7 @@ import { trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 import AuthForm from '../components/AuthForm';
+import TrainingReviewsSection from '../components/TrainingReviewsSection';
 
 export default function CourseDetailPage({ user, setUser }) {
   const { courseSlug } = useParams();
@@ -15,6 +16,19 @@ export default function CourseDetailPage({ user, setUser }) {
   const [bookingError, setBookingError] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingSlotId, setPendingSlotId] = useState(null);
+  const [pendingReviewItem, setPendingReviewItem] = useState(null);
+
+  const fetchPendingReviews = async (courseId) => {
+    if (!user && !localStorage.getItem('sporekart_token')) return;
+    try {
+      const res = await trainingApi.getPendingReviews();
+      const list = res.data?.data || [];
+      const match = list.find((item) => item.courseId === courseId);
+      setPendingReviewItem(match || null);
+    } catch (err) {
+      console.error('Failed to fetch pending training reviews', err);
+    }
+  };
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -24,6 +38,9 @@ export default function CourseDetailPage({ user, setUser }) {
         const coursesList = res.data.data || [];
         const found = coursesList.find((c) => c.slug === courseSlug) || coursesList[0];
         setCourse(found);
+        if (found) {
+          fetchPendingReviews(found.id);
+        }
       } catch (err) {
         console.error('Failed to load course details', err);
       } finally {
@@ -31,7 +48,7 @@ export default function CourseDetailPage({ user, setUser }) {
       }
     };
     fetchCourse();
-  }, [courseSlug]);
+  }, [courseSlug, user]);
 
   const handleBookSlot = async (slotId) => {
     if (!user && !localStorage.getItem('sporekart_token')) {
@@ -194,6 +211,13 @@ export default function CourseDetailPage({ user, setUser }) {
           </div>
         </div>
       </div>
+
+      {/* Trainee Reviews & Rating Section */}
+      <TrainingReviewsSection
+        courseId={course.id}
+        pendingReviewItem={pendingReviewItem}
+        onReviewSubmitted={() => course?.id && fetchPendingReviews(course.id)}
+      />
 
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">

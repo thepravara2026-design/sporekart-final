@@ -28,6 +28,22 @@ public class CatalogApplicationService {
     private final CategoryRepository categoryRepository;
     private final ProductVariantRepository variantRepository;
     private final PricingService pricingService;
+    private final com.sporekart.order.infrastructure.OrderRepository orderRepository;
+    private final ProductRankingService rankingService;
+
+    @Transactional(readOnly = true)
+    public UUID getMostPopularProductId() {
+        try {
+            List<Object[]> topSelling = orderRepository.findTopSellingProductIds();
+            if (topSelling != null && !topSelling.isEmpty()) {
+                Object[] top = topSelling.get(0);
+                if (top != null && top.length > 0 && top[0] instanceof UUID uuid) {
+                    return uuid;
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
 
     @Transactional(readOnly = true)
     public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug) {
@@ -37,11 +53,7 @@ public class CatalogApplicationService {
     @Transactional(readOnly = true)
     public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug, int page, int size) {
         String cleanCategory = resolveCategorySlug(categorySlug);
-        ProductType cleanType = typeFilter;
-
-        if (cleanType == null && categorySlug != null) {
-            cleanType = resolveProductType(categorySlug);
-        }
+        ProductType cleanType = typeFilter != null ? typeFilter : resolveProductType(categorySlug);
 
         List<Product> products;
         if (cleanCategory != null && !cleanCategory.isBlank()) {
@@ -57,14 +69,16 @@ public class CatalogApplicationService {
                 .map(this::mapToProductDto)
                 .collect(Collectors.toList());
 
+        List<CatalogDtos.ProductDto> rankedDtos = rankingService.enrichAndRankProducts(dtos, cleanCategory, null);
+
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(1, size), 100);
         int fromIndex = safePage * safeSize;
-        if (fromIndex >= dtos.size()) {
+        if (fromIndex >= rankedDtos.size()) {
             return List.of();
         }
-        int toIndex = Math.min(dtos.size(), fromIndex + safeSize);
-        return dtos.subList(fromIndex, toIndex);
+        int toIndex = Math.min(rankedDtos.size(), fromIndex + safeSize);
+        return rankedDtos.subList(fromIndex, toIndex);
     }
 
     @Transactional(readOnly = true)
@@ -75,40 +89,64 @@ public class CatalogApplicationService {
     @Transactional(readOnly = true)
     public Page<CatalogDtos.ProductDto> searchProducts(String categorySlug, ProductType productType, String searchQuery, int page, int size, String sortBy) {
         String cleanCategory = resolveCategorySlug(categorySlug);
-        ProductType cleanType = productType != null ? productType : resolveProductType(categorySlug);
+        ProductType cleanType = productType != null ? productType : (cleanCategory != null ? null : resolveProductType(categorySlug));
         String cleanQuery = (searchQuery != null && !searchQuery.trim().isEmpty()) ? searchQuery.trim() : null;
 
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Page<Product> productPage;
         if ("price_asc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "variants.priceInr");
+            Pageable pageable = PageRequest.of(page, size);
+            productPage = productRepository.searchProductsOrderByPriceAsc(cleanCategory, cleanType, cleanQuery, pageable);
         } else if ("price_desc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.DESC, "variants.priceInr");
-        } else if ("title_asc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "title");
-        } else if ("title_desc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.DESC, "title");
+            Pageable pageable = PageRequest.of(page, size);
+            productPage = productRepository.searchProductsOrderByPriceDesc(cleanCategory, cleanType, cleanQuery, pageable);
+        } else {
+            Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+            if ("title_asc".equalsIgnoreCase(sortBy)) {
+                sort = Sort.by(Sort.Direction.ASC, "title");
+            } else if ("title_desc".equalsIgnoreCase(sortBy)) {
+                sort = Sort.by(Sort.Direction.DESC, "title");
+            }
+            Pageable pageable = PageRequest.of(page, size, sort);
+            productPage = productRepository.searchProducts(cleanCategory, cleanType, cleanQuery, pageable);
         }
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> productPage = productRepository.searchProducts(cleanCategory, cleanType, cleanQuery, pageable);
+        List<CatalogDtos.ProductDto> rawDtos = productPage.getContent().stream()
+                .map(this::mapToProductDto)
+                .collect(Collectors.toList());
 
-        return productPage.map(this::mapToProductDto);
+        List<CatalogDtos.ProductDto> enrichedContent = rankingService.enrichAndRankProducts(rawDtos, cleanCategory, sortBy);
+        return new org.springframework.data.domain.PageImpl<>(enrichedContent, productPage.getPageable(), productPage.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogDtos.ProductDto> getMostPopularProducts(String categorySlug, int limit) {
+        List<CatalogDtos.ProductDto> allActive = getAllActiveProducts(null, categorySlug, 0, 1000);
+        return rankingService.filterPopularProducts(allActive, limit);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogDtos.ProductDto> getBestSellingProducts(String categorySlug, int limit) {
+        List<CatalogDtos.ProductDto> allActive = getAllActiveProducts(null, categorySlug, 0, 1000);
+        return rankingService.filterBestSellingProducts(allActive, limit);
     }
 
     private String resolveCategorySlug(String input) {
         if (input == null || input.trim().isEmpty()) return null;
-        String raw = input.trim().toLowerCase();
-        if ("mushroom-spawn".equals(raw) || "spawn-seed".equals(raw) || "spawn_seed".equals(raw)) {
+        String raw = input.trim().toLowerCase().replace("_", "-");
+        if ("mushroom-spawn".equals(raw) || "spawn-seed".equals(raw) || "spawn-seeds".equals(raw) || "spawn_seed".equals(raw)) {
             return "spawn-seeds";
         }
-        if ("fresh_mushroom".equals(raw) || "fresh-mushroom".equals(raw)) {
+        if ("fresh-mushroom".equals(raw) || "fresh-mushrooms".equals(raw) || "fresh_mushroom".equals(raw)) {
             return "fresh-mushrooms";
         }
-        if ("dry_mushroom".equals(raw) || "dry-mushroom".equals(raw)) {
+        if ("dry-mushroom".equals(raw) || "dry-mushrooms".equals(raw) || "dry_mushroom".equals(raw)) {
             return "dry-mushrooms";
         }
-        if ("growing_kit".equals(raw) || "growing-kit".equals(raw)) {
+        if ("growing-kit".equals(raw) || "growing-kits".equals(raw) || "growing_kit".equals(raw)) {
             return "growing-kits";
+        }
+        if ("equipment-supplies".equals(raw) || "cultivation-supplies".equals(raw) || "cultivation-equipment-supplies".equals(raw) || "equipment_supplies".equals(raw) || "equipment".equals(raw)) {
+            return "equipment-supplies";
         }
         return input.trim();
     }
@@ -116,17 +154,20 @@ public class CatalogApplicationService {
     private ProductType resolveProductType(String input) {
         if (input == null || input.trim().isEmpty()) return null;
         String raw = input.trim().toUpperCase().replace("-", "_");
-        if ("MUSHROOM_SPAWN".equals(raw) || "SPAWN_SEEDS".equals(raw)) {
+        if ("MUSHROOM_SPAWN".equals(raw) || "SPAWN_SEEDS".equals(raw) || "SPAWN_SEED".equals(raw)) {
             return ProductType.SPAWN_SEED;
         }
-        if ("FRESH_MUSHROOMS".equals(raw)) {
+        if ("FRESH_MUSHROOMS".equals(raw) || "FRESH_MUSHROOM".equals(raw)) {
             return ProductType.FRESH_MUSHROOM;
         }
-        if ("DRY_MUSHROOMS".equals(raw)) {
+        if ("DRY_MUSHROOMS".equals(raw) || "DRY_MUSHROOM".equals(raw)) {
             return ProductType.DRY_MUSHROOM;
         }
-        if ("GROWING_KITS".equals(raw)) {
+        if ("GROWING_KITS".equals(raw) || "GROWING_KIT".equals(raw)) {
             return ProductType.GROWING_KIT;
+        }
+        if ("EQUIPMENT_SUPPLIES".equals(raw) || "CULTIVATION_SUPPLIES".equals(raw) || "EQUIPMENT".equals(raw)) {
+            return ProductType.EQUIPMENT_SUPPLIES;
         }
         try {
             return ProductType.valueOf(raw);
@@ -144,7 +185,9 @@ public class CatalogApplicationService {
             throw new IllegalArgumentException("Product is inactive or unavailable");
         }
 
-        return mapToProductDto(product);
+        CatalogDtos.ProductDto dto = mapToProductDto(product);
+        List<CatalogDtos.ProductDto> enriched = rankingService.enrichAndRankProducts(List.of(dto), dto.getCategorySlug(), null);
+        return enriched.isEmpty() ? dto : enriched.get(0);
     }
 
     @Transactional(readOnly = true)
@@ -262,6 +305,8 @@ public class CatalogApplicationService {
         }
 
         CatalogDtos.ProductInformationDto infoDto = mapToProductInformationDto(product.getProductInformation());
+        UUID popularId = getMostPopularProductId();
+        boolean isPopular = (popularId != null && popularId.equals(product.getId()));
 
         return CatalogDtos.ProductDto.builder()
                 .id(product.getId())
@@ -283,6 +328,7 @@ public class CatalogApplicationService {
                 .activeOffers(offerDtos)
                 .productInformation(infoDto)
                 .isActive(product.isActive())
+                .isPopular(isPopular)
                 .build();
     }
 
@@ -345,6 +391,8 @@ public class CatalogApplicationService {
         }
 
         CatalogDtos.ProductInformationDto infoDto = mapToProductInformationDto(product.getProductInformation());
+        UUID popularId = getMostPopularProductId();
+        boolean isPopular = (popularId != null && popularId.equals(product.getId()));
 
         return CatalogDtos.AdminProductDto.builder()
                 .id(product.getId())
@@ -366,6 +414,7 @@ public class CatalogApplicationService {
                 .activeOffers(offerDtos)
                 .productInformation(infoDto)
                 .isActive(product.isActive())
+                .isPopular(isPopular)
                 .build();
     }
 

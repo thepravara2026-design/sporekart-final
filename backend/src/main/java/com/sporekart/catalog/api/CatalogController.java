@@ -28,6 +28,22 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
+    @GetMapping({"/products/popular", "/catalog/products/popular"})
+    public ResponseEntity<ApiResponse<List<CatalogDtos.ProductDto>>> getPopularProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "6") int limit) {
+        List<CatalogDtos.ProductDto> popular = catalogService.getMostPopularProducts(category, limit);
+        return ResponseEntity.ok(ApiResponse.success(popular));
+    }
+
+    @GetMapping({"/products/bestsellers", "/catalog/products/bestsellers"})
+    public ResponseEntity<ApiResponse<List<CatalogDtos.ProductDto>>> getBestSellingProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "6") int limit) {
+        List<CatalogDtos.ProductDto> bestsellers = catalogService.getBestSellingProducts(category, limit);
+        return ResponseEntity.ok(ApiResponse.success(bestsellers));
+    }
+
     @GetMapping({"/products/search", "/catalog/products/search"})
     public ResponseEntity<ApiResponse<Page<CatalogDtos.ProductDto>>> searchProducts(
             @RequestParam(required = false) String category,

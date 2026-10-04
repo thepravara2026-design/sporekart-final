@@ -106,6 +106,36 @@ public class InventoryService {
         return saved;
     }
 
+    @Transactional
+    public InventoryRecord replenishInventory(UUID variantId, int quantityToAdd, String reason, String createdBy) {
+        if (quantityToAdd <= 0) {
+            throw new IllegalArgumentException("Replenishment quantity must be a positive integer greater than zero");
+        }
+
+        InventoryRecord record = inventoryRecordRepository.findByVariantIdForUpdate(variantId)
+                .orElseGet(() -> {
+                    ProductVariant v = variantRepository.findById(variantId)
+                            .orElseThrow(() -> new IllegalArgumentException("Product variant not found: " + variantId));
+                    return inventoryRecordRepository.save(InventoryRecord.builder()
+                            .variantId(variantId)
+                            .availableQuantity(v.getStockQuantity())
+                            .reservedQuantity(0)
+                            .soldQuantity(0)
+                            .build());
+                });
+
+        int newAvailable = record.getAvailableQuantity() + quantityToAdd;
+        record.setAvailableQuantity(newAvailable);
+        InventoryRecord saved = inventoryRecordRepository.save(record);
+
+        syncVariantDisplayStock(variantId, saved.getAvailableQuantity());
+
+        recordAuditLog(variantId, InventoryEventType.REPLENISHED, quantityToAdd, saved, "REPLENISH-" + System.currentTimeMillis(),
+                reason != null && !reason.isBlank() ? reason : "Admin stock replenishment", createdBy != null ? createdBy : "ADMIN");
+
+        return saved;
+    }
+
     @Transactional(readOnly = true)
     public InventoryRecord getInventoryRecord(UUID variantId) {
         return inventoryRecordRepository.findByVariantId(variantId)

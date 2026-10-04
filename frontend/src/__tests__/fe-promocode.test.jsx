@@ -92,12 +92,15 @@ describe('Promo Code Feature Tests (Cart & Checkout)', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText('Have a Promo Code?')).toBeInTheDocument();
+    expect(screen.getByText(/Have a .*Promo Code/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter code/i)).toBeInTheDocument();
 
+    const viewCouponsBtn = screen.getByText(/View Store Coupons/i);
+    fireEvent.click(viewCouponsBtn);
+
     await waitFor(() => {
-      expect(screen.getByText('SPORE10')).toBeInTheDocument();
-      expect(screen.getByText('WELCOME50')).toBeInTheDocument();
+      expect(screen.getByText('10% OFF')).toBeInTheDocument();
+      expect(screen.getByText('FLAT ₹50 OFF')).toBeInTheDocument();
     });
   });
 
@@ -128,6 +131,16 @@ describe('Promo Code Feature Tests (Cart & Checkout)', () => {
         </CartProvider>
       </BrowserRouter>
     );
+
+    const viewCouponsBtn = screen.getByText(/View Store Coupons/i);
+    fireEvent.click(viewCouponsBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('10% OFF')).toBeInTheDocument();
+    });
+
+    const revealButtons = screen.getAllByText(/Click to Reveal Code/i);
+    fireEvent.click(revealButtons[0]);
 
     await waitFor(() => {
       expect(screen.getByText('SPORE10')).toBeInTheDocument();

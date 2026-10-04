@@ -27,7 +27,7 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(name = "is_active", nullable = false)

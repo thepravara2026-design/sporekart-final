@@ -35,9 +35,16 @@ public class TrainingService {
     private final AttendanceRepository attendanceRepository;
     private final CompletionRepository completionRepository;
     private final CertificateRepository certificateRepository;
+    private final TrainingReviewRepository trainingReviewRepository;
     private final UserRepository userRepository;
     private final com.sporekart.wallet.application.WalletService walletService;
+    private final com.sporekart.promotion.application.PromotionService promotionService;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Transactional(readOnly = true)
+    public Batch getBatchById(UUID batchId) {
+        return batchRepository.findById(batchId).orElse(null);
+    }
 
     // --- Categories & Courses ---
     @Transactional
@@ -142,6 +149,11 @@ public class TrainingService {
     // --- Enrollment & Registration Flow ---
     @Transactional
     public Enrollment enrollCustomer(UUID userId, UUID batchId) {
+        return enrollCustomer(userId, batchId, null);
+    }
+
+    @Transactional
+    public Enrollment enrollCustomer(UUID userId, UUID batchId, String promoCode) {
         Batch batch = batchRepository.findWithLockById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
@@ -155,13 +167,24 @@ public class TrainingService {
         }
 
         Course course = batch.getCourse();
+        BigDecimal feeToPay = course.getFeeInr();
+
+        if (promoCode != null && !promoCode.trim().isEmpty()) {
+            com.sporekart.promotion.api.PromotionDtos.PromotionValidationResult promoResult = promotionService.validateAndCalculateForBatch(
+                    promoCode, userId, batchId, course.getId(), course.getFeeInr()
+            );
+            if (!promoResult.isValid()) {
+                throw new IllegalArgumentException(promoResult.getMessage());
+            }
+            feeToPay = promoResult.getFinalAmountInr();
+        }
 
         Enrollment enrollment = Enrollment.builder()
                 .userId(userId)
                 .course(course)
                 .batch(batch)
                 .status(EnrollmentStatus.PENDING_PAYMENT)
-                .feePaidInr(course.getFeeInr())
+                .feePaidInr(feeToPay)
                 .build();
 
         Enrollment saved = enrollmentRepository.save(enrollment);
@@ -169,7 +192,7 @@ public class TrainingService {
         eventPublisher.publishEvent(com.sporekart.analytics.domain.events.EnrollmentCreatedEvent.builder()
                 .enrollmentId(saved.getId())
                 .courseId(course.getId())
-                .feePaidInr(course.getFeeInr())
+                .feePaidInr(feeToPay)
                 .userId(userId)
                 .build());
 
@@ -418,4 +441,107 @@ public class TrainingService {
         String randomHex = String.format("%04X", new Random().nextInt(0x10000));
         return "CERT-" + datePrefix + "-" + randomHex;
     }
+
+    // --- Training Reviews & Feedback ---
+    @Transactional
+    public TrainingReview createTrainingReview(UUID userId, TrainingDtos.CreateTrainingReviewRequest request) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID is required to submit a review");
+        }
+
+        Enrollment enrollment = enrollmentRepository.findById(request.getEnrollmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found with ID: " + request.getEnrollmentId()));
+
+        if (!userId.equals(enrollment.getUserId())) {
+            throw new IllegalArgumentException("Access denied: You can only review your own course enrollments");
+        }
+
+        if (enrollment.getStatus() != EnrollmentStatus.CONFIRMED && enrollment.getStatus() != EnrollmentStatus.COMPLETED) {
+            throw new IllegalStateException("Only confirmed or completed training enrollments can be reviewed");
+        }
+
+        if (trainingReviewRepository.existsByUserIdAndEnrollmentId(userId, enrollment.getId())) {
+            throw new IllegalStateException("You have already reviewed this course enrollment");
+        }
+
+        TrainingReview review = TrainingReview.builder()
+                .course(enrollment.getCourse())
+                .batch(enrollment.getBatch())
+                .enrollment(enrollment)
+                .userId(userId)
+                .rating(request.getRating())
+                .instructorRating(request.getInstructorRating() != null ? request.getInstructorRating() : request.getRating())
+                .reviewTitle(request.getReviewTitle())
+                .reviewText(request.getReviewText())
+                .status("PUBLISHED")
+                .isVerifiedTrainee(true)
+                .build();
+
+        return trainingReviewRepository.save(review);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingReview> getCourseReviews(UUID courseId) {
+        return trainingReviewRepository.findByCourseIdAndStatusOrderByCreatedAtDesc(courseId, "PUBLISHED");
+    }
+
+    @Transactional(readOnly = true)
+    public TrainingDtos.CourseReviewSummary getCourseReviewSummary(UUID courseId) {
+        Double avgRating = trainingReviewRepository.getAverageRatingForCourse(courseId);
+        Double avgInstructorRating = trainingReviewRepository.getAverageInstructorRatingForCourse(courseId);
+        Long totalReviews = trainingReviewRepository.getReviewCountForCourse(courseId);
+        List<Object[]> distribution = trainingReviewRepository.getRatingDistributionForCourse(courseId);
+
+        long five = 0, four = 0, three = 0, two = 0, one = 0;
+        if (distribution != null) {
+            for (Object[] row : distribution) {
+                Integer star = (Integer) row[0];
+                Long count = (Long) row[1];
+                if (star != null && count != null) {
+                    switch (star) {
+                        case 5 -> five = count;
+                        case 4 -> four = count;
+                        case 3 -> three = count;
+                        case 2 -> two = count;
+                        case 1 -> one = count;
+                    }
+                }
+            }
+        }
+
+        return TrainingDtos.CourseReviewSummary.builder()
+                .averageRating(avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0)
+                .averageInstructorRating(avgInstructorRating != null ? Math.round(avgInstructorRating * 10.0) / 10.0 : (avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0))
+                .totalReviews(totalReviews != null ? totalReviews : 0L)
+                .fiveStarCount(five)
+                .fourStarCount(four)
+                .threeStarCount(three)
+                .twoStarCount(two)
+                .oneStarCount(one)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingReview> getUserTrainingReviews(UUID userId) {
+        return trainingReviewRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingDtos.PendingTrainingReviewResponse> getPendingTrainingReviewsForUser(UUID userId) {
+        List<Enrollment> enrollments = enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId);
+        return enrollments.stream()
+                .filter(e -> e.getStatus() == EnrollmentStatus.CONFIRMED || e.getStatus() == EnrollmentStatus.COMPLETED)
+                .filter(e -> !trainingReviewRepository.existsByUserIdAndEnrollmentId(userId, e.getId()))
+                .map(e -> TrainingDtos.PendingTrainingReviewResponse.builder()
+                        .enrollmentId(e.getId())
+                        .courseId(e.getCourse() != null ? e.getCourse().getId() : null)
+                        .courseTitle(e.getCourse() != null ? e.getCourse().getTitle() : "Masterclass")
+                        .batchId(e.getBatch() != null ? e.getBatch().getId() : null)
+                        .batchCode(e.getBatch() != null ? e.getBatch().getBatchCode() : "UPCOMING")
+                        .enrolledAt(e.getEnrolledAt())
+                        .status(e.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }
+

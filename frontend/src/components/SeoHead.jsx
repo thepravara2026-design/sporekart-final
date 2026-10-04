@@ -15,20 +15,19 @@ export default function SeoHead({
   const defaultOrganizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "Sporekart Agritech India",
+    "name": "Sporekart — Shriyap Enterprise",
     "url": "https://sporekart.in",
     "logo": "https://sporekart.in/logo.png",
     "sameAs": [
-      "https://facebook.com/sporekart",
-      "https://twitter.com/sporekart",
-      "https://instagram.com/sporekart"
+      "https://www.instagram.com/sporekart",
+      "https://wa.me/917804709870"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-9876543210",
+      "telephone": "+91-7804709870",
       "contactType": "customer service",
       "areaServed": "IN",
-      "availableLanguage": ["en", "hi"]
+      "availableLanguage": ["en", "hi", "kn"]
     }
   };
 
@@ -47,21 +46,21 @@ export default function SeoHead({
   const defaultLocalBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "Sporekart Agritech Center",
+    "name": "Sporekart — Shriyap Enterprise",
     "image": ogImage,
-    "telephone": "+91-9876543210",
+    "telephone": "+91-7804709870",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Agri Tech Park",
-      "addressLocality": "Pune",
-      "addressRegion": "Maharashtra",
-      "postalCode": "411001",
+      "streetAddress": "Basapura village, Behind Taralabalu school",
+      "addressLocality": "Davangere",
+      "addressRegion": "Karnataka",
+      "postalCode": "577001",
       "addressCountry": "IN"
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": 18.5204,
-      "longitude": 73.8567
+      "latitude": 14.4673,
+      "longitude": 75.9241
     },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",

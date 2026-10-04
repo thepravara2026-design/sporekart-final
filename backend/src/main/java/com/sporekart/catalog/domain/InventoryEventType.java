@@ -6,5 +6,6 @@ public enum InventoryEventType {
     RELEASED,
     CONFIRMED_SOLD,
     CANCELLED_RESTOCKED,
-    ADJUSTED
+    ADJUSTED,
+    REPLENISHED
 }

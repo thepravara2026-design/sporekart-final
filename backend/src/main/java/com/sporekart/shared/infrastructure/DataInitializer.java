@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -78,6 +79,7 @@ public class DataInitializer implements CommandLineRunner {
                 .discountValue(new BigDecimal("10.00"))
                 .maximumDiscount(new BigDecimal("200.00"))
                 .minimumOrderValue(new BigDecimal("299.00"))
+                .targetAudience(com.sporekart.promotion.domain.PromotionTargetAudience.CUSTOMER)
                 .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
                 .usageLimit(500)
                 .perCustomerLimit(3)
@@ -91,6 +93,7 @@ public class DataInitializer implements CommandLineRunner {
                 .type(com.sporekart.promotion.domain.PromotionType.FIXED_AMOUNT)
                 .discountValue(new BigDecimal("100.00"))
                 .minimumOrderValue(new BigDecimal("799.00"))
+                .targetAudience(com.sporekart.promotion.domain.PromotionTargetAudience.CUSTOMER)
                 .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
                 .usageLimit(200)
                 .perCustomerLimit(1)
@@ -103,22 +106,61 @@ public class DataInitializer implements CommandLineRunner {
                 .description("Complimentary temperature-controlled cold chain delivery")
                 .type(com.sporekart.promotion.domain.PromotionType.FREE_SHIPPING)
                 .minimumOrderValue(new BigDecimal("499.00"))
+                .targetAudience(com.sporekart.promotion.domain.PromotionTargetAudience.CUSTOMER)
                 .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
                 .usageLimit(1000)
                 .perCustomerLimit(5)
                 .usageCount(62)
                 .build());
+
+        promotionRepository.save(com.sporekart.promotion.domain.Promotion.builder()
+                .name("Mushroom Cultivation 10% Off")
+                .code("MUSHROOM10")
+                .description("10% discount dedicated for training masterclass batches")
+                .type(com.sporekart.promotion.domain.PromotionType.PERCENTAGE)
+                .discountValue(new BigDecimal("10.00"))
+                .maximumDiscount(new BigDecimal("500.00"))
+                .minimumOrderValue(new BigDecimal("500.00"))
+                .targetAudience(com.sporekart.promotion.domain.PromotionTargetAudience.TRAINEE)
+                .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
+                .usageLimit(500)
+                .perCustomerLimit(3)
+                .usageCount(8)
+                .build());
+
+        promotionRepository.save(com.sporekart.promotion.domain.Promotion.builder()
+                .name("Universal Fungi Offer 15% Off")
+                .code("GLOBAL15")
+                .description("15% discount eligible on both product purchases and training courses")
+                .type(com.sporekart.promotion.domain.PromotionType.PERCENTAGE)
+                .discountValue(new BigDecimal("15.00"))
+                .maximumDiscount(new BigDecimal("400.00"))
+                .minimumOrderValue(new BigDecimal("350.00"))
+                .targetAudience(com.sporekart.promotion.domain.PromotionTargetAudience.BOTH)
+                .status(com.sporekart.promotion.domain.PromotionStatus.ACTIVE)
+                .usageLimit(1000)
+                .perCustomerLimit(2)
+                .usageCount(19)
+                .build());
     }
 
 
     private Category getOrCreateCategory(String name, String slug, String description, String imageUrl) {
-        return categoryRepository.findBySlug(slug)
-                .orElseGet(() -> categoryRepository.save(Category.builder()
-                        .name(name)
-                        .slug(slug)
-                        .description(description)
-                        .imageUrl(imageUrl)
-                        .build()));
+        Optional<Category> opt = categoryRepository.findBySlug(slug);
+        if (opt.isPresent()) {
+            Category cat = opt.get();
+            if (imageUrl != null && !imageUrl.equals(cat.getImageUrl())) {
+                cat.setImageUrl(imageUrl);
+                return categoryRepository.save(cat);
+            }
+            return cat;
+        }
+        return categoryRepository.save(Category.builder()
+                .name(name)
+                .slug(slug)
+                .description(description)
+                .imageUrl(imageUrl)
+                .build());
     }
 
     private ProductVariant v(String variantName, String sku, String price, String comparePrice, int stock) {
@@ -142,7 +184,14 @@ public class DataInitializer implements CommandLineRunner {
             String imageUrl,
             List<ProductVariant> variants
     ) {
-        if (productRepository.existsBySlug(slug)) return;
+        Optional<Product> existingOpt = productRepository.findBySlug(slug);
+        if (existingOpt.isPresent()) {
+            Product existing = existingOpt.get();
+            existing.setCategory(category);
+            existing.setProductType(productType);
+            productRepository.save(existing);
+            return;
+        }
 
         Product p = Product.builder()
                 .category(category)
@@ -426,35 +475,35 @@ public class DataInitializer implements CommandLineRunner {
         // --- Category 5: Cultivation Equipment & Supplies (5 Products) ---
         createProduct(equipCategory, "Autoclavable PP Substrate Bags with Filter Patch", "autoclavable-pp-substrate-bags",
                 "Heavy duty 3 mil polypropylene grow bags withstand 121°C sterilization with 0.2 micron breathable patch.",
-                ProductType.GROWING_KIT, "39232990", new BigDecimal("18.00"),
+                ProductType.EQUIPMENT_SUPPLIES, "39232990", new BigDecimal("18.00"),
                 "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                 List.of(v("Pack of 50 Bags (0.2 micron)", "PPB-50P", "390.00", "490.00", 250),
                         v("Pack of 200 Bulk", "PPB-200P", "1350.00", "1650.00", 80)));
 
         createProduct(equipCategory, "Mycology Liquid Culture Syringe Kit (Sterile)", "mycology-liquid-culture-syringe-kit",
                 "10ml nutrient enriched liquid culture pre-loaded with isolated high-performance mycelium.",
-                ProductType.SPAWN_SEED, "30029090", new BigDecimal("12.00"),
+                ProductType.EQUIPMENT_SUPPLIES, "30029090", new BigDecimal("12.00"),
                 "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                 List.of(v("10ml Oyster LC Syringe", "LCS-OYS", "320.00", "390.00", 160),
                         v("10ml Lion's Mane LC Syringe", "LCS-LMN", "450.00", "550.00", 90)));
 
         createProduct(equipCategory, "Substrate pH Adjuster & Calcium Carbonate", "substrate-ph-adjuster-calcium-carbonate",
                 "Pure agricultural hydrated lime and chalk powder to optimize substrate alkalinity (pH 7.5-8.0).",
-                ProductType.GROWING_KIT, "25221000", new BigDecimal("5.00"),
+                ProductType.EQUIPMENT_SUPPLIES, "25221000", new BigDecimal("5.00"),
                 "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                 List.of(v("2kg Agriculture Lime", "PHA-2KG", "180.00", "220.00", 300),
                         v("5kg Commercial Pack", "PHA-5KG", "390.00", "480.00", 120)));
 
         createProduct(equipCategory, "Digital Thermo-Hygrometer for Mushroom Rooms", "digital-thermo-hygrometer-mushroom-rooms",
                 "High precision sensor measuring temperature and humidity with min/max memory tracking.",
-                ProductType.GROWING_KIT, "90258010", new BigDecimal("18.00"),
+                ProductType.EQUIPMENT_SUPPLIES, "90258010", new BigDecimal("18.00"),
                 "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                 List.of(v("Standard Sensor Model", "DTH-STD", "450.00", "590.00", 140),
                         v("Dual Probe Pro Model", "DTH-PRO", "850.00", "1050.00", 60)));
 
         createProduct(equipCategory, "High-Pressure Micro Mist Spray Nozzle System", "micro-mist-spray-nozzle-system",
                 "Brass ultra-fine mist nozzles to maintain 85-95% humidity in growing rooms without wetting substrate.",
-                ProductType.GROWING_KIT, "84248990", new BigDecimal("18.00"),
+                ProductType.EQUIPMENT_SUPPLIES, "84248990", new BigDecimal("18.00"),
                 "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                 List.of(v("10-Nozzle Starter Kit", "MNS-10N", "890.00", "1100.00", 75),
                         v("30-Nozzle Farm Kit", "MNS-30N", "2250.00", "2750.00", 25)));

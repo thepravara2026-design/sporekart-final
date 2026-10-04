@@ -41,6 +41,34 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    public Category updateCategory(UUID categoryId, CatalogDtos.UpdateCategoryRequest request) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+
+        if (request.getName() != null && !request.getName().isBlank()) {
+            category.setName(request.getName().trim());
+        }
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            String newSlug = request.getSlug().trim().toLowerCase();
+            if (!newSlug.equals(category.getSlug()) && categoryRepository.findBySlug(newSlug).isPresent()) {
+                throw new IllegalArgumentException("Duplicate category slug: " + newSlug);
+            }
+            category.setSlug(newSlug);
+        }
+        if (request.getDescription() != null) {
+            category.setDescription(request.getDescription());
+        }
+        if (request.getImageUrl() != null) {
+            category.setImageUrl(request.getImageUrl());
+        }
+        if (request.getIsActive() != null) {
+            category.setActive(request.getIsActive());
+        }
+
+        return categoryRepository.save(category);
+    }
+
+    @Transactional
     public Product createProduct(CatalogDtos.CreateProductRequest request) {
         String rawSlug = request.getSlug() != null && !request.getSlug().isBlank() ? request.getSlug() : request.getTitle();
         String slug = rawSlug.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
@@ -162,11 +190,6 @@ public class AdminCatalogService {
             if (info.getKitContents() == null || info.getKitContents().isBlank()) {
                 throw new IllegalArgumentException("Kit contents details are required for publishing growing kit products");
             }
-        }
-
-        // Ensure product has at least one pricing variant for purchasing
-        if (product.getVariants() == null || product.getVariants().isEmpty()) {
-            throw new IllegalArgumentException("Product must have at least one pricing variant configured before publishing.");
         }
     }
 

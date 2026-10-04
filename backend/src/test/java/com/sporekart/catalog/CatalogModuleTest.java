@@ -65,10 +65,10 @@ public class CatalogModuleTest {
         infoReq.setFssaiLicenseNumber("10020011000123");
 
         CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(null, "Button Mushroom 200g", "fresh-button-200g", "Desc", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE, "07095900", new BigDecimal("5.00"), "Title", "Desc", "url", true, infoReq);
-        adminCatalogService.createProduct(prodReq);
-
-        Exception prodEx = assertThrows(IllegalArgumentException.class, () -> adminCatalogService.createProduct(prodReq));
-        assertTrue(prodEx.getMessage().contains("Duplicate product slug"));
+        Product p1 = adminCatalogService.createProduct(prodReq);
+        Product p2 = adminCatalogService.createProduct(prodReq);
+        assertNotEquals(p1.getSlug(), p2.getSlug());
+        assertTrue(p2.getSlug().startsWith("fresh-button-200g-"));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class CatalogModuleTest {
         // Invalid price: compareAtPrice < priceInr
         CatalogDtos.CreateVariantRequest invalidVariant = new CatalogDtos.CreateVariantRequest("Kit Variant", "SKU-INVALID", new BigDecimal("500.00"), new BigDecimal("400.00"), 10, true);
         Exception ex = assertThrows(IllegalArgumentException.class, () -> adminCatalogService.addVariant(product.getId(), invalidVariant));
-        assertTrue(ex.getMessage().contains("Compare at price (MRP) cannot be less than selling price"));
+        assertTrue(ex.getMessage().contains("Selling price must be strictly less than compare-at price"));
     }
 
     @Test

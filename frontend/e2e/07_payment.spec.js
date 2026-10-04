@@ -84,6 +84,8 @@ test.describe('FE-9 & FE-10: Full Checkout, Payment Authorization & Order Confir
       await expect(recipientInput).toBeHidden({ timeout: 15000 });
     }
 
+    page.on('dialog', dialog => dialog.accept().catch(() => {}));
+
     // 5. Submit Order / Proceed to Payment
     const placeOrderBtn = page.getByTestId('checkout-button');
     await expect(placeOrderBtn).toBeVisible({ timeout: 15000 });
@@ -91,7 +93,7 @@ test.describe('FE-9 & FE-10: Full Checkout, Payment Authorization & Order Confir
     await placeOrderBtn.click();
 
     // 6. Verify Payment Gateway Page Loaded
-    await expect(page).toHaveURL(/\/payment\?type=order/, { timeout: 20000 });
+    await page.waitForURL(/\/payment\?type=order/, { timeout: 20000 });
     await expect(page.getByText(/Total Amount/i).first()).toBeVisible({ timeout: 10000 });
 
     // 7. Select Payment & Click Pay Securely

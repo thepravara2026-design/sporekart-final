@@ -5,11 +5,14 @@ import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 import PageSkeleton from './components/PageSkeleton';
 import { authApi } from './api';
 import { reportWebVitals } from './reportWebVitals';
 
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import ReviewInvitationModal from './components/ReviewInvitationModal';
+import ProductReviewFormModal from './components/ProductReviewFormModal';
 
 // Code Splitting & Lazy Route Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -35,6 +38,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [globalReviewModalItem, setGlobalReviewModalItem] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('sporekart_token');
@@ -76,13 +80,9 @@ export default function App() {
                   
                   {/* Product Catalog & Category Routes */}
                   <Route path="/products" element={<CatalogPage />} />
-                  <Route path="/products/fresh-mushrooms" element={<CatalogPage />} />
-                  <Route path="/products/dry-mushrooms" element={<CatalogPage />} />
-                  <Route path="/products/mushroom-spawn" element={<CatalogPage />} />
-                  <Route path="/products/growing-kits" element={<CatalogPage />} />
                   <Route path="/products/:categorySlug" element={<CatalogPage />} />
                   
-                  <Route path="/product/:slug" element={<ProductDetailPage />} />
+                  <Route path="/product/:slug" element={<ProductDetailPage user={user} onOpenReviewModal={(item) => setGlobalReviewModalItem(item)} />} />
                   
                   {/* Legacy URL Aliases */}
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
@@ -93,6 +93,9 @@ export default function App() {
                   <Route path="/checkout" element={<CheckoutPage user={user} setUser={setUser} />} />
                   <Route path="/payment" element={<PaymentPage />} />
                   <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+
+                  {/* Review Submission Alias Route */}
+                  <Route path="/account/orders/:orderId/review/:orderItemId" element={<Navigate to="/dashboard" replace />} />
 
                   {/* Training & Masterclasses Routes */}
                   <Route path="/training" element={<TrainingPage user={user} setUser={setUser} />} />
@@ -124,6 +127,7 @@ export default function App() {
                   <Route path="/admin/inventory" element={adminElement} />
                   <Route path="/admin/offers" element={adminElement} />
                   <Route path="/admin/media" element={adminElement} />
+                  <Route path="/admin/reviews" element={adminElement} />
                   <Route path="/admin/orders" element={adminElement} />
                   <Route path="/admin/order-refunds" element={adminElement} />
                   <Route path="/admin/batch-refunds" element={adminElement} />
@@ -145,7 +149,23 @@ export default function App() {
               </Suspense>
             </main>
 
+            {/* Post-Delivery Review Invitation Modal for Customers */}
+            <ReviewInvitationModal
+              user={user}
+              onWriteReview={(item) => setGlobalReviewModalItem(item)}
+            />
+
+            {/* Global Product Review Submission Modal */}
+            {globalReviewModalItem && (
+              <ProductReviewFormModal
+                item={globalReviewModalItem}
+                onClose={() => setGlobalReviewModalItem(null)}
+                onSuccess={() => setGlobalReviewModalItem(null)}
+              />
+            )}
+
             <Footer />
+            <WhatsAppFloatingButton />
             <CartDrawer />
           </div>
         </Router>
