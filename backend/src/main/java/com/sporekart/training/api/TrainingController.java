@@ -364,5 +364,27 @@ public class TrainingController {
                 .createdAt(review.getCreatedAt())
                 .build();
     }
+
+    // --- Training Glimpses REST Endpoints ---
+    @GetMapping("/glimpses")
+    public ResponseEntity<ApiResponse<List<TrainingGlimpse>>> getPublicGlimpses() {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.getActiveGlimpses()));
+    }
+
+    @GetMapping("/admin/glimpses")
+    public ResponseEntity<ApiResponse<List<TrainingGlimpse>>> getAdminGlimpses() {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.getAllGlimpsesForAdmin()));
+    }
+
+    @PostMapping("/admin/glimpses")
+    public ResponseEntity<ApiResponse<TrainingGlimpse>> saveGlimpse(@Valid @RequestBody TrainingDtos.SaveTrainingGlimpseRequest req) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.saveGlimpse(req)));
+    }
+
+    @DeleteMapping("/admin/glimpses/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteGlimpse(@PathVariable String id) {
+        trainingService.deleteGlimpse(id);
+        return ResponseEntity.ok(ApiResponse.success("Training glimpse deleted successfully."));
+    }
 }
 

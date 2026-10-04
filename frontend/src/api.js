@@ -121,6 +121,10 @@ export const trainingApi = {
   createReview: (data) => api.post('/training/reviews', data),
   getMyReviews: () => api.get('/training/my-reviews'),
   getPendingReviews: () => api.get('/training/pending-reviews'),
+  getGlimpses: () => api.get('/training/glimpses'),
+  getAdminGlimpses: () => api.get('/training/admin/glimpses'),
+  saveGlimpse: (data) => api.post('/training/admin/glimpses', data),
+  deleteGlimpse: (id) => api.delete(`/training/admin/glimpses/${id}`),
 };
 
 export const orderApi = {

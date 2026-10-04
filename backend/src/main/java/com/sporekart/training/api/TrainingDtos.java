@@ -330,5 +330,43 @@ public class TrainingDtos {
         private ZonedDateTime enrolledAt;
         private EnrollmentStatus status;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SaveTrainingGlimpseRequest {
+        private String id;
+        @NotBlank(message = "Title is required")
+        private String title;
+        private String caption;
+        private String courseTitle;
+        private String location;
+        private String eventDate;
+        private Integer attendeeCount;
+        @NotBlank(message = "Image URL is required")
+        private String imageUrl;
+        private Integer displayOrder;
+        private Boolean isActive;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TrainingGlimpseDto {
+        private String id;
+        private String title;
+        private String caption;
+        private String courseTitle;
+        private String location;
+        private String eventDate;
+        private Integer attendeeCount;
+        private String imageUrl;
+        private Integer displayOrder;
+        private Boolean isActive;
+        private ZonedDateTime createdAt;
+        private ZonedDateTime updatedAt;
+    }
 }
 

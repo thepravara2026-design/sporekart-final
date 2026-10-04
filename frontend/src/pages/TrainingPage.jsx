@@ -10,15 +10,17 @@ import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 import PageSkeleton from '../components/PageSkeleton';
 import AuthForm from '../components/AuthForm';
+import TrainingGlimpseCarousel from '../components/TrainingGlimpseCarousel';
 
 export default function TrainingPage({ user, setUser }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [glimpses, setGlimpses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedCourse, setExpandedCourse] = useState(null);
 
   useEffect(() => {
-    async function fetchCourses() {
+    async function fetchData() {
       try {
         setLoading(true);
         const res = await trainingApi.getCourses();
@@ -29,11 +31,24 @@ export default function TrainingPage({ user, setUser }) {
         }
       } catch (err) {
         console.error('Failed to load training courses:', err);
+      }
+
+      try {
+        if (typeof trainingApi.getGlimpses === 'function') {
+          const glimpseRes = await trainingApi.getGlimpses();
+          if (glimpseRes?.data?.data) {
+            setGlimpses(glimpseRes.data.data);
+          } else if (Array.isArray(glimpseRes?.data)) {
+            setGlimpses(glimpseRes.data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load training glimpses:', err);
       } finally {
         setLoading(false);
       }
     }
-    fetchCourses();
+    fetchData();
   }, []);
 
   // Authentication & Preview Modal State
@@ -190,6 +205,9 @@ export default function TrainingPage({ user, setUser }) {
           Master commercial mushroom production, substrate formulation, lab tissue culture, and market buyback protocols. Taught by senior agronomists with live practical sessions.
         </p>
       </div>
+
+      {/* Workshop Training Glimpses Gallery */}
+      <TrainingGlimpseCarousel glimpses={glimpses} />
 
       {/* Masterclass Courses List */}
       {loading ? (

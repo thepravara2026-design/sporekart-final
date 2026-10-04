@@ -15,6 +15,7 @@ import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi } from '..
 import SeoHead from '../components/SeoHead';
 import LocalImageUploader from '../components/LocalImageUploader';
 import AdminReviewsManager from '../components/AdminReviewsManager';
+import AdminTrainingGalleryManager from '../components/AdminTrainingGalleryManager';
 
 export default function AdminDashboardPage({ user }) {
   const location = useLocation();
@@ -1222,6 +1223,7 @@ export default function AdminDashboardPage({ user }) {
       badge: courses.length ? `${courses.length} Courses` : null,
       sections: [
         { id: 'training', label: 'Academy Hub', path: '/admin/training', icon: GraduationCap },
+        { id: 'glimpses', label: 'Training Gallery Glimpses', path: '/admin/glimpses', icon: Image },
         { id: 'courses', label: 'Masterclasses', path: '/admin/courses', icon: BookOpen },
         { id: 'batches', label: 'Training Batches', path: '/admin/batches', icon: Calendar },
         { id: 'enrollments', label: 'Student Enrollments', path: '/admin/enrollments', icon: UserCheck },
@@ -3776,25 +3778,35 @@ export default function AdminDashboardPage({ user }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link to="/admin/glimpses" className="p-5 bg-surface-cream rounded-2xl border border-surface-border hover:border-forest-700 transition-all space-y-2">
+                <Image className="w-6 h-6 text-amber-600" />
+                <h4 className="font-bold text-sm text-typography-primary font-display">1. Training Gallery Glimpses</h4>
+                <p className="text-xs text-typography-secondary">Upload photos & manage auto-sliding workshop landing page glimpses.</p>
+              </Link>
               <Link to="/admin/courses" className="p-5 bg-surface-cream rounded-2xl border border-surface-border hover:border-forest-700 transition-all space-y-2">
                 <BookOpen className="w-6 h-6 text-forest-800" />
-                <h4 className="font-bold text-sm text-typography-primary font-display">1. Masterclass Courses</h4>
+                <h4 className="font-bold text-sm text-typography-primary font-display">2. Masterclass Courses</h4>
                 <p className="text-xs text-typography-secondary">Create and manage curriculum topics, duration, and fee structure.</p>
               </Link>
               <Link to="/admin/batches" className="p-5 bg-surface-cream rounded-2xl border border-surface-border hover:border-forest-700 transition-all space-y-2">
                 <Calendar className="w-6 h-6 text-forest-800" />
-                <h4 className="font-bold text-sm text-typography-primary font-display">2. Batch Schedule</h4>
+                <h4 className="font-bold text-sm text-typography-primary font-display">3. Batch Schedule</h4>
                 <p className="text-xs text-typography-secondary">Schedule upcoming live practical sessions and seat capacity limits.</p>
               </Link>
               <Link to="/admin/enrollments" className="p-5 bg-surface-cream rounded-2xl border border-surface-border hover:border-forest-700 transition-all space-y-2">
                 <UserCheck className="w-6 h-6 text-forest-800" />
-                <h4 className="font-bold text-sm text-typography-primary font-display">3. Trainee Roster</h4>
+                <h4 className="font-bold text-sm text-typography-primary font-display">4. Trainee Roster</h4>
                 <p className="text-xs text-typography-secondary">View student enrollment status and grant training platform capabilities.</p>
               </Link>
             </div>
           </div>
         </div>
+      )}
+
+      {/* 4A-1: TRAINING GALLERY GLIMPSE MANAGER */}
+      {activeSection === 'glimpses' && (
+        <AdminTrainingGalleryManager />
       )}
 
       {/* 4B: MASTERCLASS COURSES STUDIO */}

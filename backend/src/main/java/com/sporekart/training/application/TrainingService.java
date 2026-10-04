@@ -36,6 +36,7 @@ public class TrainingService {
     private final CompletionRepository completionRepository;
     private final CertificateRepository certificateRepository;
     private final TrainingReviewRepository trainingReviewRepository;
+    private final TrainingGlimpseRepository trainingGlimpseRepository;
     private final UserRepository userRepository;
     private final com.sporekart.wallet.application.WalletService walletService;
     private final com.sporekart.promotion.application.PromotionService promotionService;
@@ -542,6 +543,49 @@ public class TrainingService {
                         .status(e.getStatus())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    // --- Training Glimpses / Gallery ---
+    @Transactional(readOnly = true)
+    public List<TrainingGlimpse> getActiveGlimpses() {
+        return trainingGlimpseRepository.findByIsActiveTrueOrderByDisplayOrderAscCreatedAtDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingGlimpse> getAllGlimpsesForAdmin() {
+        return trainingGlimpseRepository.findAllByOrderByDisplayOrderAscCreatedAtDesc();
+    }
+
+    @Transactional
+    public TrainingGlimpse saveGlimpse(TrainingDtos.SaveTrainingGlimpseRequest req) {
+        TrainingGlimpse glimpse;
+        if (req.getId() != null && !req.getId().trim().isEmpty()) {
+            glimpse = trainingGlimpseRepository.findById(req.getId())
+                    .orElse(new TrainingGlimpse());
+            if (glimpse.getId() == null) {
+                glimpse.setId(req.getId());
+            }
+        } else {
+            glimpse = new TrainingGlimpse();
+            glimpse.setId(UUID.randomUUID().toString());
+        }
+
+        glimpse.setTitle(req.getTitle());
+        glimpse.setCaption(req.getCaption());
+        glimpse.setCourseTitle(req.getCourseTitle());
+        glimpse.setLocation(req.getLocation());
+        glimpse.setEventDate(req.getEventDate());
+        glimpse.setAttendeeCount(req.getAttendeeCount() != null ? req.getAttendeeCount() : 0);
+        glimpse.setImageUrl(req.getImageUrl());
+        glimpse.setDisplayOrder(req.getDisplayOrder() != null ? req.getDisplayOrder() : 0);
+        glimpse.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
+
+        return trainingGlimpseRepository.save(glimpse);
+    }
+
+    @Transactional
+    public void deleteGlimpse(String id) {
+        trainingGlimpseRepository.deleteById(id);
     }
 }
 

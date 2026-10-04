@@ -16,6 +16,7 @@ import ProductCard from '../components/ProductCard';
 import ProductGrid from '../components/ProductGrid';
 import CategoryCarousel from '../components/CategoryCarousel';
 import TrainingCarousel from '../components/TrainingCarousel';
+import TrainingGlimpseCarousel from '../components/TrainingGlimpseCarousel';
 import { BLOG_POSTS } from './BlogIndexPage';
 import { useCart } from '../context/CartContext';
 
@@ -67,6 +68,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
   const location = useLocation();
   const [products, setProducts] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [glimpses, setGlimpses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [categories, setCategories] = useState([]);
@@ -131,6 +133,15 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         setCourses(courseRes.data?.data || []);
       } catch (err) {
         console.error('Failed to fetch courses for home page', err);
+      }
+
+      try {
+        if (typeof trainingApi.getGlimpses === 'function') {
+          const glimpseRes = await trainingApi.getGlimpses();
+          setGlimpses(glimpseRes.data?.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch training glimpses for home page', err);
       } finally {
         setLoading(false);
       }
@@ -234,8 +245,9 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       </section>
 
       {/* 4. TRAINING SECTION */}
-      <section id="training" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="training" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <TrainingCarousel courses={courses} />
+        <TrainingGlimpseCarousel glimpses={glimpses} />
       </section>
 
       {/* 5. ABOUT SECTION */}
