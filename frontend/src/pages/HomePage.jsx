@@ -13,7 +13,7 @@ import MediaImage from '../components/MediaImage';
 import HeroSection from '../components/HeroSection';
 import LatestCustomerReviews from '../components/LatestCustomerReviews';
 import ProductCard from '../components/ProductCard';
-import ProductCarousel from '../components/ProductCarousel';
+import ProductGrid from '../components/ProductGrid';
 import CategoryCarousel from '../components/CategoryCarousel';
 import TrainingCarousel from '../components/TrainingCarousel';
 import { BLOG_POSTS } from './BlogIndexPage';
@@ -223,10 +223,11 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             ))}
           </div>
         ) : (
-          <ProductCarousel
+          <ProductGrid
             title="Featured Products & Seeds"
             subtitle="High-demand laboratory-certified mushroom products available across India"
             products={[...products].sort((a, b) => Boolean(b.isPopular) - Boolean(a.isPopular))}
+            itemsPerPage={8}
             onAddToCart={propOnAddToCart}
           />
         )}
