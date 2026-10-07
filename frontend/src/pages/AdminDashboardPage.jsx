@@ -16,6 +16,7 @@ import SeoHead from '../components/SeoHead';
 import LocalImageUploader from '../components/LocalImageUploader';
 import AdminReviewsManager from '../components/AdminReviewsManager';
 import AdminTrainingGalleryManager from '../components/AdminTrainingGalleryManager';
+import StarRatingInput from '../components/StarRatingInput';
 
 export default function AdminDashboardPage({ user }) {
   const location = useLocation();
@@ -172,6 +173,7 @@ export default function AdminDashboardPage({ user }) {
 
   // Support Tickets State & Interactive Workspace
   const [tickets, setTickets] = useState([]);
+  const [csatSummary, setCsatSummary] = useState({ averageRating: 5.0, ratedTicketsCount: 0, totalTickets: 0, ratingBreakdown: {} });
   const [selectedSupportTicket, setSelectedSupportTicket] = useState(null);
   const [adminReplyText, setAdminReplyText] = useState('');
   const [supportSearchQuery, setSupportSearchQuery] = useState('');
@@ -259,6 +261,11 @@ export default function AdminDashboardPage({ user }) {
     setStatusMessage('');
     setErrorMessage('');
     try {
+      // Always sync live analytics overview metrics
+      adminApi.getAnalyticsOverview()
+        .then(anRes => { if (anRes.data?.success) setAnalytics(anRes.data.data); })
+        .catch(() => {});
+
       if (section === 'overview' || section === 'analytics') {
         const [anRes, logRes] = await Promise.all([
           adminApi.getAnalyticsOverview(),
@@ -342,10 +349,16 @@ export default function AdminDashboardPage({ user }) {
           setCustomers(Array.isArray(data) ? data : (data?.content || []));
         }
       } else if (section === 'support') {
-        const res = await adminApi.getTickets();
-        if (res.data?.success) {
-          const data = res.data.data;
+        const [tRes, csatRes] = await Promise.allSettled([
+          adminApi.getTickets(),
+          adminApi.getCsatSummary()
+        ]);
+        if (tRes.status === 'fulfilled' && tRes.value.data?.success) {
+          const data = tRes.value.data.data;
           setTickets(Array.isArray(data) ? data : (data?.content || []));
+        }
+        if (csatRes.status === 'fulfilled' && csatRes.value.data?.success) {
+          setCsatSummary(csatRes.value.data.data || { averageRating: 5.0, ratedTicketsCount: 0, totalTickets: 0 });
         }
       } else if (['training', 'courses', 'batches', 'enrollments', 'batch-refunds'].includes(section)) {
         const [cRes, custRes, enrRes] = await Promise.allSettled([
@@ -837,8 +850,8 @@ export default function AdminDashboardPage({ user }) {
       fetchDataForSection('products');
       navigate('/admin/products');
     } catch (err) {
-      console.error('Create product error:', err);
-      const backendMsg = err.response?.data?.message || err.response?.data?.error;
+      const rawData = err.response?.data;
+      const backendMsg = typeof rawData === 'string' ? rawData : (rawData?.message || rawData?.error?.message || (typeof rawData?.error === 'string' ? rawData.error : null));
       setErrorMessage(backendMsg || 'Failed creating product. Ensure all required fields are valid.');
     }
   };
@@ -1124,7 +1137,9 @@ export default function AdminDashboardPage({ user }) {
   const filteredSupportTickets = React.useMemo(() => {
     return (tickets || []).filter(t => {
       if (supportStatusFilter === 'ACTIVE' && !['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'].includes(t.status)) return false;
-      if (supportStatusFilter !== 'ALL' && supportStatusFilter !== 'ACTIVE' && t.status !== supportStatusFilter) return false;
+      if (supportStatusFilter === 'RESOLVED' && !['RESOLVED', 'CLOSED'].includes(t.status)) return false;
+      if (supportStatusFilter === 'CLOSED' && !['CLOSED', 'RESOLVED'].includes(t.status)) return false;
+      if (supportStatusFilter !== 'ALL' && supportStatusFilter !== 'ACTIVE' && supportStatusFilter !== 'RESOLVED' && supportStatusFilter !== 'CLOSED' && t.status !== supportStatusFilter) return false;
       if (supportPriorityFilter !== 'ALL' && t.priority !== supportPriorityFilter) return false;
       if (supportCategoryFilter !== 'ALL' && t.category !== supportCategoryFilter) return false;
       
@@ -1312,19 +1327,19 @@ export default function AdminDashboardPage({ user }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-surface-border">
           <div className="bg-surface-cream/80 p-3.5 rounded-xl border border-surface-border/60">
             <span className="text-[10px] uppercase font-bold text-typography-muted tracking-wider block">Total Catalog</span>
-            <span className="text-lg font-black text-typography-primary font-display">{analytics?.totalProducts || products.length || 18}</span>
+            <span className="text-lg font-black text-typography-primary font-display">{analytics?.totalProducts ?? productTotalElements ?? products.length ?? 0}</span>
           </div>
           <div className="bg-surface-cream/80 p-3.5 rounded-xl border border-surface-border/60">
             <span className="text-[10px] uppercase font-bold text-typography-muted tracking-wider block">Active Orders</span>
-            <span className="text-lg font-black text-forest-700 font-display">{analytics?.activeOrders || orders.length || 5}</span>
+            <span className="text-lg font-black text-forest-700 font-display">{analytics?.activeOrders ?? orders.length ?? 0}</span>
           </div>
           <div className="bg-surface-cream/80 p-3.5 rounded-xl border border-surface-border/60">
             <span className="text-[10px] uppercase font-bold text-typography-muted tracking-wider block">Customers</span>
-            <span className="text-lg font-black text-typography-primary font-display">{analytics?.totalCustomers || customers.length || 42}</span>
+            <span className="text-lg font-black text-typography-primary font-display">{analytics?.totalCustomers ?? customers.length ?? 0}</span>
           </div>
           <div className="bg-surface-cream/80 p-3.5 rounded-xl border border-surface-border/60">
             <span className="text-[10px] uppercase font-bold text-typography-muted tracking-wider block">Gross Revenue</span>
-            <span className="text-lg font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr || 128500).toLocaleString('en-IN')}</span>
+            <span className="text-lg font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr ?? 0).toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>
@@ -1343,7 +1358,7 @@ export default function AdminDashboardPage({ user }) {
         <div className="p-4 bg-red-600/10 border border-red-600/20 rounded-2xl text-xs text-red-700 flex items-center justify-between gap-2 animate-fade-in shadow-level-1 font-medium">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            <span>{errorMessage}</span>
+            <span>{typeof errorMessage === 'object' ? (errorMessage?.message || errorMessage?.error?.message || JSON.stringify(errorMessage)) : String(errorMessage)}</span>
           </div>
           <button onClick={() => setErrorMessage('')} className="text-typography-muted hover:text-typography-primary text-sm font-bold">×</button>
         </div>
@@ -1443,7 +1458,7 @@ export default function AdminDashboardPage({ user }) {
                 <span className="text-xs font-bold uppercase tracking-wider">Total Products</span>
                 <Package className="w-4 h-4 text-forest-700" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-typography-primary font-display">{analytics?.totalProducts || products.length || 18}</p>
+              <p className="text-2xl sm:text-3xl font-black text-typography-primary font-display">{analytics?.totalProducts ?? productTotalElements ?? products.length ?? 0}</p>
               <span className="text-[10px] text-green-700 font-bold bg-green-600/10 px-2 py-0.5 rounded-full inline-block">Active Catalog Sync</span>
             </div>
 
@@ -1452,7 +1467,7 @@ export default function AdminDashboardPage({ user }) {
                 <span className="text-xs font-bold uppercase tracking-wider">Active Orders</span>
                 <ShoppingBag className="w-4 h-4 text-forest-700" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-forest-700 font-display">{analytics?.activeOrders || orders.length || 5}</p>
+              <p className="text-2xl sm:text-3xl font-black text-forest-700 font-display">{analytics?.activeOrders ?? orders.length ?? 0}</p>
               <span className="text-[10px] text-forest-800 font-bold bg-gold/15 px-2 py-0.5 rounded-full inline-block">Fulfillment Queue</span>
             </div>
 
@@ -1461,7 +1476,7 @@ export default function AdminDashboardPage({ user }) {
                 <span className="text-xs font-bold uppercase tracking-wider">Registered Users</span>
                 <Users className="w-4 h-4 text-forest-700" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-typography-primary font-display">{analytics?.totalCustomers || customers.length || 42}</p>
+              <p className="text-2xl sm:text-3xl font-black text-typography-primary font-display">{analytics?.totalCustomers ?? customers.length ?? 0}</p>
               <span className="text-[10px] text-blue-700 font-bold bg-blue-600/10 px-2 py-0.5 rounded-full inline-block">Verified Accounts</span>
             </div>
 
@@ -1470,7 +1485,7 @@ export default function AdminDashboardPage({ user }) {
                 <span className="text-xs font-bold uppercase tracking-wider">Gross Sales Revenue</span>
                 <CreditCard className="w-4 h-4 text-green-600" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr || 128500).toLocaleString('en-IN')}</p>
+              <p className="text-2xl sm:text-3xl font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr ?? 0).toLocaleString('en-IN')}</p>
               <span className="text-[10px] text-green-700 font-bold bg-green-600/10 px-2 py-0.5 rounded-full inline-block">Razorpay Settlement Verified</span>
             </div>
           </div>
@@ -3356,7 +3371,7 @@ export default function AdminDashboardPage({ user }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 space-y-1">
               <span className="text-xs font-bold uppercase text-typography-muted">Razorpay Captured Volume</span>
-              <p className="text-2xl font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr || 128500).toLocaleString('en-IN')}</p>
+              <p className="text-2xl font-black text-green-700 font-display">₹{(analytics?.totalRevenueInr ?? 0).toLocaleString('en-IN')}</p>
             </div>
             <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 space-y-1">
               <span className="text-xs font-bold uppercase text-typography-muted">Gateway Success Rate</span>
@@ -4610,12 +4625,15 @@ export default function AdminDashboardPage({ user }) {
 
             <div className="bg-surface-white p-5 rounded-card border border-surface-border shadow-level-1 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Resolution Rate</p>
-                <h3 className="text-2xl font-black font-mono text-emerald-600 mt-1">{supportStats.rate}%</h3>
-                <span className="text-[11px] text-typography-muted">{supportStats.resolved} tickets resolved</span>
+                <p className="text-xs font-bold text-typography-muted uppercase tracking-wider">Helpdesk CSAT Score</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <h3 className="text-2xl font-black font-mono text-amber-700">{csatSummary.averageRating || 5.0}</h3>
+                  <span className="text-xs font-bold text-amber-800">/ 5.0</span>
+                </div>
+                <span className="text-[11px] text-typography-muted">{csatSummary.ratedTicketsCount || 0} customer ratings</span>
               </div>
-              <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-600">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-600">
+                <Star className="w-6 h-6 fill-amber-400 text-amber-500" />
               </div>
             </div>
           </div>
@@ -4846,6 +4864,22 @@ export default function AdminDashboardPage({ user }) {
                         </span>
                       )}
                     </div>
+
+                    {/* Customer CSAT Rating Box */}
+                    {selectedSupportTicket.satisfactionRating && (
+                      <div className="p-3 bg-amber-500/10 border border-amber-300 rounded-xl flex items-center justify-between gap-3 text-xs">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-amber-900 block">Customer Helpdesk Satisfaction Rating:</span>
+                          <StarRatingInput value={selectedSupportTicket.satisfactionRating} readOnly size="sm" showLabel={true} />
+                          {selectedSupportTicket.satisfactionFeedback && (
+                            <p className="text-amber-900 text-xs italic pt-0.5">"{selectedSupportTicket.satisfactionFeedback}"</p>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-amber-800 font-mono font-bold uppercase px-2 py-1 bg-amber-100 rounded-lg">
+                          Closed by {selectedSupportTicket.closedBy || 'CUSTOMER'}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Conversation History Timeline */}

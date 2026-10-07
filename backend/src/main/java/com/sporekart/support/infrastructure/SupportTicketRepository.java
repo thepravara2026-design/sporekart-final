@@ -14,4 +14,14 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, UU
     Optional<SupportTicket> findByTicketNumber(String ticketNumber);
     List<SupportTicket> findByStatus(TicketStatus status);
     List<SupportTicket> findByCategory(TicketCategory category);
+
+    @org.springframework.data.jpa.repository.Query("SELECT AVG(t.satisfactionRating) FROM SupportTicket t WHERE t.satisfactionRating IS NOT NULL")
+    Double findAverageSatisfactionRating();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) FROM SupportTicket t WHERE t.satisfactionRating IS NOT NULL")
+    Long countRatedTickets();
+
+    @org.springframework.data.jpa.repository.Query("SELECT t.satisfactionRating, COUNT(t) FROM SupportTicket t WHERE t.satisfactionRating IS NOT NULL GROUP BY t.satisfactionRating")
+    List<Object[]> countTicketsBySatisfactionRating();
 }
+

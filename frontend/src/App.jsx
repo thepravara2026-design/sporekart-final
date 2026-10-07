@@ -1,10 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import ProductAddedPopupDrawer from './components/ProductAddedPopupDrawer';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 import PageSkeleton from './components/PageSkeleton';
 import { authApi } from './api';
@@ -35,6 +36,12 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+// Deep-link helper redirect for notification email links
+function OrderRedirect() {
+  const { orderId } = useParams();
+  return <Navigate to={orderId ? `/dashboard?tab=activeTrack&orderId=${orderId}` : '/dashboard?tab=activeTrack'} replace />;
+}
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -84,9 +91,16 @@ export default function App() {
                   
                   <Route path="/product/:slug" element={<ProductDetailPage user={user} onOpenReviewModal={(item) => setGlobalReviewModalItem(item)} />} />
                   
-                  {/* Legacy URL Aliases */}
+                  {/* Legacy URL Aliases & Notification Email Direct Route Aliases */}
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
                   <Route path="/catalog/:slug" element={<CatalogPage />} />
+                  <Route path="/wallet" element={<Navigate to="/dashboard?tab=wallet" replace />} />
+                  <Route path="/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
+                  <Route path="/orders/:orderId" element={<OrderRedirect />} />
+                  <Route path="/account" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/account/wallet" element={<Navigate to="/dashboard?tab=wallet" replace />} />
+                  <Route path="/account/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
+                  <Route path="/account/orders/:orderId" element={<OrderRedirect />} />
 
                   {/* Cart & Checkout Routes */}
                   <Route path="/cart" element={<CartPage />} />
@@ -117,7 +131,7 @@ export default function App() {
                   <Route path="/mushroom-spawn-guide" element={<SpawnGuidePage />} />
 
                   {/* User Account */}
-                  <Route path="/dashboard" element={<DashboardPage user={user} />} />
+                  <Route path="/dashboard" element={<DashboardPage user={user} setUser={setUser} />} />
 
                   {/* Admin Control Plane Access & Protected Routes */}
                   <Route path="/admin/login" element={<AdminLoginPage user={user} setUser={setUser} />} />
@@ -168,6 +182,7 @@ export default function App() {
             <Footer />
             <WhatsAppFloatingButton />
             <CartDrawer />
+            <ProductAddedPopupDrawer />
           </div>
         </Router>
       </CartProvider>

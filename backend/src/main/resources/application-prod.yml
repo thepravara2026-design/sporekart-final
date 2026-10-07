@@ -11,3 +11,8 @@ logging:
   level:
     root: INFO
     com.sporekart: INFO
+
+sporekart:
+  mail:
+    use-real-smtp: ${USE_REAL_SMTP:true}
+

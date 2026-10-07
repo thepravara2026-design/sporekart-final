@@ -90,7 +90,7 @@ export default function GlobalSearch({ isMobile = false, onCloseMobile }) {
   };
 
   return (
-    <div ref={searchRef} className={`relative ${isMobile ? 'w-full' : 'w-64 lg:w-80'}`} tabIndex={-1}>
+    <div ref={searchRef} className={`relative ${isMobile ? 'w-full' : 'w-full'}`} tabIndex={-1}>
       <div className="relative flex items-center">
         <Search className="w-4 h-4 text-typography-muted absolute left-3.5 pointer-events-none" />
         <input

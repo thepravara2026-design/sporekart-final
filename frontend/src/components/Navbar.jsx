@@ -55,63 +55,63 @@ export default function Navbar({ user, setUser }) {
 
       <header className="sticky top-0 z-40 w-full bg-surface-white/95 backdrop-blur-md border-b border-surface-border shadow-level-1 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-4">
+          <div className="flex items-center justify-between min-h-[4.5rem] py-2.5 gap-2 sm:gap-4">
             {/* Logo */}
-            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-3 group min-h-[44px] shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-forest-700 flex items-center justify-center shadow-level-1 group-hover:bg-forest-800 transition-colors duration-200">
-                <Sprout className="w-6 h-6 text-white" />
+            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-2.5 group min-h-[44px] shrink-0">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-forest-700 flex items-center justify-center shadow-level-1 group-hover:bg-forest-800 transition-colors duration-200">
+                <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <span className="font-display font-bold text-2xl tracking-tight text-forest-900">
+                <span className="font-display font-bold text-xl sm:text-2xl tracking-tight text-forest-900 leading-none block">
                   Spore<span className="text-forest-700">kart</span>
                 </span>
-                <span className="block text-[10px] text-typography-secondary font-semibold tracking-widest uppercase opacity-90">
+                <span className="block text-[9px] sm:text-[10px] text-typography-secondary font-semibold tracking-widest uppercase opacity-90 mt-0.5">
                   India Agritech
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-2 font-medium text-sm text-typography-secondary">
+            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-1 xl:gap-2 font-medium text-xs xl:text-sm text-typography-secondary shrink-0">
               <Link 
                 to="/products" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/products') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/products') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
                 <Sprout className="w-4 h-4 text-forest-700" /> Products
               </Link>
               <Link 
                 to="/training" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/training') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/training') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
                 <GraduationCap className="w-4 h-4 text-forest-700" /> Training
               </Link>
               <Link 
                 to="/blog" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/blog') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/blog') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
                 <BookOpen className="w-4 h-4 text-forest-700" /> Blog
               </Link>
               <Link 
                 to="/about" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/about') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/about') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
                 <Info className="w-4 h-4 text-forest-700" /> About
               </Link>
               <Link 
                 to="/contact" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl ${isActive('/contact') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
+                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/contact') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
               >
                 <PhoneCall className="w-4 h-4 text-forest-700" /> Contact
               </Link>
             </nav>
 
             {/* Desktop Global Search Bar */}
-            <div className="hidden md:block">
+            <div className="hidden md:block flex-1 min-w-[140px] max-w-[220px] xl:max-w-[320px] mx-1 xl:mx-3">
               <GlobalSearch />
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {/* Cart Button */}
               <button
                 onClick={openDrawer}

@@ -28,7 +28,20 @@ public class PromotionService {
 
     @Transactional
     public Promotion createPromotion(PromotionDtos.CreatePromotionRequest req) {
+        if (req.getCode() == null || req.getCode().isBlank()) {
+            throw new IllegalArgumentException("Promo code cannot be empty");
+        }
+        if (req.getDiscountValue() != null && req.getDiscountValue().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Discount value cannot be negative");
+        }
+        if (req.getStartAt() != null && req.getEndAt() != null && req.getEndAt().isBefore(req.getStartAt())) {
+            throw new IllegalArgumentException("Promotion end date cannot be before start date");
+        }
+
         String cleanCode = req.getCode().trim();
+        if (!cleanCode.matches("^[A-Za-z0-9_\\-]+$")) {
+            throw new IllegalArgumentException("Promo code can only contain alphanumeric characters, hyphens, and underscores");
+        }
         if (promotionRepository.existsByCode(cleanCode)) {
             throw new IllegalArgumentException("Promo code already exists: " + cleanCode);
         }

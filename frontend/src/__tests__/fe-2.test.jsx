@@ -33,8 +33,8 @@ describe('FE-2: 401 Response Handling Interceptor Tests', () => {
     // Token is cleared from localStorage
     expect(localStorage.getItem('sporekart_token')).toBeNull();
 
-    // Session ID is reset (cleared and refreshed)
-    expect(localStorage.getItem('sporekart_session_id')).not.toBe('sess_old_123');
+    // Session ID is preserved on 401 to avoid wiping guest cart
+    expect(localStorage.getItem('sporekart_session_id')).toBe('sess_old_123');
     expect(localStorage.getItem('sporekart_session_id')).toMatch(/^sess_/);
 
     // Window event for application logout / auth reset was dispatched

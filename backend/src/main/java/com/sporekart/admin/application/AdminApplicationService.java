@@ -22,8 +22,9 @@ public class AdminApplicationService {
     }
 
     public void logAction(UUID adminUserId, String action, String resourceType, String resourceId, String oldValue, String newValue, String details, String ipAddress) {
+        UUID safeAdminUserId = adminUserId != null ? adminUserId : UUID.fromString("00000000-0000-0000-0000-000000000000");
         AdminAuditLog log = AdminAuditLog.builder()
-                .adminUserId(adminUserId)
+                .adminUserId(safeAdminUserId)
                 .action(action)
                 .resourceType(resourceType)
                 .resourceId(resourceId)

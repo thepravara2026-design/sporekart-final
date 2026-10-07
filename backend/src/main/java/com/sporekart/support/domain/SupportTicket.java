@@ -64,6 +64,22 @@ public class SupportTicket {
     @Column(name = "product_id")
     private UUID productId;
 
+    @Column(name = "satisfaction_rating")
+    private Integer satisfactionRating;
+
+    @Column(name = "satisfaction_feedback", columnDefinition = "TEXT")
+    private String satisfactionFeedback;
+
+    @Column(name = "closed_by")
+    private String closedBy;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+
+    @Column(name = "is_auto_replied")
+    @Builder.Default
+    private Boolean isAutoReplied = false;
+
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
     @Builder.Default

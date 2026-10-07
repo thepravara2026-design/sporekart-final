@@ -40,6 +40,7 @@ public class TrainingService {
     private final UserRepository userRepository;
     private final com.sporekart.wallet.application.WalletService walletService;
     private final com.sporekart.promotion.application.PromotionService promotionService;
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -372,6 +373,28 @@ public class TrainingService {
                     reason != null ? reason : "Masterclass Training Enrollment Cancellation",
                     "TRAINING_REFUND_SYSTEM"
             );
+        }
+
+        try {
+            notificationEventService.recordEvent(
+                    com.sporekart.notification.domain.NotificationEventType.ENROLLMENT_CANCELLED,
+                    "ENROLLMENT",
+                    saved.getId(),
+                    saved.getUserId(),
+                    null,
+                    null,
+                    "Training Enrollment Cancelled - " + (saved.getCourse() != null ? saved.getCourse().getTitle() : "Masterclass"),
+                    java.util.Map.of(
+                            "enrollmentId", saved.getId().toString(),
+                            "courseTitle", saved.getCourse() != null ? saved.getCourse().getTitle() : "Masterclass",
+                            "batchCode", saved.getBatch() != null ? saved.getBatch().getBatchCode() : "N/A",
+                            "refundAmount", saved.getFeePaidInr() != null ? saved.getFeePaidInr().toString() : "0.00",
+                            "reason", reason != null ? reason : "Cancelled by user"
+                    ),
+                    "ENROLLMENT_CANCELLED:" + saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording enrollment cancellation notification: {}", e.getMessage());
         }
 
         log.info("Enrollment ID {} cancelled for user ID {}. Reason: {}", enrollmentId, userId, reason);

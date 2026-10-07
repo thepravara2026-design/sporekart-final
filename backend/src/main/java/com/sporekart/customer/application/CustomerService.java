@@ -50,6 +50,54 @@ public class CustomerService {
         if (request.getFarmSizeSqft() != null) {
             profile.setFarmSizeSqft(request.getFarmSizeSqft());
         }
+
+        if (userId != null) {
+            if (request.getFullName() != null && !request.getFullName().isBlank()) {
+                authService.linkPhoneAndNameFromAddress(userId, request.getPhone(), request.getFullName());
+            } else if (request.getPhone() != null && !request.getPhone().isBlank()) {
+                authService.linkPhoneToUser(userId, request.getPhone());
+            }
+
+            if (request.getEmail() != null && !request.getEmail().isBlank()) {
+                authService.linkEmailToUser(userId, request.getEmail());
+            }
+
+            if (request.getLine1() != null && !request.getLine1().isBlank()
+                    && request.getCity() != null && !request.getCity().isBlank()
+                    && request.getState() != null && !request.getState().isBlank()
+                    && request.getPincode() != null && !request.getPincode().isBlank()) {
+
+                String phoneForAddr = request.getPhone() != null && !request.getPhone().isBlank()
+                        ? request.getPhone()
+                        : "+919999999999";
+                String nameForAddr = request.getFullName() != null && !request.getFullName().isBlank()
+                        ? request.getFullName()
+                        : "Customer";
+
+                CustomerDtos.AddressRequest addrReq = CustomerDtos.AddressRequest.builder()
+                        .recipientName(nameForAddr)
+                        .phone(phoneForAddr)
+                        .line1(request.getLine1())
+                        .line2(request.getLine2() != null ? request.getLine2() : "")
+                        .city(request.getCity())
+                        .state(request.getState())
+                        .pincode(request.getPincode())
+                        .isDefault(true)
+                        .build();
+
+                List<CustomerAddress> existingAddrs = customerAddressRepository.findByUserId(userId);
+                if (existingAddrs.isEmpty()) {
+                    addAddress(userId, addrReq);
+                } else {
+                    CustomerAddress existingDefault = existingAddrs.stream()
+                            .filter(CustomerAddress::isDefault)
+                            .findFirst()
+                            .orElse(existingAddrs.get(0));
+                    updateAddress(userId, existingDefault.getId(), addrReq);
+                }
+            }
+        }
+
         return customerRepository.save(profile);
     }
 
@@ -65,6 +113,10 @@ public class CustomerService {
 
     @Transactional
     public CustomerDtos.AddressDto addAddress(UUID userId, CustomerDtos.AddressRequest request) {
+        if (request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank()) {
+            authService.validatePhoneUniqueness(null, request.getAlternatePhone().trim());
+        }
+
         if (userId != null) {
             authService.linkPhoneAndNameFromAddress(userId, request.getPhone(), request.getRecipientName());
         }
@@ -77,6 +129,7 @@ public class CustomerService {
                 .userId(userId)
                 .recipientName(request.getRecipientName())
                 .phone(request.getPhone())
+                .alternatePhone(request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank() ? request.getAlternatePhone().trim() : null)
                 .line1(request.getLine1())
                 .line2(request.getLine2())
                 .city(request.getCity())
@@ -107,6 +160,10 @@ public class CustomerService {
         CustomerAddress address = customerAddressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Address not found or unauthorized"));
 
+        if (request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank()) {
+            authService.validatePhoneUniqueness(null, request.getAlternatePhone().trim());
+        }
+
         if (userId != null) {
             authService.linkPhoneAndNameFromAddress(userId, request.getPhone(), request.getRecipientName());
         }
@@ -117,6 +174,7 @@ public class CustomerService {
 
         address.setRecipientName(request.getRecipientName());
         address.setPhone(request.getPhone());
+        address.setAlternatePhone(request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank() ? request.getAlternatePhone().trim() : null);
         address.setLine1(request.getLine1());
         address.setLine2(request.getLine2());
         address.setCity(request.getCity());
@@ -149,6 +207,7 @@ public class CustomerService {
                 .userId(entity.getUserId())
                 .recipientName(entity.getRecipientName())
                 .phone(entity.getPhone())
+                .alternatePhone(entity.getAlternatePhone())
                 .line1(entity.getLine1())
                 .line2(entity.getLine2())
                 .city(entity.getCity())

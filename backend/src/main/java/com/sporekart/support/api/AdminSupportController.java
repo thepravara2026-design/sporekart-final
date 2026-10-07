@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -45,6 +45,11 @@ public class AdminSupportController {
     @GetMapping("/tickets/{id}")
     public ResponseEntity<ApiResponse<SupportTicket>> getTicketById(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(ApiResponse.success(supportService.getTicketDetails(id)));
+    }
+
+    @GetMapping("/csat-summary")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCsatSummary() {
+        return ResponseEntity.ok(ApiResponse.success(supportService.getCsatSummary()));
     }
 
     @PostMapping("/tickets/{id}/messages")
@@ -100,6 +105,31 @@ public class AdminSupportController {
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
+    @PostMapping("/tickets/{id}/close")
+    public ResponseEntity<ApiResponse<SupportTicket>> closeTicket(
+            @PathVariable("id") UUID ticketId,
+            Authentication authentication,
+            @RequestBody(required = false) CloseTicketRequest request
+    ) {
+        Integer rating = request != null ? request.getRating() : null;
+        String feedback = request != null ? request.getFeedback() : null;
+
+        SupportTicket closed = supportService.closeTicketWithCsat(ticketId, "SUPPORT_AGENT", rating, feedback);
+
+        adminAuditService.logAction(
+                getAdminId(authentication),
+                "CLOSE_SUPPORT_TICKET",
+                "SUPPORT_TICKET",
+                ticketId.toString(),
+                null,
+                "CLOSED",
+                "Support agent closed support ticket " + ticketId + " with CSAT rating " + rating,
+                null
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(closed));
+    }
+
     private UUID getAdminId(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) {
             return UUID.fromString("00000000-0000-0000-0000-000000000000");
@@ -120,5 +150,11 @@ public class AdminSupportController {
     public static class UpdateTicketStatusRequest {
         private TicketStatus status;
         private TicketPriority priority;
+    }
+
+    @Data
+    public static class CloseTicketRequest {
+        private Integer rating;
+        private String feedback;
     }
 }

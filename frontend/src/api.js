@@ -52,7 +52,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      clearSessionAndTokens();
+      clearTokenOnly();
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('sporekart_unauthorized'));
         const currentPath = window.location.pathname;
@@ -173,6 +173,8 @@ export const supportApi = {
   getUserTickets: () => api.get('/support/tickets'),
   getTicketById: (id) => api.get(`/support/tickets/${id}`),
   addMessage: (id, message) => api.post(`/support/tickets/${id}/messages`, { message }),
+  closeTicket: (id, rating, feedback) => api.post(`/support/tickets/${id}/close`, { rating, feedback }),
+  getCsatSummary: () => api.get('/admin/support/csat-summary'),
 };
 
 export const adminApi = {
@@ -215,6 +217,8 @@ export const adminApi = {
   getTicketById: (ticketId) => api.get(`/admin/support/tickets/${ticketId}`),
   replyToTicket: (ticketId, message) => api.post(`/admin/support/tickets/${ticketId}/messages`, { message }),
   updateTicketStatus: (ticketId, status, priority) => api.put(`/admin/support/tickets/${ticketId}/status`, { status, priority }),
+  closeTicket: (ticketId, rating, feedback) => api.post(`/admin/support/tickets/${ticketId}/close`, { rating, feedback }),
+  getCsatSummary: () => api.get('/admin/support/csat-summary'),
   getAnalyticsOverview: () => api.get('/admin/analytics/overview'),
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
 };

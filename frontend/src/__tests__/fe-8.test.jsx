@@ -11,6 +11,47 @@ vi.mock('../api', () => ({
   trainingApi: {
     getCourses: vi.fn(),
     bookSlot: vi.fn(),
+    getCourseReviewSummary: vi.fn().mockResolvedValue({ data: { data: { averageRating: 4.8, totalReviews: 5 } } }),
+    getAvailableBatchPromotions: vi.fn().mockResolvedValue({ data: { data: [] } }),
+    validateBatchPromotion: vi.fn().mockResolvedValue({ data: { success: true } }),
+  },
+  authApi: {
+    getCurrentUser: vi.fn().mockResolvedValue({
+      data: {
+        data: {
+          id: 'usr-1',
+          fullName: 'John Farmer',
+          phone: '9876543210',
+          email: 'john@farmer.in',
+        },
+      },
+    }),
+  },
+  customerApi: {
+    getProfile: vi.fn().mockResolvedValue({
+      data: {
+        data: {
+          fullName: 'John Farmer',
+          phone: '9876543210',
+          email: 'john@farmer.in',
+        },
+      },
+    }),
+    getAddresses: vi.fn().mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: 'addr-1',
+            line1: '123 Farm Lane',
+            city: 'Pune',
+            state: 'Maharashtra',
+            pincode: '411001',
+            isDefault: true,
+          },
+        ],
+      },
+    }),
+    updateProfile: vi.fn().mockResolvedValue({ data: { success: true } }),
   },
 }));
 
@@ -101,10 +142,10 @@ describe('FE-8: Training Page & Batch Selection Component Tests', () => {
     fireEvent.click(enrollButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText('Enrollment Preview')).toBeInTheDocument();
+      expect(screen.getByText('Mandatory Trainee Profile & Address')).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    const confirmButton = screen.getByRole('button', { name: /confirm seat & proceed to payment/i });
+    const confirmButton = screen.getByRole('button', { name: /save profile & proceed to payment/i });
     fireEvent.click(confirmButton);
 
     await waitFor(() => {

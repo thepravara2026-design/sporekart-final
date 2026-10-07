@@ -6,6 +6,7 @@ import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 import AuthForm from '../components/AuthForm';
 import TrainingReviewsSection from '../components/TrainingReviewsSection';
+import TraineeProfileEnrollmentModal from '../components/TraineeProfileEnrollmentModal';
 
 export default function CourseDetailPage({ user, setUser }) {
   const { courseSlug } = useParams();
@@ -16,6 +17,7 @@ export default function CourseDetailPage({ user, setUser }) {
   const [bookingError, setBookingError] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingSlotId, setPendingSlotId] = useState(null);
+  const [previewEnrollment, setPreviewEnrollment] = useState(null);
   const [pendingReviewItem, setPendingReviewItem] = useState(null);
 
   const fetchPendingReviews = async (courseId) => {
@@ -50,23 +52,14 @@ export default function CourseDetailPage({ user, setUser }) {
     fetchCourse();
   }, [courseSlug, user]);
 
-  const handleBookSlot = async (slotId) => {
+  const handleBookSlot = (slotId) => {
+    const targetSlot = (course?.slots || []).find((s) => s.id === slotId) || { id: slotId };
     if (!user && !localStorage.getItem('sporekart_token')) {
       setPendingSlotId(slotId);
       setShowAuthModal(true);
       return;
     }
-    setBookingError('');
-    try {
-      const res = await trainingApi.bookSlot(slotId);
-      if (res.data && res.data.success) {
-        const enrollment = res.data.data;
-        setShowAuthModal(false);
-        navigate(`/payment?type=enrollment&id=${enrollment.id}`);
-      }
-    } catch (err) {
-      setBookingError(err.response?.data?.message || 'Failed to book slot.');
-    }
+    setPreviewEnrollment({ course, slot: targetSlot });
   };
 
   if (loading) {
@@ -218,6 +211,19 @@ export default function CourseDetailPage({ user, setUser }) {
         pendingReviewItem={pendingReviewItem}
         onReviewSubmitted={() => course?.id && fetchPendingReviews(course.id)}
       />
+
+      {previewEnrollment && !showAuthModal && (
+        <TraineeProfileEnrollmentModal
+          previewEnrollment={previewEnrollment}
+          user={user}
+          setUser={setUser}
+          onClose={() => setPreviewEnrollment(null)}
+          onSuccess={(enrollmentData) => {
+            setPreviewEnrollment(null);
+            navigate(`/payment?type=enrollment&id=${enrollmentData.id}`);
+          }}
+        />
+      )}
 
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">

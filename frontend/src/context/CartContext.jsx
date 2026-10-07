@@ -13,6 +13,7 @@ export const CartProvider = ({ children }) => {
     valid: true,
   });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [addedProductPopup, setAddedProductPopup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -74,8 +75,22 @@ export const CartProvider = ({ children }) => {
 
       const response = await cartApi.addItem(variantId, quantity);
       if (response.data && response.data.success) {
-        setCart(normalizeCartData(response.data.data));
-        setIsDrawerOpen(true); // Open drawer upon adding item
+        const normalized = normalizeCartData(response.data.data);
+        setCart(normalized);
+        
+        // Find added item from updated cart
+        const addedItem = normalized.items?.find((i) => i.variantId === variantId) || {
+          variantId,
+          quantity,
+        };
+
+        // Trigger Popup Drawer for each product added to cart
+        setAddedProductPopup({
+          item: addedItem,
+          quantityAdded: quantity,
+          timestamp: Date.now(),
+        });
+
         return { success: true };
       }
     } catch (err) {
@@ -220,6 +235,9 @@ export const CartProvider = ({ children }) => {
         cart,
         isDrawerOpen,
         setIsDrawerOpen,
+        addedProductPopup,
+        setAddedProductPopup,
+        closePopupDrawer: () => setAddedProductPopup(null),
         openDrawer: () => setIsDrawerOpen(true),
         closeDrawer: () => setIsDrawerOpen(false),
         loading,

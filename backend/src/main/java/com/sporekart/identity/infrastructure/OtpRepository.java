@@ -12,5 +12,6 @@ import java.util.UUID;
 @Repository
 public interface OtpRepository extends JpaRepository<Otp, UUID> {
     Optional<Otp> findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(String identifier, OtpType otpType);
+    boolean existsByIdentifierAndOtpTypeAndConsumedTrue(String identifier, OtpType otpType);
     int countByIdentifierAndOtpTypeAndCreatedAtAfter(String identifier, OtpType otpType, LocalDateTime since);
 }

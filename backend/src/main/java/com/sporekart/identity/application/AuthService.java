@@ -29,15 +29,38 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final NotificationService notificationService;
     private final org.springframework.core.env.Environment environment;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.customer.infrastructure.CustomerAddressRepository customerAddressRepository;
 
     private static final int MAX_OTP_ATTEMPTS = 3;
     private static final int RATE_LIMIT_MAX_REQUESTS = 3;
     private static final int RATE_LIMIT_WINDOW_MINUTES = 10;
     private static final int OTP_EXPIRATION_MINUTES = 5;
 
+    public void checkIfPhoneIsAlternateDeliveryOnly(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank() || rawPhone.contains("@")) return;
+        String cleaned = rawPhone.replaceAll("[^0-9]", "");
+        if (cleaned.isEmpty()) return;
+        String last10 = cleaned.length() >= 10 ? cleaned.substring(cleaned.length() - 10) : cleaned;
+        String withPrefix = "+91" + last10;
+
+        Optional<User> primaryUser = findUserByPhoneFlexible(rawPhone);
+        if (primaryUser.isPresent()) return;
+
+        if (customerAddressRepository != null && customerAddressRepository.isAlternateDeliveryPhoneExist(rawPhone, withPrefix, last10)) {
+            throw new IllegalArgumentException(
+                    "This phone number (" + normalizePhone(rawPhone) + ") is registered only as an alternative delivery contact for an order/address and cannot be used for account login. Please log in using your primary account credential (email or primary phone number)."
+            );
+        }
+    }
+
     @Transactional
     public void requestOtp(AuthDtos.OtpRequest request, OtpType type) {
         String identifier = request.getIdentifier().trim().toLowerCase();
+        if (!identifier.contains("@")) {
+            identifier = normalizePhone(identifier);
+            checkIfPhoneIsAlternateDeliveryOnly(identifier);
+        }
 
         // 1. Rate Limiting Check
         LocalDateTime tenMinsAgo = LocalDateTime.now().minusMinutes(RATE_LIMIT_WINDOW_MINUTES);
@@ -69,43 +92,72 @@ public class AuthService {
 
     @Transactional
     public AuthDtos.AuthResponse verifyOtp(AuthDtos.VerifyOtpRequest request, OtpType type) {
-        String identifier = request.getIdentifier().trim().toLowerCase();
+        String rawIdentifier = request.getIdentifier().trim().toLowerCase();
+        String identifier = rawIdentifier.contains("@") ? rawIdentifier : normalizePhone(rawIdentifier);
+        if (!identifier.contains("@")) {
+            checkIfPhoneIsAlternateDeliveryOnly(identifier);
+        }
         String code = request.getOtpCode().trim();
 
-        Otp otp = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type)
-                .orElseThrow(() -> new IllegalArgumentException("No active OTP found or OTP has already been used"));
-
-        if (otp.isConsumed() || otp.isUsed()) {
-            throw new IllegalArgumentException("OTP has already been used");
-        }
-
-        if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("OTP has expired. Please request a new one.");
-        }
-
-        if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
-            otp.setConsumed(true);
-            otpRepository.save(otp);
-            throw new IllegalArgumentException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
-        }
-
-        // Validate OTP code strictly against generated code (with 123456 fallback for dev/test)
         boolean isDevOrTest = environment != null && environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
-        boolean isValidCode = otp.getOtpCode().equals(code) || (isDevOrTest && "123456".equals(code));
+        boolean isMockDevOtp = isDevOrTest && "123456".equals(code);
 
-        if (!isValidCode) {
-            otp.setAttemptCount(otp.getAttemptCount() + 1);
+        if (!isMockDevOtp) {
+            Otp otp = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type)
+                    .orElseGet(() -> otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(rawIdentifier, type)
+                            .orElseThrow(() -> new IllegalArgumentException("No active OTP found or OTP has already been used")));
+
+            if (otp.isConsumed() || otp.isUsed()) {
+                throw new IllegalArgumentException("OTP has already been used");
+            }
+
+            if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new IllegalArgumentException("OTP has expired. Please request a new one.");
+            }
+
             if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
                 otp.setConsumed(true);
+                otpRepository.save(otp);
+                throw new IllegalArgumentException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
             }
-            otpRepository.save(otp);
-            throw new IllegalArgumentException("Invalid OTP code provided. Attempts remaining: " + (MAX_OTP_ATTEMPTS - otp.getAttemptCount()));
-        }
 
-        // Mark OTP as consumed (Replay Protection)
-        otp.setConsumed(true);
-        otp.setUsed(true);
-        otpRepository.save(otp);
+            if (!otp.getOtpCode().equals(code)) {
+                otp.setAttemptCount(otp.getAttemptCount() + 1);
+                if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
+                    otp.setConsumed(true);
+                }
+                otpRepository.save(otp);
+                throw new IllegalArgumentException("Invalid OTP code provided. Attempts remaining: " + (MAX_OTP_ATTEMPTS - otp.getAttemptCount()));
+            }
+
+            // Mark OTP as consumed (Replay Protection)
+            otp.setConsumed(true);
+            otp.setUsed(true);
+            otpRepository.save(otp);
+        } else {
+            // Dev Mock OTP: consume active OTP if present, enforcing expiration & replay protection
+            Optional<Otp> activeOtpOpt = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type);
+            if (activeOtpOpt.isEmpty()) {
+                activeOtpOpt = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(rawIdentifier, type);
+            }
+            if (activeOtpOpt.isPresent()) {
+                Otp activeOtp = activeOtpOpt.get();
+                if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    activeOtp.setConsumed(true);
+                    otpRepository.save(activeOtp);
+                    throw new IllegalArgumentException("OTP has expired. Please request a new one.");
+                }
+                activeOtp.setConsumed(true);
+                activeOtp.setUsed(true);
+                otpRepository.save(activeOtp);
+            } else {
+                // If an OTP was previously created and consumed for this identifier, block replay attempt
+                if (otpRepository.existsByIdentifierAndOtpTypeAndConsumedTrue(identifier, type) ||
+                    otpRepository.existsByIdentifierAndOtpTypeAndConsumedTrue(rawIdentifier, type)) {
+                    throw new IllegalArgumentException("OTP has already been used");
+                }
+            }
+        }
 
         // Find or create Customer
         boolean isEmail = identifier.contains("@");
@@ -258,6 +310,38 @@ public class AuthService {
         return cleaned;
     }
 
+    public void validatePhoneUniqueness(UUID userId, String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) return;
+        String phoneToSet = normalizePhone(rawPhone);
+        Optional<User> existing = findUserByPhoneFlexible(phoneToSet);
+        if (existing.isPresent()) {
+            User existingUser = existing.get();
+            if (userId == null || !existingUser.getId().equals(userId)) {
+                throw new com.sporekart.identity.domain.DuplicateIdentityConflictException(
+                        "The phone number (" + phoneToSet + ") is already registered to another Sporekart account. Please log in with that registered account or use a different phone number.",
+                        "phone",
+                        phoneToSet
+                );
+            }
+        }
+    }
+
+    public void validateEmailUniqueness(UUID userId, String rawEmail) {
+        if (rawEmail == null || rawEmail.isBlank() || !rawEmail.contains("@")) return;
+        String emailToSet = rawEmail.trim().toLowerCase();
+        Optional<User> existing = userRepository.findByEmail(emailToSet);
+        if (existing.isPresent()) {
+            User existingUser = existing.get();
+            if (userId == null || !existingUser.getId().equals(userId)) {
+                throw new com.sporekart.identity.domain.DuplicateIdentityConflictException(
+                        "The email address (" + emailToSet + ") is already registered to another Sporekart account. Please log in with that registered email address or use a different email.",
+                        "email",
+                        emailToSet
+                );
+            }
+        }
+    }
+
     @Transactional
     public void linkPhoneToUser(UUID userId, String rawPhone) {
         linkPhoneAndNameFromAddress(userId, rawPhone, null);
@@ -273,24 +357,23 @@ public class AuthService {
 
         if (rawPhone != null && !rawPhone.isBlank()) {
             String phoneToSet = normalizePhone(rawPhone);
-            if (user.getPhone() == null || user.getPhone().isBlank()) {
-                Optional<User> existing = findUserByPhoneFlexible(phoneToSet);
-                if (existing.isEmpty() || existing.get().getId().equals(userId)) {
-                    user.setPhone(phoneToSet);
-                    user.setPhoneVerified(true);
-                    updated = true;
-                }
-            }
 
-            Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
-                    IdentityProvider.PHONE_OTP, phoneToSet);
-            if (existingIdentity.isEmpty()) {
-                CustomerIdentity newIdentity = CustomerIdentity.builder()
-                        .userId(userId)
-                        .provider(IdentityProvider.PHONE_OTP)
-                        .providerSubject(phoneToSet)
-                        .build();
-                customerIdentityRepository.save(newIdentity);
+            if (user.getPhone() == null || user.getPhone().isBlank()) {
+                validatePhoneUniqueness(userId, rawPhone);
+                user.setPhone(phoneToSet);
+                user.setPhoneVerified(true);
+                updated = true;
+
+                Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
+                        IdentityProvider.PHONE_OTP, phoneToSet);
+                if (existingIdentity.isEmpty()) {
+                    CustomerIdentity newIdentity = CustomerIdentity.builder()
+                            .userId(userId)
+                            .provider(IdentityProvider.PHONE_OTP)
+                            .providerSubject(phoneToSet)
+                            .build();
+                    customerIdentityRepository.save(newIdentity);
+                }
             }
         }
 
@@ -321,15 +404,13 @@ public class AuthService {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return;
 
+        validateEmailUniqueness(userId, rawEmail);
         String emailToSet = rawEmail.trim().toLowerCase();
 
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            Optional<User> existing = userRepository.findByEmail(emailToSet);
-            if (existing.isEmpty() || existing.get().getId().equals(userId)) {
-                user.setEmail(emailToSet);
-                user.setEmailVerified(true);
-                userRepository.save(user);
-            }
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().equalsIgnoreCase(emailToSet)) {
+            user.setEmail(emailToSet);
+            user.setEmailVerified(true);
+            userRepository.save(user);
         }
 
         Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(

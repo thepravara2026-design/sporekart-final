@@ -8,7 +8,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableScheduling
+@EnableAsync
 public class SporekartApplication {
 
     public static void main(String[] args) {

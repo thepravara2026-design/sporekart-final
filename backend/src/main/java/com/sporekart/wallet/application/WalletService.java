@@ -25,6 +25,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository transactionRepository;
     private final WalletWithdrawalRepository withdrawalRepository;
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
 
     @Transactional
     public Wallet getOrCreateWallet(UUID userId, String userType) {
@@ -111,7 +112,37 @@ public class WalletService {
                 .createdBy(createdBy != null ? createdBy : "SYSTEM")
                 .build();
 
-        return transactionRepository.save(txn);
+        WalletTransaction savedTxn = transactionRepository.save(txn);
+
+        try {
+            com.sporekart.notification.domain.NotificationEventType eventType =
+                    (sourceType == WalletSourceType.REFUND) ? com.sporekart.notification.domain.NotificationEventType.WALLET_REFUND_CREDIT : com.sporekart.notification.domain.NotificationEventType.WALLET_TOPUP_SUCCESS;
+
+            String subject = (eventType == com.sporekart.notification.domain.NotificationEventType.WALLET_REFUND_CREDIT)
+                    ? "Sporekart Wallet - Refund Credited ₹" + amount
+                    : "Sporekart Wallet - Top-Up Successful ₹" + amount;
+
+            notificationEventService.recordEvent(
+                    eventType,
+                    "WALLET_TRANSACTION",
+                    savedTxn.getId(),
+                    userId,
+                    null,
+                    null,
+                    subject,
+                    java.util.Map.of(
+                            "transactionRef", savedTxn.getTransactionReference(),
+                            "amount", amount.toString(),
+                            "newBalance", balanceAfter.toString(),
+                            "description", description != null ? description : "Wallet Credit"
+                    ),
+                    "WALLET_CREDIT:" + savedTxn.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording wallet credit notification: {}", e.getMessage());
+        }
+
+        return savedTxn;
     }
 
     @Transactional
@@ -177,7 +208,29 @@ public class WalletService {
                 .createdBy(createdBy != null ? createdBy : "SYSTEM")
                 .build();
 
-        return transactionRepository.save(txn);
+        WalletTransaction savedTxn = transactionRepository.save(txn);
+
+        try {
+            notificationEventService.recordEvent(
+                    com.sporekart.notification.domain.NotificationEventType.WALLET_PAYMENT_SUCCESS,
+                    "WALLET_TRANSACTION",
+                    savedTxn.getId(),
+                    userId,
+                    null,
+                    null,
+                    "Sporekart Wallet - Payment Deducted ₹" + amount,
+                    java.util.Map.of(
+                            "transactionRef", savedTxn.getTransactionReference(),
+                            "amount", amount.toString(),
+                            "newBalance", balanceAfter.toString()
+                    ),
+                    "WALLET_DEBIT:" + savedTxn.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording wallet debit notification: {}", e.getMessage());
+        }
+
+        return savedTxn;
     }
 
     @Transactional
@@ -257,6 +310,28 @@ public class WalletService {
                 .build();
 
         WalletWithdrawal saved = withdrawalRepository.save(withdrawal);
+
+        try {
+            notificationEventService.recordEvent(
+                    com.sporekart.notification.domain.NotificationEventType.WALLET_WITHDRAWAL_REQUESTED,
+                    "WALLET_WITHDRAWAL",
+                    saved.getId(),
+                    userId,
+                    null,
+                    null,
+                    "Sporekart Wallet - Withdrawal Requested ₹" + request.getAmount(),
+                    java.util.Map.of(
+                            "withdrawalRef", saved.getWithdrawalReference(),
+                            "amount", request.getAmount().toString(),
+                            "bankName", saved.getBankName(),
+                            "accountMasked", saved.getAccountNumberMasked()
+                    ),
+                    "WALLET_WD_REQ:" + saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording wallet withdrawal requested notification: {}", e.getMessage());
+        }
+
         return mapToWithdrawalResponse(saved);
     }
 
@@ -275,6 +350,28 @@ public class WalletService {
         withdrawal.setProcessedAt(OffsetDateTime.now());
 
         WalletWithdrawal saved = withdrawalRepository.save(withdrawal);
+
+        try {
+            notificationEventService.recordEvent(
+                    com.sporekart.notification.domain.NotificationEventType.WALLET_WITHDRAWAL_COMPLETED,
+                    "WALLET_WITHDRAWAL",
+                    saved.getId(),
+                    saved.getUserId(),
+                    null,
+                    null,
+                    "Sporekart Wallet - Withdrawal Successful ₹" + saved.getAmount(),
+                    java.util.Map.of(
+                            "withdrawalRef", saved.getWithdrawalReference(),
+                            "amount", saved.getAmount().toString(),
+                            "bankName", saved.getBankName(),
+                            "accountMasked", saved.getAccountNumberMasked()
+                    ),
+                    "WALLET_WD_COMPLETED:" + saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording wallet withdrawal completed notification: {}", e.getMessage());
+        }
+
         return mapToWithdrawalResponse(saved);
     }
 
@@ -308,6 +405,26 @@ public class WalletService {
                 "wd_rev_" + withdrawal.getId(),
                 "ADMIN_REVERSAL"
         );
+
+        try {
+            notificationEventService.recordEvent(
+                    com.sporekart.notification.domain.NotificationEventType.WALLET_WITHDRAWAL_REVERSED,
+                    "WALLET_WITHDRAWAL",
+                    saved.getId(),
+                    saved.getUserId(),
+                    null,
+                    null,
+                    "Sporekart Wallet - Withdrawal Request Rejected & Refunded ₹" + saved.getAmount(),
+                    java.util.Map.of(
+                            "withdrawalRef", saved.getWithdrawalReference(),
+                            "amount", saved.getAmount().toString(),
+                            "reason", saved.getRejectionReason() != null ? saved.getRejectionReason() : "Rejected by Admin"
+                    ),
+                    "WALLET_WD_REV:" + saved.getId()
+            );
+        } catch (Exception e) {
+            log.error("Error recording wallet withdrawal reversed notification: {}", e.getMessage());
+        }
 
         return mapToWithdrawalResponse(saved);
     }

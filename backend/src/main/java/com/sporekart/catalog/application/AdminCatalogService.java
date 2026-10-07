@@ -70,6 +70,9 @@ public class AdminCatalogService {
 
     @Transactional
     public Product createProduct(CatalogDtos.CreateProductRequest request) {
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
+            throw new IllegalArgumentException("Product title cannot be empty");
+        }
         String rawSlug = request.getSlug() != null && !request.getSlug().isBlank() ? request.getSlug() : request.getTitle();
         String slug = rawSlug.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
         if (slug.isBlank()) {

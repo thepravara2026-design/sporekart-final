@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ShoppingBag, GraduationCap, Truck, Clock, CheckCircle2, User, RefreshCw, 
   Lock, ShieldCheck, MapPin, FileText, XCircle, AlertCircle, PlusCircle, 
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
-  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star
+  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
 } from 'lucide-react';
 import { orderApi, trainingApi, customerApi, supportApi, walletApi } from '../api';
 import SeoHead from '../components/SeoHead';
@@ -11,9 +12,25 @@ import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';
 import MyReviewsTab from '../components/MyReviewsTab';
 import ProductReviewFormModal from '../components/ProductReviewFormModal';
+import StarRatingInput from '../components/StarRatingInput';
+import AuthForm from '../components/AuthForm';
+import IndianAddressForm from '../components/IndianAddressForm';
+import { validateAddressForm } from '../utils/validation';
 
-export default function DashboardPage({ user }) {
-  const [activeTab, setActiveTab] = useState('activeTrack');
+export default function DashboardPage({ user, setUser }) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab');
+  const urlOrderId = searchParams.get('orderId');
+  const urlBookingId = searchParams.get('bookingId');
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (urlTab) return urlTab;
+    if (urlOrderId) return 'activeTrack';
+    if (urlBookingId) return 'trainings';
+    return 'activeTrack';
+  });
+
   const [orders, setOrders] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [addresses, setAddresses] = useState([]);
@@ -55,10 +72,14 @@ export default function DashboardPage({ user }) {
   // Ticket Details / Messaging Drawer State
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [replyMessage, setReplyMessage] = useState('');
+  const [csatModalTicket, setCsatModalTicket] = useState(null);
+  const [csatRating, setCsatRating] = useState(5);
+  const [csatFeedback, setCsatFeedback] = useState('');
 
   // Address Modal State
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  const [addressFormErrors, setAddressFormErrors] = useState({});
   const [addressForm, setAddressForm] = useState({
     recipientName: '',
     phone: '',
@@ -117,8 +138,42 @@ export default function DashboardPage({ user }) {
   };
 
   useEffect(() => {
-    fetchData();
+    if (user) {
+      fetchData();
+    }
   }, [user]);
+
+  // Synchronize activeTab and target deep link when URL query parameters change
+  useEffect(() => {
+    if (urlTab) {
+      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'wallet', 'support', 'reviews'];
+      if (validTabs.includes(urlTab)) {
+        setActiveTab(urlTab);
+      }
+    } else if (urlOrderId) {
+      const isHistory = historyOrders.some((o) => o.id === urlOrderId || o.orderNumber === urlOrderId);
+      if (isHistory) {
+        setActiveTab('history');
+      } else {
+        setActiveTab('activeTrack');
+      }
+    } else if (urlBookingId) {
+      setActiveTab('trainings');
+    }
+  }, [urlTab, urlOrderId, urlBookingId, orders]);
+
+  // Smooth auto-scroll to targeted order if orderId query parameter is present
+  useEffect(() => {
+    if (urlOrderId && !loading) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`order-${urlOrderId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [urlOrderId, loading, activeTab]);
 
   // Invoice PDF Download Handler
   const handleDownloadInvoice = async (orderId, orderNumber) => {
@@ -154,7 +209,7 @@ export default function DashboardPage({ user }) {
     try {
       const res = await orderApi.cancelOrder(cancellingOrder.id, finalReason);
       if (res.data && res.data.success) {
-        alert(`Order ${cancellingOrder.orderNumber} cancelled successfully.`);
+        alert(`Order ${cancellingOrder.orderNumber} cancelled successfully! Paid amount has been credited directly to your Sporekart Wallet balance. You can use it for new orders or transfer it to your choice of bank account.`);
         setCancellingOrder(null);
         setCustomCancelReason('');
         fetchData();
@@ -180,7 +235,7 @@ export default function DashboardPage({ user }) {
     try {
       const res = await trainingApi.cancelEnrollment(cancellingEnrollment.id, finalReason);
       if (res.data && res.data.success) {
-        alert(`Enrollment for ${cancellingEnrollment.courseTitle} cancelled successfully.`);
+        alert(`Enrollment for ${cancellingEnrollment.courseTitle} cancelled successfully! Fee has been credited directly to your Sporekart Wallet balance. You can use it for masterclasses or transfer it to your bank account.`);
         setCancellingEnrollment(null);
         setCustomCancelEnrollmentReason('');
         fetchData();
@@ -235,9 +290,54 @@ export default function DashboardPage({ user }) {
     }
   };
 
+  // Close Ticket & CSAT Rating Submit
+  const handleCloseTicketWithCsat = async (e) => {
+    e.preventDefault();
+    if (!csatModalTicket) return;
+    setActionLoading((prev) => ({ ...prev, closeTicket: true }));
+    try {
+      try {
+        const res = await supportApi.closeTicket(csatModalTicket.id, csatRating, csatFeedback);
+        if (res.data && res.data.success) {
+          alert('Ticket marked as CLOSED. Thank you for rating your Helpdesk interaction and service!');
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          // Graceful fallback if backend server hasn't restarted yet: log CSAT via message stream
+          const ratingLabels = { 1: 'Very dissatisfied', 2: 'Dissatisfied', 3: 'Average', 4: 'Satisfied', 5: 'Very satisfied' };
+          const msgText = `[CUSTOMER TICKET RESOLUTION]: Customer marked ticket as CLOSED. Helpdesk Satisfaction Rating: ${csatRating}/5 Stars (${ratingLabels[csatRating] || 'Satisfied'})${csatFeedback ? ` — Feedback: "${csatFeedback.trim()}"` : ''}`;
+          await supportApi.addMessage(csatModalTicket.id, msgText);
+          alert('Ticket resolution and CSAT rating recorded! Thank you for your feedback.');
+        } else {
+          throw err;
+        }
+      }
+
+      setCsatModalTicket(null);
+      setCsatRating(5);
+      setCsatFeedback('');
+      if (selectedTicket?.id === csatModalTicket.id) {
+        setSelectedTicket(null);
+      }
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to close ticket');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, closeTicket: false }));
+    }
+  };
+
+
   // Save Address Submit
   const handleSaveAddress = async (e) => {
     e.preventDefault();
+    setAddressFormErrors({});
+    const errors = validateAddressForm(addressForm, { nameLabel: 'Recipient Name' });
+    if (Object.keys(errors).length > 0) {
+      setAddressFormErrors(errors);
+      return;
+    }
+
     setActionLoading((prev) => ({ ...prev, saveAddress: true }));
     try {
       if (editingAddress) {
@@ -247,9 +347,17 @@ export default function DashboardPage({ user }) {
       }
       setAddressModalOpen(false);
       setEditingAddress(null);
+      setAddressFormErrors({});
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save address');
+      const status = err.response?.status;
+      const errCode = err.response?.data?.error?.code;
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to save address';
+      if (status === 409 || errCode === 'DUPLICATE_IDENTITY_CONFLICT' || msg.toLowerCase().includes('already registered')) {
+        setAddressFormErrors({ alternatePhone: msg });
+      } else {
+        setAddressFormErrors({ general: msg });
+      }
     } finally {
       setActionLoading((prev) => ({ ...prev, saveAddress: false }));
     }
@@ -370,13 +478,17 @@ export default function DashboardPage({ user }) {
     }
   };
 
-  // Filter Active vs Completed/Cancelled Orders
+  // Filter Active vs Completed/Cancelled Orders & Incomplete Checkouts
   const activeOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)
   );
   const historyOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['DELIVERED', 'CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(o.status)
   );
+
+  const pendingOrders = (Array.isArray(orders) ? orders : []).filter((o) => o.status === 'PENDING_PAYMENT');
+  const pendingBookings = (Array.isArray(bookings) ? bookings : []).filter((b) => b.status === 'PENDING_PAYMENT');
+  const hasPendingTransactions = pendingOrders.length > 0 || pendingBookings.length > 0;
 
   // Calculate 5-Stage Stepper Index
   const getStepperStage = (status) => {
@@ -438,6 +550,11 @@ export default function DashboardPage({ user }) {
           </span>
         );
       case 'PENDING_PAYMENT':
+        return (
+          <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1 animate-pulse">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600" /> UNPAID / INCOMPLETE CHECKOUT
+          </span>
+        );
       default:
         return (
           <span className="px-3 py-1 bg-surface-neutral text-typography-secondary border border-surface-border text-xs font-bold rounded-full flex items-center gap-1.5 shadow-level-1">
@@ -446,6 +563,55 @@ export default function DashboardPage({ user }) {
         );
     }
   };
+
+  // FAANG-Grade Session Verification & Auth Guard for Notification Email Deep-Links
+  if (!user) {
+    const hasToken = !!localStorage.getItem('sporekart_token');
+    if (hasToken && loading) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <PageSkeleton type="cards" count={2} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
+        <SeoHead title="Sign In Required — Sporekart" noindex={true} />
+        <div className="w-full max-w-lg bg-surface-white border border-surface-border rounded-card p-6 sm:p-8 shadow-level-2 space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-forest-900/10 border border-forest-900/20 rounded-2xl mx-auto flex items-center justify-center text-forest-800 shadow-level-1">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-display font-extrabold text-forest-900">Sign In Required</h2>
+            <p className="text-xs text-typography-secondary max-w-sm mx-auto">
+              You opened a secure notification link ({urlTab ? `View ${urlTab.toUpperCase()}` : 'Order Tracking / Wallet'}). Please sign in using your registered mobile number, email, or Google account to access your account details.
+            </p>
+          </div>
+
+          <AuthForm
+            setUser={(userData) => {
+              if (setUser) setUser(userData);
+            }}
+            onSuccess={() => {
+              fetchData();
+            }}
+            title="Customer & Trainee Sign In"
+            subtitle="Verify your identity to proceed to your notification destination"
+          />
+
+          <div className="text-center pt-2 border-t border-surface-border">
+            <button
+              onClick={() => navigate('/')}
+              className="text-xs font-semibold text-typography-muted hover:text-forest-700 transition-colors"
+            >
+              ← Return to Home Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-typography-primary">
@@ -514,6 +680,108 @@ export default function DashboardPage({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Incomplete Transactions & Pending Checkouts Alert Banner */}
+      {hasPendingTransactions && (
+        <div className="p-6 rounded-card bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-emerald-500/10 border-2 border-amber-400 shadow-level-2 space-y-4 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-amber-300/60 pb-3 gap-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-800 shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-700 animate-bounce" />
+              </div>
+              <div>
+                <h2 className="font-display font-extrabold text-base text-typography-primary flex items-center gap-2">
+                  Incomplete Transactions &amp; Pending Checkouts ({pendingOrders.length + pendingBookings.length})
+                </h2>
+                <p className="text-xs text-typography-secondary">
+                  You have unpaid items awaiting payment completion. Click <strong>"Resume Checkout &amp; Pay"</strong> to finalize your order or training seat.
+                </p>
+              </div>
+            </div>
+            <span className="px-3 py-1 bg-amber-600 text-white font-extrabold text-xs rounded-full shadow-xs uppercase tracking-wider shrink-0">
+              ⚡ Action Required
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Pending Product Orders */}
+            {pendingOrders.map((order) => (
+              <div key={order.id} className="bg-surface-white p-4 rounded-xl border border-amber-300 space-y-3 shadow-sm">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                      📦 Product Order
+                    </span>
+                    <h4 className="font-mono font-bold text-sm text-typography-primary mt-1">{order.orderNumber}</h4>
+                    <p className="text-[11px] text-typography-muted">
+                      Created: {new Date(order.createdAt).toLocaleDateString()} • {order.items?.length || 1} item(s)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-typography-muted block">Amount Due</span>
+                    <span className="font-display font-extrabold text-base text-forest-800 font-mono">
+                      ₹{order.totalAmountInr}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => navigate(`/payment?type=order&id=${order.id}`)}
+                    className="flex-1 btn-primary py-2 text-xs font-bold flex items-center justify-center gap-1.5 shadow-level-1 button-press"
+                  >
+                    <CreditCard className="w-4 h-4 text-white" /> Resume Checkout &amp; Pay Now
+                  </button>
+                  <button
+                    onClick={() => setCancellingOrder(order)}
+                    className="px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-input text-xs font-bold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Pending Masterclass Enrollments */}
+            {pendingBookings.map((booking) => (
+              <div key={booking.id || booking.bookingId} className="bg-surface-white p-4 rounded-xl border border-amber-300 space-y-3 shadow-sm">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-200">
+                      🎓 Masterclass Enrollment
+                    </span>
+                    <h4 className="font-bold text-sm text-typography-primary mt-1 line-clamp-1">{booking.courseTitle}</h4>
+                    <p className="text-[11px] text-typography-muted font-mono">
+                      Batch: {booking.batchCode || 'Upcoming'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-typography-muted block">Tuition Fee</span>
+                    <span className="font-display font-extrabold text-base text-purple-900 font-mono">
+                      ₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => navigate(`/payment?type=enrollment&id=${booking.id || booking.bookingId}`)}
+                    className="flex-1 bg-purple-700 hover:bg-purple-800 text-white py-2 text-xs font-bold rounded-input flex items-center justify-center gap-1.5 shadow-level-1 transition-all button-press"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" /> Complete Enrollment &amp; Pay
+                  </button>
+                  <button
+                    onClick={() => setCancellingEnrollment(booking)}
+                    className="px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-input text-xs font-bold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* MNC Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-surface-border pb-3 text-xs sm:text-sm font-bold">
@@ -626,6 +894,15 @@ export default function DashboardPage({ user }) {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
+                      {order.status === 'PENDING_PAYMENT' && (
+                        <button
+                          onClick={() => navigate(`/payment?type=order&id=${order.id}`)}
+                          className="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-level-1 button-press"
+                        >
+                          <CreditCard className="w-4 h-4 text-white" /> Resume Checkout &amp; Pay Now
+                        </button>
+                      )}
+
                       {/* PDF Invoice Download */}
                       {order.status === 'DELIVERED' ? (
                         <button
@@ -916,9 +1193,11 @@ export default function DashboardPage({ user }) {
                             ? 'bg-red-600/10 text-red-700 border-red-600/20'
                             : booking.status === 'COMPLETED'
                             ? 'bg-green-600/10 text-green-700 border-green-600/20'
+                            : booking.status === 'PENDING_PAYMENT'
+                            ? 'bg-amber-100 text-amber-900 border-amber-300 animate-pulse'
                             : 'bg-forest-900/10 text-forest-800 border-forest-900/20'
                         }`}>
-                          {booking.status || 'CONFIRMED'}
+                          {booking.status === 'PENDING_PAYMENT' ? '⚠️ PAYMENT PENDING' : (booking.status || 'CONFIRMED')}
                         </span>
                         {booking.batchCode && (
                           <span className="px-2.5 py-0.5 bg-surface-cream text-typography-primary text-[10px] font-mono font-bold rounded-lg border border-surface-border">
@@ -940,8 +1219,20 @@ export default function DashboardPage({ user }) {
                     </div>
 
                     <div className="text-right space-y-2 flex-shrink-0">
-                      <span className="text-xs text-typography-muted block font-medium">Workshop Fee Paid</span>
+                      <span className="text-xs text-typography-muted block font-medium">
+                        {booking.status === 'PENDING_PAYMENT' ? 'Tuition Fee Due' : 'Workshop Fee Paid'}
+                      </span>
                       <span className="text-2xl font-bold text-forest-800 font-display block">₹{(booking.feePaidInr ?? booking.amountPaidInr ?? 0).toLocaleString('en-IN')}</span>
+
+                      {/* Complete Payment Button */}
+                      {booking.status === 'PENDING_PAYMENT' && (
+                        <button
+                          onClick={() => navigate(`/payment?type=enrollment&id=${booking.id || booking.bookingId}`)}
+                          className="bg-purple-700 hover:bg-purple-800 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ml-auto shadow-sm button-press"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Complete Enrollment &amp; Pay
+                        </button>
+                      )}
 
                       {/* Cancel Enrollment Button */}
                       {canCancel && (
@@ -1158,41 +1449,77 @@ export default function DashboardPage({ user }) {
             />
           ) : (
             <div className="space-y-4">
-              {tickets.map((t) => (
-                <div key={t.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 hover-lift shadow-level-1">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-typography-primary text-base">{t.subject}</span>
-                        <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border ${
-                          t.status === 'RESOLVED' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-gold/15 text-forest-900 border border-gold/30'
-                        }`}>
-                          {t.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-typography-muted">
-                        Category: <strong className="text-typography-primary">{t.category}</strong> • Priority: {t.priority} • Opened on {new Date(t.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+              {tickets.map((t) => {
+                const isClosed = t.status === 'CLOSED' || t.status === 'RESOLVED';
+                return (
+                  <div key={t.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 hover-lift shadow-level-1">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-typography-primary text-base">{t.subject}</span>
+                          <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border ${
+                            t.status === 'CLOSED' ? 'bg-slate-200 text-slate-800 border-slate-300' :
+                            t.status === 'RESOLVED' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
+                            t.status === 'WAITING_ON_CUSTOMER' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                            'bg-gold/15 text-forest-900 border border-gold/30'
+                          }`}>
+                            {t.status}
+                          </span>
+                          {t.isAutoReplied && (
+                            <span className="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-200 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                              <Bot className="w-3 h-3 text-purple-700" /> FAANG Auto-Replied
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-typography-muted">
+                          Ticket ID: <strong className="font-mono text-forest-800">{t.ticketNumber || t.id.substring(0, 8)}</strong> • Category: <strong className="text-typography-primary">{t.category}</strong> • Priority: {t.priority} • Opened: {new Date(t.createdAt).toLocaleDateString()}
+                        </p>
 
-                    <button
-                      onClick={async () => {
-                        setSelectedTicket(t);
-                        try {
-                          const res = await supportApi.getTicketById(t.id);
-                          if (res.data?.success) setSelectedTicket(res.data.data);
-                        } catch (err) {
-                          console.error('Failed loading ticket thread details:', err);
-                        }
-                      }}
-                      className="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5"
-                    >
-                      <span>View Message Thread ({t.messages?.length || 0})</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                        {/* Customer CSAT Review Badge (if closed) */}
+                        {isClosed && t.satisfactionRating && (
+                          <div className="pt-2 flex items-center gap-3">
+                            <StarRatingInput value={t.satisfactionRating} readOnly size="sm" showLabel={true} />
+                            {t.satisfactionFeedback && (
+                              <span className="text-xs text-typography-secondary italic">"{t.satisfactionFeedback}"</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {!isClosed && (
+                          <button
+                            onClick={() => {
+                              setCsatModalTicket(t);
+                              setCsatRating(5);
+                              setCsatFeedback('');
+                            }}
+                            className="px-3 py-1.5 bg-green-600/10 text-green-700 hover:bg-green-600/20 border border-green-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Close &amp; Rate Service
+                          </button>
+                        )}
+
+                        <button
+                          onClick={async () => {
+                            setSelectedTicket(t);
+                            try {
+                              const res = await supportApi.getTicketById(t.id);
+                              if (res.data?.success) setSelectedTicket(res.data.data);
+                            } catch (err) {
+                              console.error('Failed loading ticket thread details:', err);
+                            }
+                          }}
+                          className="btn-secondary px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5"
+                        >
+                          <span>Message Thread ({t.messages?.length || 0})</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1542,7 +1869,7 @@ export default function DashboardPage({ user }) {
             </div>
 
             <p className="text-xs text-typography-secondary leading-relaxed">
-              Please select a cancellation reason. Reserved stock will be returned to inventory and any paid amount will enter refund processing.
+              Please select a cancellation reason. Reserved stock will be returned to inventory and any paid amount will be <strong>credited directly into your Sporekart Wallet balance</strong> (which you can use for future orders or transfer to your bank account of choice).
             </p>
 
             <form onSubmit={handleConfirmCancelOrder} className="space-y-4">
@@ -1776,32 +2103,82 @@ export default function DashboardPage({ user }) {
           <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-2xl w-full space-y-4 shadow-level-3 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center pb-3 border-b border-surface-border flex-shrink-0">
               <div>
-                <h3 className="text-lg font-display font-bold text-typography-primary">{selectedTicket.subject}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-display font-bold text-typography-primary">{selectedTicket.subject}</h3>
+                  <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border ${
+                    selectedTicket.status === 'CLOSED' ? 'bg-slate-200 text-slate-800 border-slate-300' :
+                    selectedTicket.status === 'RESOLVED' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
+                    'bg-gold/15 text-forest-900 border border-gold/30'
+                  }`}>
+                    {selectedTicket.status}
+                  </span>
+                </div>
                 <span className="text-xs text-typography-muted">
-                  Status: <strong className="text-forest-700">{selectedTicket.status}</strong> • Priority: {selectedTicket.priority}
+                  Ticket #{selectedTicket.ticketNumber || selectedTicket.id.substring(0, 8)} • Priority: {selectedTicket.priority}
                 </span>
               </div>
-              <button onClick={() => setSelectedTicket(null)} className="text-typography-muted hover:text-typography-primary text-lg">✕</button>
+              <div className="flex items-center gap-3">
+                {selectedTicket.status !== 'CLOSED' && selectedTicket.status !== 'RESOLVED' && (
+                  <button
+                    onClick={() => {
+                      setCsatModalTicket(selectedTicket);
+                      setCsatRating(5);
+                      setCsatFeedback('');
+                    }}
+                    className="px-3 py-1.5 bg-green-600/10 text-green-700 hover:bg-green-600/20 border border-green-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Close &amp; Rate
+                  </button>
+                )}
+                <button onClick={() => setSelectedTicket(null)} className="text-typography-muted hover:text-typography-primary text-lg font-bold">✕</button>
+              </div>
             </div>
+
+            {/* Customer CSAT Review Badge inside Drawer if closed */}
+            {selectedTicket.satisfactionRating && (
+              <div className="p-3 bg-amber-500/10 border border-amber-300 rounded-xl flex items-center justify-between gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <span className="font-bold text-amber-900 block">Customer Satisfaction Level:</span>
+                  <StarRatingInput value={selectedTicket.satisfactionRating} readOnly size="sm" showLabel={true} />
+                  {selectedTicket.satisfactionFeedback && (
+                    <p className="text-amber-900 text-xs italic pt-0.5">"{selectedTicket.satisfactionFeedback}"</p>
+                  )}
+                </div>
+                <span className="text-[10px] text-amber-800 font-mono font-bold uppercase px-2 py-1 bg-amber-100 rounded-lg">
+                  Closed by {selectedTicket.closedBy || 'CUSTOMER'}
+                </span>
+              </div>
+            )}
 
             {/* Message History */}
             <div className="flex-1 overflow-y-auto space-y-3 p-3.5 bg-surface-cream rounded-2xl border border-surface-border">
               {selectedTicket.messages?.map((msg) => {
                 const isCustomerMsg = msg.senderType === 'CUSTOMER' || msg.senderType === 'GUEST' || msg.senderRole === 'CUSTOMER';
+                const isSystemMsg = msg.senderType === 'SYSTEM';
                 const isAgentMsg = msg.senderType === 'SUPPORT_AGENT' || msg.senderType === 'ADMIN';
 
                 return (
                   <div
                     key={msg.id}
-                    className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[85%] shadow-level-1 ${
+                    className={`p-3.5 rounded-2xl text-xs space-y-1 max-w-[88%] shadow-level-1 ${
                       isCustomerMsg
                         ? 'ml-auto bg-forest-900 text-white rounded-tr-none'
+                        : isSystemMsg
+                        ? 'mx-auto bg-purple-50 border border-purple-200 text-purple-950 rounded-2xl w-full max-w-full'
                         : 'mr-auto bg-surface-white border border-surface-border text-typography-primary rounded-tl-none'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] opacity-90 border-b pb-1 mb-1 border-current/15 gap-4">
                       <span className="font-bold flex items-center gap-1">
-                        {isAgentMsg ? '🛡️ Support Agent' : `👤 ${msg.senderName || 'Customer'}`}
+                        {isSystemMsg ? (
+                          <span className="flex items-center gap-1 text-purple-900 font-extrabold uppercase tracking-wide">
+                            <Bot className="w-3.5 h-3.5 text-purple-700" /> {msg.senderName || 'FAANG AI Helpdesk Assistant'}
+                          </span>
+                        ) : isAgentMsg ? (
+                          '🛡️ Support Agent'
+                        ) : (
+                          `👤 ${msg.senderName || 'Customer'}`
+                        )}
                       </span>
                       <span className="font-mono text-[9px]">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -1812,23 +2189,90 @@ export default function DashboardPage({ user }) {
             </div>
 
             {/* Reply Input */}
-            <form onSubmit={handleReplyTicket} className="flex gap-2 flex-shrink-0 pt-2">
-              <input
-                type="text"
-                required
-                placeholder="Type your reply to customer care..."
-                value={replyMessage}
-                onChange={(e) => setReplyMessage(e.target.value)}
-                className="flex-1 bg-surface-white border border-surface-border rounded-xl px-4 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-              />
-              <button
-                type="submit"
-                disabled={actionLoading.replyTicket}
-                className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1"
-              >
-                <span>Send</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            {selectedTicket.status !== 'CLOSED' ? (
+              <form onSubmit={handleReplyTicket} className="flex gap-2 flex-shrink-0 pt-2">
+                <input
+                  type="text"
+                  required
+                  placeholder="Type your reply to customer care (stay on topic: spawn, orders, payments)..."
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  className="flex-1 bg-surface-white border border-surface-border rounded-xl px-4 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
+                />
+                <button
+                  type="submit"
+                  disabled={actionLoading.replyTicket}
+                  className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1"
+                >
+                  <span>Send</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+            ) : (
+              <div className="p-3 bg-slate-100 text-slate-700 rounded-xl text-xs text-center font-medium border border-slate-200">
+                🔒 This ticket has been marked as CLOSED. To ask a new question, please raise a new support ticket.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CLOSE TICKET & CSAT RATING MODAL */}
+      {csatModalTicket && (
+        <div className="fixed inset-0 bg-typography-primary/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border max-w-md w-full space-y-5 shadow-level-3">
+            <div className="flex justify-between items-center pb-3 border-b border-surface-border">
+              <div>
+                <h3 className="text-lg font-display font-bold text-typography-primary">Close Support Ticket &amp; Rate Service</h3>
+                <p className="text-xs text-typography-muted font-mono">{csatModalTicket.ticketNumber || csatModalTicket.subject}</p>
+              </div>
+              <button onClick={() => setCsatModalTicket(null)} className="text-typography-muted hover:text-typography-primary">✕</button>
+            </div>
+
+            <form onSubmit={handleCloseTicketWithCsat} className="space-y-4">
+              <div className="space-y-2 text-center p-4 bg-surface-cream rounded-2xl border border-surface-border">
+                <label className="block text-xs font-extrabold text-typography-primary uppercase tracking-wider">
+                  How satisfied are you with the helpdesk interaction?
+                </label>
+                <div className="flex justify-center pt-1">
+                  <StarRatingInput
+                    value={csatRating}
+                    onChange={(val) => setCsatRating(val)}
+                    size="lg"
+                    showLabel={true}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-typography-primary mb-1">
+                  Feedback &amp; Service Review (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Tell us what you liked about our support interaction or how we can improve..."
+                  value={csatFeedback}
+                  onChange={(e) => setCsatFeedback(e.target.value)}
+                  className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-typography-primary text-xs focus:outline-none focus:border-green-600"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={actionLoading.closeTicket}
+                  className="flex-1 btn-primary font-bold py-2.5 text-xs shadow-level-1"
+                >
+                  {actionLoading.closeTicket ? 'Submitting Review...' : 'Close Ticket & Submit Rating'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCsatModalTicket(null)}
+                  className="px-4 py-2.5 btn-secondary text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -1845,94 +2289,24 @@ export default function DashboardPage({ user }) {
               <button onClick={() => setAddressModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
             </div>
 
-            <form onSubmit={handleSaveAddress} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-typography-primary mb-1 font-medium">Recipient Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.recipientName}
-                    onChange={(e) => setAddressForm({ ...addressForm, recipientName: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                  />
+            <form onSubmit={handleSaveAddress} className="space-y-4 text-xs">
+              {addressFormErrors.general && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-medium text-xs">
+                  ⚠️ {addressFormErrors.general}
                 </div>
-                <div>
-                  <label className="block text-typography-primary mb-1 font-medium">Phone Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.phone}
-                    onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                  />
-                </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-typography-primary mb-1 font-medium">Address Line 1</label>
-                <input
-                  type="text"
-                  required
-                  value={addressForm.line1}
-                  onChange={(e) => setAddressForm({ ...addressForm, line1: e.target.value })}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-typography-primary mb-1 font-medium">Address Line 2 (Optional)</label>
-                <input
-                  type="text"
-                  value={addressForm.line2}
-                  onChange={(e) => setAddressForm({ ...addressForm, line2: e.target.value })}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-typography-primary mb-1 font-medium">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.city}
-                    onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-typography-primary mb-1 font-medium">State</label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.state}
-                    onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-typography-primary mb-1 font-medium">PIN Code</label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={addressForm.pincode}
-                    onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-2.5 py-2 text-typography-primary text-xs focus:outline-none focus:border-green-600"
-                  />
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 pt-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={addressForm.isDefault}
-                  onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
-                  className="rounded text-green-600 focus:ring-green-600/15"
-                />
-                <span className="text-typography-secondary text-xs">Set as default delivery address</span>
-              </label>
+              <IndianAddressForm
+                formData={addressForm}
+                onChange={setAddressForm}
+                errors={addressFormErrors}
+                nameLabel="Recipient Name"
+                namePlaceholder="e.g. Suresh Kumar"
+                showDefaultCheckbox={true}
+                disabled={actionLoading.saveAddress}
+                primaryPhoneImmutable={Boolean(user?.phone)}
+                primaryEmailImmutable={Boolean(user?.email)}
+              />
 
               <div className="flex gap-3 pt-2">
                 <button

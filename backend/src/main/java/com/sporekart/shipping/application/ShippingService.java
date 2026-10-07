@@ -31,6 +31,8 @@ public class ShippingService {
     private final ShipmentTrackingRepository trackingRepository;
     private final ShippingProvider shippingProvider;
     private final OrderService orderService;
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+    private final com.sporekart.identity.infrastructure.UserRepository userRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -99,6 +101,9 @@ public class ShippingService {
         // Update Order Status to SHIPPED
         orderService.updateOrderStatus(orderId, OrderStatus.SHIPPED, "Shipment created: " + result.getAwbCode(), "SHIPPING_SERVICE");
 
+        // Record Shipment Notification
+        recordShipmentNotification(savedShipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_SHIPPED, "SHIPPED");
+
         return savedShipment;
     }
 
@@ -133,8 +138,10 @@ public class ShippingService {
             shipment.setStatus(ShipmentStatus.DELIVERED);
             shipment.setDeliveredAt(ZonedDateTime.now());
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Order delivered", "SHIPPING_SERVICE");
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
         } else if ("IN_TRANSIT".equalsIgnoreCase(trackingResult.getCurrentStatus())) {
             shipment.setStatus(ShipmentStatus.IN_TRANSIT);
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
         }
 
         shipment.addTrackingEvent(tracking);
@@ -166,6 +173,10 @@ public class ShippingService {
             shipment.setStatus(ShipmentStatus.DELIVERED);
             shipment.setDeliveredAt(ZonedDateTime.now());
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Delivered via webhook", "SHIPROCKET_WEBHOOK");
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
+        } else if ("IN_TRANSIT".equalsIgnoreCase(currentStatus)) {
+            shipment.setStatus(ShipmentStatus.IN_TRANSIT);
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
         }
 
         shipment.addTrackingEvent(tracking);
@@ -190,5 +201,53 @@ public class ShippingService {
         shipment.addTrackingEvent(tracking);
 
         shipmentRepository.save(shipment);
+    }
+
+    private void recordShipmentNotification(Shipment shipment, com.sporekart.notification.domain.NotificationEventType eventType, String statusLabel) {
+        try {
+            OrderResponse order = orderService.getOrderById(shipment.getOrderId());
+            if (order == null) return;
+
+            String recipientEmail = null;
+            String recipientName = "Valued Customer";
+            if (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null) {
+                recipientName = order.getShippingAddress().getRecipientName();
+            }
+
+            if (order.getUserId() != null) {
+                recipientEmail = userRepository.findById(order.getUserId())
+                        .map(com.sporekart.identity.domain.User::getEmail)
+                        .filter(e -> e != null && e.contains("@"))
+                        .orElse(null);
+            }
+
+            if ((recipientEmail == null || recipientEmail.isBlank()) && order.getShippingAddress() != null) {
+                recipientEmail = order.getShippingAddress().getEmail();
+            }
+
+            notificationEventService.recordEvent(
+                    eventType,
+                    "SHIPMENT",
+                    shipment.getId(),
+                    order.getUserId(),
+                    recipientEmail,
+                    recipientName,
+                    "Sporekart Shipment Update #" + order.getOrderNumber() + " 🚚",
+                    java.util.Map.of(
+                            "orderNumber", order.getOrderNumber(),
+                            "orderId", order.getId().toString(),
+                            "customerName", recipientName,
+                            "courierName", shipment.getCourierName() != null ? shipment.getCourierName() : "Delhivery",
+                            "awbCode", shipment.getAwbCode() != null ? shipment.getAwbCode() : "N/A",
+                            "trackingUrl", (order.getTrackingUrl() != null && !order.getTrackingUrl().isBlank())
+                                    ? order.getTrackingUrl()
+                                    : ("https://track.shiprocket.in/" + (shipment.getAwbCode() != null ? shipment.getAwbCode() : "")),
+                            "status", statusLabel
+                    ),
+                    eventType.name() + ":" + shipment.getId()
+            );
+        } catch (Exception e) {
+            log.error("Failed to record shipment notification for shipment {}: {}", shipment.getId(), e.getMessage());
+        }
     }
 }

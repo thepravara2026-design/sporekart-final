@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("CONFLICT", ex.getMessage()));
     }
 
+    @ExceptionHandler(com.sporekart.identity.domain.DuplicateIdentityConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateIdentityConflict(com.sporekart.identity.domain.DuplicateIdentityConflictException ex) {
+        log.warn("Duplicate identity conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("DUPLICATE_IDENTITY_CONFLICT", ex.getMessage()));
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());

@@ -50,5 +50,8 @@ public class AdminAuditLog {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        if (adminUserId == null) {
+            adminUserId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
     }
 }

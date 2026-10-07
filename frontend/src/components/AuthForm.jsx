@@ -10,10 +10,11 @@ export default function AuthForm({
   initialAdminMode = false,
   title,
   subtitle,
+  initialIdentifier = '',
 }) {
   const { mergeGuestCart } = useCart();
   const [isAdminMode] = useState(initialAdminMode);
-  const [identifier, setIdentifier] = useState(initialAdminMode ? 'admin@sporekart.in' : '');
+  const [identifier, setIdentifier] = useState(initialIdentifier || (initialAdminMode ? 'admin@sporekart.in' : ''));
   const [otpCode, setOtpCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -23,6 +24,12 @@ export default function AuthForm({
   const [loading, setLoading] = useState(false);
   const [pendingGoogleAuth, setPendingGoogleAuth] = useState(null);
   const [googleProfileName, setGoogleProfileName] = useState('');
+
+  React.useEffect(() => {
+    if (initialIdentifier) {
+      setIdentifier(initialIdentifier);
+    }
+  }, [initialIdentifier]);
 
   React.useEffect(() => {
     let timer;
@@ -135,10 +142,12 @@ export default function AuthForm({
     }
   };
 
-  // Skip step 1 and jump directly to OTP entry for dev convenience in Admin mode
   const handleJumpToOtp = () => {
     setAuthError('');
-    setAuthMessage('Enter 6-digit administrative verification code (Dev Mock: 123456).');
+    setAuthMessage(isAdminMode 
+      ? 'Enter 6-digit administrative verification code (Dev Mock: 123456).'
+      : 'Enter 6-digit verification code (Dev Mock OTP: 123456).'
+    );
     setOtpSent(true);
   };
 
@@ -446,16 +455,14 @@ export default function AuthForm({
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {isAdminMode && (
-                <button
-                  type="button"
-                  onClick={handleJumpToOtp}
-                  className="w-full bg-surface-cream hover:bg-surface-border border border-gold/40 text-soil font-semibold py-2.5 rounded-input text-xs transition-all button-press flex items-center justify-center gap-2"
-                >
-                  <KeyRound className="w-3.5 h-3.5 text-gold" />
-                  <span>Enter OTP Directly (Dev Mock: 123456)</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleJumpToOtp}
+                className="w-full bg-surface-cream hover:bg-surface-border border border-forest-900/15 text-forest-900 font-semibold py-2.5 rounded-input text-xs transition-all button-press flex items-center justify-center gap-2"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-forest-700" />
+                <span>Enter OTP Directly (Dev Mock: 123456)</span>
+              </button>
             </div>
           </form>
         </div>

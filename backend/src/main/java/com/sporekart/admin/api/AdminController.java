@@ -2,21 +2,24 @@ package com.sporekart.admin.api;
 
 import com.sporekart.admin.application.AdminApplicationService;
 import com.sporekart.admin.domain.AdminAuditLog;
+import com.sporekart.catalog.infrastructure.ProductRepository;
+import com.sporekart.identity.infrastructure.UserRepository;
+import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.api.ApiResponse;
+import com.sporekart.training.infrastructure.CourseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/admin")
@@ -25,6 +28,10 @@ import java.util.List;
 public class AdminController {
 
     private final AdminApplicationService adminService;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
 
     @GetMapping("/audit-logs")
     public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(
@@ -42,12 +49,18 @@ public class AdminController {
 
     @GetMapping("/analytics/overview")
     public ResponseEntity<ApiResponse<AdminAnalyticsOverview>> getAnalyticsOverview() {
+        long totalProducts = productRepository.count();
+        long activeOrders = orderRepository.countActiveOrders();
+        long totalCustomers = userRepository.count();
+        long activeCourses = courseRepository.count();
+        BigDecimal totalRevenue = orderRepository.calculateTotalRevenueInr();
+
         AdminAnalyticsOverview overview = AdminAnalyticsOverview.builder()
-                .totalProducts(18)
-                .activeOrders(5)
-                .totalCustomers(42)
-                .activeCourses(4)
-                .totalRevenueInr(new java.math.BigDecimal("128500.00"))
+                .totalProducts(totalProducts)
+                .activeOrders(activeOrders)
+                .totalCustomers(totalCustomers)
+                .activeCourses(activeCourses)
+                .totalRevenueInr(totalRevenue != null ? totalRevenue : BigDecimal.ZERO)
                 .systemHealthStatus("HEALTHY")
                 .build();
         return ResponseEntity.ok(ApiResponse.success(overview));
@@ -62,7 +75,7 @@ public class AdminController {
         private long activeOrders;
         private long totalCustomers;
         private long activeCourses;
-        private java.math.BigDecimal totalRevenueInr;
+        private BigDecimal totalRevenueInr;
         private String systemHealthStatus;
     }
 }

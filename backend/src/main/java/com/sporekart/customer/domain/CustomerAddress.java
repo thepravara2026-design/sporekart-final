@@ -27,6 +27,9 @@ public class CustomerAddress {
     @Column(nullable = false)
     private String phone;
 
+    @Column(name = "alternate_phone")
+    private String alternatePhone;
+
     @Column(nullable = false)
     private String line1;
 

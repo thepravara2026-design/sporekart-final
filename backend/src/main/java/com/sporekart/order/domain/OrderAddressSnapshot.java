@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class OrderAddressSnapshot {
 
     private String recipientName;
+    private String email;
     private String phone;
     private String line1;
     private String line2;

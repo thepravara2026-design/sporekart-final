@@ -43,6 +43,12 @@ public class OrderService {
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.application.AuthService authService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.wallet.application.WalletService walletService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.identity.infrastructure.UserRepository userRepository;
 
     @Transactional
     public OrderResponse createOrderFromCart(UUID userId, String sessionId, String idempotencyKey, CreateOrderRequest request) {
@@ -88,6 +94,10 @@ public class OrderService {
                             .isDefault(true)
                             .build());
                 }
+            }
+        } else {
+            if (addressSnapshot.getPhone() != null && !addressSnapshot.getPhone().isBlank()) {
+                authService.validatePhoneUniqueness(null, addressSnapshot.getPhone());
             }
         }
 
@@ -365,11 +375,35 @@ public class OrderService {
             return mapToResponse(order);
         }
 
+        boolean isPaidOrder = (previousStatus == OrderStatus.PAID || previousStatus == OrderStatus.CONFIRMED || previousStatus == OrderStatus.PROCESSING);
+
+        if (isPaidOrder && (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUND_PENDING || newStatus == OrderStatus.REFUNDED)) {
+            newStatus = OrderStatus.REFUNDED;
+            if (order.getUserId() != null && order.getTotalAmountInr() != null && order.getTotalAmountInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                String walletReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Order Cancellation Refund";
+                try {
+                    walletService.processRefundToWallet(
+                            order.getUserId(),
+                            order.getTotalAmountInr(),
+                            order.getId(),
+                            null,
+                            "REF-" + order.getOrderNumber(),
+                            "Order #" + order.getOrderNumber() + " cancellation refund credited to Sporekart Wallet (" + walletReason + ")",
+                            updatedBy != null ? updatedBy : "SYSTEM"
+                    );
+                } catch (Exception e) {
+                    org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error crediting wallet for cancelled order {}: {}", order.getId(), e.getMessage(), e);
+                }
+            }
+        }
+
         order.setStatus(newStatus);
         if (reason != null && !reason.trim().isEmpty()) {
             order.setCancellationReason(reason);
-        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUND_PENDING || newStatus == OrderStatus.REFUNDED) {
-            order.setCancellationReason("Order status updated to " + newStatus);
+        } else if (newStatus == OrderStatus.REFUNDED) {
+            order.setCancellationReason("Order refunded directly to Sporekart Wallet");
+        } else if (newStatus == OrderStatus.CANCELLED) {
+            order.setCancellationReason("Order cancelled");
         }
 
         OrderEvent event = OrderEvent.builder()
@@ -387,6 +421,82 @@ public class OrderService {
                     .orderId(saved.getId())
                     .orderNumber(saved.getOrderNumber())
                     .build());
+        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
+            try {
+                String recipientEmail = null;
+                String recipientName = "Valued Customer";
+                if (saved.getUserId() != null) {
+                    var userOpt = userRepository.findById(saved.getUserId());
+                    if (userOpt.isPresent()) {
+                        recipientEmail = userOpt.get().getEmail();
+                        recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
+                    }
+                }
+                OrderAddressSnapshot addrSnap = OrderAddressSnapshot.fromJson(saved.getShippingAddressJson());
+                if ((recipientEmail == null || recipientEmail.isBlank()) && addrSnap != null) {
+                    recipientEmail = addrSnap.getEmail();
+                    if (addrSnap.getRecipientName() != null) {
+                        recipientName = addrSnap.getRecipientName();
+                    }
+                }
+
+                notificationEventService.recordEvent(
+                        com.sporekart.notification.domain.NotificationEventType.ORDER_CANCELLED,
+                        "ORDER",
+                        saved.getId(),
+                        saved.getUserId(),
+                        recipientEmail,
+                        recipientName,
+                        "Sporekart Order Cancellation #" + saved.getOrderNumber(),
+                        java.util.Map.of(
+                                "orderId", saved.getId().toString(),
+                                "orderNumber", saved.getOrderNumber(),
+                                "customerName", recipientName != null ? recipientName : "Grower",
+                                "reason", reason != null ? reason : "Cancelled",
+                                "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00"
+                        ),
+                        "ORDER_CANCELLED:" + saved.getId()
+                );
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_CANCELLED notification: {}", e.getMessage());
+            }
+        } else if (newStatus == OrderStatus.PROCESSING) {
+            try {
+                String recipientEmail = null;
+                String recipientName = "Valued Customer";
+                if (saved.getUserId() != null) {
+                    var userOpt = userRepository.findById(saved.getUserId());
+                    if (userOpt.isPresent()) {
+                        recipientEmail = userOpt.get().getEmail();
+                        recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
+                    }
+                }
+                OrderAddressSnapshot addrSnap = OrderAddressSnapshot.fromJson(saved.getShippingAddressJson());
+                if ((recipientEmail == null || recipientEmail.isBlank()) && addrSnap != null) {
+                    recipientEmail = addrSnap.getEmail();
+                    if (addrSnap.getRecipientName() != null) {
+                        recipientName = addrSnap.getRecipientName();
+                    }
+                }
+
+                notificationEventService.recordEvent(
+                        com.sporekart.notification.domain.NotificationEventType.ORDER_PACKED,
+                        "ORDER",
+                        saved.getId(),
+                        saved.getUserId(),
+                        recipientEmail,
+                        recipientName,
+                        "Your Sporekart Order #" + saved.getOrderNumber() + " Has Been Packed 📦",
+                        java.util.Map.of(
+                                "orderId", saved.getId().toString(),
+                                "orderNumber", saved.getOrderNumber(),
+                                "customerName", recipientName != null ? recipientName : "Grower"
+                        ),
+                        "ORDER_PACKED:" + saved.getId()
+                );
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_PACKED notification: {}", e.getMessage());
+            }
         }
         return mapToResponse(saved);
     }
@@ -411,17 +521,15 @@ public class OrderService {
             throw new IllegalStateException("Order cannot be cancelled once " + currentStatus);
         }
 
-        OrderStatus nextStatus = (currentStatus == OrderStatus.PAID || currentStatus == OrderStatus.CONFIRMED)
-                ? OrderStatus.REFUND_PENDING
-                : OrderStatus.CANCELLED;
+        boolean isPaidOrder = (currentStatus == OrderStatus.PAID || currentStatus == OrderStatus.CONFIRMED || currentStatus == OrderStatus.PROCESSING);
+        OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUNDED : OrderStatus.CANCELLED;
 
         String formattedReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Cancelled by Customer";
 
         // Release reserved stock back to available inventory
         for (OrderItem item : order.getItems()) {
             if (item.getVariantId() != null) {
-                boolean fromSold = (currentStatus == OrderStatus.PAID || currentStatus == OrderStatus.CONFIRMED);
-                inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), fromSold, formattedReason, userId != null ? userId.toString() : "CUSTOMER");
+                inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), isPaidOrder, formattedReason, userId != null ? userId.toString() : "CUSTOMER");
             }
         }
 
@@ -435,9 +543,12 @@ public class OrderService {
             if (userId != null && a.getUserId() != null && !userId.equals(a.getUserId())) {
                 throw new ForbiddenOperationException("Access denied: Address does not belong to the current user");
             }
+            String deliveryContactPhone = (a.getAlternatePhone() != null && !a.getAlternatePhone().isBlank()) 
+                    ? a.getAlternatePhone().trim() 
+                    : a.getPhone();
             return OrderAddressSnapshot.builder()
                     .recipientName(a.getRecipientName())
-                    .phone(a.getPhone())
+                    .phone(deliveryContactPhone)
                     .line1(a.getLine1())
                     .line2(a.getLine2())
                     .city(a.getCity())

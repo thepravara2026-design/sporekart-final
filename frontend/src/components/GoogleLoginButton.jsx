@@ -21,7 +21,9 @@ const parseJwt = (token) => {
 export default function GoogleLoginButton({ onSuccess, onError, loading, setLoading }) {
   const googleButtonRef = useRef(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [gsiError, setGsiError] = useState(false);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const isDev = import.meta.env.DEV || process.env.NODE_ENV === 'development';
 
   const handleCredentialResponse = async (response) => {
     if (!response || !response.credential) {
@@ -54,7 +56,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
     }
   };
 
-  // Mock / Dev Demo Google Login when Client ID is missing or in dev mode
+  // Dev Mock Google Login when Client ID is missing, fails to render, or in dev mode fallback
   const handleDevMockGoogleLogin = async () => {
     if (setLoading) setLoading(true);
     try {
@@ -91,7 +93,10 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
     script.async = true;
     script.defer = true;
     script.onload = () => setScriptLoaded(true);
-    script.onerror = () => console.warn('Failed to load Google GSI SDK script');
+    script.onerror = () => {
+      console.warn('Failed to load Google GSI SDK script');
+      setGsiError(true);
+    };
     document.body.appendChild(script);
   }, [clientId]);
 
@@ -112,15 +117,30 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
         });
       } catch (e) {
         console.error('Google GSI Initialize Error:', e);
+        setGsiError(true);
       }
     }
   }, [scriptLoaded, clientId]);
 
   return (
     <div className="w-full space-y-2">
-      {clientId ? (
-        <div className="w-full flex justify-center min-h-[44px]">
-          <div ref={googleButtonRef} className="w-full max-w-sm flex justify-center" />
+      {clientId && !gsiError ? (
+        <div className="w-full space-y-2">
+          <div className="w-full flex justify-center min-h-[44px]">
+            <div ref={googleButtonRef} className="w-full max-w-sm flex justify-center" />
+          </div>
+          {isDev && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleDevMockGoogleLogin}
+                disabled={loading}
+                className="text-[11px] text-forest-700 hover:underline font-medium"
+              >
+                ⚡ Dev Mode: Quick Google Login Test
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <button
@@ -147,7 +167,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
               d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
             />
           </svg>
-          <span>{loading ? 'Signing in with Google...' : 'Continue with Google'}</span>
+          <span>{loading ? 'Signing in with Google...' : 'Continue with Google (Dev Mode)'}</span>
         </button>
       )}
     </div>

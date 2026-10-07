@@ -433,7 +433,7 @@ public class OrderServiceUnitTest {
     }
 
     @Test
-    @DisplayName("ORD-21: cancelOrder on PAID status releases sold stock and sets status to REFUND_PENDING")
+    @DisplayName("ORD-21: cancelOrder on PAID status releases sold stock and sets status to REFUNDED")
     void ORD_21_cancel_order_paid_status_sets_refund_pending() {
         UUID orderId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -454,7 +454,7 @@ public class OrderServiceUnitTest {
 
         OrderResponse cancelled = orderService.cancelOrder(orderId, userId, "Changed mind");
 
-        assertEquals(OrderStatus.REFUND_PENDING, cancelled.getStatus());
+        assertEquals(OrderStatus.REFUNDED, cancelled.getStatus());
         verify(inventoryService, times(1)).releaseCancelledOrder(variantId, 1, "SK-CANCEL-PAID", true, "Changed mind", userId.toString());
     }
 

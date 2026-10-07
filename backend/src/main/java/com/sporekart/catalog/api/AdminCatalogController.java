@@ -20,54 +20,84 @@ public class AdminCatalogController {
     private final AdminCatalogService adminCatalogService;
     private final CatalogApplicationService catalogApplicationService;
     private final com.sporekart.catalog.application.InventoryService inventoryService;
+    private final com.sporekart.admin.application.AdminApplicationService adminService;
 
     @PostMapping("/categories")
-    public ResponseEntity<ApiResponse<Category>> createCategory(@Valid @RequestBody CatalogDtos.CreateCategoryRequest request) {
+    public ResponseEntity<ApiResponse<Category>> createCategory(
+            @Valid @RequestBody CatalogDtos.CreateCategoryRequest request,
+            org.springframework.security.core.Authentication authentication) {
         Category category = adminCatalogService.createCategory(request);
+        adminService.logAction(getAdminUserId(authentication), "CREATE_CATEGORY", "Category", category.getId().toString(), null, category.getName(), "Created category: " + category.getName(), null);
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
     @PutMapping("/categories/{id}")
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable("id") UUID categoryId,
-            @RequestBody CatalogDtos.UpdateCategoryRequest request) {
+            @RequestBody CatalogDtos.UpdateCategoryRequest request,
+            org.springframework.security.core.Authentication authentication) {
         Category category = adminCatalogService.updateCategory(categoryId, request);
+        adminService.logAction(getAdminUserId(authentication), "UPDATE_CATEGORY", "Category", category.getId().toString(), null, category.getName(), "Updated category: " + category.getName(), null);
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
     @PostMapping("/products")
-    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> createProduct(@Valid @RequestBody CatalogDtos.CreateProductRequest request) {
+    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> createProduct(
+            @Valid @RequestBody CatalogDtos.CreateProductRequest request,
+            org.springframework.security.core.Authentication authentication) {
         Product product = adminCatalogService.createProduct(request);
+        adminService.logAction(getAdminUserId(authentication), "CREATE_PRODUCT", "Product", product.getId().toString(), null, product.getStatus().name(), "Created product: " + product.getTitle(), null);
         return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
     }
 
     @PostMapping("/products/{id}/information")
     public ResponseEntity<ApiResponse<ProductInformation>> updateProductInformation(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.CreateProductInformationRequest request) {
-        Product product = adminCatalogService.publishProduct(productId); // Get product
+            @RequestBody CatalogDtos.CreateProductInformationRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        Product product = adminCatalogService.publishProduct(productId);
         ProductInformation info = adminCatalogService.saveOrUpdateProductInformation(product, request);
+        adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT_INFO", "Product", productId.toString(), null, product.getTitle(), "Updated technical specifications for: " + product.getTitle(), null);
         return ResponseEntity.ok(ApiResponse.success(info));
     }
 
     @PostMapping("/products/{id}/publish")
-    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> publishProduct(@PathVariable("id") UUID productId) {
+    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> publishProduct(
+            @PathVariable("id") UUID productId,
+            org.springframework.security.core.Authentication authentication) {
         Product product = adminCatalogService.publishProduct(productId);
+        adminService.logAction(getAdminUserId(authentication), "PUBLISH_PRODUCT", "Product", productId.toString(), "DRAFT", "ACTIVE", "Published product to active catalog: " + product.getTitle(), null);
         return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
     }
 
     @PostMapping("/products/{id}/variants")
     public ResponseEntity<ApiResponse<ProductVariant>> addVariant(
             @PathVariable("id") UUID productId,
-            @Valid @RequestBody CatalogDtos.CreateVariantRequest request) {
+            @Valid @RequestBody CatalogDtos.CreateVariantRequest request,
+            org.springframework.security.core.Authentication authentication) {
         ProductVariant variant = adminCatalogService.addVariant(productId, request);
+        adminService.logAction(getAdminUserId(authentication), "ADD_VARIANT", "ProductVariant", variant.getId().toString(), null, variant.getSku(), "Added variant '" + variant.getVariantName() + "' to product ID " + productId, null);
         return ResponseEntity.ok(ApiResponse.success(variant));
     }
 
     @PostMapping("/offers")
-    public ResponseEntity<ApiResponse<ProductOffer>> createOffer(@Valid @RequestBody CatalogDtos.CreateOfferRequest request) {
+    public ResponseEntity<ApiResponse<ProductOffer>> createOffer(
+            @Valid @RequestBody CatalogDtos.CreateOfferRequest request,
+            org.springframework.security.core.Authentication authentication) {
         ProductOffer offer = adminCatalogService.createOffer(request);
+        adminService.logAction(getAdminUserId(authentication), "CREATE_OFFER", "ProductOffer", offer.getId().toString(), null, offer.getOfferName(), "Created promotional offer: " + offer.getOfferName(), null);
         return ResponseEntity.ok(ApiResponse.success(offer));
+    }
+
+    private UUID getAdminUserId(org.springframework.security.core.Authentication auth) {
+        if (auth == null || auth.getName() == null) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
+        try {
+            return UUID.fromString(auth.getName());
+        } catch (Exception e) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
     }
 
     @PostMapping("/media")
@@ -109,6 +139,7 @@ public class AdminCatalogController {
                 request.getReason(),
                 adminUser
         );
+        adminService.logAction(null, "REPLENISH_STOCK", "ProductVariant", variantId.toString(), null, String.valueOf(request.getQuantity()), "Replenished inventory stock by +" + request.getQuantity() + " units", null);
         return ResponseEntity.ok(ApiResponse.success(record));
     }
 }

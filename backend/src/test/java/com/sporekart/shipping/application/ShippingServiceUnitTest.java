@@ -53,9 +53,16 @@ class ShippingServiceUnitTest {
         orderId = UUID.randomUUID();
         shipmentId = UUID.randomUUID();
 
-        OrderAddressSnapshot shippingAddr = new OrderAddressSnapshot(
-                "John Doe", "9876543210", "123 Farm Rd", "", "Pune", "MH", "411001"
-        );
+        OrderAddressSnapshot shippingAddr = OrderAddressSnapshot.builder()
+                .recipientName("John Doe")
+                .email("john@example.com")
+                .phone("9876543210")
+                .line1("123 Farm Rd")
+                .line2("")
+                .city("Pune")
+                .state("MH")
+                .pincode("411001")
+                .build();
 
         OrderItemResponse item = new OrderItemResponse();
         item.setProductTitle("Oyster Mushroom");

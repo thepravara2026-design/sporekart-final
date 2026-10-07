@@ -10,7 +10,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
+ 
   h1, h2, h3, h4, .font-display {
     font-family: 'DM Serif Display', Georgia, serif;
   }
@@ -170,6 +170,15 @@
   100% { transform: scale(1.02); }
 }
 
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 8s linear infinite;
+}
+
 .animate-ken-burns {
   animation: kenBurnsSlow 20s ease-in-out infinite;
 }
@@ -188,6 +197,45 @@
 
 .animate-scale-in {
   animation: scaleIn 0.25s ease-out forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes beamShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-beam {
+  animation: beamShimmer 3s ease-in-out infinite;
+}
+
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 70%
+  );
+  transform: rotate(30deg);
+  animation: beamShimmer 4s infinite;
+}
+
+.glow-card {
+  box-shadow: 0 10px 30px -5px rgba(23, 59, 42, 0.12), 0 0 15px -3px rgba(63, 125, 77, 0.15);
 }
 
 .skeleton-shimmer {

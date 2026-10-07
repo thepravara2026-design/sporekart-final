@@ -45,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByEmail("admin@sporekart.in").isEmpty()) {
             userRepository.save(User.builder()
                     .email("admin@sporekart.in")
-                    .phone("+919999999999")
+                    .phone("+919876543210")
                     .firstName("Sporekart")
                     .lastName("Admin")
                     .fullName("Sporekart Admin")

@@ -88,11 +88,35 @@ public class SupportController {
         TicketMessage msg = supportService.addMessageToTicket(
                 ticketId,
                 senderId,
-                "CUSTOMER",
+                isAdmin ? "SUPPORT_AGENT" : "CUSTOMER",
                 senderName,
                 request.getMessage()
         );
         return ResponseEntity.ok(ApiResponse.success(msg));
+    }
+
+    @PostMapping("/tickets/{id}/close")
+    public ResponseEntity<ApiResponse<SupportTicket>> closeTicket(
+            @PathVariable("id") UUID ticketId,
+            Authentication authentication,
+            @RequestBody(required = false) CloseTicketRequest request
+    ) {
+        UUID userId = getUserId(authentication);
+        SupportTicket ticket = supportService.getTicketDetails(ticketId);
+
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (userId == null || (ticket.getUserId() != null && !ticket.getUserId().equals(userId) && !isAdmin)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied: You cannot close this ticket"));
+        }
+
+        String closedBy = isAdmin ? "SUPPORT_AGENT" : "CUSTOMER";
+        Integer rating = request != null ? request.getRating() : null;
+        String feedback = request != null ? request.getFeedback() : null;
+
+        SupportTicket closed = supportService.closeTicketWithCsat(ticketId, closedBy, rating, feedback);
+        return ResponseEntity.ok(ApiResponse.success(closed));
     }
 
     private UUID getUserId(Authentication authentication) {
@@ -122,5 +146,11 @@ public class SupportController {
     @Data
     public static class AddMessageRequest {
         private String message;
+    }
+
+    @Data
+    public static class CloseTicketRequest {
+        private Integer rating;
+        private String feedback;
     }
 }

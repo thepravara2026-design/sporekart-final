@@ -225,15 +225,17 @@ public class PaymentService {
     public PaymentGateway.RefundResult refundPayment(UUID orderId, BigDecimal amountInr, String reason) {
         OrderResponse order = orderService.getOrderById(orderId);
 
-        if (order.getRazorpayPaymentId() == null) {
-            throw new IllegalStateException("Cannot refund order without payment ID");
+        if (order.getRazorpayPaymentId() == null || order.getRazorpayPaymentId().isBlank()) {
+            throw new IllegalStateException("Cannot refund order without payment ID: " + orderId);
         }
 
         if (amountInr != null && order.getTotalAmountInr() != null && amountInr.compareTo(order.getTotalAmountInr()) > 0) {
             throw new IllegalArgumentException("Refund amount (" + amountInr + ") cannot exceed total order amount (" + order.getTotalAmountInr() + ")");
         }
 
-        PaymentGateway.RefundResult refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), amountInr, reason);
+        BigDecimal refundAmt = (amountInr != null) ? amountInr : order.getTotalAmountInr();
+
+        PaymentGateway.RefundResult refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), refundAmt, reason);
 
         Optional<Payment> paymentOpt = paymentRepository.findByRazorpayPaymentId(order.getRazorpayPaymentId());
         paymentOpt.ifPresent(payment -> {
@@ -241,27 +243,30 @@ public class PaymentService {
             PaymentEvent event = PaymentEvent.builder()
                     .payment(payment)
                     .eventType("REFUND_PROCESSED")
-                    .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + amountInr + "\"}")
+                    .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + refundAmt + "\"}")
                     .createdBy("SYSTEM_REFUND")
                     .build();
             payment.addEvent(event);
             paymentRepository.save(payment);
         });
 
-        orderService.updateOrderStatus(orderId, OrderStatus.REFUNDED, "Refund processed: " + refundResult.getRefundId(), "SYSTEM_REFUND");
-
-        if (order.getUserId() != null) {
-            BigDecimal refundAmt = (amountInr != null) ? amountInr : order.getTotalAmountInr();
-            walletService.processRefundToWallet(
-                    order.getUserId(),
-                    refundAmt,
-                    orderId,
-                    null,
-                    refundResult.getRefundId(),
-                    reason != null ? reason : "Order Cancellation Refund",
-                    "SYSTEM_REFUND"
-            );
+        if (order.getUserId() != null && refundAmt != null && refundAmt.compareTo(BigDecimal.ZERO) > 0) {
+            try {
+                walletService.processRefundToWallet(
+                        order.getUserId(),
+                        refundAmt,
+                        orderId,
+                        null,
+                        refundResult.getRefundId(),
+                        reason != null ? reason : "Order cancellation refund credited to Sporekart Wallet",
+                        "SYSTEM_REFUND"
+                );
+            } catch (Exception e) {
+                log.warn("Could not credit refund to wallet for user {}: {}", order.getUserId(), e.getMessage());
+            }
         }
+
+        orderService.updateOrderStatus(orderId, OrderStatus.REFUNDED, "Refund processed (Ref: " + refundResult.getRefundId() + ")", "SYSTEM_REFUND");
 
         return refundResult;
     }

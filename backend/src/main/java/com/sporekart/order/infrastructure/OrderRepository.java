@@ -45,4 +45,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
         ORDER BY totalSales DESC
     """)
     List<Object[]> findTopSellingProductIds();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmountInr), 0) FROM Order o WHERE o.status NOT IN (com.sporekart.order.domain.OrderStatus.CANCELLED)")
+    java.math.BigDecimal calculateTotalRevenueInr();
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.status IN (com.sporekart.order.domain.OrderStatus.PENDING_PAYMENT, com.sporekart.order.domain.OrderStatus.PAID, com.sporekart.order.domain.OrderStatus.CONFIRMED, com.sporekart.order.domain.OrderStatus.PROCESSING, com.sporekart.order.domain.OrderStatus.SHIPPED)")
+    Long countActiveOrders();
 }

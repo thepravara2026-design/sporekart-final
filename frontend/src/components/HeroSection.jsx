@@ -35,7 +35,7 @@ export default function HeroSection() {
   return (
     <section 
       id="hero" 
-      className="relative w-full mt-3 sm:mt-4 px-3 sm:px-6 lg:px-8"
+      className="relative w-full mt-3 sm:mt-4 px-4 sm:px-6 lg:px-8"
       aria-label="Sporekart Hero Banner"
     >
       <div className="relative w-full min-h-[560px] sm:min-h-[600px] lg:min-h-[660px] rounded-hero overflow-hidden text-white shadow-level-3 flex items-center">

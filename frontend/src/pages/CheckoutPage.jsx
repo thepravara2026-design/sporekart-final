@@ -6,6 +6,9 @@ import { useCart } from '../context/CartContext';
 import MediaImage from '../components/MediaImage';
 import AuthForm from '../components/AuthForm';
 import PromoCodeSection from '../components/PromoCodeSection';
+import IdentityConflictModal from '../components/IdentityConflictModal';
+import IndianAddressForm from '../components/IndianAddressForm';
+import { validateAddressForm as validateStrictAddressForm } from '../utils/validation';
 
 export default function CheckoutPage({ user, setUser }) {
   const { cart, validateCart, fetchCart, loading: cartLoading } = useCart();
@@ -85,30 +88,7 @@ export default function CheckoutPage({ user, setUser }) {
   };
 
   const validateAddressForm = (addr) => {
-    const errors = {};
-    if (!addr.recipientName || !addr.recipientName.trim()) {
-      errors.recipientName = 'Recipient name is required';
-    }
-    if (!addr.phone || !addr.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^[0-9+ \-()]{8,15}$/.test(addr.phone.trim())) {
-      errors.phone = 'Phone number must be 8-15 digits (e.g., +91 9876543210)';
-    }
-    if (!addr.line1 || !addr.line1.trim()) {
-      errors.line1 = 'Address line 1 is required';
-    }
-    if (!addr.city || !addr.city.trim()) {
-      errors.city = 'City is required';
-    }
-    if (!addr.state || !addr.state.trim()) {
-      errors.state = 'State is required';
-    }
-    if (!addr.pincode || !addr.pincode.trim()) {
-      errors.pincode = 'PIN code is required';
-    } else if (!/^[1-9][0-9]{5}$/.test(addr.pincode.trim())) {
-      errors.pincode = 'PIN code must be a valid 6-digit Indian postal code (e.g. 110001)';
-    }
-    return errors;
+    return validateStrictAddressForm(addr, { nameLabel: 'Recipient Name' });
   };
 
   const [guestAddress, setGuestAddress] = useState(null);
@@ -154,6 +134,14 @@ export default function CheckoutPage({ user, setUser }) {
       }
     } catch (err) {
       const status = err.response?.status;
+      const errCode = err.response?.data?.error?.code;
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to save address';
+      if (status === 409 || errCode === 'DUPLICATE_IDENTITY_CONFLICT' || msg.toLowerCase().includes('already registered')) {
+        const conflictVal = newAddress.alternatePhone || newAddress.phone;
+        setConflictInfo({ isOpen: true, value: conflictVal, field: 'phone' });
+        setAddressFormErrors({ alternatePhone: msg });
+        return false;
+      }
       if (status === 401 || status === 403) {
         // Fallback for guest/unauthenticated user
         setIsAddingAddress(false);
@@ -161,11 +149,14 @@ export default function CheckoutPage({ user, setUser }) {
         setGuestAddress(newAddress);
         return { isGuest: true, address: newAddress };
       }
-      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to add address';
       setAddressFormErrors({ general: msg });
       return false;
     }
   };
+
+  const [conflictInfo, setConflictInfo] = useState({ isOpen: false, value: '', field: 'phone' });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [loginPreFill, setLoginPreFill] = useState('');
 
   const handlePlaceOrder = async () => {
     setAddressFormErrors({});
@@ -202,7 +193,15 @@ export default function CheckoutPage({ user, setUser }) {
         navigate(`/payment?type=order&id=${orderData.id}`);
       }
     } catch (err) {
-      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to place order');
+      const status = err.response?.status;
+      const errCode = err.response?.data?.error?.code;
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to place order';
+      if (status === 409 || errCode === 'DUPLICATE_IDENTITY_CONFLICT') {
+        const phoneVal = inlineShippingAddress?.phone || newAddress.phone || user?.phone || '';
+        setConflictInfo({ isOpen: true, value: phoneVal, field: 'phone' });
+      } else {
+        alert(msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -326,122 +325,21 @@ export default function CheckoutPage({ user, setUser }) {
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="recipientName" className="block text-xs text-typography-primary mb-1">Recipient Name</label>
-                    <input
-                      id="recipientName"
-                      type="text"
-                      required
-                      value={newAddress.recipientName}
-                      onChange={e => setNewAddress({ ...newAddress, recipientName: e.target.value })}
-                      className={`w-full bg-surface-white border rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none ${
-                        addressFormErrors.recipientName ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                      }`}
-                    />
-                    {addressFormErrors.recipientName && (
-                      <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.recipientName}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-xs text-typography-primary mb-1">Phone Number</label>
-                    <input
-                      id="phone"
-                      type="text"
-                      required
-                      placeholder="e.g. +91 9876543210"
-                      value={newAddress.phone}
-                      onChange={e => setNewAddress({ ...newAddress, phone: e.target.value })}
-                      className={`w-full bg-surface-white border rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none ${
-                        addressFormErrors.phone ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                      }`}
-                    />
-                    {addressFormErrors.phone && (
-                      <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.phone}</p>
-                    )}
-                  </div>
-                </div>
 
-                <div>
-                  <label htmlFor="line1" className="block text-xs text-typography-primary mb-1">Address Line 1</label>
-                  <input
-                    id="line1"
-                    type="text"
-                    required
-                    value={newAddress.line1}
-                    onChange={e => setNewAddress({ ...newAddress, line1: e.target.value })}
-                    className={`w-full bg-surface-white border rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none ${
-                      addressFormErrors.line1 ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                    }`}
-                  />
-                  {addressFormErrors.line1 && (
-                    <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.line1}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="line2" className="block text-xs text-typography-primary mb-1">Address Line 2 (Optional)</label>
-                  <input
-                    id="line2"
-                    type="text"
-                    value={newAddress.line2}
-                    onChange={e => setNewAddress({ ...newAddress, line2: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-forest-900 text-sm focus:outline-none focus:border-forest-700"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label htmlFor="city" className="block text-xs text-typography-primary mb-1">City</label>
-                    <input
-                      id="city"
-                      type="text"
-                      required
-                      value={newAddress.city}
-                      onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
-                      className={`w-full bg-surface-white border rounded-input px-3 py-2 text-forest-900 text-sm focus:outline-none ${
-                        addressFormErrors.city ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                      }`}
-                    />
-                    {addressFormErrors.city && (
-                      <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.city}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="state" className="block text-xs text-typography-primary mb-1">State</label>
-                    <input
-                      id="state"
-                      type="text"
-                      required
-                      value={newAddress.state}
-                      onChange={e => setNewAddress({ ...newAddress, state: e.target.value })}
-                      className={`w-full bg-surface-white border rounded-input px-3 py-2 text-forest-900 text-sm focus:outline-none ${
-                        addressFormErrors.state ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                      }`}
-                    />
-                    {addressFormErrors.state && (
-                      <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.state}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="pincode" className="block text-xs text-typography-primary mb-1">PIN Code</label>
-                    <input
-                      id="pincode"
-                      type="text"
-                      required
-                      maxLength={6}
-                      placeholder="6 digits"
-                      value={newAddress.pincode}
-                      onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })}
-                      className={`w-full bg-surface-white border rounded-input px-3 py-2 text-forest-900 text-sm focus:outline-none ${
-                        addressFormErrors.pincode ? 'border-rose-500 focus:border-rose-600' : 'border-surface-border focus:border-forest-700'
-                      }`}
-                    />
-                    {addressFormErrors.pincode && (
-                      <p className="text-[11px] text-rose-600 mt-1">{addressFormErrors.pincode}</p>
-                    )}
-                  </div>
-                </div>
+                <IndianAddressForm
+                  formData={newAddress}
+                  onChange={setNewAddress}
+                  errors={addressFormErrors}
+                  nameLabel="Recipient Name"
+                  namePlaceholder="e.g. Suresh Kumar"
+                  showDefaultCheckbox={true}
+                  disabled={submitting}
+                  primaryPhoneImmutable={Boolean(user?.phone)}
+                  primaryEmailImmutable={Boolean(user?.email)}
+                  onRequireLoginWithPhone={(phoneVal) =>
+                    setConflictInfo({ isOpen: true, value: phoneVal, field: 'phone' })
+                  }
+                />
 
                 <div className="flex gap-3 pt-2">
                   <button
@@ -580,6 +478,45 @@ export default function CheckoutPage({ user, setUser }) {
           </div>
         </div>
       </div>
+
+      {/* Identity Conflict FAANG Modal */}
+      <IdentityConflictModal
+        isOpen={conflictInfo.isOpen}
+        onClose={() => setConflictInfo({ ...conflictInfo, isOpen: false })}
+        conflictingValue={conflictInfo.value}
+        conflictingField={conflictInfo.field}
+        onOpenLogin={(val) => {
+          setLoginPreFill(val);
+          setShowAuthModal(true);
+        }}
+      />
+
+      {/* Auth Modal Triggered from Conflict Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-forest-950/70 backdrop-blur-sm p-4">
+          <div className="bg-surface-white border border-surface-border rounded-[24px] max-w-md w-full relative p-6 shadow-level-3">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-typography-muted hover:text-forest-900 p-2 rounded-full hover:bg-surface-cream"
+            >
+              ✕
+            </button>
+            <AuthForm
+              initialIdentifier={loginPreFill}
+              setUser={setUser}
+              onSuccess={(authData) => {
+                setShowAuthModal(false);
+                setConflictInfo({ isOpen: false, value: '', field: 'phone' });
+                if (setUser) setUser(authData);
+                fetchCart();
+                fetchAddresses();
+              }}
+              title="Log In to Registered Account"
+              subtitle="Enter your verification code to access your linked Sporekart profile."
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
