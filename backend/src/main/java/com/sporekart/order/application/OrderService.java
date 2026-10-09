@@ -50,7 +50,7 @@ public class OrderService {
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.infrastructure.UserRepository userRepository;
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse createOrderFromCart(UUID userId, String sessionId, String idempotencyKey, CreateOrderRequest request) {
         // 1. Idempotency Check
         if (idempotencyKey != null && !idempotencyKey.trim().isEmpty()) {
@@ -354,7 +354,7 @@ public class OrderService {
                 .map(this::mapToResponse);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public void confirmOrderInventory(UUID orderId) {
         orderRepository.findById(orderId).ifPresent(order -> {
             for (OrderItem item : order.getItems()) {
@@ -365,7 +365,7 @@ public class OrderService {
         });
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse updateOrderStatus(UUID orderId, OrderStatus newStatus, String reason, String updatedBy) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -501,7 +501,7 @@ public class OrderService {
         return mapToResponse(saved);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse cancelOrder(UUID orderId, UUID userId, String reason) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));

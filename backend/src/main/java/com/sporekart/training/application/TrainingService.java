@@ -149,18 +149,18 @@ public class TrainingService {
     }
 
     // --- Enrollment & Registration Flow ---
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment enrollCustomer(UUID userId, UUID batchId) {
         return enrollCustomer(userId, batchId, null);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment enrollCustomer(UUID userId, UUID batchId, String promoCode) {
         Batch batch = batchRepository.findWithLockById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
         if (!batch.hasAvailableCapacity()) {
-            throw new IllegalStateException("Batch '" + batch.getBatchCode() + "' is full. Cannot enroll.");
+            throw new BatchCapacityExceededException("Batch '" + batch.getBatchCode() + "' is full. Cannot enroll.");
         }
 
         Optional<Enrollment> existing = enrollmentRepository.findByUserIdAndBatchId(userId, batchId);
@@ -201,7 +201,7 @@ public class TrainingService {
         return saved;
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment confirmEnrollmentPayment(UUID enrollmentId, String paymentReference) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
@@ -210,15 +210,16 @@ public class TrainingService {
             return enrollment;
         }
 
-        Batch batch = batchRepository.findWithLockById(enrollment.getBatch().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Batch not found for enrollment"));
-
-        if (!batch.hasAvailableCapacity()) {
-            throw new IllegalStateException("Batch full during payment confirmation");
+        UUID batchId = enrollment.getBatch().getId();
+        
+        // Option A: Database-Level Atomic Capacity Update
+        int updatedRows = batchRepository.incrementEnrolledCountIfCapacityAvailable(batchId);
+        if (updatedRows == 0) {
+            throw new BatchCapacityExceededException("Batch full during payment confirmation");
         }
 
-        batch.incrementEnrolledCount();
-        batchRepository.save(batch);
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found for enrollment"));
 
         enrollment.setStatus(EnrollmentStatus.CONFIRMED);
         enrollment.setPaymentReference(paymentReference);
@@ -331,7 +332,7 @@ public class TrainingService {
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment cancelEnrollment(UUID enrollmentId, UUID userId, String reason) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
@@ -354,9 +355,10 @@ public class TrainingService {
         }
 
         if (enrollment.getStatus() == EnrollmentStatus.CONFIRMED && batch != null) {
-            if (batch.getEnrolledCount() != null && batch.getEnrolledCount() > 0) {
-                batch.setEnrolledCount(batch.getEnrolledCount() - 1);
-                batchRepository.save(batch);
+            Batch lockedBatch = batchRepository.findWithLockById(batch.getId()).orElse(batch);
+            if (lockedBatch.getEnrolledCount() != null && lockedBatch.getEnrolledCount() > 0) {
+                lockedBatch.setEnrolledCount(lockedBatch.getEnrolledCount() - 1);
+                batchRepository.save(lockedBatch);
             }
         }
 

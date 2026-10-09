@@ -165,14 +165,14 @@ public class TrainingServiceUnitTest {
                 .build();
 
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));
-        when(batchRepository.findWithLockById(batchId)).thenReturn(Optional.of(batch));
+        when(batchRepository.incrementEnrolledCountIfCapacityAvailable(batchId)).thenReturn(1);
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(batch));
         when(enrollmentRepository.save(any(Enrollment.class))).thenAnswer(i -> i.getArgument(0));
 
         Enrollment confirmed = trainingService.confirmEnrollmentPayment(enrollmentId, "PAY-REF-123");
 
         assertEquals(EnrollmentStatus.CONFIRMED, confirmed.getStatus());
         assertEquals("PAY-REF-123", confirmed.getPaymentReference());
-        assertEquals(4, batch.getEnrolledCount());
         verify(eventPublisher, times(1)).publishEvent(any(EnrollmentConfirmedEvent.class));
     }
 
@@ -200,7 +200,7 @@ public class TrainingServiceUnitTest {
         Enrollment enrollment = Enrollment.builder().id(enrollmentId).batch(fullBatch).status(EnrollmentStatus.PENDING_PAYMENT).build();
 
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));
-        when(batchRepository.findWithLockById(batchId)).thenReturn(Optional.of(fullBatch));
+        when(batchRepository.incrementEnrolledCountIfCapacityAvailable(batchId)).thenReturn(0);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
                 trainingService.confirmEnrollmentPayment(enrollmentId, "PAY-FULL")

@@ -76,7 +76,7 @@ public class Batch {
 
     public void incrementEnrolledCount() {
         if (!hasAvailableCapacity()) {
-            throw new IllegalStateException("Batch '" + batchCode + "' is at full capacity (" + capacity + ")");
+            throw new BatchCapacityExceededException("Batch '" + batchCode + "' is at full capacity (" + capacity + ")");
         }
         this.enrolledCount++;
     }

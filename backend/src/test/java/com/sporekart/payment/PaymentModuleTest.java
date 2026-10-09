@@ -117,9 +117,10 @@ public class PaymentModuleTest {
         String sessionId = "sess-pay-" + UUID.randomUUID();
         cartService.addItemToCart(null, sessionId, testVariant.getId(), 2);
 
+        String randomPhone = "+919" + String.format("%09d", (long)(Math.random() * 1_000_000_000L));
         OrderAddressSnapshot address = OrderAddressSnapshot.builder()
                 .recipientName("Aarav Sharma")
-                .phone("+919876543210")
+                .phone(randomPhone)
                 .line1("456 Mushroom Lane")
                 .city("Bangalore")
                 .state("Karnataka")

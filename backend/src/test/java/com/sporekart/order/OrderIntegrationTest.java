@@ -109,9 +109,10 @@ public class OrderIntegrationTest {
         );
         testVariant = adminCatalogService.addVariant(testProduct.getId(), varReq);
 
+        String randomPhone = "+919" + String.format("%09d", (long)(Math.random() * 1_000_000_000L));
         testAddress = OrderAddressSnapshot.builder()
                 .recipientName("Ramesh Kumar")
-                .phone("+919876543210")
+                .phone(randomPhone)
                 .line1("123 Agri Park")
                 .city("Pune")
                 .state("Maharashtra")

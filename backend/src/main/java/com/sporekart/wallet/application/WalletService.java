@@ -52,7 +52,7 @@ public class WalletService {
         return mapToWalletResponse(wallet);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction creditWallet(
             UUID userId,
             BigDecimal amount,
@@ -145,7 +145,7 @@ public class WalletService {
         return savedTxn;
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction debitWallet(
             UUID userId,
             BigDecimal amount,
@@ -233,7 +233,7 @@ public class WalletService {
         return savedTxn;
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction processRefundToWallet(
             UUID userId,
             BigDecimal amount,
@@ -261,7 +261,7 @@ public class WalletService {
         );
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse requestWithdrawal(UUID userId, WalletDtos.WithdrawRequest request) {
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be greater than zero");
@@ -335,7 +335,7 @@ public class WalletService {
         return mapToWithdrawalResponse(saved);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse approveWithdrawal(UUID withdrawalId, String adminUser, String notes) {
         WalletWithdrawal withdrawal = withdrawalRepository.findById(withdrawalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Withdrawal request not found: " + withdrawalId));
@@ -375,7 +375,7 @@ public class WalletService {
         return mapToWithdrawalResponse(saved);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse rejectWithdrawal(UUID withdrawalId, String adminUser, String reason) {
         WalletWithdrawal withdrawal = withdrawalRepository.findById(withdrawalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Withdrawal request not found: " + withdrawalId));
@@ -504,7 +504,7 @@ public class WalletService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction performAdminAdjustment(UUID targetUserId, BigDecimal amount, String direction, String reason, String adminUser) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Adjustment amount must be greater than zero");

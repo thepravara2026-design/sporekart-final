@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("CONFLICT", ex.getMessage()));
     }
 
+    @ExceptionHandler(com.sporekart.training.domain.BatchCapacityExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBatchCapacityExceeded(com.sporekart.training.domain.BatchCapacityExceededException ex) {
+        log.warn("Batch capacity exceeded: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("BATCH_CAPACITY_EXCEEDED", ex.getMessage()));
+    }
+
     @ExceptionHandler(com.sporekart.identity.domain.DuplicateIdentityConflictException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateIdentityConflict(com.sporekart.identity.domain.DuplicateIdentityConflictException ex) {
         log.warn("Duplicate identity conflict: {}", ex.getMessage());

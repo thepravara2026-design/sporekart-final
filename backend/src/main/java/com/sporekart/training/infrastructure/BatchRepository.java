@@ -24,4 +24,12 @@ public interface BatchRepository extends JpaRepository<Batch, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Batch> findWithLockById(UUID id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("UPDATE Batch b SET b.enrolledCount = b.enrolledCount + 1 WHERE b.id = :batchId AND b.enrolledCount < b.capacity")
+    int incrementEnrolledCountIfCapacityAvailable(@org.springframework.data.repository.query.Param("batchId") UUID batchId);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("UPDATE Batch b SET b.enrolledCount = b.enrolledCount - 1 WHERE b.id = :batchId AND b.enrolledCount > 0")
+    int decrementEnrolledCount(@org.springframework.data.repository.query.Param("batchId") UUID batchId);
 }

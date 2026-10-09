@@ -75,7 +75,7 @@ public class PaymentService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentDtos.VerifyPaymentResponse verifyPayment(PaymentDtos.VerifyPaymentRequest request) {
         boolean validSignature = paymentGateway.verifySignature(
                 request.getRazorpayOrderId(),
@@ -150,7 +150,7 @@ public class PaymentService {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public String processWebhook(String rawBody, String signatureHeader) {
         if (!paymentGateway.verifyWebhookSignature(rawBody, signatureHeader)) {
             throw new IllegalArgumentException("Invalid Razorpay webhook signature");
@@ -161,10 +161,11 @@ public class PaymentService {
             String eventType = root.path("event").asText();
             String eventId = root.path("event_id").asText();
 
-            // Duplicate Webhook Protection
+            // Duplicate Webhook Protection (Fast Read Check)
             if (eventId != null && !eventId.trim().isEmpty()) {
                 Optional<PaymentEvent> existing = paymentEventRepository.findByEventId(eventId);
                 if (existing.isPresent()) {
+                    log.info("Webhook event ID {} already processed. Idempotent ignore.", eventId);
                     return "Webhook event already processed (idempotent ignore)";
                 }
             }
@@ -178,31 +179,15 @@ public class PaymentService {
 
             if ("payment.captured".equalsIgnoreCase(eventType) || "order.paid".equalsIgnoreCase(eventType)) {
                 if (payment != null) {
+                    if (payment.getStatus() == PaymentStatus.CAPTURED) {
+                        log.info("Payment for Razorpay order {} is already CAPTURED. Idempotent ignore.", razorpayOrderId);
+                        return "Webhook event already processed (payment already captured)";
+                    }
                     payment.setRazorpayPaymentId(razorpayPaymentId);
                     payment.setStatus(PaymentStatus.CAPTURED);
                 }
 
-                PaymentEvent event = PaymentEvent.builder()
-                        .payment(payment)
-                        .eventType(eventType)
-                        .eventId(eventId)
-                        .eventDataJson(rawBody)
-                        .createdBy("RAZORPAY_WEBHOOK")
-                        .build();
-                paymentEventRepository.save(event);
-                if (payment != null) paymentRepository.save(payment);
-
-                // Find associated Order
-                Optional<OrderResponse> orderOpt = orderService.getOrderByRazorpayOrderId(razorpayOrderId);
-                if (orderOpt.isPresent()) {
-                    OrderResponse order = orderOpt.get();
-                    orderService.setRazorpayPaymentId(order.getId(), razorpayPaymentId);
-                    orderService.updateOrderStatus(order.getId(), OrderStatus.PAID, "Payment captured via webhook", "RAZORPAY_WEBHOOK");
-                    orderService.confirmOrderInventory(order.getId());
-                }
-            } else if ("payment.failed".equalsIgnoreCase(eventType)) {
-                if (payment != null) {
-                    payment.setStatus(PaymentStatus.FAILED);
+                try {
                     PaymentEvent event = PaymentEvent.builder()
                             .payment(payment)
                             .eventType(eventType)
@@ -210,18 +195,52 @@ public class PaymentService {
                             .eventDataJson(rawBody)
                             .createdBy("RAZORPAY_WEBHOOK")
                             .build();
-                    payment.addEvent(event);
+                    paymentEventRepository.save(event);
+                } catch (org.springframework.dao.DataIntegrityViolationException dive) {
+                    log.warn("Concurrent duplicate webhook event ID caught by database constraint: {}", eventId);
+                    return "Webhook event already processed (idempotent ignore)";
+                }
+
+                if (payment != null) paymentRepository.save(payment);
+
+                // Find associated Order
+                Optional<OrderResponse> orderOpt = orderService.getOrderByRazorpayOrderId(razorpayOrderId);
+                if (orderOpt.isPresent()) {
+                    OrderResponse order = orderOpt.get();
+                    if (order.getStatus() != OrderStatus.PAID) {
+                        orderService.setRazorpayPaymentId(order.getId(), razorpayPaymentId);
+                        orderService.updateOrderStatus(order.getId(), OrderStatus.PAID, "Payment captured via webhook", "RAZORPAY_WEBHOOK");
+                        orderService.confirmOrderInventory(order.getId());
+                    }
+                }
+            } else if ("payment.failed".equalsIgnoreCase(eventType)) {
+                if (payment != null && payment.getStatus() != PaymentStatus.FAILED) {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    try {
+                        PaymentEvent event = PaymentEvent.builder()
+                                .payment(payment)
+                                .eventType(eventType)
+                                .eventId(eventId)
+                                .eventDataJson(rawBody)
+                                .createdBy("RAZORPAY_WEBHOOK")
+                                .build();
+                        payment.addEvent(event);
+                    } catch (org.springframework.dao.DataIntegrityViolationException dive) {
+                        log.warn("Concurrent duplicate failed webhook event ID: {}", eventId);
+                        return "Webhook event already processed (idempotent ignore)";
+                    }
                     paymentRepository.save(payment);
                 }
             }
 
             return "Webhook processed successfully: " + eventType;
         } catch (Exception e) {
+            log.error("Error processing Razorpay webhook: {}", e.getMessage(), e);
             throw new RuntimeException("Error processing Razorpay webhook: " + e.getMessage(), e);
         }
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentGateway.RefundResult refundPayment(UUID orderId, BigDecimal amountInr, String reason) {
         OrderResponse order = orderService.getOrderById(orderId);
 
@@ -355,12 +374,12 @@ public class PaymentService {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request) {
         return verifyEnrollmentPayment(request, null);
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request, UUID callingUserId) {
         if (request.getEnrollmentId() == null) {
             throw new IllegalArgumentException("Enrollment ID is required");
