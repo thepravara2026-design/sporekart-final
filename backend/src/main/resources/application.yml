@@ -90,6 +90,12 @@ sporekart:
     from: ${MAIL_FROM:${SMTP_USERNAME:noreply@sporekart.in}}
     from-name: ${MAIL_FROM_NAME:Sporekart Agritech}
     use-real-smtp: ${USE_REAL_SMTP:false}
+  twilio:
+    use-real-twilio: ${USE_REAL_TWILIO_SMS:false}
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    from-phone-number: ${TWILIO_PHONE_NUMBER:}
+    messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
   shiprocket:
     email: ${SHIPROCKET_EMAIL:}
     password: ${SHIPROCKET_PASSWORD:}

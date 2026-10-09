@@ -71,7 +71,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
                 auth.requestMatchers("/auth/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**", "/reviews/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**", "/categories/**", "/categories", "/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/search", "/search/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/training/**").permitAll()

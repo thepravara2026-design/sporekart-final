@@ -61,6 +61,8 @@ export default function AdminDashboardPage({ user }) {
   // Catalog State
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [prodTitle, setProdTitle] = useState('');
   const [prodSlug, setProdSlug] = useState('');
   const [prodType, setProdType] = useState('FRESH_MUSHROOM');
@@ -782,6 +784,48 @@ export default function AdminDashboardPage({ user }) {
         }
       };
 
+      if (editingProduct && editingProduct.id) {
+        const res = await adminApi.updateProduct(editingProduct.id, payload);
+        const updatedProd = res.data?.data || res.data || editingProduct;
+        if (payload.productInformation && updatedProd.id) {
+          try {
+            await adminApi.updateProductInformation(updatedProd.id, payload.productInformation);
+          } catch (iErr) {
+            console.warn('Updated product, info update note:', iErr);
+          }
+        }
+
+        // Sync Product Media Images to backend when editing product
+        if (updatedProd.id) {
+          try {
+            const mediaItemsPayload = (mediaList || []).map((m, idx) => ({
+              productId: updatedProd.id,
+              mediaUrl: m.url || m.mediaUrl,
+              role: m.role || (m.isPrimary || idx === 0 ? 'PRIMARY' : 'GALLERY'),
+              isPrimary: m.isPrimary || idx === 0,
+              displayOrder: m.displayOrder !== undefined ? m.displayOrder : idx
+            }));
+            await adminApi.syncProductMedia(updatedProd.id, mediaItemsPayload);
+          } catch (mErr) {
+            console.warn('Failed syncing product media on edit:', mErr);
+          }
+        }
+
+        if (publishImmediately && updatedProd.id) {
+          try {
+            await adminApi.publishProduct(updatedProd.id);
+          } catch (pErr) {
+            console.warn('Updated product, publish note:', pErr);
+          }
+        }
+        setStatusMessage(`Product "${prodTitle}" updated successfully with all media images saved.`);
+        setEditingProduct(null);
+        setProdTitle(''); setProdSlug(''); setProdDesc(''); setMediaList([]);
+        fetchDataForSection('products');
+        navigate('/admin/products');
+        return;
+      }
+
       const res = await adminApi.createProduct(payload);
       const createdProd = res.data?.data || res.data;
 
@@ -819,18 +863,29 @@ export default function AdminDashboardPage({ user }) {
       }
 
       // Add Media gallery images (Step 6)
-      if (mediaList.length > 0 && createdProd?.id) {
-        for (const m of mediaList) {
-          try {
-            await adminApi.addMedia({
-              productId: createdProd.id,
-              mediaUrl: m.url,
-              mediaRole: m.role,
-              isPrimary: m.isPrimary,
-              displayOrder: m.displayOrder
-            });
-          } catch (mediaErr) {
-            console.warn('Failed adding media item:', mediaErr);
+      if (createdProd?.id) {
+        try {
+          const mediaItemsPayload = (mediaList || []).map((m, idx) => ({
+            productId: createdProd.id,
+            mediaUrl: m.url || m.mediaUrl,
+            role: m.role || (m.isPrimary || idx === 0 ? 'PRIMARY' : 'GALLERY'),
+            isPrimary: m.isPrimary || idx === 0,
+            displayOrder: m.displayOrder !== undefined ? m.displayOrder : idx
+          }));
+          await adminApi.syncProductMedia(createdProd.id, mediaItemsPayload);
+        } catch (mediaErr) {
+          for (const m of mediaList) {
+            try {
+              await adminApi.addMedia({
+                productId: createdProd.id,
+                mediaUrl: m.url || m.mediaUrl,
+                mediaRole: m.role,
+                isPrimary: m.isPrimary,
+                displayOrder: m.displayOrder
+              });
+            } catch (fallbackErr) {
+              console.warn('Failed adding media item:', fallbackErr);
+            }
           }
         }
       }
@@ -852,7 +907,90 @@ export default function AdminDashboardPage({ user }) {
     } catch (err) {
       const rawData = err.response?.data;
       const backendMsg = typeof rawData === 'string' ? rawData : (rawData?.message || rawData?.error?.message || (typeof rawData?.error === 'string' ? rawData.error : null));
-      setErrorMessage(backendMsg || 'Failed creating product. Ensure all required fields are valid.');
+      setErrorMessage(backendMsg || 'Failed saving product. Ensure all required fields are valid.');
+    }
+  };
+
+  const handleStartEditProduct = (product) => {
+    setEditingProduct(product);
+    setQuickViewProduct(null);
+
+    setProdTitle(product.title || '');
+    setProdSlug(product.slug || '');
+    setProdType(product.productType || 'FRESH_MUSHROOM');
+    setProdDesc(product.description || '');
+    setProdHsn(product.hsnCode || '07095900');
+    setProdGst(product.gstRatePercent !== undefined && product.gstRatePercent !== null ? String(product.gstRatePercent) : '5.00');
+    
+    const catId = product.categoryId || product.category?.id || (categories.find(c => c.name === product.categoryName || c.slug === product.categorySlug)?.id) || '';
+    setProdCatId(catId);
+
+    const info = product.productInformation || {};
+    setBrandName(info.brandName || 'Sporekart Agritech');
+    setCountryOrigin(info.countryOfOrigin || 'India');
+    setNetQty(info.netQuantity || '200');
+    setUom(info.unitOfMeasure || 'g');
+    setFssaiLic(info.fssaiLicenseNumber || '10020011000123');
+    setIsVeg(info.vegetarian ?? true);
+    setIngredients(info.ingredients || '');
+    setAllergenInfo(info.allergenInfo || '');
+
+    setSpecies(info.mushroomSpecies || 'Agaricus bisporus');
+    setStrain(info.strainVariety || 'A15 Premium');
+    setSubstrate(info.recommendedSubstrate || 'Pasteurized Wheat Straw');
+    setKitContents(info.kitContents || '');
+
+    setStorageInst(info.storageInstructions || 'Refrigerate between 2°C - 4°C');
+    setTempGuidance(info.storageTemperatureGuidance || '2°C - 4°C');
+    setShelfLife(info.shelfLifeGuidance || '30 Days from dispatch');
+    setMfrDetails(info.manufacturerDetails || 'Sporekart Agritech, Solan, HP');
+    setCustCareDetails(info.customerCareDetails || 'care@sporekart.in');
+
+    if (product.variants && product.variants.length > 0) {
+      setVariantsList(product.variants.map((v, i) => ({
+        id: v.id || `v_${i}`,
+        variantName: v.variantName || 'Standard Pack',
+        sku: v.sku || '',
+        priceInr: String(v.priceInr || v.calculatedFinalPriceInr || '149.00'),
+        compareAtPriceInr: v.compareAtPriceInr ? String(v.compareAtPriceInr) : '',
+        stockQuantity: v.stockQuantity || 50,
+        isPrimary: v.isPrimary || i === 0
+      })));
+    }
+
+    if (product.media && product.media.length > 0) {
+      setMediaList(product.media.map((m, i) => ({
+        id: m.id || `m_${i}`,
+        url: m.mediaUrl || m.url,
+        role: m.role || 'GALLERY',
+        isPrimary: m.isPrimary || i === 0,
+        displayOrder: m.displayOrder || i
+      })));
+    } else if (product.imageUrls && product.imageUrls.length > 0) {
+      setMediaList(product.imageUrls.map((url, i) => ({
+        id: `m_${i}`,
+        url,
+        role: 'GALLERY',
+        isPrimary: i === 0,
+        displayOrder: i
+      })));
+    } else {
+      setMediaList([]);
+    }
+
+    setFormTab('basic');
+    navigate('/admin/products?mode=add');
+  };
+
+  const handleToggleProductStatus = async (product) => {
+    const newStatus = product.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+    const newIsActive = newStatus === 'ACTIVE';
+    try {
+      await adminApi.updateProductStatus(product.id, newStatus, newIsActive);
+      setStatusMessage(`Product "${product.title}" status changed to ${newStatus}.`);
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: newStatus, isActive: newIsActive } : p));
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed updating product status.');
     }
   };
 
@@ -2381,55 +2519,113 @@ export default function AdminDashboardPage({ user }) {
                         }
                         return 0;
                       })
-                      .map((p) => (
-                      <tr key={p.id} className="hover:bg-surface-cream/50 transition-colors">
-                        <td className="p-3.5">
-                          <span className="font-bold text-sm text-typography-primary font-display block">{p.title}</span>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-typography-muted font-mono bg-surface-cream px-1.5 py-0.5 rounded">ID: {p.id?.substring(0, 8)}...</span>
-                            <span className="text-[10px] text-forest-700 font-mono">/{p.slug}</span>
-                          </div>
-                        </td>
-                        <td className="p-3.5">
-                          <span className="font-bold text-typography-primary block text-xs">{p.categoryName || 'General'}</span>
-                          <span className="px-2 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[9px] font-bold rounded-md uppercase mt-1 inline-block">
-                            {p.productType}
-                          </span>
-                        </td>
-                        <td className="p-3.5">
-                          {p.variants && p.variants.length > 0 ? (
-                            <div className="space-y-1">
-                              <span className="font-bold text-forest-900 font-display text-xs">
-                                ₹{p.variants[0].priceInr || p.variants[0].calculatedFinalPriceInr}
+                      .map((p) => {
+                        const primaryMedia = p.media?.find(m => m.isPrimary || m.role === 'PRIMARY')?.mediaUrl
+                          || p.imageUrls?.[0]
+                          || p.media?.[0]?.mediaUrl
+                          || getFallbackImageUrl(p.id?.charCodeAt(0) || 0);
+
+                        const totalStock = p.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 0;
+                        const stockBadgeClass = totalStock > 20 
+                          ? 'bg-green-100 text-green-800 border-green-200' 
+                          : totalStock > 0 
+                            ? 'bg-amber-100 text-amber-800 border-amber-200' 
+                            : 'bg-red-100 text-red-800 border-red-200';
+                        const stockStatusText = totalStock > 20 ? 'In Stock' : totalStock > 0 ? `Low (${totalStock})` : 'Out of Stock';
+
+                        return (
+                          <tr key={p.id} className="hover:bg-surface-cream/50 transition-colors">
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={primaryMedia}
+                                  alt={p.title}
+                                  className="w-11 h-11 object-cover rounded-xl border border-surface-border bg-surface-cream flex-shrink-0"
+                                />
+                                <div>
+                                  <span className="font-bold text-sm text-typography-primary font-display block">{p.title}</span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-typography-muted font-mono bg-surface-cream px-1.5 py-0.5 rounded">
+                                      ID: {p.id?.substring(0, 8)}...
+                                    </span>
+                                    <span className="text-[10px] text-forest-700 font-mono">/{p.slug}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3.5">
+                              <span className="font-bold text-typography-primary block text-xs">{p.categoryName || 'General'}</span>
+                              <span className="px-2 py-0.5 bg-forest-900/10 text-forest-800 border border-forest-900/20 text-[9px] font-bold rounded-md uppercase mt-1 inline-block">
+                                {p.productType}
                               </span>
-                              <span className="text-[10px] text-typography-muted block font-mono">
-                                {p.variants.length} Variant(s) • SKU: {p.variants[0].sku}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-typography-muted italic">No variants</span>
-                          )}
-                        </td>
-                        <td className="p-3.5 font-mono text-[11px]">
-                          <div>HSN: {p.hsnCode || '07095900'}</div>
-                          {p.productInformation?.fssaiLicenseNumber && (
-                            <div className="text-green-700 font-bold">FSSAI: {p.productInformation.fssaiLicenseNumber}</div>
-                          )}
-                        </td>
-                        <td className="p-3.5">
-                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase ${
-                            p.status === 'ACTIVE' ? 'bg-green-600/10 text-green-700 border border-green-600/20' : 'bg-gold/15 text-forest-900 border border-gold/30'
-                          }`}>
-                            {p.status || 'ACTIVE'}
-                          </span>
-                        </td>
-                        <td className="p-3.5 whitespace-nowrap">
-                          <Link to={`/product/${p.slug}`} target="_blank" className="text-forest-700 font-bold hover:underline text-[11px] flex items-center gap-1">
-                            Live Now <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
+                            </td>
+                            <td className="p-3.5">
+                              {p.variants && p.variants.length > 0 ? (
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-forest-900 font-display text-xs">
+                                      ₹{p.variants[0].priceInr || p.variants[0].calculatedFinalPriceInr}
+                                    </span>
+                                    <span className={`px-1.5 py-0.5 text-[9px] font-bold border rounded-full ${stockBadgeClass}`}>
+                                      {stockStatusText}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-typography-muted block font-mono">
+                                    {p.variants.length} Variant(s) • SKU: {p.variants[0].sku}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-typography-muted italic">No variants</span>
+                              )}
+                            </td>
+                            <td className="p-3.5 font-mono text-[11px]">
+                              <div>HSN: {p.hsnCode || '07095900'}</div>
+                              {p.productInformation?.fssaiLicenseNumber && (
+                                <div className="text-green-700 font-bold">FSSAI: {p.productInformation.fssaiLicenseNumber}</div>
+                              )}
+                            </td>
+                            <td className="p-3.5">
+                              <button
+                                onClick={() => handleToggleProductStatus(p)}
+                                title="Click to toggle status between Active and Draft"
+                                className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase border transition-all duration-200 cursor-pointer ${
+                                  p.status === 'ACTIVE'
+                                    ? 'bg-green-600/10 text-green-700 border-green-600/20 hover:bg-green-600/20'
+                                    : 'bg-gold/15 text-forest-900 border-gold/30 hover:bg-gold/25'
+                                }`}
+                              >
+                                {p.status || 'ACTIVE'}
+                              </button>
+                            </td>
+                            <td className="p-3.5 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setQuickViewProduct(p)}
+                                  className="btn-secondary text-[11px] px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 text-forest-800 hover:bg-forest-900/10 transition-colors"
+                                  title="Inspect product specifications prior to full editing"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-forest-700" /> Prior Inspection
+                                </button>
+                                <button
+                                  onClick={() => handleStartEditProduct(p)}
+                                  className="btn-primary text-[11px] px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 bg-forest-900 text-white hover:bg-forest-800 transition-colors"
+                                  title="Edit Product Specifications & Variants"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" /> Edit
+                                </button>
+                                <Link
+                                  to={`/product/${p.slug}`}
+                                  target="_blank"
+                                  className="text-forest-700 font-bold hover:underline text-[11px] flex items-center gap-1 ml-1"
+                                  title="View live product page"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     {products.length === 0 && (
                       <tr><td colSpan={6} className="p-6 text-center text-typography-muted">No products found in catalog. Click "Add Product" above to create one.</td></tr>
                     )}
@@ -2470,6 +2666,255 @@ export default function AdminDashboardPage({ user }) {
                   </button>
                 </div>
               </div>
+
+              {/* Prior-to-Edit Product Inspection Modal */}
+              {quickViewProduct && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+                  <div className="bg-surface-white w-full max-w-4xl rounded-2xl shadow-level-3 border border-surface-border overflow-hidden my-8 max-h-[90vh] flex flex-col">
+                    {/* Modal Header */}
+                    <div className="p-5 bg-surface-cream border-b border-surface-border flex items-center justify-between flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-forest-900/10 rounded-xl border border-forest-900/20">
+                          <Eye className="w-5 h-5 text-forest-800" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold tracking-widest text-forest-800 uppercase bg-forest-900/10 px-2 py-0.5 rounded-full">
+                              Prior-to-Edit Inspection
+                            </span>
+                            <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md uppercase ${
+                              quickViewProduct.status === 'ACTIVE' ? 'bg-green-600/15 text-green-700' : 'bg-gold/20 text-forest-900'
+                            }`}>
+                              {quickViewProduct.status || 'ACTIVE'}
+                            </span>
+                          </div>
+                          <h3 className="font-display font-bold text-lg text-typography-primary mt-0.5">
+                            {quickViewProduct.title}
+                          </h3>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setQuickViewProduct(null)}
+                        className="p-2 rounded-xl text-typography-muted hover:text-typography-primary hover:bg-surface-border/50 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 overflow-y-auto space-y-6 text-xs text-typography-secondary flex-1">
+                      {/* Top Grid: Media Gallery & Primary Specs */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        {/* Left Column: Image Preview */}
+                        <div className="md:col-span-5 space-y-3">
+                          <div className="aspect-square w-full rounded-2xl border border-surface-border overflow-hidden bg-surface-cream relative group">
+                            <img
+                              src={
+                                quickViewProduct.media?.find(m => m.isPrimary || m.role === 'PRIMARY')?.mediaUrl
+                                || quickViewProduct.imageUrls?.[0]
+                                || quickViewProduct.media?.[0]?.mediaUrl
+                                || getFallbackImageUrl(quickViewProduct.id?.charCodeAt(0) || 0)
+                              }
+                              alt={quickViewProduct.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute bottom-2 left-2 bg-forest-900/80 text-white backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-mono">
+                              Primary Product Image
+                            </div>
+                          </div>
+
+                          {/* Thumbnail Strip */}
+                          {quickViewProduct.media && quickViewProduct.media.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                              {quickViewProduct.media.map((m, idx) => (
+                                <img
+                                  key={m.id || idx}
+                                  src={m.mediaUrl || m.url}
+                                  alt=""
+                                  className="w-14 h-14 object-cover rounded-xl border border-surface-border flex-shrink-0"
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right Column: Key Details */}
+                        <div className="md:col-span-7 space-y-4">
+                          <div className="grid grid-cols-2 gap-3 bg-surface-cream p-4 rounded-xl border border-surface-border">
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">Product ID</span>
+                              <span className="font-mono text-xs text-typography-primary font-bold">{quickViewProduct.id}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">URL Slug</span>
+                              <span className="font-mono text-xs text-forest-700 font-bold">/{quickViewProduct.slug}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">Category</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.categoryName || 'General'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">Classification</span>
+                              <span className="font-bold text-forest-900">{quickViewProduct.productType}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">HSN Code</span>
+                              <span className="font-mono font-bold text-typography-primary">{quickViewProduct.hsnCode || '07095900'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block">GST Rate</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.gstRatePercent || '5.00'}%</span>
+                            </div>
+                          </div>
+
+                          {quickViewProduct.description && (
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-typography-muted block mb-1">Description</span>
+                              <p className="text-xs leading-relaxed text-typography-primary bg-surface-white p-3 rounded-xl border border-surface-border">
+                                {quickViewProduct.description}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Compliance Badges */}
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {quickViewProduct.productInformation?.fssaiLicenseNumber && (
+                              <span className="bg-green-100 border border-green-300 text-green-800 text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                <ShieldCheck className="w-3.5 h-3.5" /> FSSAI: {quickViewProduct.productInformation.fssaiLicenseNumber}
+                              </span>
+                            )}
+                            {quickViewProduct.productInformation?.brandName && (
+                              <span className="bg-surface-cream border border-surface-border text-typography-primary text-[10px] font-bold px-2.5 py-1 rounded-lg">
+                                Brand: {quickViewProduct.productInformation.brandName}
+                              </span>
+                            )}
+                            {quickViewProduct.productInformation?.vegetarian !== undefined && (
+                              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${
+                                quickViewProduct.productInformation.vegetarian ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                              }`}>
+                                {quickViewProduct.productInformation.vegetarian ? '🌱 100% Vegetarian' : 'Non-Veg'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Variants & Pricing Table */}
+                      <div className="space-y-2">
+                        <h4 className="font-display font-bold text-sm text-typography-primary flex items-center justify-between">
+                          <span>Configured Variants & Stock Levels ({quickViewProduct.variants?.length || 0})</span>
+                        </h4>
+                        <div className="border border-surface-border rounded-xl overflow-hidden">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-surface-cream text-typography-primary font-bold border-b border-surface-border uppercase text-[10px]">
+                              <tr>
+                                <th className="p-2.5">Variant Name</th>
+                                <th className="p-2.5">SKU Code</th>
+                                <th className="p-2.5">Selling Price</th>
+                                <th className="p-2.5">MRP / Compare</th>
+                                <th className="p-2.5">Stock Level</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-surface-border">
+                              {quickViewProduct.variants && quickViewProduct.variants.length > 0 ? (
+                                quickViewProduct.variants.map((v, i) => (
+                                  <tr key={v.id || i} className="hover:bg-surface-cream/40">
+                                    <td className="p-2.5 font-bold text-typography-primary">{v.variantName}</td>
+                                    <td className="p-2.5 font-mono text-[11px] text-typography-muted">{v.sku}</td>
+                                    <td className="p-2.5 font-bold text-forest-900">₹{v.priceInr || v.calculatedFinalPriceInr}</td>
+                                    <td className="p-2.5 text-typography-muted line-through">
+                                      {v.compareAtPriceInr ? `₹${v.compareAtPriceInr}` : '—'}
+                                    </td>
+                                    <td className="p-2.5">
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                        (v.stockQuantity || 0) > 20
+                                          ? 'bg-green-100 text-green-800 border-green-200'
+                                          : (v.stockQuantity || 0) > 0
+                                            ? 'bg-amber-100 text-amber-800 border-amber-200'
+                                            : 'bg-red-100 text-red-800 border-red-200'
+                                      }`}>
+                                        {v.stockQuantity || 0} Units
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={5} className="p-3 text-center text-typography-muted italic">No variants configured</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Agricultural & Storage Guidance Specs */}
+                      {quickViewProduct.productInformation && (
+                        <div className="bg-surface-cream p-4 rounded-xl border border-surface-border space-y-3">
+                          <h4 className="font-display font-bold text-xs text-typography-primary uppercase tracking-wider">
+                            Agricultural & Quality Specifications
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+                            <div>
+                              <span className="text-typography-muted block font-medium">Species:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.mushroomSpecies || '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-typography-muted block font-medium">Strain:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.strainVariety || '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-typography-muted block font-medium">Substrate:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.recommendedSubstrate || '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-typography-muted block font-medium">Shelf Life:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.shelfLifeGuidance || '—'}</span>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-typography-muted block font-medium">Storage Instructions:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.storageInstructions || '—'}</span>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-typography-muted block font-medium">Temperature Guidance:</span>
+                              <span className="font-bold text-typography-primary">{quickViewProduct.productInformation.storageTemperatureGuidance || '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modal Footer Controls */}
+                    <div className="p-4 bg-surface-cream border-t border-surface-border flex items-center justify-between flex-wrap gap-3 flex-shrink-0">
+                      <button
+                        onClick={() => handleToggleProductStatus(quickViewProduct)}
+                        className={`btn-secondary text-xs px-4 py-2 rounded-xl font-bold border transition-colors ${
+                          quickViewProduct.status === 'ACTIVE'
+                            ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                            : 'bg-green-50 text-green-800 border-green-200 hover:bg-green-100'
+                        }`}
+                      >
+                        {quickViewProduct.status === 'ACTIVE' ? 'Pause Product (Set to Draft)' : 'Publish Product (Set to Active)'}
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setQuickViewProduct(null)}
+                          className="btn-secondary text-xs px-4 py-2 rounded-xl font-bold"
+                        >
+                          Close
+                        </button>
+                        <button
+                          onClick={() => handleStartEditProduct(quickViewProduct)}
+                          className="btn-primary text-xs px-5 py-2 rounded-xl font-bold bg-forest-900 text-white flex items-center gap-1.5 shadow-level-1 hover:bg-forest-800"
+                        >
+                          <Edit3 className="w-4 h-4" /> Edit Specifications & Media
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -2511,8 +2956,16 @@ export default function AdminDashboardPage({ user }) {
                       className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700 mt-2 font-mono text-[11px]" 
                     />
                     {catImageUrl && (
-                      <div className="mt-2 relative h-24 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream">
-                        <img src={catImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover" />
+                      <div className="mt-2 relative h-28 sm:h-36 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream group">
+                        <img src={catImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover rounded-xl" />
+                        <button
+                          type="button"
+                          onClick={() => setCatImageUrl('')}
+                          className="absolute top-2 right-2 p-1.5 bg-red-600/90 text-white rounded-lg hover:bg-red-700 text-[11px] font-bold flex items-center gap-1 shadow-md transition-all"
+                          title="Clear image"
+                        >
+                          <X className="w-3.5 h-3.5" /> Remove Image
+                        </button>
                       </div>
                     )}
                   </div>
@@ -5194,18 +5647,18 @@ export default function AdminDashboardPage({ user }) {
 
       {/* Edit Category Modal */}
       {editingCategory && (
-        <div className="fixed inset-0 bg-forest-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-surface-white rounded-card p-6 sm:p-8 max-w-lg w-full border border-surface-border shadow-level-2 space-y-4">
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <h3 className="font-display font-bold text-lg text-typography-primary flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-forest-700" /> Edit Category: {editingCategory.name}
+        <div className="fixed inset-0 bg-forest-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 z-50 animate-fade-in overflow-y-auto">
+          <div className="bg-surface-white rounded-card p-4 sm:p-6 md:p-8 max-w-lg w-full max-h-[90vh] sm:max-h-[85vh] flex flex-col border border-surface-border shadow-level-2 space-y-3 sm:space-y-4 my-auto overflow-hidden">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3 shrink-0">
+              <h3 className="font-display font-bold text-base sm:text-lg text-typography-primary flex items-center gap-2 truncate pr-2">
+                <Edit3 className="w-5 h-5 text-forest-700 shrink-0" /> <span className="truncate">Edit Category: {editingCategory.name}</span>
               </h3>
-              <button onClick={() => setEditingCategory(null)} className="p-1 hover:bg-surface-cream rounded-lg">
+              <button onClick={() => setEditingCategory(null)} className="p-1 hover:bg-surface-cream rounded-lg shrink-0">
                 <X className="w-5 h-5 text-typography-secondary" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateCategory} className="space-y-4 text-xs">
+            <form onSubmit={handleUpdateCategory} className="space-y-3.5 sm:space-y-4 text-xs overflow-y-auto pr-1 flex-1 custom-scrollbar">
               <div>
                 <label className="block text-typography-primary font-bold mb-1">Category Name *</label>
                 <input
@@ -5241,8 +5694,16 @@ export default function AdminDashboardPage({ user }) {
                   className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700 mt-2 font-mono text-[11px]" 
                 />
                 {editCatImageUrl && (
-                  <div className="mt-2 relative h-28 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream">
-                    <img src={editCatImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover" />
+                  <div className="mt-2 relative h-28 sm:h-36 w-full rounded-xl overflow-hidden border border-surface-border bg-surface-cream group">
+                    <img src={editCatImageUrl} alt="Category Banner Preview" className="w-full h-full object-cover rounded-xl" />
+                    <button
+                      type="button"
+                      onClick={() => setEditCatImageUrl('')}
+                      className="absolute top-2 right-2 p-1.5 bg-red-600/90 text-white rounded-lg hover:bg-red-700 text-[11px] font-bold flex items-center gap-1 shadow-md transition-all"
+                      title="Clear image"
+                    >
+                      <X className="w-3.5 h-3.5" /> Remove Image
+                    </button>
                   </div>
                 )}
               </div>
@@ -5257,7 +5718,7 @@ export default function AdminDashboardPage({ user }) {
                 <label htmlFor="editCatIsActive" className="text-typography-primary font-bold">Category Active</label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-surface-border">
+              <div className="flex justify-end gap-3 pt-3 border-t border-surface-border sticky bottom-0 bg-surface-white z-10">
                 <button
                   type="button" onClick={() => setEditingCategory(null)}
                   className="btn-secondary px-4 py-2 text-xs font-bold rounded-xl"

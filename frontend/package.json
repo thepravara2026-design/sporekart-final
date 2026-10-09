@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "axios": "^1.7.4",
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.28",

@@ -83,8 +83,16 @@ public class AdminAuthService {
 
         if (identifier.contains("@")) {
             notificationService.sendOtpEmail(identifier, otpCode);
+            userRepository.findByEmail(identifier)
+                    .map(User::getPhone)
+                    .filter(phone -> phone != null && !phone.isBlank())
+                    .ifPresent(phone -> notificationService.sendOtpSms(phone, otpCode));
         } else {
             notificationService.sendOtpSms(identifier, otpCode);
+            userRepository.findByPhone(identifier)
+                    .map(User::getEmail)
+                    .filter(email -> email != null && email.contains("@"))
+                    .ifPresent(email -> notificationService.sendOtpEmail(email, otpCode));
         }
     }
 

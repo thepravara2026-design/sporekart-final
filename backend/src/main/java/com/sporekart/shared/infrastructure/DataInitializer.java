@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Component
-@Profile({"dev", "test"})
+@Profile({"dev", "test", "supabase"})
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 

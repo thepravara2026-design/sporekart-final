@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS courses (
     CONSTRAINT fk_courses_category_id FOREIGN KEY (category_id) REFERENCES course_categories(id)
 );
 
-CREATE INDEX idx_courses_category_id ON courses(category_id);
-CREATE INDEX idx_courses_slug ON courses(slug);
+CREATE INDEX IF NOT EXISTS idx_courses_category_id ON courses(category_id);
+CREATE INDEX IF NOT EXISTS idx_courses_slug ON courses(slug);
 
 CREATE TABLE IF NOT EXISTS batches (
     id UUID PRIMARY KEY,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS batches (
     CONSTRAINT fk_batches_course_id FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
-CREATE INDEX idx_batches_course_id ON batches(course_id);
+CREATE INDEX IF NOT EXISTS idx_batches_course_id ON batches(course_id);
 
 CREATE TABLE IF NOT EXISTS batch_schedules (
     id UUID PRIMARY KEY,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS batch_schedules (
     CONSTRAINT fk_batch_schedules_batch_id FOREIGN KEY (batch_id) REFERENCES batches(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_batch_schedules_batch_id ON batch_schedules(batch_id);
+CREATE INDEX IF NOT EXISTS idx_batch_schedules_batch_id ON batch_schedules(batch_id);
 
 CREATE TABLE IF NOT EXISTS enrollments (
     id UUID PRIMARY KEY,
@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS enrollments (
     CONSTRAINT fk_enrollments_batch_id FOREIGN KEY (batch_id) REFERENCES batches(id)
 );
 
-CREATE INDEX idx_enrollments_user_id ON enrollments(user_id);
-CREATE INDEX idx_enrollments_batch_id ON enrollments(batch_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_user_id ON enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_batch_id ON enrollments(batch_id);
 
 CREATE TABLE IF NOT EXISTS attendances (
     id UUID PRIMARY KEY,
@@ -105,4 +105,4 @@ CREATE TABLE IF NOT EXISTS certificates (
     CONSTRAINT fk_certificates_enrollment_id FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
 );
 
-CREATE INDEX idx_certificates_certificate_code ON certificates(certificate_code);
+CREATE INDEX IF NOT EXISTS idx_certificates_certificate_code ON certificates(certificate_code);

@@ -16,14 +16,16 @@ import org.springframework.stereotype.Service;
 public class SmtpNotificationService implements NotificationService {
 
     private final JavaMailSender mailSender;
+    private final TwilioSmsService twilioSmsService;
 
     @Value("${sporekart.mail.from:${spring.mail.username:noreply@sporekart.in}}")
     private String fromEmail;
 
     @Override
     public void sendOtpSms(String phone, String code) {
-        // TODO: Integrate SMS provider API (e.g. Twilio/Fast2SMS) when SMS credentials are configured.
-        log.info("Dispatched SMS OTP request for phone: {} [SMS provider credentials pending]", phone);
+        String messageText = "Your Sporekart verification code is: " + code + ". Valid for 5 minutes. Do not share this OTP with anyone.";
+        twilioSmsService.sendSms(phone, messageText);
+        log.info("Dispatched OTP SMS via Twilio to phone: {}", phone);
     }
 
     @Override

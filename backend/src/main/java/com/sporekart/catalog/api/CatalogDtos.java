@@ -292,6 +292,32 @@ public class CatalogDtos {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class UpdateProductRequest {
+        private UUID categoryId;
+        private String title;
+        private String slug;
+        private String description;
+        private ProductType productType;
+        private ProductStatus status;
+        private String hsnCode;
+        private BigDecimal gstRatePercent;
+        private String metaTitle;
+        private String metaDescription;
+        private String canonicalUrl;
+        private Boolean isActive;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateProductStatusRequest {
+        private ProductStatus status;
+        private Boolean isActive;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class CreateProductInformationRequest {
         private String brandName;
         private String countryOfOrigin;
@@ -397,5 +423,12 @@ public class CatalogDtos {
             private boolean isPrimary;
             private ProductMediaRole role;
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SyncMediaRequest {
+        private List<CreateMediaRequest> items;
     }
 }

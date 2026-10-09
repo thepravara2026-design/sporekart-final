@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS shipments (
     CONSTRAINT fk_shipments_order_id FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
-CREATE INDEX idx_shipments_order_id ON shipments(order_id);
-CREATE INDEX idx_shipments_awb_code ON shipments(awb_code);
-CREATE INDEX idx_shipments_shipment_id ON shipments(shipment_id);
+CREATE INDEX IF NOT EXISTS idx_shipments_order_id ON shipments(order_id);
+CREATE INDEX IF NOT EXISTS idx_shipments_awb_code ON shipments(awb_code);
+CREATE INDEX IF NOT EXISTS idx_shipments_shipment_id ON shipments(shipment_id);
 
 CREATE TABLE IF NOT EXISTS shipment_trackings (
     id UUID PRIMARY KEY,
@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS shipment_trackings (
     CONSTRAINT fk_shipment_trackings_shipment_id FOREIGN KEY (shipment_id) REFERENCES shipments(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_shipment_trackings_shipment_id ON shipment_trackings(shipment_id);
+CREATE INDEX IF NOT EXISTS idx_shipment_trackings_shipment_id ON shipment_trackings(shipment_id);

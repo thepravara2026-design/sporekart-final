@@ -209,12 +209,25 @@ public class ShippingService {
             if (order == null) return;
 
             String recipientEmail = null;
+            String recipientPhone = null;
             String recipientName = "Valued Customer";
-            if (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null) {
-                recipientName = order.getShippingAddress().getRecipientName();
+            if (order.getShippingAddress() != null) {
+                if (order.getShippingAddress().getRecipientName() != null) {
+                    recipientName = order.getShippingAddress().getRecipientName();
+                }
+                recipientPhone = order.getShippingAddress().getPhone();
             }
 
             if (order.getUserId() != null) {
+                userRepository.findById(order.getUserId()).ifPresent(user -> {
+                    if (user.getEmail() != null && user.getEmail().contains("@")) {
+                        // Keep primary email if resolved
+                    }
+                    if (user.getPhone() != null && !user.getPhone().isBlank()) {
+                        // Use user phone
+                    }
+                });
+
                 recipientEmail = userRepository.findById(order.getUserId())
                         .map(com.sporekart.identity.domain.User::getEmail)
                         .filter(e -> e != null && e.contains("@"))
@@ -231,6 +244,7 @@ public class ShippingService {
                     shipment.getId(),
                     order.getUserId(),
                     recipientEmail,
+                    recipientPhone,
                     recipientName,
                     "Sporekart Shipment Update #" + order.getOrderNumber() + " 🚚",
                     java.util.Map.of(
@@ -246,6 +260,7 @@ public class ShippingService {
                     ),
                     eventType.name() + ":" + shipment.getId()
             );
+
         } catch (Exception e) {
             log.error("Failed to record shipment notification for shipment {}: {}", shipment.getId(), e.getMessage());
         }

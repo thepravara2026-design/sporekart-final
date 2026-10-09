@@ -42,6 +42,22 @@ public class NotificationEventService {
             Map<String, Object> payload,
             String deduplicationKey
     ) {
+        return recordEvent(eventType, entityType, entityId, userId, recipientEmail, null, recipientName, subject, payload, deduplicationKey);
+    }
+
+    @Transactional
+    public Optional<NotificationEvent> recordEvent(
+            NotificationEventType eventType,
+            String entityType,
+            UUID entityId,
+            UUID userId,
+            String recipientEmail,
+            String recipientPhone,
+            String recipientName,
+            String subject,
+            Map<String, Object> payload,
+            String deduplicationKey
+    ) {
         if (recipientEmail == null || recipientEmail.isBlank() || !recipientEmail.contains("@")) {
             if (userId != null) {
                 recipientEmail = userRepository.findById(userId)
@@ -54,6 +70,23 @@ public class NotificationEventService {
         if (recipientEmail == null || recipientEmail.isBlank() || !recipientEmail.contains("@")) {
             recipientEmail = (defaultFallbackEmail != null && defaultFallbackEmail.contains("@")) ? defaultFallbackEmail : "praveenkodekal8@gmail.com";
             log.info("Using fallback recipient email ({}) for notification event {} (User ID: {})", recipientEmail, eventType, userId);
+        }
+
+        // Auto-resolve recipient phone if not provided
+        if (recipientPhone == null || recipientPhone.isBlank()) {
+            if (userId != null) {
+                recipientPhone = userRepository.findById(userId)
+                        .map(User::getPhone)
+                        .filter(p -> p != null && !p.isBlank())
+                        .orElse(null);
+            }
+        }
+        if (recipientPhone == null || recipientPhone.isBlank()) {
+            if (payload != null) {
+                if (payload.containsKey("phone")) recipientPhone = String.valueOf(payload.get("phone"));
+                else if (payload.containsKey("customerPhone")) recipientPhone = String.valueOf(payload.get("customerPhone"));
+                else if (payload.containsKey("shippingPhone")) recipientPhone = String.valueOf(payload.get("shippingPhone"));
+            }
         }
 
         // Idempotency check
@@ -82,19 +115,23 @@ public class NotificationEventService {
                 .entityType(entityType)
                 .entityId(entityId)
                 .userId(userId)
-                .recipientEmail(recipientEmail.trim().toLowerCase())
+                .recipientEmail(recipientEmail != null ? recipientEmail.trim().toLowerCase() : null)
+                .recipientPhone(recipientPhone != null ? recipientPhone.trim() : null)
+                .deliveryChannel("EMAIL_AND_SMS")
                 .recipientName(resolvedName)
                 .templateKey(eventType.name())
                 .subject(subject)
                 .payloadJson(payloadJson)
                 .status(NotificationStatus.PENDING)
+                .smsStatus("PENDING")
                 .attemptCount(0)
                 .provider("GMAIL")
+                .smsProvider("TWILIO")
                 .deduplicationKey(deduplicationKey)
                 .build();
 
         NotificationEvent saved = notificationRepository.save(event);
-        log.info("Recorded notification event ID {} [{}] for {}", saved.getId(), eventType, recipientEmail);
+        log.info("Recorded notification event ID {} [{}] for Email: {}, Phone: {}", saved.getId(), eventType, recipientEmail, recipientPhone);
 
         // Immediate dispatch
         try {
@@ -106,3 +143,4 @@ public class NotificationEventService {
         return Optional.of(saved);
     }
 }
+

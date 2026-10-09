@@ -15,4 +15,6 @@ logging:
 sporekart:
   mail:
     use-real-smtp: ${USE_REAL_SMTP:true}
+  twilio:
+    use-real-twilio: ${USE_REAL_TWILIO_SMS:true}
 

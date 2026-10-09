@@ -50,6 +50,26 @@ public class AdminCatalogController {
         return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
     }
 
+    @PutMapping("/products/{id}")
+    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> updateProduct(
+            @PathVariable("id") UUID productId,
+            @RequestBody CatalogDtos.UpdateProductRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        Product product = adminCatalogService.updateProduct(productId, request);
+        adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT", "Product", product.getId().toString(), null, product.getStatus().name(), "Updated product: " + product.getTitle(), null);
+        return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
+    }
+
+    @PatchMapping("/products/{id}/status")
+    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> updateProductStatus(
+            @PathVariable("id") UUID productId,
+            @RequestBody CatalogDtos.UpdateProductStatusRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        Product product = adminCatalogService.updateProductStatus(productId, request.getStatus(), request.getIsActive());
+        adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT_STATUS", "Product", product.getId().toString(), null, product.getStatus().name(), "Updated product status: " + product.getTitle(), null);
+        return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
+    }
+
     @PostMapping("/products/{id}/information")
     public ResponseEntity<ApiResponse<ProductInformation>> updateProductInformation(
             @PathVariable("id") UUID productId,
@@ -124,6 +144,15 @@ public class AdminCatalogController {
             @PathVariable("id") UUID productId,
             @RequestBody CatalogDtos.UpdateMediaOrderRequest request) {
         List<ProductMedia> mediaList = adminCatalogService.updateMediaOrder(productId, request);
+        return ResponseEntity.ok(ApiResponse.success(mediaList));
+    }
+
+    @PutMapping("/products/{id}/media")
+    public ResponseEntity<ApiResponse<List<ProductMedia>>> syncProductMedia(
+            @PathVariable("id") UUID productId,
+            @RequestBody CatalogDtos.SyncMediaRequest request) {
+        List<CatalogDtos.CreateMediaRequest> items = request != null && request.getItems() != null ? request.getItems() : java.util.Collections.emptyList();
+        List<ProductMedia> mediaList = adminCatalogService.syncProductMedia(productId, items);
         return ResponseEntity.ok(ApiResponse.success(mediaList));
     }
 

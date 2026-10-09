@@ -52,18 +52,25 @@ public class NotificationEventListener {
             if (order == null) return;
 
             String recipientEmail = null;
+            String recipientPhone = null;
             String recipientName = "Valued Customer";
 
             if (order.getUserId() != null) {
                 Optional<User> userOpt = userRepository.findById(order.getUserId());
                 if (userOpt.isPresent()) {
                     recipientEmail = userOpt.get().getEmail();
+                    recipientPhone = userOpt.get().getPhone();
                     recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
                 }
             }
 
-            if ((recipientEmail == null || recipientEmail.isBlank()) && order.getShippingAddress() != null) {
-                recipientName = order.getShippingAddress().getRecipientName();
+            if (order.getShippingAddress() != null) {
+                if (recipientPhone == null || recipientPhone.isBlank()) {
+                    recipientPhone = order.getShippingAddress().getPhone();
+                }
+                if ((recipientEmail == null || recipientEmail.isBlank())) {
+                    recipientName = order.getShippingAddress().getRecipientName();
+                }
             }
 
             List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -85,6 +92,7 @@ public class NotificationEventListener {
                     order.getId(),
                     order.getUserId(),
                     recipientEmail,
+                    recipientPhone,
                     recipientName,
                     "Sporekart Order Confirmation #" + order.getOrderNumber() + " 🍄",
                     Map.of(
@@ -111,12 +119,14 @@ public class NotificationEventListener {
             if (enrollment == null) return;
 
             String recipientEmail = null;
+            String recipientPhone = null;
             String recipientName = "Trainee";
 
             if (enrollment.getUserId() != null) {
                 Optional<User> userOpt = userRepository.findById(enrollment.getUserId());
                 if (userOpt.isPresent()) {
                     recipientEmail = userOpt.get().getEmail();
+                    recipientPhone = userOpt.get().getPhone();
                     recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
                 }
             }
@@ -131,6 +141,7 @@ public class NotificationEventListener {
                     enrollment.getId(),
                     enrollment.getUserId(),
                     recipientEmail,
+                    recipientPhone,
                     recipientName,
                     "Masterclass Enrollment Confirmed: " + courseTitle + " 🎓",
                     Map.of(
@@ -156,14 +167,20 @@ public class NotificationEventListener {
             if (order == null) return;
 
             String recipientEmail = null;
+            String recipientPhone = null;
             String recipientName = "Valued Customer";
 
             if (order.getUserId() != null) {
                 Optional<User> userOpt = userRepository.findById(order.getUserId());
                 if (userOpt.isPresent()) {
                     recipientEmail = userOpt.get().getEmail();
+                    recipientPhone = userOpt.get().getPhone();
                     recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
                 }
+            }
+
+            if (order.getShippingAddress() != null && (recipientPhone == null || recipientPhone.isBlank())) {
+                recipientPhone = order.getShippingAddress().getPhone();
             }
 
             String dedupKey = "ORDER_DELIVERED:" + order.getId();
@@ -173,6 +190,7 @@ public class NotificationEventListener {
                     order.getId(),
                     order.getUserId(),
                     recipientEmail,
+                    recipientPhone,
                     recipientName,
                     "Your Sporekart Order #" + order.getOrderNumber() + " Has Been Delivered 🎉",
                     Map.of(
@@ -182,6 +200,7 @@ public class NotificationEventListener {
                     ),
                     dedupKey
             );
+
         } catch (Exception e) {
             log.error("Error creating ORDER_DELIVERED notification event for order {}: {}", event.getOrderId(), e.getMessage(), e);
         }

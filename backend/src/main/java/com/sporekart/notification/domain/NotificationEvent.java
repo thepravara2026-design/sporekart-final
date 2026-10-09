@@ -36,8 +36,15 @@ public class NotificationEvent {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "recipient_email", nullable = false)
+    @Column(name = "recipient_email")
     private String recipientEmail;
+
+    @Column(name = "recipient_phone", length = 64)
+    private String recipientPhone;
+
+    @Column(name = "delivery_channel", length = 32)
+    @Builder.Default
+    private String deliveryChannel = "EMAIL_AND_SMS";
 
     @Column(name = "recipient_name")
     private String recipientName;
@@ -79,8 +86,29 @@ public class NotificationEvent {
     @Column(name = "provider_message_id")
     private String providerMessageId;
 
+    @Column(name = "sms_status", length = 32)
+    @Builder.Default
+    private String smsStatus = "PENDING";
+
+    @Column(name = "sms_sent_at")
+    private ZonedDateTime smsSentAt;
+
+    @Column(name = "sms_failed_at")
+    private ZonedDateTime smsFailedAt;
+
+    @Column(name = "sms_error_message", columnDefinition = "TEXT")
+    private String smsErrorMessage;
+
+    @Column(name = "sms_provider", length = 32)
+    @Builder.Default
+    private String smsProvider = "TWILIO";
+
+    @Column(name = "sms_provider_message_id")
+    private String smsProviderMessageId;
+
     @Column(name = "deduplication_key", nullable = false, unique = true)
     private String deduplicationKey;
+
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;

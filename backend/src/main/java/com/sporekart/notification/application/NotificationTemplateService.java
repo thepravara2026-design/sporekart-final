@@ -505,4 +505,46 @@ public class NotificationTemplateService {
         </div>
         """.formatted(ticketNumber, ticketNumber, subject, category, priority, closedByDisplay, ratingHtml, msgHtml, ctaUrl);
     }
+
+    public String buildSmsText(NotificationEventType eventType, String payloadJson) {
+        try {
+            JsonNode data = objectMapper.readTree(payloadJson);
+            return switch (eventType) {
+                case ORDER_CONFIRMED, ORDER_PACKED -> 
+                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " confirmed! Total Amount: INR " + data.path("totalAmount").asText("0.00") + ". Thank you for your purchase!";
+                case ORDER_CANCELLED -> 
+                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " has been cancelled. Refund details have been sent to your registered email.";
+                case SHIPMENT_HANDOVER, SHIPMENT_SHIPPED, SHIPMENT_IN_TRANSIT -> 
+                    "Sporekart: Your order #" + data.path("orderNumber").asText("N/A") + " is shipped via " + data.path("courierName").asText("Courier") + ". AWB: " + data.path("awbCode").asText("N/A") + ". Track here: " + data.path("trackingUrl").asText("N/A");
+                case SHIPMENT_OUT_FOR_DELIVERY -> 
+                    "Sporekart: Your order #" + data.path("orderNumber").asText("N/A") + " is OUT FOR DELIVERY today! Please be available to collect.";
+                case ORDER_DELIVERED -> 
+                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " has been delivered successfully! Thank you for choosing Sporekart.";
+                case REFUND_INITIATED, REFUND_PROCESSING, REFUND_COMPLETED -> 
+                    "Sporekart: Refund of INR " + data.path("refundAmount").asText("0.00") + " for order #" + data.path("orderNumber").asText("N/A") + " status: " + eventType.name() + ".";
+                case ENROLLMENT_CONFIRMED -> 
+                    "Sporekart Training: Masterclass enrollment for '" + data.path("courseTitle").asText("Course") + "' confirmed! Batch: " + data.path("batchCode").asText("UPCOMING") + ".";
+                case ENROLLMENT_CANCELLED -> 
+                    "Sporekart Training: Enrollment for '" + data.path("courseTitle").asText("Course") + "' has been cancelled.";
+                case WALLET_TOPUP_SUCCESS -> 
+                    "Sporekart Wallet: Top-up of INR " + data.path("amount").asText("0.00") + " successful! Transaction Ref: " + data.path("transactionRef").asText("N/A") + ".";
+                case WALLET_REFUND_CREDIT -> 
+                    "Sporekart Wallet: INR " + data.path("amount").asText("0.00") + " credited as refund to your Sporekart wallet.";
+                case WALLET_PAYMENT_SUCCESS -> 
+                    "Sporekart Wallet: Payment of INR " + data.path("amount").asText("0.00") + " processed successfully from your wallet.";
+                case WALLET_WITHDRAWAL_REQUESTED, WALLET_WITHDRAWAL_COMPLETED -> 
+                    "Sporekart Wallet: Withdrawal of INR " + data.path("amount").asText("0.00") + " status: " + eventType.name() + ".";
+                case CART_ABANDONED, ENROLLMENT_CHECKOUT_ABANDONED -> 
+                    "Sporekart: You left items in your cart! Complete your checkout now at " + frontendUrl + "/cart";
+                case SUPPORT_TICKET_CLOSED -> 
+                    "Sporekart Support: Ticket #" + data.path("ticketNumber").asText("N/A") + " ('" + data.path("subject").asText("") + "') has been resolved and closed.";
+                default -> 
+                    "Sporekart Alert: An update has been posted to your account. Log in to view details: " + frontendUrl;
+            };
+        } catch (Exception e) {
+            log.error("Failed to build SMS text for event {}: {}", eventType, e.getMessage());
+            return "Sporekart Alert: You have a new notification on Sporekart. Please check your account dashboard.";
+        }
+    }
 }
+

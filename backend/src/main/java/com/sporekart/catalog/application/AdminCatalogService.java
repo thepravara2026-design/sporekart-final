@@ -116,6 +116,70 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    public Product updateProduct(UUID productId, CatalogDtos.UpdateProductRequest request) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found: " + request.getCategoryId()));
+            product.setCategory(category);
+        }
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            product.setTitle(request.getTitle().trim());
+        }
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            String newSlug = request.getSlug().trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+            if (!newSlug.equals(product.getSlug()) && productRepository.existsBySlug(newSlug)) {
+                newSlug = newSlug + "-" + System.currentTimeMillis() % 10000;
+            }
+            product.setSlug(newSlug);
+        }
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+        if (request.getProductType() != null) {
+            product.setProductType(request.getProductType());
+        }
+        if (request.getStatus() != null) {
+            product.setStatus(request.getStatus());
+        }
+        if (request.getHsnCode() != null) {
+            product.setHsnCode(request.getHsnCode());
+        }
+        if (request.getGstRatePercent() != null) {
+            product.setGstRatePercent(request.getGstRatePercent());
+        }
+        if (request.getMetaTitle() != null) {
+            product.setMetaTitle(request.getMetaTitle());
+        }
+        if (request.getMetaDescription() != null) {
+            product.setMetaDescription(request.getMetaDescription());
+        }
+        if (request.getCanonicalUrl() != null) {
+            product.setCanonicalUrl(request.getCanonicalUrl());
+        }
+        if (request.getIsActive() != null) {
+            product.setActive(request.getIsActive());
+        }
+
+        return productRepository.save(product);
+    }
+
+    @Transactional
+    public Product updateProductStatus(UUID productId, ProductStatus status, Boolean isActive) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+        if (status != null) {
+            product.setStatus(status);
+        }
+        if (isActive != null) {
+            product.setActive(isActive);
+        }
+        return productRepository.save(product);
+    }
+
+    @Transactional
     public ProductInformation saveOrUpdateProductInformation(Product product, CatalogDtos.CreateProductInformationRequest request) {
         ProductInformation info = informationRepository.findByProductId(product.getId())
                 .orElseGet(() -> ProductInformation.builder().product(product).build());
@@ -298,6 +362,43 @@ public class AdminCatalogService {
         }
 
         return mediaRepository.findByProductIdOrderByDisplayOrderAsc(productId);
+    }
+
+    @Transactional
+    public List<ProductMedia> syncProductMedia(UUID productId, List<CatalogDtos.CreateMediaRequest> items) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        List<ProductMedia> existingMedia = mediaRepository.findByProductIdOrderByDisplayOrderAsc(productId);
+        if (!existingMedia.isEmpty()) {
+            mediaRepository.deleteAll(existingMedia);
+            product.getMedia().clear();
+        }
+
+        List<ProductMedia> newMediaList = new java.util.ArrayList<>();
+        if (items != null && !items.isEmpty()) {
+            boolean hasPrimary = items.stream().anyMatch(CatalogDtos.CreateMediaRequest::isPrimary);
+            for (int i = 0; i < items.size(); i++) {
+                CatalogDtos.CreateMediaRequest req = items.get(i);
+                if (req.getMediaUrl() == null || req.getMediaUrl().trim().isEmpty()) {
+                    continue;
+                }
+                boolean isPrimary = req.isPrimary() || (!hasPrimary && i == 0);
+                ProductMedia media = ProductMedia.builder()
+                        .product(product)
+                        .variantId(req.getVariantId())
+                        .mediaUrl(req.getMediaUrl().trim())
+                        .mediaType(req.getMediaType() != null ? req.getMediaType() : MediaType.IMAGE)
+                        .role(req.getRole() != null ? req.getRole() : (isPrimary ? ProductMediaRole.PRIMARY : ProductMediaRole.GALLERY))
+                        .isPrimary(isPrimary)
+                        .displayOrder(req.getDisplayOrder() != 0 ? req.getDisplayOrder() : i)
+                        .build();
+                ProductMedia saved = mediaRepository.save(media);
+                newMediaList.add(saved);
+                product.getMedia().add(saved);
+            }
+        }
+        return newMediaList;
     }
 
     @Transactional(readOnly = true)

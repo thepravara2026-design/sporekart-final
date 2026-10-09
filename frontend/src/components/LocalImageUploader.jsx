@@ -142,13 +142,13 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
   };
 
   return (
-    <div className="p-5 bg-surface-cream rounded-2xl border border-surface-border space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h4 className="font-bold text-sm text-typography-primary flex items-center gap-2">
-            <Upload className="w-4 h-4 text-forest-700" /> Local Image Upload with Pre-Upload Preview
+    <div className="p-3.5 sm:p-4 bg-surface-cream rounded-2xl border border-surface-border space-y-3 w-full max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <h4 className="font-bold text-xs sm:text-sm text-typography-primary flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Upload className="w-4 h-4 text-forest-700 shrink-0" /> <span className="truncate">Local Image Upload with Pre-Upload Preview</span>
           </h4>
-          <p className="text-xs text-typography-secondary">
+          <p className="text-[11px] sm:text-xs text-typography-secondary line-clamp-2">
             Select high-resolution JPG, PNG, WEBP, or GIF images from your device.
           </p>
         </div>
@@ -157,7 +157,7 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="btn-primary text-xs font-bold px-4 py-2 flex items-center gap-2"
+          className="btn-primary text-xs font-bold px-3.5 py-2 flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
         >
           <ImageIcon className="w-4 h-4" /> Select Images
         </button>
@@ -172,31 +172,31 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
       </div>
 
       {errorMsg && (
-        <div className="p-3 bg-red-50 text-red-700 rounded-xl text-xs flex items-center gap-2 border border-red-200">
+        <div className="p-2.5 bg-red-50 text-red-700 rounded-xl text-xs flex items-center gap-2 border border-red-200">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{errorMsg}</span>
+          <span className="break-words min-w-0 flex-1">{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-2 border border-emerald-200">
+        <div className="p-2.5 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-2 border border-emerald-200">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{successMsg}</span>
+          <span className="break-words min-w-0 flex-1">{successMsg}</span>
         </div>
       )}
 
       {/* Pre-Upload Image Previews */}
       {selectedFiles.length > 0 && (
-        <div className="space-y-3">
-          <div className="text-xs font-bold text-typography-primary flex items-center justify-between">
+        <div className="space-y-2.5 pt-1.5 border-t border-surface-border/60">
+          <div className="text-xs font-bold text-typography-primary flex flex-wrap items-center justify-between gap-1">
             <span>Selected Images ({selectedFiles.length})</span>
-            <span className="text-typography-muted text-[11px]">Previewing locally before server upload</span>
+            <span className="text-typography-muted text-[10px] sm:text-[11px]">Previewing locally</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-48 sm:max-h-56 overflow-y-auto p-1 custom-scrollbar">
             {selectedFiles.map((item) => (
-              <div key={item.id} className="relative group rounded-xl overflow-hidden border border-surface-border bg-surface-white p-2 space-y-1">
-                <div className="h-28 rounded-lg overflow-hidden bg-forest-900/5 relative flex items-center justify-center">
+              <div key={item.id} className="relative group rounded-xl overflow-hidden border border-surface-border bg-surface-white p-1.5 space-y-1">
+                <div className="h-20 sm:h-24 rounded-lg overflow-hidden bg-forest-900/5 relative flex items-center justify-center">
                   <img
                     src={item.previewUrl}
                     alt={item.name}
@@ -206,19 +206,19 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
                     type="button"
                     onClick={() => handleRemoveFile(item.id)}
                     disabled={isUploading}
-                    className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-90 hover:opacity-100 hover:scale-110 transition-all shadow-md"
+                    className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-90 hover:opacity-100 hover:scale-110 transition-all shadow-md z-10"
                     title="Remove image"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="text-[11px] truncate font-medium text-typography-primary">{item.name}</div>
-                <div className="text-[10px] text-typography-muted font-mono">{item.sizeKb} KB</div>
+                <div className="text-[11px] truncate font-medium text-typography-primary px-0.5">{item.name}</div>
+                <div className="text-[10px] text-typography-muted font-mono px-0.5">{item.sizeKb} KB</div>
               </div>
             ))}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={() => {
@@ -226,7 +226,7 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
                 setSelectedFiles([]);
               }}
               disabled={isUploading}
-              className="btn-secondary text-xs font-bold px-4 py-2"
+              className="btn-secondary text-xs font-bold px-3 py-1.5"
             >
               Clear All
             </button>
@@ -234,15 +234,15 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
               type="button"
               onClick={handleUploadAll}
               disabled={isUploading}
-              className="btn-primary text-xs font-bold px-5 py-2 flex items-center gap-2"
+              className="btn-primary text-xs font-bold px-4 py-1.5 flex items-center gap-1.5"
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Uploading ({uploadProgress}%)
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading ({uploadProgress}%)
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4" /> Confirm & Upload {selectedFiles.length} Image(s)
+                  <Upload className="w-3.5 h-3.5" /> Confirm & Upload {selectedFiles.length} Image(s)
                 </>
               )}
             </button>

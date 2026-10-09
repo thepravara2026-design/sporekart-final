@@ -3,6 +3,7 @@ package com.sporekart.notification.application;
 import com.sporekart.notification.domain.NotificationEvent;
 import com.sporekart.notification.domain.NotificationStatus;
 import com.sporekart.notification.infrastructure.NotificationEventRepository;
+import com.sporekart.shared.infrastructure.TwilioSmsService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class NotificationWorker {
     private final NotificationEventRepository notificationRepository;
     private final NotificationTemplateService templateService;
     private final JavaMailSender mailSender;
+    private final TwilioSmsService twilioSmsService;
 
     @Value("${spring.mail.username:}")
     private String smtpUsername;
@@ -63,50 +65,72 @@ public class NotificationWorker {
         event.setLastAttemptAt(ZonedDateTime.now());
         notificationRepository.save(event);
 
-        try {
-            String htmlBody = templateService.buildHtmlEmail(event.getEventType(), event.getPayloadJson());
-
-            String activeFrom = (configuredFrom != null && !configuredFrom.isBlank() && configuredFrom.contains("@"))
-                    ? configuredFrom
-                    : ((smtpUsername != null && !smtpUsername.isBlank() && smtpUsername.contains("@")) ? smtpUsername : "noreply@sporekart.in");
-
-            // Attempt real email dispatch via JavaMailSender (same credentials as OTP)
+        // 1. DISPATCH TWILIO SMS NOTIFICATION (if phone is present)
+        if (event.getRecipientPhone() != null && !event.getRecipientPhone().isBlank()) {
             try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                String smsMessageText = templateService.buildSmsText(event.getEventType(), event.getPayloadJson());
+                String messageSid = twilioSmsService.sendSms(event.getRecipientPhone(), smsMessageText);
                 
-                try {
-                    helper.setFrom(activeFrom, fromName != null && !fromName.isBlank() ? fromName : "Sporekart Agritech");
-                } catch (Exception e) {
-                    helper.setFrom(activeFrom);
-                }
-
-                helper.setTo(event.getRecipientEmail());
-                helper.setSubject(event.getSubject());
-                helper.setText(htmlBody, true);
-
-                mailSender.send(message);
-
-                event.setStatus(NotificationStatus.SENT);
-                event.setSentAt(ZonedDateTime.now());
-                event.setErrorMessage(null);
-                notificationRepository.save(event);
-
-                log.info("Successfully dispatched email notification ID {} [{}] via JavaMailSender to {}", event.getId(), event.getEventType(), event.getRecipientEmail());
-                return;
-            } catch (Exception e) {
-                if (useRealSmtp) {
-                    log.error("Failed to send real SMTP email notification ID {} [{}] to {}: {}", event.getId(), event.getEventType(), event.getRecipientEmail(), e.getMessage());
-                    throw e; // Rethrow to trigger retry policy for real SMTP mode
-                } else {
-                    log.warn("Real SMTP dispatch failed for event ID {} [{}] to {} ({}), falling back to log mode: {}", 
-                            event.getId(), event.getEventType(), event.getRecipientEmail(), activeFrom, e.getMessage());
-                }
+                event.setSmsStatus("SENT");
+                event.setSmsSentAt(ZonedDateTime.now());
+                event.setSmsProviderMessageId(messageSid);
+                event.setSmsErrorMessage(null);
+                log.info("Successfully dispatched Twilio SMS notification ID {} [{}] to {}", event.getId(), event.getEventType(), event.getRecipientPhone());
+            } catch (Exception smsEx) {
+                log.error("Failed Twilio SMS dispatch for notification ID {} [{}]: {}", event.getId(), event.getEventType(), smsEx.getMessage());
+                event.setSmsStatus("FAILED");
+                event.setSmsFailedAt(ZonedDateTime.now());
+                event.setSmsErrorMessage(smsEx.getMessage());
             }
+        }
 
-            // Log mode fallback when USE_REAL_SMTP is false and local dev mail server is unreachable
-            log.info("[NOTIFICATION DISPATCHED - LOG MODE] Event ID: {}, Type: {}, Recipient: {}, Subject: {}\nHTML Content Size: {} bytes",
-                    event.getId(), event.getEventType(), event.getRecipientEmail(), event.getSubject(), htmlBody.length());
+        // 2. DISPATCH EMAIL NOTIFICATION (if email is present)
+        try {
+            if (event.getRecipientEmail() != null && event.getRecipientEmail().contains("@")) {
+                String htmlBody = templateService.buildHtmlEmail(event.getEventType(), event.getPayloadJson());
+
+                String activeFrom = (configuredFrom != null && !configuredFrom.isBlank() && configuredFrom.contains("@"))
+                        ? configuredFrom
+                        : ((smtpUsername != null && !smtpUsername.isBlank() && smtpUsername.contains("@")) ? smtpUsername : "noreply@sporekart.in");
+
+                // Attempt real email dispatch via JavaMailSender
+                try {
+                    MimeMessage message = mailSender.createMimeMessage();
+                    MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                    
+                    try {
+                        helper.setFrom(activeFrom, fromName != null && !fromName.isBlank() ? fromName : "Sporekart Agritech");
+                    } catch (Exception e) {
+                        helper.setFrom(activeFrom);
+                    }
+
+                    helper.setTo(event.getRecipientEmail());
+                    helper.setSubject(event.getSubject());
+                    helper.setText(htmlBody, true);
+
+                    mailSender.send(message);
+
+                    event.setStatus(NotificationStatus.SENT);
+                    event.setSentAt(ZonedDateTime.now());
+                    event.setErrorMessage(null);
+                    notificationRepository.save(event);
+
+                    log.info("Successfully dispatched email notification ID {} [{}] via JavaMailSender to {}", event.getId(), event.getEventType(), event.getRecipientEmail());
+                    return;
+                } catch (Exception e) {
+                    if (useRealSmtp) {
+                        log.error("Failed to send real SMTP email notification ID {} [{}] to {}: {}", event.getId(), event.getEventType(), event.getRecipientEmail(), e.getMessage());
+                        throw e; // Rethrow to trigger retry policy for real SMTP mode
+                    } else {
+                        log.warn("Real SMTP dispatch failed for event ID {} [{}] to {} ({}), falling back to log mode: {}", 
+                                event.getId(), event.getEventType(), event.getRecipientEmail(), activeFrom, e.getMessage());
+                    }
+                }
+
+                // Log mode fallback when USE_REAL_SMTP is false and local dev mail server is unreachable
+                log.info("[NOTIFICATION DISPATCHED - LOG MODE] Event ID: {}, Type: {}, Recipient: {}, Subject: {}\nHTML Content Size: {} bytes",
+                        event.getId(), event.getEventType(), event.getRecipientEmail(), event.getSubject(), htmlBody.length());
+            }
 
             event.setStatus(NotificationStatus.SENT);
             event.setSentAt(ZonedDateTime.now());
@@ -127,3 +151,4 @@ public class NotificationWorker {
         }
     }
 }
+
