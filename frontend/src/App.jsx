@@ -75,7 +75,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <CartProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className="min-h-screen flex flex-col justify-between bg-surface-cream text-typography-primary font-sans">
             <Navbar user={user} setUser={setUser} />
 

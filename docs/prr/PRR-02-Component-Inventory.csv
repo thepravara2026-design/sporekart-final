@@ -1,0 +1,22 @@
+Component ID,Module,Type,File Path,Role Access,API Endpoints,DB Entities / Tables,Review Status,Findings
+COMP-FE-01,Catalog,Frontend Route,frontend/src/pages/CatalogPage.jsx,PUBLIC,GET /api/v1/products,products; product_variants,REVIEWED,Monolithic filtering logic
+COMP-FE-02,Catalog,Frontend Page,frontend/src/pages/ProductDetailPage.jsx,PUBLIC,GET /api/v1/products/{id}; GET /api/v1/reviews/product/{id},products; product_variants; product_reviews,REVIEWED,Large bundle size (36.7 KB)
+COMP-FE-03,Cart,Frontend Page,frontend/src/pages/CartPage.jsx,PUBLIC/CUSTOMER,GET/POST/DELETE /api/v1/cart,carts; cart_items,REVIEWED,Good state isolation
+COMP-FE-04,Checkout,Frontend Page,frontend/src/pages/CheckoutPage.jsx,CUSTOMER,POST /api/v1/orders; POST /api/v1/payment/razorpay/order,orders; order_items; payments,REVIEWED,Missing optimistic locking alert
+COMP-FE-05,Payment,Frontend Page,frontend/src/pages/PaymentPage.jsx,CUSTOMER,POST /api/v1/payment/razorpay/verify,payments; orders,REVIEWED,Client-side callback validation check
+COMP-FE-06,Order,Frontend Page,frontend/src/pages/OrderConfirmationPage.jsx,CUSTOMER,GET /api/v1/orders/{id}; GET /api/v1/orders/{id}/invoice,orders; order_items,REVIEWED,In-browser PDF invoice generator
+COMP-FE-07,Training,Frontend Page,frontend/src/pages/TrainingPage.jsx,PUBLIC,GET /api/v1/courses,courses; batches; course_categories,REVIEWED,Auto-sliding glimpse gallery integration
+COMP-FE-08,Training,Frontend Page,frontend/src/pages/CourseDetailPage.jsx,PUBLIC,GET /api/v1/courses/{id}; POST /api/v1/enrollments,courses; batches; enrollments,REVIEWED,Batch slot capacity state check
+COMP-FE-09,Account,Frontend Page,frontend/src/pages/DashboardPage.jsx,CUSTOMER/TRAINEE,GET/PUT /api/v1/customer/profile; GET /api/v1/wallet/me,customer_profiles; wallets; orders; enrollments,REVIEWED,Massive monolithic file (123 KB)
+COMP-FE-10,Admin,Frontend Page,frontend/src/pages/AdminDashboardPage.jsx,ADMIN,GET/POST/PUT /api/v1/admin/*,all tables,REVIEWED,Extreme file bloat (340 KB / ~8500 lines)
+COMP-BE-01,Identity,Backend REST,backend/src/main/java/com/sporekart/identity/api/AuthController.java,PUBLIC,POST /api/v1/auth/login; POST /api/v1/auth/register,users; otps,REVIEWED,Bcrypt password hashing verified
+COMP-BE-02,Catalog,Backend REST,backend/src/main/java/com/sporekart/catalog/api/CatalogController.java,PUBLIC,GET /api/v1/products; GET /api/v1/products/{slug},products; product_variants; categories,REVIEWED,DTO mapping clean
+COMP-BE-03,Order,Backend REST,backend/src/main/java/com/sporekart/order/api/OrderController.java,CUSTOMER,POST /api/v1/orders; GET /api/v1/orders/my-orders,orders; order_items; inventory_records,REVIEWED,Pessimistic lock on inventory reservation
+COMP-BE-04,Payment,Backend REST,backend/src/main/java/com/sporekart/payment/api/PaymentWebhookController.java,PUBLIC/RAZORPAY,POST /api/v1/payment/webhook,payments; orders,REVIEWED,HMAC SHA256 signature verification active
+COMP-BE-05,Training,Backend REST,backend/src/main/java/com/sporekart/training/api/TrainingController.java,PUBLIC/TRAINEE,POST /api/v1/enrollments; GET /api/v1/courses,courses; batches; enrollments,REVIEWED,Batch capacity race condition fix verified
+COMP-BE-06,Wallet,Backend REST,backend/src/main/java/com/sporekart/wallet/api/WalletController.java,CUSTOMER/TRAINEE,GET /api/v1/wallet/me; POST /api/v1/wallet/withdraw,wallets; wallet_transactions; wallet_withdrawals,REVIEWED,Idempotency key enforced on ledger
+COMP-BE-07,Admin,Backend REST,backend/src/main/java/com/sporekart/admin/api/AdminController.java,ADMIN,GET /api/v1/admin/metrics; GET /api/v1/admin/audit-logs,admin_audit_logs,REVIEWED,Role-based security enforced
+COMP-DB-01,Identity,DB Entity,users,ALL,N/A,users,REVIEWED,Primary Key UUID; UNIQUE phone/email
+COMP-DB-02,Catalog,DB Entity,products / product_variants,ALL,N/A,products; product_variants,REVIEWED,Cascade delete on variants; compare_at_price
+COMP-DB-03,Training,DB Entity,courses / batches / enrollments,ALL,N/A,courses; batches; enrollments,REVIEWED,Batch capacity constraint
+COMP-DB-04,Wallet,DB Entity,wallets / wallet_transactions,ALL,N/A,wallets; wallet_transactions,REVIEWED,Idempotency key UNIQUE; missing DB balance CHECK

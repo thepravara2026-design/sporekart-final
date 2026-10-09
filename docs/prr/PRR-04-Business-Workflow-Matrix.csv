@@ -1,0 +1,15 @@
+Workflow ID,Module,Workflow Name,User Roles,Pre-Conditions,Key State Transitions,Backend Enforcement,DB Persistence,Audit Result,Discovered Defects
+WF-CUST-01,Customer,Product Discovery & Filtering,PUBLIC,Catalog active,View products -> Filter category -> Search,CatalogController REST,products; categories,PASS,Client-side filtering on large sets
+WF-CUST-02,Customer,Cart Management & Promo Apply,PUBLIC/CUSTOMER,Items available,Add item -> Update quantity -> Apply promo,CartController & PromoService,carts; cart_items; promotions,PASS,Popup drawer state sync verified
+WF-CUST-03,Customer,Checkout & Guest Order Creation,PUBLIC/CUSTOMER,Cart non-empty,Cart -> Select Address -> Create Order,OrderService (Pessimistic lock),orders; order_items; inventory_records,FAIL,IDOR risk on order view endpoint
+WF-CUST-04,Customer,Razorpay Payment Verification,CUSTOMER,Order CREATED,Launch Razorpay -> Payment Success -> Verify,PaymentService (HMAC verification),payments; orders,PASS,HMAC SHA256 signature verified
+WF-CUST-05,Customer,Order History & Invoice PDF,CUSTOMER,Order exists,View orders -> Download PDF Invoice,OrderController REST,orders; order_items,FAIL,BOLA/IDOR on GET /orders/{id}
+WF-TRAIN-01,Trainee,Course & Batch Discovery,PUBLIC,Courses active,View courses -> Select batch schedule,TrainingController REST,courses; batches,PASS,Auto-sliding glimpse gallery active
+WF-TRAIN-02,Trainee,Batch Enrollment & Slot Lock,TRAINEE,Batch slots available,Select slot -> Reserve -> Pay -> Confirm,TrainingService (Concurrency lock),enrollments; batches,PASS,Concurrency race condition fix verified
+WF-WALLET-01,Customer,Wallet Balance & Top-Up,CUSTOMER,Account verified,Top-up wallet -> Record Ledger -> Update Balance,WalletService (Idempotency key),wallets; wallet_transactions,WARN,Missing DB-level CHECK constraint
+WF-WALLET-02,Customer,Wallet Withdrawal Request,CUSTOMER,Sufficient balance,Request withdrawal -> Deduct available -> Request,WalletService & WalletWithdrawal,wallets; wallet_withdrawals,PASS,Pessimistic lock on balance check
+WF-ADMIN-01,Admin,Product & Stock Management,ADMIN,Admin authenticated,Create/Edit Product -> Replenish Stock,AdminCatalogController,products; product_variants,PASS,Role ADMIN enforced
+WF-ADMIN-02,Admin,Order Processing & Shipping,ADMIN,Order PAID,Approve order -> Create Shiprocket shipment,AdminOrderController & ShippingService,orders; shipments,PASS,Permitted status transition check
+WF-ADMIN-03,Admin,Review Moderation & CSAT,ADMIN,Reviews submitted,Pending -> Moderate (Publish/Reject),AdminReviewController,product_reviews; training_reviews,PASS,Admin audit log entry recorded
+WF-CROSS-01,Cross-Module,Stock Depletion during Checkout,CUSTOMER,Last stock item,User A checks out while User B views,OrderService (Pessimistic Lock),product_variants; inventory_records,PASS,User B receives out-of-stock alert
+WF-CROSS-02,Cross-Module,Duplicate Webhook Callback,PAYMENT,Webhook triggered,Gateway retries webhook payload,PaymentWebhookController (Idempotency),payment_events; orders,PASS,Duplicate webhook ignored gracefully

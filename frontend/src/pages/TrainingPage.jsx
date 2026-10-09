@@ -64,34 +64,6 @@ export default function TrainingPage({ user, setUser }) {
     setPreviewEnrollment({ course, slot: targetSlot });
   };
 
-  const handleConfirmAndPay = async () => {
-    if (!previewEnrollment || !previewEnrollment.slot) {
-      setBookingError('No valid batch slot selected.');
-      return;
-    }
-
-    setReserving(true);
-    setBookingError('');
-
-    try {
-      const activePromoCode = (promoResult && promoResult.valid) ? promoCodeInput.trim() : null;
-      const res = await trainingApi.bookSlot(previewEnrollment.slot.id, activePromoCode);
-      if (res.data && res.data.success) {
-        const enrollmentData = res.data.data;
-        setPreviewEnrollment(null);
-        setPromoResult(null);
-        setPromoCodeInput('');
-        setPromoMessage('');
-        navigate(`/payment?type=enrollment&id=${enrollmentData.id}`);
-      } else {
-        setBookingError('Unable to reserve seat slot. Please try again.');
-      }
-    } catch (err) {
-      setBookingError(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to reserve seat slot.');
-    } finally {
-      setReserving(false);
-    }
-  };
 
   const courseSchemas = courses.map((c) => ({
     "@context": "https://schema.org",

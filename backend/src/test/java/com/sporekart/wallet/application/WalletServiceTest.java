@@ -31,6 +31,9 @@ class WalletServiceTest {
     @Mock
     private WalletWithdrawalRepository withdrawalRepository;
 
+    @Mock
+    private com.sporekart.notification.application.NotificationEventService notificationEventService;
+
     @InjectMocks
     private WalletService walletService;
 

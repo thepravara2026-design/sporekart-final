@@ -8,7 +8,7 @@ export const validateIndianPhone = (phone) => {
   if (!phone || !phone.trim()) {
     return 'Mobile phone number is required';
   }
-  const cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.trim().replace(/[\s\-()]/g, '');
   const mobile10 = cleaned.replace(/^(?:\+91|91|0)/, '');
   if (!/^[6-9]\d{9}$/.test(mobile10)) {
     return 'Enter a valid 10-digit Indian mobile number (must start with 6, 7, 8, or 9)';
@@ -49,7 +49,7 @@ export const validateCity = (city) => {
   if (cleanCity.length < 2) {
     return 'City / District must be at least 2 characters long';
   }
-  if (!/^[a-zA-Z\s\.\-]{2,50}$/.test(cleanCity)) {
+  if (!/^[a-zA-Z\s.-]{2,50}$/.test(cleanCity)) {
     return 'City / District must contain only letters and spaces';
   }
   return null;
@@ -64,7 +64,7 @@ export const validateState = (state) => {
   if (cleanState.length < 2) {
     return 'State must be at least 2 characters long';
   }
-  if (!/^[a-zA-Z\s\.\-]{2,50}$/.test(cleanState)) {
+  if (!/^[a-zA-Z\s.-]{2,50}$/.test(cleanState)) {
     return 'State must contain only letters and spaces';
   }
   return null;
@@ -79,7 +79,7 @@ export const validateName = (name, fieldName = 'Full Name') => {
   if (cleanName.length < 2) {
     return `${fieldName} must be at least 2 characters long`;
   }
-  if (!/^[a-zA-Z\s\.\-]{2,60}$/.test(cleanName)) {
+  if (!/^[a-zA-Z\s.-]{2,60}$/.test(cleanName)) {
     return `${fieldName} must contain only letters and spaces`;
   }
   return null;
@@ -101,13 +101,13 @@ export const validateAlternatePhone = (alternatePhone, primaryPhone) => {
   if (!alternatePhone || !alternatePhone.trim()) {
     return null;
   }
-  const cleanedAlt = alternatePhone.trim().replace(/[\s\-\(\)]/g, '');
+  const cleanedAlt = alternatePhone.trim().replace(/[\s\-()]/g, '');
   const mobile10Alt = cleanedAlt.replace(/^(?:\+91|91|0)/, '');
   if (!/^[6-9]\d{9}$/.test(mobile10Alt)) {
     return 'Enter a valid 10-digit Indian mobile number for alternative contact';
   }
   if (primaryPhone) {
-    const cleanedPri = primaryPhone.trim().replace(/[\s\-\(\)]/g, '').replace(/^(?:\+91|91|0)/, '');
+    const cleanedPri = primaryPhone.trim().replace(/[\s\-()]/g, '').replace(/^(?:\+91|91|0)/, '');
     if (mobile10Alt === cleanedPri) {
       return 'Alternative phone number should be different from your primary phone number';
     }
