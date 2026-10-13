@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, CheckCircle, Search, Filter, Shield, Eye, ThumbsUp, EyeOff, XCircle, AlertCircle, Loader2, X, Image as ImageIcon } from 'lucide-react';
 import StarRatingInput from './StarRatingInput';
+import AdminAnalyticsDetailModal from './AdminAnalyticsDetailModal';
 import { reviewApi } from '../api';
 
 export default function AdminReviewsManager() {
@@ -21,11 +22,165 @@ export default function AdminReviewsManager() {
   const [moderationReason, setModerationReason] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [analyticsModalConfig, setAnalyticsModalConfig] = useState(null);
 
   useEffect(() => {
     loadSummary();
     loadReviews(0);
   }, [statusFilter, ratingFilter]);
+
+  const mapReviewItem = (r) => ({
+    id: r.id,
+    title: r.productTitle || 'Product Review',
+    subtitle: r.reviewText ? `"${r.reviewText.slice(0, 90)}..."` : 'No comments provided',
+    status: r.status,
+    statusColor: r.status === 'PUBLISHED' ? 'green' : r.status === 'PENDING' ? 'amber' : r.status === 'REJECTED' ? 'red' : 'blue',
+    metadata: {
+      'Customer': r.customerName || 'Verified Buyer',
+      'Rating': `${r.rating || 5} ★`,
+      'Headline': r.reviewTitle || 'Review'
+    },
+    actionLabel: 'Moderate',
+    onAction: () => {
+      setSelectedReview(r);
+      setModerationReason(r.moderationNotes || '');
+    }
+  });
+
+  const handleReviewCardClick = (type) => {
+    switch(type) {
+      case 'TOTAL':
+        setAnalyticsModalConfig({
+          domain: 'Reviews & Customer Sentiment',
+          title: 'Catalog & Customer Reviews',
+          metric: `${summary?.totalReviews || reviews.length || 0} Reviews`,
+          subtitle: 'Direct customer feedback, ratings, and sentiment submitted across catalog products.',
+          badge: 'Customer Voice',
+          badgeColor: 'forest',
+          icon: Star,
+          breakdown: [
+            { label: 'Published', value: summary?.publishedCount || 0 },
+            { label: 'Pending Moderation', value: summary?.pendingCount || 0 },
+            { label: 'Average Rating', value: `${summary?.averageRating ? summary.averageRating.toFixed(1) : '0.0'} ★` }
+          ],
+          items: reviews.map(mapReviewItem),
+          actionButton: {
+            label: 'View All in Table',
+            onClick: () => setStatusFilter('ALL')
+          }
+        });
+        break;
+      case 'PENDING':
+        setStatusFilter('PENDING');
+        setAnalyticsModalConfig({
+          domain: 'Reviews Moderation Queue',
+          title: 'Pending Moderation Reviews',
+          metric: `${summary?.pendingCount || 0} Pending`,
+          subtitle: 'Reviews submitted by verified purchasers awaiting admin compliance approval.',
+          badge: 'Action Required',
+          badgeColor: 'amber',
+          icon: AlertCircle,
+          breakdown: [
+            { label: 'Pending Queue', value: summary?.pendingCount || 0 },
+            { label: 'Review SLA', value: '< 24 Hours' },
+            { label: 'Status', value: 'Unpublished' }
+          ],
+          items: reviews.filter(r => r.status === 'PENDING').map(mapReviewItem),
+          actionButton: {
+            label: 'Filter Page to Pending',
+            onClick: () => setStatusFilter('PENDING')
+          }
+        });
+        break;
+      case 'PUBLISHED':
+        setStatusFilter('PUBLISHED');
+        setAnalyticsModalConfig({
+          domain: 'Live Customer Feedback',
+          title: 'Published Catalog Reviews',
+          metric: `${summary?.publishedCount || 0} Published`,
+          subtitle: 'Verified public reviews currently visible on customer product pages.',
+          badge: 'Active On Store',
+          badgeColor: 'green',
+          icon: CheckCircle,
+          breakdown: [
+            { label: 'Published Count', value: summary?.publishedCount || 0 },
+            { label: 'Store Visibility', value: 'Public' },
+            { label: 'Average Rating', value: `${summary?.averageRating ? summary.averageRating.toFixed(1) : '0.0'} ★` }
+          ],
+          items: reviews.filter(r => r.status === 'PUBLISHED').map(mapReviewItem),
+          actionButton: {
+            label: 'Filter Page to Published',
+            onClick: () => setStatusFilter('PUBLISHED')
+          }
+        });
+        break;
+      case 'HIDDEN':
+        setStatusFilter('HIDDEN');
+        setAnalyticsModalConfig({
+          domain: 'Moderated Content',
+          title: 'Hidden Reviews',
+          metric: `${summary?.hiddenCount || 0} Hidden`,
+          subtitle: 'Reviews temporarily hidden from product pages pending seller review or verification.',
+          badge: 'Suppressed',
+          badgeColor: 'blue',
+          icon: EyeOff,
+          breakdown: [
+            { label: 'Hidden Count', value: summary?.hiddenCount || 0 },
+            { label: 'Visibility', value: 'Hidden from Store' }
+          ],
+          items: reviews.filter(r => r.status === 'HIDDEN').map(mapReviewItem),
+          actionButton: {
+            label: 'Filter Page to Hidden',
+            onClick: () => setStatusFilter('HIDDEN')
+          }
+        });
+        break;
+      case 'REJECTED':
+        setStatusFilter('REJECTED');
+        setAnalyticsModalConfig({
+          domain: 'Content Moderation',
+          title: 'Rejected Reviews',
+          metric: `${summary?.rejectedCount || 0} Rejected`,
+          subtitle: 'Submissions rejected due to spam, community guidelines, or profanity violations.',
+          badge: 'Declined',
+          badgeColor: 'red',
+          icon: XCircle,
+          breakdown: [
+            { label: 'Rejected Count', value: summary?.rejectedCount || 0 },
+            { label: 'Status', value: 'Policy Violation' }
+          ],
+          items: reviews.filter(r => r.status === 'REJECTED').map(mapReviewItem),
+          actionButton: {
+            label: 'Filter Page to Rejected',
+            onClick: () => setStatusFilter('REJECTED')
+          }
+        });
+        break;
+      case 'RATING':
+        setAnalyticsModalConfig({
+          domain: 'CSAT & Customer Sentiment',
+          title: 'Rating Distribution & Sentiment',
+          metric: `${summary?.averageRating ? summary.averageRating.toFixed(1) : '0.0'} ★ CSAT`,
+          subtitle: 'Weighted satisfaction score calculated across all published customer reviews.',
+          badge: 'Verified Rating',
+          badgeColor: 'amber',
+          icon: Star,
+          breakdown: [
+            { label: '5-Star Reviews', value: reviews.filter(r => r.rating === 5).length },
+            { label: '4-Star Reviews', value: reviews.filter(r => r.rating === 4).length },
+            { label: '3-Star or Below', value: reviews.filter(r => r.rating <= 3).length }
+          ],
+          items: reviews.map(mapReviewItem),
+          actionButton: {
+            label: 'Close Inspect',
+            onClick: () => {}
+          }
+        });
+        break;
+      default:
+        break;
+    }
+  };
 
   const loadSummary = () => {
     reviewApi
@@ -117,36 +272,107 @@ export default function AdminReviewsManager() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-3.5 bg-surface-cream rounded-2xl border border-surface-border text-center">
-          <div className="text-xs text-typography-muted font-medium">Total Reviews</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('TOTAL')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('TOTAL'); }}
+          className="p-3.5 bg-surface-cream rounded-2xl border border-surface-border text-center cursor-pointer hover:border-forest-700/60 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-forest-700/30"
+          title="Click to inspect all reviews breakdown"
+          data-testid="kpi-card-total-reviews"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-typography-muted font-bold uppercase tracking-wider">Total</span>
+            <span className="text-[9px] text-forest-700 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-forest-900 mt-1 font-mono">{summary?.totalReviews || 0}</div>
+          <div className="text-[10px] text-typography-muted truncate mt-0.5">All Submissions</div>
         </div>
 
-        <div className="p-3.5 bg-amber-50/60 rounded-2xl border border-amber-200/80 text-center">
-          <div className="text-xs text-amber-800 font-medium">Pending Moderation</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('PENDING')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('PENDING'); }}
+          className="p-3.5 bg-amber-50/60 rounded-2xl border border-amber-200/80 text-center cursor-pointer hover:border-amber-400 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+          title="Click to inspect pending reviews"
+          data-testid="kpi-card-pending-moderation"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">Pending</span>
+            <span className="text-[9px] text-amber-800 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-amber-900 mt-1 font-mono">{summary?.pendingCount || 0}</div>
+          <div className="text-[10px] text-amber-700 truncate mt-0.5 font-bold">Needs Moderation</div>
         </div>
 
-        <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 text-center">
-          <div className="text-xs text-emerald-800 font-medium">Published</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('PUBLISHED')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('PUBLISHED'); }}
+          className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 text-center cursor-pointer hover:border-emerald-400 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+          title="Click to inspect published reviews"
+          data-testid="kpi-card-published-reviews"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Published</span>
+            <span className="text-[9px] text-emerald-800 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-emerald-900 mt-1 font-mono">{summary?.publishedCount || 0}</div>
+          <div className="text-[10px] text-emerald-700 truncate mt-0.5 font-bold">Live on Store</div>
         </div>
 
-        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-          <div className="text-xs text-slate-700 font-medium">Hidden</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('HIDDEN')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('HIDDEN'); }}
+          className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-center cursor-pointer hover:border-slate-400 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-slate-500/30"
+          title="Click to inspect hidden reviews"
+          data-testid="kpi-card-hidden-reviews"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-700 font-bold uppercase tracking-wider">Hidden</span>
+            <span className="text-[9px] text-slate-700 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-slate-900 mt-1 font-mono">{summary?.hiddenCount || 0}</div>
+          <div className="text-[10px] text-slate-600 truncate mt-0.5">Suppressed</div>
         </div>
 
-        <div className="p-3.5 bg-red-50/60 rounded-2xl border border-red-200/80 text-center">
-          <div className="text-xs text-red-800 font-medium">Rejected</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('REJECTED')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('REJECTED'); }}
+          className="p-3.5 bg-red-50/60 rounded-2xl border border-red-200/80 text-center cursor-pointer hover:border-red-400 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-red-500/30"
+          title="Click to inspect rejected reviews"
+          data-testid="kpi-card-rejected-reviews"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-red-800 font-bold uppercase tracking-wider">Rejected</span>
+            <span className="text-[9px] text-red-800 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-red-900 mt-1 font-mono">{summary?.rejectedCount || 0}</div>
+          <div className="text-[10px] text-red-700 truncate mt-0.5 font-bold">Policy Flagged</div>
         </div>
 
-        <div className="p-3.5 bg-amber-100/50 rounded-2xl border border-amber-300/80 text-center">
-          <div className="text-xs text-amber-900 font-medium">Avg Rating</div>
+        <div 
+          role="button"
+          tabIndex={0}
+          onClick={() => handleReviewCardClick('RATING')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleReviewCardClick('RATING'); }}
+          className="p-3.5 bg-amber-100/50 rounded-2xl border border-amber-300/80 text-center cursor-pointer hover:border-amber-500 hover:shadow-level-2 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+          title="Click to inspect rating breakdown"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-amber-900 font-bold uppercase tracking-wider">Avg CSAT</span>
+            <span className="text-[9px] text-amber-900 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity">Inspect ↗</span>
+          </div>
           <div className="text-xl font-black text-amber-900 mt-1 font-mono">
             {summary?.averageRating ? summary.averageRating.toFixed(1) : '0.0'} ★
           </div>
+          <div className="text-[10px] text-amber-800 truncate mt-0.5">Rating Score</div>
         </div>
       </div>
 
@@ -436,6 +662,13 @@ export default function AdminReviewsManager() {
           </div>
         </div>
       )}
+
+      {/* Instant FAANG Analytics Detail Drilldown Modal */}
+      <AdminAnalyticsDetailModal
+        isOpen={Boolean(analyticsModalConfig)}
+        onClose={() => setAnalyticsModalConfig(null)}
+        config={analyticsModalConfig}
+      />
     </div>
   );
 }

@@ -15,23 +15,14 @@ public class AdminAuthController {
     private final AdminAuthService adminAuthService;
 
     @PostMapping("/otp/request")
-    public ResponseEntity<ApiResponse<String>> requestAdminOtp(@Valid @RequestBody AuthDtos.OtpRequest request) {
-        adminAuthService.requestAdminOtp(request);
-        return ResponseEntity.ok(ApiResponse.success("OTP sent"));
+    public ResponseEntity<ApiResponse<String>> requestAdminOtp(@RequestBody(required = false) AuthDtos.OtpRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Admin OTP authentication has been retired. Please sign in with Google using an authorized admin account."));
     }
 
     @PostMapping("/otp/verify")
-    public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyAdminOtp(@Valid @RequestBody AuthDtos.VerifyOtpRequest request) {
-        AuthDtos.AuthResponse response = adminAuthService.verifyAdminOtp(request);
-        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-        return ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.success(response));
+    public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyAdminOtp(@RequestBody(required = false) AuthDtos.VerifyOtpRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Admin OTP authentication has been retired. Please sign in with Google using an authorized admin account."));
     }
 }

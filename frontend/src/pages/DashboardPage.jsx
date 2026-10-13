@@ -6,7 +6,7 @@ import {
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
   Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
 } from 'lucide-react';
-import { orderApi, trainingApi, customerApi, supportApi, walletApi } from '../api';
+import { orderApi, trainingApi, customerApi, supportApi, walletApi, shippingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';
@@ -21,10 +21,14 @@ export default function DashboardPage({ user, setUser }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlTab = searchParams.get('tab');
-  const urlOrderId = searchParams.get('orderId');
-  const urlBookingId = searchParams.get('bookingId');
+  const urlOrderId = searchParams.get('orderId') || ((urlTab === 'orders' || urlTab === 'activeTrack' || urlTab === 'history') ? searchParams.get('id') : null);
+  const urlBookingId = searchParams.get('bookingId') || ((urlTab === 'trainings' || urlTab === 'training') ? searchParams.get('id') : null);
+  const urlTicketId = searchParams.get('ticketId') || (urlTab === 'support' ? searchParams.get('id') : null);
 
   const [activeTab, setActiveTab] = useState(() => {
+    if (urlTicketId) return 'support';
+    if (urlTab === 'orders') return 'activeTrack';
+    if (urlTab === 'training') return 'trainings';
     if (urlTab) return urlTab;
     if (urlOrderId) return 'activeTrack';
     if (urlBookingId) return 'trainings';
@@ -52,6 +56,27 @@ export default function DashboardPage({ user, setUser }) {
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [cancelReason, setCancelReason] = useState('Ordered by mistake');
   const [customCancelReason, setCustomCancelReason] = useState('');
+
+  // Customer Live Shipment Tracking Modal State
+  const [trackingModalOrder, setTrackingModalOrder] = useState(null);
+  const [trackingModalShipment, setTrackingModalShipment] = useState(null);
+  const [trackingModalLoading, setTrackingModalLoading] = useState(false);
+
+  const handleOpenCustomerTrackingModal = async (order) => {
+    setTrackingModalOrder(order);
+    setTrackingModalShipment(null);
+    setTrackingModalLoading(true);
+    try {
+      const res = await shippingApi.getShipmentByOrder(order.id);
+      if (res.data?.data) {
+        setTrackingModalShipment(res.data.data);
+      }
+    } catch (err) {
+      setTrackingModalShipment(null);
+    } finally {
+      setTrackingModalLoading(false);
+    }
+  };
 
   // Cancel Enrollment Modal State
   const [cancellingEnrollment, setCancellingEnrollment] = useState(null);
@@ -145,35 +170,61 @@ export default function DashboardPage({ user, setUser }) {
 
   // Synchronize activeTab and target deep link when URL query parameters change
   useEffect(() => {
-    if (urlTab) {
-      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'wallet', 'support', 'reviews'];
-      if (validTabs.includes(urlTab)) {
-        setActiveTab(urlTab);
+    if (urlTicketId) {
+      setActiveTab('support');
+      const found = tickets.find((t) => t.id === urlTicketId || t.ticketNumber === urlTicketId);
+      if (found) {
+        setSelectedTicket(found);
+      } else if (user) {
+        supportApi.getTicketById(urlTicketId)
+          .then((res) => {
+            const data = res.data?.data || res.data;
+            if (data && (data.subject || data.id)) {
+              setSelectedTicket(data);
+            }
+          })
+          .catch((err) => console.error('Failed deep linking to support ticket:', err));
       }
     } else if (urlOrderId) {
       const isHistory = historyOrders.some((o) => o.id === urlOrderId || o.orderNumber === urlOrderId);
-      if (isHistory) {
+      if (isHistory || urlTab === 'history') {
         setActiveTab('history');
       } else {
         setActiveTab('activeTrack');
       }
     } else if (urlBookingId) {
       setActiveTab('trainings');
+    } else if (urlTab) {
+      const normalizedTab = urlTab === 'orders' ? 'activeTrack' : urlTab === 'training' ? 'trainings' : urlTab;
+      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'wallet', 'support', 'reviews'];
+      if (validTabs.includes(normalizedTab)) {
+        setActiveTab(normalizedTab);
+      }
     }
-  }, [urlTab, urlOrderId, urlBookingId, orders]);
+  }, [urlTab, urlOrderId, urlBookingId, urlTicketId, orders, tickets, user]);
 
-  // Smooth auto-scroll to targeted order if orderId query parameter is present
+  // Smooth auto-scroll to targeted order, ticket, or training if deep-linked
   useEffect(() => {
-    if (urlOrderId && !loading) {
-      const timer = setTimeout(() => {
-        const el = document.getElementById(`order-${urlOrderId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
-      return () => clearTimeout(timer);
+    if (!loading) {
+      const targetId = urlOrderId 
+        ? `order-${urlOrderId}` 
+        : urlTicketId 
+        ? `ticket-${urlTicketId}` 
+        : urlBookingId 
+        ? `booking-${urlBookingId}` 
+        : null;
+
+      if (targetId) {
+        const timer = setTimeout(() => {
+          const el = document.getElementById(targetId) || document.querySelector(`[data-order-number="${urlOrderId}"]`);
+          if (el && typeof el.scrollIntoView === 'function') {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [urlOrderId, loading, activeTab]);
+  }, [urlOrderId, urlTicketId, urlBookingId, loading, activeTab]);
 
   // Invoice PDF Download Handler
   const handleDownloadInvoice = async (orderId, orderNumber) => {
@@ -189,7 +240,7 @@ export default function DashboardPage({ user, setUser }) {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to download invoice. Please try again.');
+      console.error('Failed to download invoice:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, [orderId]: false }));
     }
@@ -201,7 +252,6 @@ export default function DashboardPage({ user, setUser }) {
     if (!cancellingOrder) return;
     const finalReason = cancelReason === 'Other' ? customCancelReason : cancelReason;
     if (!finalReason || !finalReason.trim()) {
-      alert('Please select or specify a cancellation reason.');
       return;
     }
 
@@ -209,13 +259,12 @@ export default function DashboardPage({ user, setUser }) {
     try {
       const res = await orderApi.cancelOrder(cancellingOrder.id, finalReason);
       if (res.data && res.data.success) {
-        alert(`Order ${cancellingOrder.orderNumber} cancelled successfully! Paid amount has been credited directly to your Sporekart Wallet balance. You can use it for new orders or transfer it to your choice of bank account.`);
         setCancellingOrder(null);
         setCustomCancelReason('');
         fetchData();
       }
     } catch (err) {
-      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to cancel order');
+      console.error('Order cancellation failed:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, [cancellingOrder.id]: false }));
     }
@@ -227,7 +276,6 @@ export default function DashboardPage({ user, setUser }) {
     if (!cancellingEnrollment) return;
     const finalReason = cancelEnrollmentReason === 'Other' ? customCancelEnrollmentReason : cancelEnrollmentReason;
     if (!finalReason || !finalReason.trim()) {
-      alert('Please select or specify a cancellation reason.');
       return;
     }
 
@@ -235,13 +283,12 @@ export default function DashboardPage({ user, setUser }) {
     try {
       const res = await trainingApi.cancelEnrollment(cancellingEnrollment.id, finalReason);
       if (res.data && res.data.success) {
-        alert(`Enrollment for ${cancellingEnrollment.courseTitle} cancelled successfully! Fee has been credited directly to your Sporekart Wallet balance. You can use it for masterclasses or transfer it to your bank account.`);
         setCancellingEnrollment(null);
         setCustomCancelEnrollmentReason('');
         fetchData();
       }
     } catch (err) {
-      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to cancel enrollment. Note: Cancellations are only permitted at least 7 days before the batch start date.');
+      console.error('Enrollment cancellation failed:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, [cancellingEnrollment.id]: false }));
     }
@@ -251,20 +298,18 @@ export default function DashboardPage({ user, setUser }) {
   const handleCreateTicket = async (e) => {
     e.preventDefault();
     if (!ticketForm.subject || !ticketForm.message) {
-      alert('Subject and description message are required.');
       return;
     }
     setActionLoading((prev) => ({ ...prev, createTicket: true }));
     try {
       const res = await supportApi.createTicket(ticketForm);
       if (res.data && res.data.success) {
-        alert('Support ticket created successfully. Our care team will respond shortly!');
         setTicketModalOpen(false);
         setTicketForm({ subject: '', category: 'ORDER_ISSUE', priority: 'MEDIUM', message: '', orderId: null, courseId: null });
         fetchData();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create support ticket');
+      console.error('Support ticket creation failed:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, createTicket: false }));
     }
@@ -284,7 +329,7 @@ export default function DashboardPage({ user, setUser }) {
         fetchData();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send message');
+      console.error('Failed to send reply message:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, replyTicket: false }));
     }
@@ -297,17 +342,13 @@ export default function DashboardPage({ user, setUser }) {
     setActionLoading((prev) => ({ ...prev, closeTicket: true }));
     try {
       try {
-        const res = await supportApi.closeTicket(csatModalTicket.id, csatRating, csatFeedback);
-        if (res.data && res.data.success) {
-          alert('Ticket marked as CLOSED. Thank you for rating your Helpdesk interaction and service!');
-        }
+        await supportApi.closeTicket(csatModalTicket.id, csatRating, csatFeedback);
       } catch (err) {
         if (err.response && err.response.status === 404) {
           // Graceful fallback if backend server hasn't restarted yet: log CSAT via message stream
           const ratingLabels = { 1: 'Very dissatisfied', 2: 'Dissatisfied', 3: 'Average', 4: 'Satisfied', 5: 'Very satisfied' };
           const msgText = `[CUSTOMER TICKET RESOLUTION]: Customer marked ticket as CLOSED. Helpdesk Satisfaction Rating: ${csatRating}/5 Stars (${ratingLabels[csatRating] || 'Satisfied'})${csatFeedback ? ` — Feedback: "${csatFeedback.trim()}"` : ''}`;
           await supportApi.addMessage(csatModalTicket.id, msgText);
-          alert('Ticket resolution and CSAT rating recorded! Thank you for your feedback.');
         } else {
           throw err;
         }
@@ -321,7 +362,7 @@ export default function DashboardPage({ user, setUser }) {
       }
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to close ticket');
+      console.error('Failed to close ticket:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, closeTicket: false }));
     }
@@ -370,7 +411,7 @@ export default function DashboardPage({ user, setUser }) {
       await customerApi.deleteAddress(addressId);
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete address');
+      console.error('Failed to delete address:', err);
     }
   };
 
@@ -378,11 +419,9 @@ export default function DashboardPage({ user, setUser }) {
   const handleRequestWithdrawal = async (e) => {
     e.preventDefault();
     if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
-      alert('Please enter a valid withdrawal amount.');
       return;
     }
     if (!withdrawForm.bankName || !withdrawForm.accountNumber) {
-      alert('Bank name and account number are required.');
       return;
     }
     setActionLoading((prev) => ({ ...prev, withdraw: true }));
@@ -395,13 +434,12 @@ export default function DashboardPage({ user, setUser }) {
         accountHolderName: withdrawForm.accountHolderName,
       });
       if (res.data && res.data.success) {
-        alert('Bank withdrawal request submitted successfully!');
         setWithdrawModalOpen(false);
         setWithdrawForm({ amount: '', bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '' });
         fetchData();
       }
     } catch (err) {
-      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to submit withdrawal request');
+      console.error('Withdrawal request failed:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, withdraw: false }));
     }
@@ -411,7 +449,6 @@ export default function DashboardPage({ user, setUser }) {
   const handleAddMoneyToWallet = async (e) => {
     e.preventDefault();
     if (!addMoneyAmount || parseFloat(addMoneyAmount) <= 0) {
-      alert('Please enter a valid topup amount.');
       return;
     }
     setActionLoading((prev) => ({ ...prev, addMoney: true }));
@@ -429,13 +466,12 @@ export default function DashboardPage({ user, setUser }) {
               razorpaySignature: rzpSignature,
             }, amt);
             if (verifyRes.data && verifyRes.data.success) {
-              alert(`Successfully credited ₹${amt} to your Sporekart Wallet!`);
               setAddMoneyModalOpen(false);
               setAddMoneyAmount('');
               fetchData();
             }
           } catch (err) {
-            alert(err.response?.data?.message || 'Wallet topup verification failed.');
+            console.error('Wallet topup verification failed:', err);
           }
         };
 
@@ -472,7 +508,7 @@ export default function DashboardPage({ user, setUser }) {
         }
       }
     } catch (err) {
-      alert(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to initiate wallet topup');
+      console.error('Failed to initiate wallet topup:', err);
     } finally {
       setActionLoading((prev) => ({ ...prev, addMoney: false }));
     }
@@ -606,6 +642,47 @@ export default function DashboardPage({ user, setUser }) {
               className="text-xs font-semibold text-typography-muted hover:text-forest-700 transition-colors"
             >
               ← Return to Home Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Purely dedicated admin account guard: no customer or trainee dashboard access
+  if (user?.role === 'ROLE_ADMIN' || user?.email?.toLowerCase() === 'thepravara2026@gmail.com') {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
+        <SeoHead title="Admin Dedicated Session — Sporekart" noindex={true} />
+        <div className="w-full max-w-lg bg-surface-white border border-surface-border rounded-card p-8 shadow-level-2 text-center space-y-6">
+          <div className="w-16 h-16 bg-gold/15 border border-gold/40 rounded-2xl mx-auto flex items-center justify-center text-soil shadow-level-1">
+            <Lock className="w-8 h-8 text-gold" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="font-display font-extrabold text-2xl text-typography-primary">
+              Dedicated Admin Account
+            </h1>
+            <p className="text-xs text-typography-secondary leading-relaxed">
+              <span className="font-mono font-bold text-soil">{user.email}</span> is strictly configured for <strong>Administrative Operations</strong> only. Access to customer and trainee dashboards or account upgrades is disabled for this admin entity.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full sm:w-auto px-6 py-3 bg-forest-900 hover:bg-forest-800 text-white font-bold text-xs rounded-xl shadow-level-1 transition-all button-press flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4 text-gold" />
+              <span>Go to Admin Console</span>
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem('sporekart_token');
+                if (setUser) setUser(null);
+                navigate('/');
+              }}
+              className="w-full sm:w-auto px-6 py-3 bg-surface-neutral hover:bg-surface-border text-typography-secondary font-bold text-xs rounded-xl transition-all button-press"
+            >
+              Sign Out
             </button>
           </div>
         </div>
@@ -879,14 +956,30 @@ export default function DashboardPage({ user, setUser }) {
           ) : (
             activeOrders.map((order) => {
               const stage = getStepperStage(order.status);
+              const isTargeted = urlOrderId && (order.id === urlOrderId || order.orderNumber === urlOrderId);
+
               return (
-                <div key={order.id} className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-6 hover-lift shadow-level-1">
+                <div
+                  key={order.id}
+                  id={`order-${order.id}`}
+                  data-order-number={order.orderNumber}
+                  className={`bg-surface-white p-6 sm:p-8 rounded-card border space-y-6 hover-lift shadow-level-1 transition-all ${
+                    isTargeted 
+                      ? 'ring-2 ring-forest-700 bg-forest-50/20 border-forest-600 shadow-level-2' 
+                      : 'border-surface-border'
+                  }`}
+                >
                   {/* Order Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-4 gap-3">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-mono font-extrabold text-typography-primary text-lg tracking-wider">{order.orderNumber}</span>
                         {getStatusBadge(order.status)}
+                        {isTargeted && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-bold uppercase tracking-wide animate-fade-in shadow-xs">
+                            🎯 Targeted from Notification
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-typography-muted">
                         Placed on {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -1026,14 +1119,24 @@ export default function DashboardPage({ user, setUser }) {
                         </div>
                       </div>
 
-                      <a
-                        href={order.trackingUrl || `https://track.shiprocket.in/AWB-897${order.id.substring(0, 6).toUpperCase()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-primary text-xs font-extrabold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" /> Track Shipment
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenCustomerTrackingModal(order)}
+                          className="btn-primary text-xs font-extrabold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+                        >
+                          <Truck className="w-3.5 h-3.5" /> View Live Tracking Timeline
+                        </button>
+                        {order.trackingUrl && (
+                          <a
+                            href={order.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" /> Direct Carrier Page
+                          </a>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1074,18 +1177,35 @@ export default function DashboardPage({ user, setUser }) {
               actionLink="/products"
             />
           ) : (
-            historyOrders.map((order) => (
-              <div key={order.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-4 hover-lift shadow-level-1">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-3 gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-typography-primary text-base">{order.orderNumber}</span>
-                      {getStatusBadge(order.status)}
+            historyOrders.map((order) => {
+              const isTargeted = urlOrderId && (order.id === urlOrderId || order.orderNumber === urlOrderId);
+
+              return (
+                <div
+                  key={order.id}
+                  id={`order-${order.id}`}
+                  data-order-number={order.orderNumber}
+                  className={`bg-surface-white p-6 rounded-card border space-y-4 hover-lift shadow-level-1 transition-all ${
+                    isTargeted 
+                      ? 'ring-2 ring-forest-700 bg-forest-50/20 border-forest-600 shadow-level-2' 
+                      : 'border-surface-border'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-3 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-mono font-bold text-typography-primary text-base">{order.orderNumber}</span>
+                        {getStatusBadge(order.status)}
+                        {isTargeted && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-bold uppercase tracking-wide animate-fade-in shadow-xs">
+                            🎯 Targeted from Notification
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-typography-muted block">
+                        Ordered on {new Date(order.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="text-xs text-typography-muted block">
-                      Ordered on {new Date(order.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
 
                   <div className="flex items-center gap-3">
                     {order.status === 'DELIVERED' ? (
@@ -1156,8 +1276,9 @@ export default function DashboardPage({ user, setUser }) {
                   <span className="text-forest-800 text-xl font-display">₹{order.totalAmountInr}</span>
                 </div>
               </div>
-            ))
-          )}
+            );
+          })
+        )}
         </div>
       )}
 
@@ -1181,13 +1302,23 @@ export default function DashboardPage({ user, setUser }) {
               const timeDiff = startDateObj ? (startDateObj.getTime() - now.getTime()) : null;
               const daysUntilStart = timeDiff !== null ? Math.ceil(timeDiff / (1000 * 3600 * 24)) : null;
               const canCancel = booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && (daysUntilStart === null || daysUntilStart >= 7);
+              const bookingKey = booking.id || booking.bookingId;
+              const isTargeted = urlBookingId && (bookingKey === urlBookingId || booking.batchCode === urlBookingId);
 
               return (
-                <div key={booking.id || booking.bookingId} className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-5 hover-lift shadow-level-1">
+                <div
+                  key={bookingKey}
+                  id={`booking-${bookingKey}`}
+                  className={`bg-surface-white p-6 sm:p-8 rounded-card border space-y-5 hover-lift shadow-level-1 transition-all ${
+                    isTargeted 
+                      ? 'ring-2 ring-forest-700 bg-forest-50/20 border-forest-600 shadow-level-2' 
+                      : 'border-surface-border'
+                  }`}
+                >
                   {/* Card Header & Summary */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-border pb-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className={`px-3 py-1 text-xs font-bold rounded-xl border inline-block ${
                           booking.status === 'CANCELLED' 
                             ? 'bg-red-600/10 text-red-700 border-red-600/20'
@@ -1199,6 +1330,11 @@ export default function DashboardPage({ user, setUser }) {
                         }`}>
                           {booking.status === 'PENDING_PAYMENT' ? '⚠️ PAYMENT PENDING' : (booking.status || 'CONFIRMED')}
                         </span>
+                        {isTargeted && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-bold uppercase tracking-wide animate-fade-in shadow-xs">
+                            🎯 Targeted from Notification
+                          </span>
+                        )}
                         {booking.batchCode && (
                           <span className="px-2.5 py-0.5 bg-surface-cream text-typography-primary text-[10px] font-mono font-bold rounded-lg border border-surface-border">
                             {booking.batchCode}
@@ -1451,8 +1587,17 @@ export default function DashboardPage({ user, setUser }) {
             <div className="space-y-4">
               {tickets.map((t) => {
                 const isClosed = t.status === 'CLOSED' || t.status === 'RESOLVED';
+                const isTargeted = urlTicketId && (t.id === urlTicketId || t.ticketNumber === urlTicketId);
                 return (
-                  <div key={t.id} className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 hover-lift shadow-level-1">
+                  <div
+                    key={t.id}
+                    id={`ticket-${t.id}`}
+                    className={`bg-surface-white p-6 rounded-card border space-y-3 hover-lift shadow-level-1 transition-all ${
+                      isTargeted
+                        ? 'ring-2 ring-forest-700 bg-forest-50/20 border-forest-600 shadow-level-2'
+                        : 'border-surface-border'
+                    }`}
+                  >
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -1465,6 +1610,11 @@ export default function DashboardPage({ user, setUser }) {
                           }`}>
                             {t.status}
                           </span>
+                          {isTargeted && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-bold uppercase tracking-wide animate-fade-in shadow-xs">
+                              🎯 Targeted from Notification
+                            </span>
+                          )}
                           {t.isAutoReplied && (
                             <span className="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-200 text-[10px] font-bold rounded-lg flex items-center gap-1">
                               <Bot className="w-3 h-3 text-purple-700" /> FAANG Auto-Replied
@@ -2175,7 +2325,7 @@ export default function DashboardPage({ user, setUser }) {
                             <Bot className="w-3.5 h-3.5 text-purple-700" /> {msg.senderName || 'FAANG AI Helpdesk Assistant'}
                           </span>
                         ) : isAgentMsg ? (
-                          '🛡️ Support Agent'
+                          `🛡️ ${msg.senderName || 'Support Agent'}`
                         ) : (
                           `👤 ${msg.senderName || 'Customer'}`
                         )}
@@ -2325,6 +2475,82 @@ export default function DashboardPage({ user, setUser }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* CUSTOMER LIVE TRACKING MODAL */}
+      {trackingModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-surface-white p-6 sm:p-8 rounded-card max-w-lg w-full space-y-5 border border-surface-border shadow-level-3 animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-surface-border pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-forest-900 text-white flex items-center justify-center shadow-level-1">
+                  <Truck className="w-5 h-5 text-gold" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-typography-primary font-display">Live Courier Tracking</h3>
+                  <p className="text-xs text-typography-secondary">Order <code className="font-mono font-bold text-forest-800">{trackingModalOrder.orderNumber}</code></p>
+                </div>
+              </div>
+              <button onClick={() => setTrackingModalOrder(null)} className="p-2 text-typography-muted hover:text-typography-primary rounded-xl hover:bg-surface-cream transition-all">
+                ✕
+              </button>
+            </div>
+
+            {/* Logistics Summary Bar */}
+            <div className="p-4 bg-surface-cream rounded-2xl border border-surface-border grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-typography-muted text-[11px] block">Courier Partner</span>
+                <span className="font-bold text-forest-900 text-sm">{trackingModalOrder.courierPartner || 'BlueDart Express'}</span>
+              </div>
+              <div>
+                <span className="text-typography-muted text-[11px] block">AWB Tracking Code</span>
+                <span className="font-mono font-bold text-typography-primary text-xs">{trackingModalOrder.trackingNumber || 'AWB-ASSIGNED'}</span>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-xs text-typography-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-forest-700" /> Real-Time Carrier Milestone Scans
+              </h4>
+
+              {trackingModalLoading ? (
+                <div className="p-6 text-center text-xs text-typography-muted animate-pulse">
+                  Fetching live courier tracking events from logistics network...
+                </div>
+              ) : trackingModalShipment?.trackingEvents && trackingModalShipment.trackingEvents.length > 0 ? (
+                <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-forest-700/30">
+                  {trackingModalShipment.trackingEvents.map((evt, idx) => (
+                    <div key={evt.id || idx} className="relative text-xs space-y-1">
+                      <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-forest-700 ring-4 ring-forest-700/20" />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-forest-900 text-xs uppercase bg-forest-700/10 px-2 py-0.5 rounded">{evt.currentStatus}</span>
+                        <span className="text-[10px] text-typography-muted">
+                          {new Date(evt.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                      </div>
+                      <p className="font-bold text-typography-primary text-xs">{evt.location || 'Hub Facility'}</p>
+                      <p className="text-typography-secondary text-[11px] leading-relaxed">{evt.activity}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 bg-surface-cream rounded-xl text-xs text-typography-muted text-center">
+                  Manifest created with courier partner. Package is currently being sorted at warehouse facility.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-surface-border">
+              <button
+                type="button"
+                onClick={() => setTrackingModalOrder(null)}
+                className="px-5 btn-primary py-2 text-xs font-bold"
+              >
+                Close Tracking
+              </button>
+            </div>
           </div>
         </div>
       )}

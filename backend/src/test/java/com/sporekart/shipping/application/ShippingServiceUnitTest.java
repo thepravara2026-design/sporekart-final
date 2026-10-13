@@ -1,5 +1,7 @@
 package com.sporekart.shipping.application;
 
+import com.sporekart.identity.infrastructure.UserRepository;
+import com.sporekart.notification.application.NotificationEventService;
 import com.sporekart.order.api.dto.OrderItemResponse;
 import com.sporekart.order.api.dto.OrderResponse;
 import com.sporekart.order.application.OrderService;
@@ -39,6 +41,12 @@ class ShippingServiceUnitTest {
     private ShippingProvider shippingProvider;
     @Mock
     private OrderService orderService;
+    @Mock
+    private NotificationEventService notificationEventService;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private com.sporekart.catalog.infrastructure.ProductVariantRepository variantRepository;
 
     @InjectMocks
     private ShippingService shippingService;
@@ -75,6 +83,7 @@ class ShippingServiceUnitTest {
         testOrderResponse.setOrderNumber("ORD-20260926-001");
         testOrderResponse.setShippingAddress(shippingAddr);
         testOrderResponse.setTotalAmountInr(new BigDecimal("200.00"));
+        testOrderResponse.setStatus(OrderStatus.PAID);
         testOrderResponse.setItems(List.of(item));
 
         testShipment = Shipment.builder()
@@ -86,6 +95,8 @@ class ShippingServiceUnitTest {
                 .courierName("Delhivery")
                 .status(ShipmentStatus.PICKUP_SCHEDULED)
                 .build();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(shippingService, "trackingBaseUrl", "https://track.shiprocket.in/");
     }
 
     @Test
@@ -167,4 +178,134 @@ class ShippingServiceUnitTest {
         verify(shippingProvider).cancelShipment("SR-SHIP-123", "AWB123456");
         verify(shipmentRepository).save(testShipment);
     }
+
+    @Test
+    @DisplayName("SHP-6: Create shipment for unpaid order throws IllegalStateException")
+    void SHP_6_createShipmentForOrder_unpaid_throws() {
+        testOrderResponse.setStatus(OrderStatus.PENDING_PAYMENT);
+        when(shipmentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(orderService.getOrderById(orderId)).thenReturn(testOrderResponse);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> shippingService.createShipmentForOrder(orderId));
+        assertTrue(ex.getMessage().contains("Order must be PAID or CONFIRMED"));
+    }
+
+    @Test
+    @DisplayName("SHP-7: Create shipment for cancelled order throws IllegalStateException")
+    void SHP_7_createShipmentForOrder_cancelled_throws() {
+        testOrderResponse.setStatus(OrderStatus.CANCELLED);
+        when(shipmentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(orderService.getOrderById(orderId)).thenReturn(testOrderResponse);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> shippingService.createShipmentForOrder(orderId));
+        assertTrue(ex.getMessage().contains("Cannot create courier shipment for a cancelled or refunded order"));
+    }
+
+    @Test
+    @DisplayName("SHP-8: Webhook update ignores in-transit scans for already DELIVERED shipments")
+    void SHP_8_processWebhookUpdate_delivered_no_regression() {
+        testShipment.setStatus(ShipmentStatus.DELIVERED);
+        when(shipmentRepository.findByAwbCode("AWB123456")).thenReturn(Optional.of(testShipment));
+
+        shippingService.processWebhookUpdate("AWB123456", "IN_TRANSIT", "Pune Hub", "Package scanned in transit", "{}");
+
+        assertEquals(ShipmentStatus.DELIVERED, testShipment.getStatus());
+        verify(orderService, never()).updateOrderStatus(any(), eq(OrderStatus.SHIPPED), any(), any());
+    }
+
+    @Test
+    @DisplayName("SHP-9: Package dead weight and dimensions calculated from product variants")
+    void SHP_9_createShipment_calculatesPackageWeightAndDimensions() {
+        when(shipmentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(orderService.getOrderById(orderId)).thenReturn(testOrderResponse);
+
+        UUID variantId = UUID.randomUUID();
+        com.sporekart.order.api.dto.OrderItemResponse itemWithVariant = new com.sporekart.order.api.dto.OrderItemResponse();
+        itemWithVariant.setVariantId(variantId);
+        itemWithVariant.setProductTitle("Oyster Mushroom Spawn");
+        itemWithVariant.setSku("SPAWN-OYSTER-1KG");
+        itemWithVariant.setQuantity(2);
+        itemWithVariant.setPriceInr(new BigDecimal("500.00"));
+        testOrderResponse.setItems(List.of(itemWithVariant));
+
+        com.sporekart.catalog.domain.ProductVariant variant = com.sporekart.catalog.domain.ProductVariant.builder()
+                .id(variantId)
+                .sku("SPAWN-OYSTER-1KG")
+                .weightKg(new BigDecimal("0.750"))
+                .lengthCm(new BigDecimal("20.00"))
+                .breadthCm(new BigDecimal("20.00"))
+                .heightCm(new BigDecimal("12.00"))
+                .build();
+        when(variantRepository.findById(variantId)).thenReturn(Optional.of(variant));
+
+        when(shippingProvider.createShipment(any())).thenAnswer(invocation -> {
+            ShippingProvider.CreateShipmentCommand cmd = invocation.getArgument(0);
+            // 2 items * 0.750kg = 1.500kg
+            assertEquals(new BigDecimal("1.500"), cmd.getWeightKg());
+            assertEquals(new BigDecimal("20.00"), cmd.getLengthCm());
+            assertEquals(new BigDecimal("20.00"), cmd.getBreadthCm());
+            // 2 items * 12cm = 24cm
+            assertEquals(new BigDecimal("24.00"), cmd.getHeightCm());
+            assertEquals("Primary", cmd.getPickupLocation());
+            assertEquals("411001", cmd.getPickupPincode());
+
+            return ShippingProvider.CreateShipmentResult.builder()
+                    .providerShipmentId("SR-999")
+                    .awbCode("AWB-999")
+                    .courierName("Delhivery")
+                    .build();
+        });
+        when(shipmentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Shipment created = shippingService.createShipmentForOrder(orderId);
+        assertNotNull(created);
+        verify(shippingProvider).createShipment(any());
+    }
+
+    @Test
+    @DisplayName("SHP-10: Webhook update deduplicates identical tracking scans")
+    void SHP_10_processWebhookUpdate_deduplicatesIdenticalScans() {
+        when(shipmentRepository.findByAwbCode("AWB123456")).thenReturn(Optional.of(testShipment));
+
+        // First webhook scan
+        shippingService.processWebhookUpdate("AWB123456", "IN_TRANSIT", "Pune Hub", "Scanned in Pune", "{}");
+        assertEquals(1, testShipment.getTrackingEvents().size());
+        verify(shipmentRepository, times(1)).save(testShipment);
+
+        // Second identical webhook scan
+        shippingService.processWebhookUpdate("AWB123456", "IN_TRANSIT", "Pune Hub", "Scanned in Pune", "{}");
+        // Must remain 1 event, must not save again
+        assertEquals(1, testShipment.getTrackingEvents().size());
+        verify(shipmentRepository, times(1)).save(testShipment);
+    }
+
+    @Test
+    @DisplayName("SHP-11: Custom tracking base URL is reflected when updating order shipping details")
+    void SHP_11_customTrackingBaseUrl_isUsed() {
+        org.springframework.test.util.ReflectionTestUtils.setField(shippingService, "trackingBaseUrl", "https://custom-tracking.sporekart.in/");
+        when(shipmentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(orderService.getOrderById(orderId)).thenReturn(testOrderResponse);
+
+        ShippingProvider.CreateShipmentResult providerResult = ShippingProvider.CreateShipmentResult.builder()
+                .providerShipmentId("SR-SHIP-999")
+                .awbCode("AWB-CUSTOM-123")
+                .courierName("BlueDart")
+                .courierId("1")
+                .status("PICKUP_SCHEDULED")
+                .build();
+        when(shippingProvider.createShipment(any())).thenReturn(providerResult);
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(i -> i.getArgument(0));
+
+        shippingService.createShipmentForOrder(orderId);
+
+        verify(orderService).updateOrderShippingDetails(
+                eq(orderId),
+                eq("BlueDart"),
+                eq("AWB-CUSTOM-123"),
+                eq("https://custom-tracking.sporekart.in/AWB-CUSTOM-123")
+        );
+    }
 }
+

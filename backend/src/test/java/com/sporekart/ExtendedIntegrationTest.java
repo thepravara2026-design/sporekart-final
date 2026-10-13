@@ -182,7 +182,7 @@ public class ExtendedIntegrationTest {
 
         // 6. Transition Order Status to DELIVERED
         orderService.updateOrderStatus(order.getId(), OrderStatus.SHIPPED, "Shipped via BlueDart", "ADMIN");
-        OrderResponse deliveredOrder = orderService.updateOrderStatus(order.getId(), OrderStatus.DELIVERED, "Delivered to customer", "ADMIN");
+        OrderResponse deliveredOrder = orderService.updateOrderStatus(order.getId(), OrderStatus.DELIVERED, "Delivered to customer", "CARRIER_WEBHOOK");
         assertEquals(OrderStatus.DELIVERED, deliveredOrder.getStatus());
 
         // 7. Generate GST Tax Invoice PDF

@@ -38,7 +38,14 @@ export default function CourseDetailPage({ user, setUser }) {
       try {
         const res = await trainingApi.getCourses();
         const coursesList = res.data.data || [];
-        const found = coursesList.find((c) => c.slug === courseSlug) || coursesList[0];
+        const found = coursesList.find((c) => c.slug === courseSlug)
+          || (courseSlug && courseSlug.toLowerCase().includes('spawn')
+              ? coursesList.find((c) => c.slug.toLowerCase().includes('spawn'))
+              : null)
+          || (courseSlug && (courseSlug.toLowerCase().includes('cultivation') || courseSlug.toLowerCase().includes('commercial'))
+              ? coursesList.find((c) => c.slug.toLowerCase().includes('cultivation') || c.slug.toLowerCase().includes('commercial'))
+              : null)
+          || coursesList[0];
         setCourse(found);
         if (found) {
           fetchPendingReviews(found.id);
@@ -57,6 +64,10 @@ export default function CourseDetailPage({ user, setUser }) {
     if (!user && !localStorage.getItem('sporekart_token')) {
       setPendingSlotId(slotId);
       setShowAuthModal(true);
+      return;
+    }
+    if (user?.role === 'ROLE_ADMIN' || user?.email?.toLowerCase() === 'thepravara2026@gmail.com') {
+      alert('The admin account (thepravara2026@gmail.com) is purely dedicated for administrative operations. Storefront trainee enrollments are not permitted on the admin entity.');
       return;
     }
     setPreviewEnrollment({ course, slot: targetSlot });

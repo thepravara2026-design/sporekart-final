@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +31,21 @@ public class ShippingService {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentTrackingRepository trackingRepository;
     private final ShippingProvider shippingProvider;
+    @org.springframework.context.annotation.Lazy
     private final OrderService orderService;
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     private final com.sporekart.identity.infrastructure.UserRepository userRepository;
+    private final com.sporekart.catalog.infrastructure.ProductVariantRepository variantRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @org.springframework.beans.factory.annotation.Value("${sporekart.shiprocket.pickup-location:Primary}")
+    private String pickupLocation;
+
+    @org.springframework.beans.factory.annotation.Value("${sporekart.shiprocket.pickup-pincode:411001}")
+    private String pickupPincode;
+
+    @org.springframework.beans.factory.annotation.Value("${sporekart.shiprocket.tracking-base-url:https://track.shiprocket.in/}")
+    private String trackingBaseUrl;
 
     @Transactional
     public Shipment createShipmentForOrder(UUID orderId) {
@@ -43,16 +55,75 @@ public class ShippingService {
         }
 
         OrderResponse order = orderService.getOrderById(orderId);
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.REFUNDED) {
+            throw new IllegalStateException("Cannot create courier shipment for a cancelled or refunded order (Order #" + order.getOrderNumber() + ")");
+        }
+        if (order.getStatus() != OrderStatus.PAID && order.getStatus() != OrderStatus.CONFIRMED && order.getStatus() != OrderStatus.PROCESSING) {
+            throw new IllegalStateException("Cannot create courier shipment for order #" + order.getOrderNumber() + " with status " + order.getStatus() + ". Order must be PAID or CONFIRMED.");
+        }
+
         OrderAddressSnapshot addr = order.getShippingAddress();
 
-        List<ShippingProvider.ShipmentItemCommand> itemCommands = order.getItems().stream()
-                .map(item -> ShippingProvider.ShipmentItemCommand.builder()
+        BigDecimal totalWeightKg = BigDecimal.ZERO;
+        BigDecimal maxLengthCm = BigDecimal.ZERO;
+        BigDecimal maxBreadthCm = BigDecimal.ZERO;
+        BigDecimal totalHeightCm = BigDecimal.ZERO;
+
+        List<ShippingProvider.ShipmentItemCommand> itemCommands = new java.util.ArrayList<>();
+        if (order.getItems() != null) {
+            for (var item : order.getItems()) {
+                BigDecimal itemWeight = new BigDecimal("0.250");
+                BigDecimal itemLength = new BigDecimal("15.00");
+                BigDecimal itemBreadth = new BigDecimal("15.00");
+                BigDecimal itemHeight = new BigDecimal("10.00");
+
+                if (item.getVariantId() != null && variantRepository != null) {
+                    var variantOpt = variantRepository.findById(item.getVariantId());
+                    if (variantOpt.isPresent()) {
+                        var v = variantOpt.get();
+                        if (v.getWeightKg() != null && v.getWeightKg().compareTo(BigDecimal.ZERO) > 0) {
+                            itemWeight = v.getWeightKg();
+                        }
+                        if (v.getLengthCm() != null && v.getLengthCm().compareTo(BigDecimal.ZERO) > 0) {
+                            itemLength = v.getLengthCm();
+                        }
+                        if (v.getBreadthCm() != null && v.getBreadthCm().compareTo(BigDecimal.ZERO) > 0) {
+                            itemBreadth = v.getBreadthCm();
+                        }
+                        if (v.getHeightCm() != null && v.getHeightCm().compareTo(BigDecimal.ZERO) > 0) {
+                            itemHeight = v.getHeightCm();
+                        }
+                    }
+                }
+
+                int qty = item.getQuantity() != null && item.getQuantity() > 0 ? item.getQuantity() : 1;
+                totalWeightKg = totalWeightKg.add(itemWeight.multiply(BigDecimal.valueOf(qty)));
+                if (itemLength.compareTo(maxLengthCm) > 0) maxLengthCm = itemLength;
+                if (itemBreadth.compareTo(maxBreadthCm) > 0) maxBreadthCm = itemBreadth;
+                totalHeightCm = totalHeightCm.add(itemHeight.multiply(BigDecimal.valueOf(qty)));
+
+                itemCommands.add(ShippingProvider.ShipmentItemCommand.builder()
                         .title(item.getProductTitle())
                         .sku(item.getSku())
-                        .quantity(item.getQuantity())
+                        .quantity(qty)
                         .priceInr(item.getPriceInr())
-                        .build())
-                .collect(Collectors.toList());
+                        .weightKg(itemWeight)
+                        .build());
+            }
+        }
+
+        if (totalWeightKg.compareTo(new BigDecimal("0.100")) < 0) {
+            totalWeightKg = new BigDecimal("0.250");
+        }
+        if (maxLengthCm.compareTo(BigDecimal.ZERO) <= 0) {
+            maxLengthCm = new BigDecimal("15.00");
+        }
+        if (maxBreadthCm.compareTo(BigDecimal.ZERO) <= 0) {
+            maxBreadthCm = new BigDecimal("15.00");
+        }
+        if (totalHeightCm.compareTo(BigDecimal.ZERO) <= 0) {
+            totalHeightCm = new BigDecimal("10.00");
+        }
 
         ShippingProvider.CreateShipmentCommand command = ShippingProvider.CreateShipmentCommand.builder()
                 .orderId(order.getId())
@@ -65,6 +136,12 @@ public class ShippingService {
                 .state(addr != null ? addr.getState() : "")
                 .pincode(addr != null ? addr.getPincode() : "")
                 .totalAmountInr(order.getTotalAmountInr())
+                .weightKg(totalWeightKg)
+                .lengthCm(maxLengthCm)
+                .breadthCm(maxBreadthCm)
+                .heightCm(totalHeightCm)
+                .pickupLocation(pickupLocation != null && !pickupLocation.isBlank() ? pickupLocation : "Primary")
+                .pickupPincode(pickupPincode != null && !pickupPincode.isBlank() ? pickupPincode : "411001")
                 .items(itemCommands)
                 .build();
 
@@ -80,8 +157,8 @@ public class ShippingService {
                 .orderNumber(order.getOrderNumber())
                 .providerShipmentId(result.getProviderShipmentId())
                 .awbCode(result.getAwbCode())
-                .courierName(result.getCourierName())
-                .courierId(result.getCourierId())
+                .courierName(result.getCourierName() != null ? result.getCourierName() : "BlueDart Express")
+                .courierId(result.getCourierId() != null ? result.getCourierId() : "BLUEDART_1")
                 .status(ShipmentStatus.PICKUP_SCHEDULED)
                 .pickupScheduledAt(ZonedDateTime.now().plusDays(1))
                 .shippingAddressJson(addrJson)
@@ -91,20 +168,67 @@ public class ShippingService {
                 .shipment(shipment)
                 .awbCode(result.getAwbCode())
                 .currentStatus("PICKUP_SCHEDULED")
-                .activity(result.getMessage())
+                .activity(result.getMessage() != null ? result.getMessage() : "Shipment created and pickup scheduled with courier partner")
+                .location("Warehouse Manifest Facility")
                 .timestamp(ZonedDateTime.now())
                 .build();
         shipment.addTrackingEvent(tracking);
 
         Shipment savedShipment = shipmentRepository.save(shipment);
 
-        // Update Order Status to SHIPPED
+        // Update Order Shipping Details and set Order Status to SHIPPED
+        orderService.updateOrderShippingDetails(
+                orderId,
+                savedShipment.getCourierName(),
+                savedShipment.getAwbCode(),
+                buildTrackingUrl(savedShipment.getAwbCode())
+        );
         orderService.updateOrderStatus(orderId, OrderStatus.SHIPPED, "Shipment created: " + result.getAwbCode(), "SHIPPING_SERVICE");
 
         // Record Shipment Notification
         recordShipmentNotification(savedShipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_SHIPPED, "SHIPPED");
 
         return savedShipment;
+    }
+
+    @Transactional
+    public Shipment simulateCourierEvent(UUID shipmentId, ShipmentStatus targetStatus, String location, String activity) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
+
+        if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot update tracking for a cancelled shipment.");
+        }
+
+        String loc = (location != null && !location.isBlank()) ? location : "Central Logistics Hub";
+        String act = (activity != null && !activity.isBlank()) ? activity : "Courier tracking scan: " + targetStatus;
+
+        shipment.setStatus(targetStatus);
+        if (targetStatus == ShipmentStatus.DELIVERED) {
+            shipment.setDeliveredAt(ZonedDateTime.now());
+        }
+
+        ShipmentTracking tracking = ShipmentTracking.builder()
+                .shipment(shipment)
+                .awbCode(shipment.getAwbCode())
+                .currentStatus(targetStatus.name())
+                .location(loc)
+                .activity(act)
+                .timestamp(ZonedDateTime.now())
+                .eventDataJson("{\"status\":\"" + targetStatus.name() + "\",\"source\":\"COURIER_CARRIER_SIMULATION\"}")
+                .build();
+
+        shipment.addTrackingEvent(tracking);
+        Shipment saved = shipmentRepository.save(shipment);
+
+        if (targetStatus == ShipmentStatus.DELIVERED) {
+            orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Order delivered via courier partner scan", "COURIER_SYSTEM");
+            recordShipmentNotification(saved, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
+        } else if (targetStatus == ShipmentStatus.IN_TRANSIT) {
+            recordShipmentNotification(saved, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
+        }
+
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -159,6 +283,20 @@ public class ShippingService {
         }
 
         Shipment shipment = shipmentOpt.get();
+
+        if (shipment.getStatus() == ShipmentStatus.DELIVERED) {
+            log.info("Shipment for AWB {} is already in terminal DELIVERED status; ignoring webhook transition to {}", awbCode, currentStatus);
+            return;
+        }
+
+        boolean isDuplicateScan = shipment.getTrackingEvents() != null && shipment.getTrackingEvents().stream()
+                .anyMatch(t -> currentStatus != null && currentStatus.equalsIgnoreCase(t.getCurrentStatus())
+                        && ((activity == null && t.getActivity() == null) || (activity != null && activity.equalsIgnoreCase(t.getActivity()))));
+        if (isDuplicateScan) {
+            log.info("Ignoring duplicate webhook tracking scan for AWB {}: status={}, activity={}", awbCode, currentStatus, activity);
+            return;
+        }
+
         ShipmentTracking tracking = ShipmentTracking.builder()
                 .shipment(shipment)
                 .awbCode(awbCode)
@@ -255,7 +393,7 @@ public class ShippingService {
                             "awbCode", shipment.getAwbCode() != null ? shipment.getAwbCode() : "N/A",
                             "trackingUrl", (order.getTrackingUrl() != null && !order.getTrackingUrl().isBlank())
                                     ? order.getTrackingUrl()
-                                    : ("https://track.shiprocket.in/" + (shipment.getAwbCode() != null ? shipment.getAwbCode() : "")),
+                                    : buildTrackingUrl(shipment.getAwbCode()),
                             "status", statusLabel
                     ),
                     eventType.name() + ":" + shipment.getId()
@@ -264,5 +402,14 @@ public class ShippingService {
         } catch (Exception e) {
             log.error("Failed to record shipment notification for shipment {}: {}", shipment.getId(), e.getMessage());
         }
+    }
+
+    public String buildTrackingUrl(String awbCode) {
+        if (awbCode == null || awbCode.isBlank()) return "";
+        String base = trackingBaseUrl != null ? trackingBaseUrl.trim() : "https://track.shiprocket.in/";
+        if (!base.endsWith("/")) {
+            base += "/";
+        }
+        return base + awbCode.trim();
     }
 }

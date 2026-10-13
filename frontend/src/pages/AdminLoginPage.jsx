@@ -1,18 +1,22 @@
 import React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import SeoHead from '../components/SeoHead';
 import AuthForm from '../components/AuthForm';
 
 export default function AdminLoginPage({ user, setUser }) {
   const navigate = useNavigate();
 
-  // Redirect to admin dashboard if user is already an Admin
-  if (user && user.role === 'ROLE_ADMIN') {
+  // Redirect to admin dashboard if user is already the authorized Admin
+  if (user && user.role === 'ROLE_ADMIN' && user.email?.toLowerCase() === 'thepravara2026@gmail.com') {
     return <Navigate to="/admin" replace />;
   }
 
   const handleAdminAuthSuccess = (authData) => {
+    if (authData.email?.toLowerCase() !== 'thepravara2026@gmail.com') {
+      alert('Access Denied: Only thepravara2026@gmail.com is authorized for administrator access.');
+      return;
+    }
     if (setUser) setUser(authData);
     navigate('/admin', { replace: true });
   };
@@ -36,22 +40,9 @@ export default function AdminLoginPage({ user, setUser }) {
             Sporekart <span className="text-forest-700">Admin Control</span>
           </h1>
           <p className="text-xs text-typography-secondary max-w-sm mx-auto">
-            Log in with your authorized administrative credentials to manage products, orders, catalog, and training.
+            Authorized admin entity: <span className="font-mono font-bold text-soil">thepravara2026@gmail.com</span>. Strictly dedicated for administrative operations.
           </p>
         </div>
-
-        {/* Credentials Tip Card (Dev Mode Only) */}
-        {import.meta.env.DEV && (
-          <div className="p-4 bg-surface-white border border-gold/30 rounded-2xl text-xs space-y-1.5 text-typography-secondary shadow-level-1">
-            <div className="flex items-center gap-2 text-forest-800 font-bold">
-              <ShieldCheck className="w-4 h-4 text-forest-700" />
-              <span>Development Admin Account</span>
-            </div>
-            <p className="text-[11px] text-typography-secondary leading-relaxed">
-              Use <code className="text-forest-900 font-mono font-bold bg-surface-cream px-1.5 py-0.5 rounded">admin@sporekart.in</code> or <code className="text-forest-900 font-mono font-bold bg-surface-cream px-1.5 py-0.5 rounded">+919999999999</code> with Mock OTP: <code className="text-forest-900 font-mono font-bold bg-gold/20 px-1 py-0.5 rounded border border-gold/40">123456</code>.
-            </p>
-          </div>
-        )}
 
         {/* Auth Form pre-configured for Admin Mode */}
         <div className="bg-surface-white border border-surface-border rounded-card p-6 sm:p-8 shadow-level-2">
@@ -59,8 +50,8 @@ export default function AdminLoginPage({ user, setUser }) {
             setUser={setUser}
             onSuccess={handleAdminAuthSuccess}
             initialAdminMode={true}
-            title="Admin Authentication"
-            subtitle="Verify administrative mobile or email identifier"
+            title="Admin Google Sign-In"
+            subtitle="Authenticate with the single permissible admin account (thepravara2026@gmail.com)"
           />
         </div>
 

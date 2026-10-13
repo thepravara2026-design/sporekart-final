@@ -163,7 +163,16 @@ public class TrainingService {
             throw new BatchCapacityExceededException("Batch '" + batch.getBatchCode() + "' is full. Cannot enroll.");
         }
 
+        if (userId != null) {
+            userRepository.findById(userId).ifPresent(u -> {
+                if ("thepravara2026@gmail.com".equalsIgnoreCase(u.getEmail()) || u.getRole() == com.sporekart.identity.domain.UserRole.ROLE_ADMIN) {
+                    throw new IllegalStateException("The admin account (thepravara2026@gmail.com) is purely dedicated for admin operations and cannot enroll as a trainee.");
+                }
+            });
+        }
+
         Optional<Enrollment> existing = enrollmentRepository.findByUserIdAndBatchId(userId, batchId);
+
         if (existing.isPresent()) {
             return existing.get();
         }

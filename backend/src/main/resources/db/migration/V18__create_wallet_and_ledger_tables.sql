@@ -1,7 +1,7 @@
 -- Sporekart Migration V18: Wallet, Payment Ledger, Refund & Settlement System
 
 CREATE TABLE IF NOT EXISTS wallets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID UNIQUE,
     user_type VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER',
     available_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS wallets (
 );
 
 CREATE TABLE IF NOT EXISTS wallet_transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_reference VARCHAR(100) NOT NULL UNIQUE,
     wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
     user_id UUID,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
 );
 
 CREATE TABLE IF NOT EXISTS wallet_withdrawals (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     withdrawal_reference VARCHAR(100) NOT NULL UNIQUE,
     wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
     user_id UUID NOT NULL,

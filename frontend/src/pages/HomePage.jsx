@@ -108,33 +108,19 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const prodRes = await catalogApi.getProducts();
-        setProducts(prodRes.data?.data || []);
-      } catch (err) {
-        console.error('Failed to fetch products for home page', err);
-      }
+        const [prodRes, catRes, courseRes, glimpseRes] = await Promise.allSettled([
+          catalogApi.getProducts(),
+          catalogApi.getCategories(),
+          trainingApi.getCourses(),
+          typeof trainingApi.getGlimpses === 'function' ? trainingApi.getGlimpses() : Promise.resolve({ data: { data: [] } }),
+        ]);
 
-      try {
-        const catRes = await catalogApi.getCategories();
-        setCategories(catRes.data?.data || []);
+        if (prodRes.status === 'fulfilled') setProducts(prodRes.value.data?.data || []);
+        if (catRes.status === 'fulfilled') setCategories(catRes.value.data?.data || []);
+        if (courseRes.status === 'fulfilled') setCourses(courseRes.value.data?.data || []);
+        if (glimpseRes.status === 'fulfilled') setGlimpses(glimpseRes.value.data?.data || []);
       } catch (err) {
-        console.error('Failed to fetch categories for home page', err);
-      }
-
-      try {
-        const courseRes = await trainingApi.getCourses();
-        setCourses(courseRes.data?.data || []);
-      } catch (err) {
-        console.error('Failed to fetch courses for home page', err);
-      }
-
-      try {
-        if (typeof trainingApi.getGlimpses === 'function') {
-          const glimpseRes = await trainingApi.getGlimpses();
-          setGlimpses(glimpseRes.data?.data || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch training glimpses for home page', err);
+        console.error('Failed to load home page data:', err);
       } finally {
         setLoading(false);
       }

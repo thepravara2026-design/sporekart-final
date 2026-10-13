@@ -1,5 +1,7 @@
 package com.sporekart.notification.api;
 
+import com.sporekart.notification.api.dto.NotificationDto;
+import com.sporekart.notification.application.NotificationEventService;
 import com.sporekart.notification.application.NotificationWorker;
 import com.sporekart.notification.domain.NotificationEvent;
 import com.sporekart.notification.domain.NotificationEventType;
@@ -15,17 +17,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/notifications")
+@RequestMapping({"/admin/notifications", "/api/v1/admin/notifications"})
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequiredArgsConstructor
 public class AdminNotificationController {
 
     private final NotificationEventRepository notificationRepository;
     private final NotificationWorker notificationWorker;
+    private final NotificationEventService notificationEventService;
 
+    // Outbox Email / SMS Operations
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationEvent>>> getAllNotifications(
             @RequestParam(required = false) String eventType,
@@ -64,5 +69,37 @@ public class AdminNotificationController {
         notificationWorker.dispatchNotification(saved);
 
         return ResponseEntity.ok(ApiResponse.success(saved));
+    }
+
+    // In-App Operational Alert Operations
+    @GetMapping("/in-app")
+    public ResponseEntity<ApiResponse<Page<NotificationDto>>> getAdminInAppNotifications(
+            @RequestParam(defaultValue = "false") boolean unreadOnly,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        int clampedSize = Math.min(Math.max(size, 1), 50);
+        Page<NotificationDto> result = notificationEventService.getAdminNotifications(
+                unreadOnly, PageRequest.of(page, clampedSize)
+        );
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping({"/in-app/unread-count", "/unread-count"})
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAdminUnreadCount() {
+        long count = notificationEventService.getAdminUnreadCount();
+        return ResponseEntity.ok(ApiResponse.success(Map.of("unreadCount", count)));
+    }
+
+    @RequestMapping(value = "/in-app/{id}/read", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<ApiResponse<NotificationDto>> markAdminAsRead(@PathVariable UUID id) {
+        NotificationDto dto = notificationEventService.markAdminAsRead(id);
+        return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
+    @RequestMapping(value = "/in-app/read-all", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<ApiResponse<Map<String, Object>>> markAdminAllAsRead() {
+        int count = notificationEventService.markAdminAllAsRead();
+        return ResponseEntity.ok(ApiResponse.success(Map.of("markedCount", count)));
     }
 }

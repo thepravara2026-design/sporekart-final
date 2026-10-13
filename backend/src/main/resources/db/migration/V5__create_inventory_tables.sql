@@ -2,7 +2,7 @@
 
 -- 1. Inventory Records Table
 CREATE TABLE IF NOT EXISTS inventory_records (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     variant_id UUID NOT NULL UNIQUE REFERENCES product_variants(id) ON DELETE CASCADE,
     available_quantity INT NOT NULL DEFAULT 0,
     reserved_quantity INT NOT NULL DEFAULT 0,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS inventory_records (
 
 -- 2. Inventory Audit Events Table
 CREATE TABLE IF NOT EXISTS inventory_audit_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     variant_id UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
     event_type VARCHAR(50) NOT NULL, -- INITIALIZED, RESERVED, RELEASED, CONFIRMED_SOLD, CANCELLED_RESTOCKED, ADJUSTED
     quantity_changed INT NOT NULL,

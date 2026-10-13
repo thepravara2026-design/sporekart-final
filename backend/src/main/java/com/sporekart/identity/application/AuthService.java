@@ -21,21 +21,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
     private final UserRepository userRepository;
-    private final OtpRepository otpRepository;
     private final CustomerIdentityRepository customerIdentityRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final NotificationService notificationService;
     private final org.springframework.core.env.Environment environment;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.customer.infrastructure.CustomerAddressRepository customerAddressRepository;
-
-    private static final int MAX_OTP_ATTEMPTS = 3;
-    private static final int RATE_LIMIT_MAX_REQUESTS = 3;
-    private static final int RATE_LIMIT_WINDOW_MINUTES = 10;
-    private static final int OTP_EXPIRATION_MINUTES = 5;
 
     public void checkIfPhoneIsAlternateDeliveryOnly(String rawPhone) {
         if (rawPhone == null || rawPhone.isBlank() || rawPhone.contains("@")) return;
@@ -49,148 +40,9 @@ public class AuthService {
 
         if (customerAddressRepository != null && customerAddressRepository.isAlternateDeliveryPhoneExist(rawPhone, withPrefix, last10)) {
             throw new IllegalArgumentException(
-                    "This phone number (" + normalizePhone(rawPhone) + ") is registered only as an alternative delivery contact for an order/address and cannot be used for account login. Please log in using your primary account credential (email or primary phone number)."
+                    "This phone number (" + normalizePhone(rawPhone) + ") is registered only as an alternative delivery contact for an order/address and cannot be used for account login. Please log in using Google authentication."
             );
         }
-    }
-
-    @Transactional
-    public void requestOtp(AuthDtos.OtpRequest request, OtpType type) {
-        String identifier = request.getIdentifier().trim().toLowerCase();
-        if (!identifier.contains("@")) {
-            identifier = normalizePhone(identifier);
-            checkIfPhoneIsAlternateDeliveryOnly(identifier);
-        }
-
-        // 1. Rate Limiting Check
-        LocalDateTime tenMinsAgo = LocalDateTime.now().minusMinutes(RATE_LIMIT_WINDOW_MINUTES);
-        int recentRequests = otpRepository.countByIdentifierAndOtpTypeAndCreatedAtAfter(identifier, type, tenMinsAgo);
-        if (recentRequests >= RATE_LIMIT_MAX_REQUESTS) {
-            throw new IllegalArgumentException("Rate limit exceeded. Maximum 3 OTP requests allowed every 10 minutes.");
-        }
-
-        String otpCode = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
-
-        Otp otp = Otp.builder()
-                .identifier(identifier)
-                .otpCode(otpCode)
-                .expiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES))
-                .isUsed(false)
-                .consumed(false)
-                .attemptCount(0)
-                .otpType(type)
-                .build();
-
-        otpRepository.save(otp);
-
-        if (identifier.contains("@")) {
-            notificationService.sendOtpEmail(identifier, otpCode);
-            userRepository.findByEmail(identifier)
-                    .map(User::getPhone)
-                    .filter(phone -> phone != null && !phone.isBlank())
-                    .ifPresent(phone -> notificationService.sendOtpSms(phone, otpCode));
-        } else {
-            notificationService.sendOtpSms(identifier, otpCode);
-            userRepository.findByPhone(identifier)
-                    .map(User::getEmail)
-                    .filter(email -> email != null && email.contains("@"))
-                    .ifPresent(email -> notificationService.sendOtpEmail(email, otpCode));
-        }
-    }
-
-    @Transactional
-    public AuthDtos.AuthResponse verifyOtp(AuthDtos.VerifyOtpRequest request, OtpType type) {
-        String rawIdentifier = request.getIdentifier().trim().toLowerCase();
-        String identifier = rawIdentifier.contains("@") ? rawIdentifier : normalizePhone(rawIdentifier);
-        if (!identifier.contains("@")) {
-            checkIfPhoneIsAlternateDeliveryOnly(identifier);
-        }
-        String code = request.getOtpCode().trim();
-
-        boolean isDevOrTest = environment != null && environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
-        boolean isMockDevOtp = isDevOrTest && "123456".equals(code);
-
-        if (!isMockDevOtp) {
-            Otp otp = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type)
-                    .orElseGet(() -> otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(rawIdentifier, type)
-                            .orElseThrow(() -> new IllegalArgumentException("No active OTP found or OTP has already been used")));
-
-            if (otp.isConsumed() || otp.isUsed()) {
-                throw new IllegalArgumentException("OTP has already been used");
-            }
-
-            if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("OTP has expired. Please request a new one.");
-            }
-
-            if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
-                otp.setConsumed(true);
-                otpRepository.save(otp);
-                throw new IllegalArgumentException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
-            }
-
-            if (!otp.getOtpCode().equals(code)) {
-                otp.setAttemptCount(otp.getAttemptCount() + 1);
-                if (otp.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
-                    otp.setConsumed(true);
-                }
-                otpRepository.save(otp);
-                throw new IllegalArgumentException("Invalid OTP code provided. Attempts remaining: " + (MAX_OTP_ATTEMPTS - otp.getAttemptCount()));
-            }
-
-            // Mark OTP as consumed (Replay Protection)
-            otp.setConsumed(true);
-            otp.setUsed(true);
-            otpRepository.save(otp);
-        } else {
-            // Dev Mock OTP: consume active OTP if present, enforcing expiration & replay protection
-            Optional<Otp> activeOtpOpt = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type);
-            if (activeOtpOpt.isEmpty()) {
-                activeOtpOpt = otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(rawIdentifier, type);
-            }
-            if (activeOtpOpt.isPresent()) {
-                Otp activeOtp = activeOtpOpt.get();
-                if (activeOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    activeOtp.setConsumed(true);
-                    otpRepository.save(activeOtp);
-                    throw new IllegalArgumentException("OTP has expired. Please request a new one.");
-                }
-                activeOtp.setConsumed(true);
-                activeOtp.setUsed(true);
-                otpRepository.save(activeOtp);
-            } else {
-                // If an OTP was previously created and consumed for this identifier, block replay attempt
-                if (otpRepository.existsByIdentifierAndOtpTypeAndConsumedTrue(identifier, type) ||
-                    otpRepository.existsByIdentifierAndOtpTypeAndConsumedTrue(rawIdentifier, type)) {
-                    throw new IllegalArgumentException("OTP has already been used");
-                }
-            }
-        }
-
-        // Find or create Customer
-        boolean isEmail = identifier.contains("@");
-        IdentityProvider provider = isEmail ? IdentityProvider.EMAIL_OTP : IdentityProvider.PHONE_OTP;
-
-        User user = findOrCreateUserForIdentity(provider, identifier, identifier, request.getFirstName(), request.getLastName(), request.getFullName());
-
-        String token = jwtTokenProvider.generateToken(user.getId(), identifier, user.getRole().name());
-
-        List<String> providers = customerIdentityRepository.findByUserId(user.getId())
-                .stream()
-                .map(ci -> ci.getProvider().name())
-                .collect(Collectors.toList());
-
-        return AuthDtos.AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole().name())
-                .linkedProviders(providers)
-                .build();
     }
 
     @Transactional
@@ -199,6 +51,20 @@ public class AuthService {
         String googleSub = request.getGoogleSub().trim();
 
         User user = findOrCreateUserForIdentity(IdentityProvider.GOOGLE, googleSub, email, request.getFirstName(), request.getLastName(), request.getFullName());
+
+        // Single entity enforcement: only thepravara2026@gmail.com is permissible for ROLE_ADMIN via Google OAuth
+        if ("thepravara2026@gmail.com".equalsIgnoreCase(email)) {
+            if (user.getRole() != UserRole.ROLE_ADMIN) {
+                user.setRole(UserRole.ROLE_ADMIN);
+                user = userRepository.save(user);
+            }
+        } else {
+            // Any other Google user can NEVER hold ROLE_ADMIN
+            if (user.getRole() == UserRole.ROLE_ADMIN && !"admin@sporekart.in".equalsIgnoreCase(email)) {
+                user.setRole(UserRole.ROLE_CUSTOMER);
+                user = userRepository.save(user);
+            }
+        }
 
         String token = jwtTokenProvider.generateToken(user.getId(), email, user.getRole().name());
 
@@ -227,6 +93,9 @@ public class AuthService {
         if (existingIdentity.isPresent()) {
             User user = userRepository.findById(existingIdentity.get().getUserId())
                     .orElseThrow(() -> new IllegalStateException("User associated with identity not found"));
+            if (emailOrPhone != null && "thepravara2026@gmail.com".equalsIgnoreCase(emailOrPhone.trim())) {
+                user.setRole(UserRole.ROLE_ADMIN);
+            }
             if (reqFullName != null && !reqFullName.isBlank()) {
                 user.setFullName(reqFullName.trim());
                 if (reqFirstName != null && !reqFirstName.isBlank()) user.setFirstName(reqFirstName.trim());
@@ -245,6 +114,9 @@ public class AuthService {
         User user;
         if (existingUser.isPresent()) {
             user = existingUser.get();
+            if (isEmail && "thepravara2026@gmail.com".equalsIgnoreCase(emailOrPhone.trim())) {
+                user.setRole(UserRole.ROLE_ADMIN);
+            }
             if (reqFullName != null && !reqFullName.isBlank()) {
                 user.setFullName(reqFullName.trim());
                 if (reqFirstName != null && !reqFirstName.isBlank()) user.setFirstName(reqFirstName.trim());
@@ -256,15 +128,20 @@ public class AuthService {
             String lastName = reqLastName != null && !reqLastName.isBlank() ? reqLastName.trim() : "Grower";
             String fullName = reqFullName != null && !reqFullName.isBlank() ? reqFullName.trim() : (firstName + " " + lastName);
 
+            UserRole initialRole = (isEmail && "thepravara2026@gmail.com".equalsIgnoreCase(emailOrPhone.trim()))
+                    ? UserRole.ROLE_ADMIN
+                    : UserRole.ROLE_CUSTOMER;
+
             user = User.builder()
                     .firstName(firstName)
                     .lastName(lastName)
                     .fullName(fullName)
-                    .role(UserRole.ROLE_CUSTOMER)
+                    .role(initialRole)
                     .isVerified(true)
                     .isEmailVerified(isEmail)
                     .isPhoneVerified(!isEmail)
                     .build();
+
 
             if (isEmail) {
                 user.setEmail(emailOrPhone.trim().toLowerCase());

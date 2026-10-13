@@ -60,6 +60,10 @@ export default function TrainingPage({ user, setUser }) {
       setShowAuthModal(true);
       return;
     }
+    if (user.role === 'ROLE_ADMIN' || user.email?.toLowerCase() === 'thepravara2026@gmail.com') {
+      alert('The admin account (thepravara2026@gmail.com) is purely dedicated for administrative operations. Storefront trainee enrollments are not permitted on the admin entity.');
+      return;
+    }
     const targetSlot = slot || (course.slots && course.slots.length > 0 ? course.slots[0] : null);
     setPreviewEnrollment({ course, slot: targetSlot });
   };

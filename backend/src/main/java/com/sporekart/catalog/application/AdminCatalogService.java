@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -277,6 +278,10 @@ public class AdminCatalogService {
                 .compareAtPriceInr(request.getCompareAtPriceInr())
                 .stockQuantity(request.getStockQuantity())
                 .isActive(request.isActive())
+                .weightKg(request.getWeightKg() != null ? request.getWeightKg() : new BigDecimal("0.250"))
+                .lengthCm(request.getLengthCm() != null ? request.getLengthCm() : new BigDecimal("15.00"))
+                .breadthCm(request.getBreadthCm() != null ? request.getBreadthCm() : new BigDecimal("15.00"))
+                .heightCm(request.getHeightCm() != null ? request.getHeightCm() : new BigDecimal("10.00"))
                 .build();
 
         variant.validatePricing();

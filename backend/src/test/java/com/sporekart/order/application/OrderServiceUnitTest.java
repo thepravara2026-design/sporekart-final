@@ -63,6 +63,9 @@ public class OrderServiceUnitTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private com.sporekart.identity.infrastructure.UserRepository userRepository;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -400,7 +403,7 @@ public class OrderServiceUnitTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
 
-        OrderResponse updated = orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED, "Delivered by courier", "ADMIN");
+        OrderResponse updated = orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED, "Delivered by courier", "CARRIER_WEBHOOK");
 
         assertEquals(OrderStatus.DELIVERED, updated.getStatus());
         verify(eventPublisher, times(1)).publishEvent(any(Object.class));

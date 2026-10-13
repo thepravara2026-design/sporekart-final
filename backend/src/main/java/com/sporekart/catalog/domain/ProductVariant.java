@@ -42,6 +42,22 @@ public class ProductVariant {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(name = "weight_kg", precision = 6, scale = 3, nullable = false)
+    @Builder.Default
+    private BigDecimal weightKg = new BigDecimal("0.250");
+
+    @Column(name = "length_cm", precision = 6, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal lengthCm = new BigDecimal("15.00");
+
+    @Column(name = "breadth_cm", precision = 6, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal breadthCm = new BigDecimal("15.00");
+
+    @Column(name = "height_cm", precision = 6, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal heightCm = new BigDecimal("10.00");
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

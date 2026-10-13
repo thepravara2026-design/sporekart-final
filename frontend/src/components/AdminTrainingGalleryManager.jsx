@@ -171,7 +171,6 @@ export default function AdminTrainingGalleryManager() {
       }
     } catch (err) {
       console.error('Failed to toggle status:', err);
-      alert('Failed to change glimpse status.');
     }
   };
 
@@ -187,7 +186,6 @@ export default function AdminTrainingGalleryManager() {
       }
     } catch (err) {
       console.error('Failed to delete glimpse:', err);
-      alert('Failed to delete glimpse.');
     }
   };
 

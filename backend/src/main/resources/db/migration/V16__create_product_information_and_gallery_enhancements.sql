@@ -2,7 +2,7 @@
 
 -- 1. Create Product Information Table for structured compliance, food & agritech metadata
 CREATE TABLE IF NOT EXISTS product_information (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
     
     -- Basic Product & Trade Disclosures

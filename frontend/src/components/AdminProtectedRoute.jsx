@@ -2,13 +2,28 @@ import React from 'react';
 import { ShieldAlert, LogIn } from 'lucide-react';
 import SeoHead from './SeoHead';
 
-export default function AdminProtectedRoute({ user, children }) {
-  if (!user || user.role !== 'ROLE_ADMIN') {
+export default function AdminProtectedRoute({ user, loading, children }) {
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-4">
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-medium text-slate-400">Verifying administrative access...</p>
+      </div>
+    );
+  }
+
+  const isAdminPermitted = Boolean(
+    user &&
+    user.role === 'ROLE_ADMIN' &&
+    user.email?.toLowerCase() === 'thepravara2026@gmail.com'
+  );
+
+  if (!isAdminPermitted) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-6">
         <SeoHead
           title="Access Denied — Sporekart Admin Console"
-          description="Administrative access restricted to authorized personnel."
+          description="Administrative access restricted strictly to thepravara2026@gmail.com."
           noindex={true}
         />
         <div className="w-20 h-20 mx-auto rounded-3xl bg-red-950/80 border border-red-800/80 flex items-center justify-center text-red-400 shadow-2xl animate-pulse">
@@ -17,7 +32,7 @@ export default function AdminProtectedRoute({ user, children }) {
         <div className="space-y-2">
           <h1 className="font-display font-black text-3xl text-white">403 — Unauthorized Administrative Access</h1>
           <p className="text-slate-400 text-sm max-w-md mx-auto">
-            The requested control plane endpoint requires elevated privilege <code className="text-amber-400 font-mono">ROLE_ADMIN</code>. Public or non-administrative access is strictly forbidden.
+            Administrative access is strictly restricted to the single authorized administrator account <code className="text-amber-400 font-mono font-bold">thepravara2026@gmail.com</code>. Customer, trainee, or unauthorized Google accounts cannot access this console.
           </p>
         </div>
         <div className="pt-4 flex justify-center items-center gap-4">

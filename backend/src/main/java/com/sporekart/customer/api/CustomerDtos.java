@@ -32,7 +32,7 @@ public class CustomerDtos {
     @AllArgsConstructor
     public static class AddressRequest {
         @NotBlank(message = "Recipient name is required")
-        @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z\\s\\.\\-]{2,60}$", message = "Recipient name must contain only letters and spaces (min 2 characters)")
+        @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z0-9\\s\\.\\-]{2,60}$", message = "Recipient name must contain only letters, numbers, spaces, dots, or hyphens (min 2 characters)")
         private String recipientName;
 
         @NotBlank(message = "Phone number is required")

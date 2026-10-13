@@ -86,7 +86,40 @@ public class SupportApplicationService {
 
         ticket.addMessage(autoReplyMsg);
 
-        return ticketRepository.save(ticket);
+        SupportTicket savedTicket = ticketRepository.save(ticket);
+
+        try {
+            if (userId != null) {
+                notificationEventService.recordEvent(
+                        NotificationEventType.SUPPORT_TICKET_CREATED,
+                        "SUPPORT_TICKET",
+                        savedTicket.getId(),
+                        userId,
+                        null,
+                        null,
+                        senderName != null ? senderName : "Valued Customer",
+                        "Support Ticket Received: #" + ticketNumber + " 🎫",
+                        java.util.Map.of(
+                                "ticketNumber", ticketNumber,
+                                "subject", subject,
+                                "actionUrl", "/dashboard?tab=support&ticketId=" + savedTicket.getId()
+                        ),
+                        "TICKET_CREATED:" + savedTicket.getId()
+                );
+            }
+
+            notificationEventService.recordAdminNotification(
+                    NotificationEventType.SUPPORT_TICKET_CREATED,
+                    "SUPPORT_TICKET",
+                    savedTicket.getId(),
+                    "New Support Ticket #" + ticketNumber,
+                    "Ticket submitted by " + (senderName != null ? senderName : "Customer") + ": \"" + subject + "\"",
+                    "/admin/support?ticketId=" + savedTicket.getId(),
+                    "ADMIN_TICKET_CREATED:" + savedTicket.getId()
+            );
+        } catch (Exception ignored) {}
+
+        return savedTicket;
     }
 
     @Transactional

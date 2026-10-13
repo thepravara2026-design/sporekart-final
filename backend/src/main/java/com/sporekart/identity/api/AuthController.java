@@ -19,24 +19,15 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/otp/request")
-    public ResponseEntity<ApiResponse<String>> requestOtp(@Valid @RequestBody AuthDtos.OtpRequest request) {
-        authService.requestOtp(request, OtpType.CUSTOMER_AUTH);
-        return ResponseEntity.ok(ApiResponse.success("OTP sent"));
+    public ResponseEntity<ApiResponse<String>> requestOtp(@RequestBody(required = false) AuthDtos.OtpRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Email and Phone OTP authentication have been retired. Please sign in with Google."));
     }
 
     @PostMapping("/otp/verify")
-    public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyOtp(@Valid @RequestBody AuthDtos.VerifyOtpRequest request) {
-        AuthDtos.AuthResponse response = authService.verifyOtp(request, OtpType.CUSTOMER_AUTH);
-        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-        return ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.success(response));
+    public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyOtp(@RequestBody(required = false) AuthDtos.VerifyOtpRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Email and Phone OTP authentication have been retired. Please sign in with Google."));
     }
 
     @PostMapping("/oauth/google")

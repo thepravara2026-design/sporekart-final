@@ -200,7 +200,7 @@ export default function CheckoutPage({ user, setUser }) {
         const phoneVal = inlineShippingAddress?.phone || newAddress.phone || user?.phone || '';
         setConflictInfo({ isOpen: true, value: phoneVal, field: 'phone' });
       } else {
-        alert(msg);
+        console.error('Checkout order error:', msg);
       }
     } finally {
       setSubmitting(false);
@@ -229,6 +229,40 @@ export default function CheckoutPage({ user, setUser }) {
         >
           Return to Catalog
         </button>
+      </div>
+    );
+  }
+
+  // Purely dedicated admin account barrier: no customer storefront purchases
+  if (user?.role === 'ROLE_ADMIN' || user?.email?.toLowerCase() === 'thepravara2026@gmail.com') {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-gold/15 border border-gold/40 rounded-2xl mx-auto flex items-center justify-center text-soil shadow-level-1">
+          <Lock className="w-8 h-8 text-gold" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="font-display font-extrabold text-2xl text-typography-primary">
+            Admin Account Restricted From Storefront Checkout
+          </h1>
+          <p className="text-xs text-typography-secondary max-w-md mx-auto leading-relaxed">
+            The administrator account (<code className="font-mono font-bold text-soil">{user.email}</code>) is purely dedicated for administrative operations. Storefront orders and customer accounts cannot be accessed using this admin credential.
+          </p>
+        </div>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => navigate('/admin')}
+            className="px-6 py-3 bg-forest-900 hover:bg-forest-800 text-white font-bold text-xs rounded-xl shadow-level-1 transition-all button-press flex items-center justify-center gap-2"
+          >
+            <ShieldCheck className="w-4 h-4 text-gold" />
+            <span>Go to Admin Console</span>
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-3 bg-surface-neutral hover:bg-surface-border text-typography-secondary font-bold text-xs rounded-xl transition-all button-press"
+          >
+            Return to Storefront
+          </button>
+        </div>
       </div>
     );
   }

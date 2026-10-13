@@ -25,6 +25,24 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
 
     Page<NotificationEvent> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
+    Page<NotificationEvent> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+
+    long countByUserIdAndIsReadFalse(UUID userId);
+
+    Page<NotificationEvent> findByIsAdminNotificationTrueOrderByCreatedAtDesc(Pageable pageable);
+
+    Page<NotificationEvent> findByIsAdminNotificationTrueAndIsReadFalseOrderByCreatedAtDesc(Pageable pageable);
+
+    long countByIsAdminNotificationTrueAndIsReadFalse();
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE NotificationEvent n SET n.isRead = true, n.readAt = :readAt WHERE n.userId = :userId AND n.isRead = false")
+    int markAllAsReadForUser(@Param("userId") UUID userId, @Param("readAt") java.time.ZonedDateTime readAt);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE NotificationEvent n SET n.isRead = true, n.readAt = :readAt WHERE n.isAdminNotification = true AND n.isRead = false")
+    int markAllAsReadForAdmin(@Param("readAt") java.time.ZonedDateTime readAt);
+
     @Query("SELECT n FROM NotificationEvent n WHERE " +
            "(:eventType IS NULL OR n.eventType = :eventType) AND " +
            "(:status IS NULL OR n.status = :status) AND " +

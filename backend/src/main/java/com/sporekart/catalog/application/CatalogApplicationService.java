@@ -305,8 +305,6 @@ public class CatalogApplicationService {
         }
 
         CatalogDtos.ProductInformationDto infoDto = mapToProductInformationDto(product.getProductInformation());
-        UUID popularId = getMostPopularProductId();
-        boolean isPopular = (popularId != null && popularId.equals(product.getId()));
 
         return CatalogDtos.ProductDto.builder()
                 .id(product.getId())
@@ -328,7 +326,7 @@ public class CatalogApplicationService {
                 .activeOffers(offerDtos)
                 .productInformation(infoDto)
                 .isActive(product.isActive())
-                .isPopular(isPopular)
+                .isPopular(false)
                 .build();
     }
 

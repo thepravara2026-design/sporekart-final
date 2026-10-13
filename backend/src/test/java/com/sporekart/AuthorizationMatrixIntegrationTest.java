@@ -267,7 +267,8 @@ public class AuthorizationMatrixIntegrationTest {
     }
 
     private boolean isPathAdmin(String path) {
-        return path.startsWith("/admin/") && !path.startsWith("/admin/auth/");
+        return (path.startsWith("/admin/") && !path.startsWith("/admin/auth/")) ||
+                path.equals("/shipping/create") || path.startsWith("/shipping/cancel/") || path.startsWith("/shipping/simulate-event/");
     }
 
     private boolean isPathPermitAll(String httpMethod, String path) {
@@ -281,7 +282,7 @@ public class AuthorizationMatrixIntegrationTest {
         if ("GET".equalsIgnoreCase(httpMethod)) {
             if (path.startsWith("/catalog/") || path.startsWith("/products/") ||
                 path.startsWith("/search") || path.startsWith("/content/") ||
-                path.startsWith("/training/") || path.startsWith("/shipping/") ||
+                path.startsWith("/training/") || path.startsWith("/shipping/check-pincode") ||
                 path.startsWith("/seo/") || path.startsWith("/media/") ||
                 path.equals("/orders") || path.matches("^/orders/[^/]+$") || path.matches("^/orders/[^/]+/invoice$") ||
                 path.equals("/payment/summary")) {
@@ -292,6 +293,7 @@ public class AuthorizationMatrixIntegrationTest {
         if ("POST".equalsIgnoreCase(httpMethod)) {
             if (path.equals("/orders") || path.equals("/orders/") ||
                 path.equals("/payment/initiate") || path.equals("/payment/verify") || path.equals("/payment/webhook") ||
+                path.equals("/shipping/webhook") ||
                 path.startsWith("/analytics/track-")) {
                 return true;
             }
@@ -299,4 +301,5 @@ public class AuthorizationMatrixIntegrationTest {
 
         return false;
     }
+
 }

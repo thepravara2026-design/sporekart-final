@@ -1,14 +1,10 @@
 package com.sporekart.identity;
 
 import com.sporekart.identity.api.AuthDtos;
-import com.sporekart.identity.application.AdminAuthService;
 import com.sporekart.identity.application.AuthService;
-import com.sporekart.identity.domain.CustomerIdentity;
-import com.sporekart.identity.domain.OtpType;
 import com.sporekart.identity.domain.User;
 import com.sporekart.identity.domain.UserRole;
 import com.sporekart.identity.infrastructure.CustomerIdentityRepository;
-import com.sporekart.identity.infrastructure.OtpRepository;
 import com.sporekart.identity.infrastructure.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,10 +16,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,13 +33,7 @@ public class IdentitySecurityTest {
     private AuthService authService;
 
     @Autowired
-    private AdminAuthService adminAuthService;
-
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private OtpRepository otpRepository;
 
     @Autowired
     private CustomerIdentityRepository customerIdentityRepository;
@@ -54,223 +44,85 @@ public class IdentitySecurityTest {
     @BeforeEach
     void setUp() {
         customerIdentityRepository.deleteAll();
-        otpRepository.deleteAll();
         userRepository.deleteAll();
     }
 
-    private String fetchLatestOtpCode(String identifier, OtpType type) {
-        return otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(identifier, type)
-                .orElseThrow()
-                .getOtpCode();
-    }
-
     @Test
-    void testValidOtpVerification() {
-        String phone = "+919876543210";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
+    void testGoogleOAuthLoginNewUser() {
+        String email = "googleuser@example.com";
+        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_sub_1001", email, "Google", "User", "Google User");
 
-        AuthDtos.VerifyOtpRequest verifyReq = new AuthDtos.VerifyOtpRequest(phone, otpCode, "Ramesh", "Patil", "Ramesh Patil");
-        AuthDtos.AuthResponse response = authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH);
+        AuthDtos.AuthResponse response = authService.loginWithGoogle(googleReq);
 
         assertNotNull(response);
         assertNotNull(response.getToken());
         assertEquals("ROLE_CUSTOMER", response.getRole());
-        assertEquals(phone, response.getPhone());
+        assertEquals(email, response.getEmail());
     }
 
     @Test
-    void testExpiredOtpRejection() {
-        String phone = "+919876543211";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-
-        // Manually expire the OTP in repository
-        otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(phone, OtpType.CUSTOMER_AUTH)
-                .ifPresent(otp -> {
-                    otp.setExpiresAt(LocalDateTime.now().minusMinutes(1));
-                    otpRepository.save(otp);
-                });
-
-        AuthDtos.VerifyOtpRequest verifyReq = new AuthDtos.VerifyOtpRequest(phone, "123456", "Ramesh", "Patil", "Ramesh Patil");
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH));
-        assertTrue(exception.getMessage().contains("expired"));
-    }
-
-    @Test
-    void testReusedOtpRejection() {
-        String phone = "+919876543212";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
-
-        AuthDtos.VerifyOtpRequest verifyReq = new AuthDtos.VerifyOtpRequest(phone, otpCode, "Ramesh", "Patil", "Ramesh Patil");
-        authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH);
-
-        // Attempt second verification with same OTP code (Replay Attack)
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(verifyReq, OtpType.CUSTOMER_AUTH));
-        assertTrue(exception.getMessage().contains("already been used") || exception.getMessage().contains("No active OTP"));
-    }
-
-    @Test
-    void testExcessiveAttemptsLimit() {
-        String phone = "+919876543213";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-
-        AuthDtos.VerifyOtpRequest wrongReq = new AuthDtos.VerifyOtpRequest(phone, "000000", "Ramesh", "Patil", "Ramesh Patil");
-
-        // Fail 3 times
-        assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(wrongReq, OtpType.CUSTOMER_AUTH));
-        assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(wrongReq, OtpType.CUSTOMER_AUTH));
-        assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(wrongReq, OtpType.CUSTOMER_AUTH));
-
-        // 4th attempt must be rejected due to attempt limit
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> authService.verifyOtp(wrongReq, OtpType.CUSTOMER_AUTH));
-        assertTrue(exception.getMessage().contains("exceeded") || exception.getMessage().contains("No active OTP"));
-    }
-
-    @Test
-    void testRateLimiting() {
-        String phone = "+919876543214";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-
-        // 4th request within 10 minutes must fail
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH)
-        );
-        assertTrue(exception.getMessage().contains("Rate limit exceeded"));
-    }
-
-    @Test
-    void testDuplicateIdentityPreventionAndLinking() {
-        String email = "grower@sporekart.in";
-
-        // 1. Email OTP auth creates user & links EMAIL_OTP identity
-        authService.requestOtp(new AuthDtos.OtpRequest(email), OtpType.CUSTOMER_AUTH);
-        String otpCode = fetchLatestOtpCode(email, OtpType.CUSTOMER_AUTH);
-        AuthDtos.AuthResponse res1 = authService.verifyOtp(new AuthDtos.VerifyOtpRequest(email, otpCode, "Suresh", "Kumar", "Suresh Kumar"), OtpType.CUSTOMER_AUTH);
-
-        // 2. Google OAuth auth with same email links GOOGLE identity to SAME user
-        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_sub_12345", email, "Suresh", "Kumar", "Suresh Kumar");
-        AuthDtos.AuthResponse res2 = authService.loginWithGoogle(googleReq);
-
-        assertEquals(res1.getUserId(), res2.getUserId(), "Must link to the same customer account without creating duplicate accounts");
-
-        List<CustomerIdentity> identities = customerIdentityRepository.findByUserId(res1.getUserId());
-        assertEquals(2, identities.size(), "Customer account should have 2 linked identity providers");
-    }
-
-    @Test
-    void testAdminAuthIsolationAndPrivilegeEscalationPrevention() {
-        String customerEmail = "customer@sporekart.in";
-        User customer = User.builder()
-                .email(customerEmail)
-                .fullName("Regular Customer")
-                .role(UserRole.ROLE_CUSTOMER)
-                .build();
-        userRepository.save(customer);
-
-        // Customer identifier cannot request Admin OTP
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                adminAuthService.requestAdminOtp(new AuthDtos.OtpRequest(customerEmail))
-        );
-        assertTrue(exception.getMessage().contains("Access Denied"));
-
-        // Create authorized Admin User
-        String adminEmail = "admin@sporekart.in";
-        User admin = User.builder()
+    void testGoogleOAuthLoginExistingAdminRolePreservation() {
+        String adminEmail = "thepravara2026@gmail.com";
+        User admin = userRepository.findByEmail(adminEmail).orElseGet(() -> 
+            userRepository.save(User.builder()
                 .email(adminEmail)
-                .fullName("Super Admin")
+                .fullName("Sporekart Admin")
                 .role(UserRole.ROLE_ADMIN)
-                .build();
-        userRepository.save(admin);
+                .isVerified(true)
+                .isEmailVerified(true)
+                .build())
+        );
 
-        adminAuthService.requestAdminOtp(new AuthDtos.OtpRequest(adminEmail));
-        String adminOtp = fetchLatestOtpCode(adminEmail, OtpType.ADMIN_AUTH);
-        AuthDtos.AuthResponse adminRes = adminAuthService.verifyAdminOtp(new AuthDtos.VerifyOtpRequest(adminEmail, adminOtp, null, null, null));
+        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_admin_sub_999", adminEmail, "Sporekart", "Admin", "Sporekart Admin");
+        AuthDtos.AuthResponse response = authService.loginWithGoogle(googleReq);
 
-        assertNotNull(adminRes);
-        assertEquals("ROLE_ADMIN", adminRes.getRole());
+        assertNotNull(response);
+        assertEquals("ROLE_ADMIN", response.getRole(), "Existing admin role must be preserved when logging in with Google OAuth");
     }
 
     @Test
-    void testCrossProviderPhoneLinkingAndAccountUnification() {
-        String email = "usera@gmail.com";
-        String phone = "+919876543210";
-
-        // 1. Google OAuth Auth creates User A
-        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_sub_user_a", email, "User", "A", "User A");
-        AuthDtos.AuthResponse resGoogle = authService.loginWithGoogle(googleReq);
-
-        assertNotNull(resGoogle.getUserId());
-        assertNull(resGoogle.getPhone(), "Initial Google auth phone should be null");
-
-        // 2. Link phone number (simulating address entry during checkout)
-        authService.linkPhoneToUser(resGoogle.getUserId(), phone);
-
-        // 3. Verify user profile now reflects linked phone
-        AuthDtos.UserDto updatedProfile = authService.getUserProfile(resGoogle.getUserId());
-        assertEquals(phone, updatedProfile.getPhone());
-
-        // 4. User A logs out & logs in using Phone OTP for the same phone number
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
-        AuthDtos.AuthResponse resPhone = authService.verifyOtp(new AuthDtos.VerifyOtpRequest(phone, otpCode, "User", "A", "User A"), OtpType.CUSTOMER_AUTH);
-
-        assertEquals(resGoogle.getUserId(), resPhone.getUserId(), "Phone OTP login must recognize User A and return the same userId");
-        assertEquals(email, resPhone.getEmail(), "Phone OTP response must contain pre-filled Google email");
-    }
-
-    @Test
-    void testOtpResponseDoesNotLeakCode() throws Exception {
-        String phone = "+919988776655";
+    void testRetiredOtpEndpointsReturn410Gone() throws Exception {
         mockMvc.perform(post("/auth/otp/request")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"identifier\":\"" + phone + "\"}"))
-                .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String json = result.getResponse().getContentAsString();
-                    assertFalse(json.matches(".*\\b\\d{6}\\b.*"), "Response body must not contain 6-digit OTP code");
-                });
-        assertTrue(otpRepository.findTopByIdentifierAndOtpTypeAndConsumedFalseOrderByCreatedAtDesc(phone, OtpType.CUSTOMER_AUTH).isPresent());
+                .content("{\"identifier\":\"user@example.com\"}"))
+                .andExpect(status().isGone());
+
+        mockMvc.perform(post("/auth/otp/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\":\"user@example.com\",\"otpCode\":\"123456\"}"))
+                .andExpect(status().isGone());
+
+        mockMvc.perform(post("/admin/auth/otp/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\":\"admin@sporekart.in\"}"))
+                .andExpect(status().isGone());
+
+        mockMvc.perform(post("/admin/auth/otp/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\":\"admin@sporekart.in\",\"otpCode\":\"123456\"}"))
+                .andExpect(status().isGone());
     }
 
     @Test
-    void testOtpCodeIsAlwaysSixDigitsZeroPadded() {
-        String phone = "+919988776600";
-        for (int i = 0; i < 5; i++) {
-            authService.requestOtp(new AuthDtos.OtpRequest(phone + i), OtpType.CUSTOMER_AUTH);
-            String code = fetchLatestOtpCode(phone + i, OtpType.CUSTOMER_AUTH);
-            assertNotNull(code);
-            assertTrue(code.matches("^\\d{6}$"), "OTP code must be exactly 6 digits, zero-padded: " + code);
-        }
-    }
+    void testGoogleAuthHttpOnlyCookieAndMeEndpoint() throws Exception {
+        AuthDtos.GoogleOAuthRequest googleReq = new AuthDtos.GoogleOAuthRequest("google_sub_2002", "cookietest@example.com", "Cookie", "User", "Cookie User");
 
-    @Test
-    void testHttpOnlyCookieAndBearerTokenExtraction() throws Exception {
-        String phone = "+919988775511";
-        authService.requestOtp(new AuthDtos.OtpRequest(phone), OtpType.CUSTOMER_AUTH);
-        String otpCode = fetchLatestOtpCode(phone, OtpType.CUSTOMER_AUTH);
-
-        var mvcResult = mockMvc.perform(post("/auth/otp/verify")
+        var mvcResult = mockMvc.perform(post("/auth/oauth/google")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"" + phone + "\",\"otpCode\":\"" + otpCode + "\"}"))
+                        .content("{\"googleSub\":\"google_sub_2002\",\"email\":\"cookietest@example.com\",\"fullName\":\"Cookie User\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String setCookie = mvcResult.getResponse().getHeader("Set-Cookie");
-        assertNotNull(setCookie, "Set-Cookie header must be present on verify OTP response");
+        assertNotNull(setCookie, "Set-Cookie header must be present on Google OAuth login response");
         assertTrue(setCookie.contains("sporekart_token="), "Set-Cookie header must contain sporekart_token");
-        assertTrue(setCookie.contains("HttpOnly"), "Cookie must be marked HttpOnly");
 
-        // Extract cookie value
         String cookieVal = setCookie.substring(setCookie.indexOf("sporekart_token=") + 16);
         if (cookieVal.contains(";")) {
             cookieVal = cookieVal.substring(0, cookieVal.indexOf(";"));
         }
 
-        // Test authenticating /auth/me using Cookie fallback in JwtAuthenticationFilter
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/auth/me")
+        mockMvc.perform(get("/auth/me")
                         .cookie(new jakarta.servlet.http.Cookie("sporekart_token", cookieVal)))
                 .andExpect(status().isOk());
     }

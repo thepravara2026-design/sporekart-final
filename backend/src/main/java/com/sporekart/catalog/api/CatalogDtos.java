@@ -371,6 +371,19 @@ public class CatalogDtos {
         @Min(value = 0, message = "Stock quantity cannot be negative")
         private int stockQuantity;
         private boolean isActive = true;
+        private BigDecimal weightKg;
+        private BigDecimal lengthCm;
+        private BigDecimal breadthCm;
+        private BigDecimal heightCm;
+
+        public CreateVariantRequest(String variantName, String sku, BigDecimal priceInr, BigDecimal compareAtPriceInr, int stockQuantity, boolean isActive) {
+            this.variantName = variantName;
+            this.sku = sku;
+            this.priceInr = priceInr;
+            this.compareAtPriceInr = compareAtPriceInr;
+            this.stockQuantity = stockQuantity;
+            this.isActive = isActive;
+        }
     }
 
     @Data

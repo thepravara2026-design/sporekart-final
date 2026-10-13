@@ -10,5 +10,5 @@ CREATE INDEX IF NOT EXISTS idx_promotions_target_course ON promotions(target_cou
 -- Seed initial batch promotion code
 INSERT INTO promotions (id, name, code, description, type, discount_value, maximum_discount, minimum_order_value, status, usage_limit, per_customer_limit, priority, target_type)
 VALUES 
-    (uuid_generate_v4(), 'Mushroom Cultivation 10% Off', 'MUSHROOM10', '10% discount on mushroom cultivation masterclass batches', 'PERCENTAGE', 10.00, 500.00, 0.00, 'ACTIVE', 500, 3, 10, 'BATCH')
+    (gen_random_uuid(), 'Mushroom Cultivation 10% Off', 'MUSHROOM10', '10% discount on mushroom cultivation masterclass batches', 'PERCENTAGE', 10.00, 500.00, 0.00, 'ACTIVE', 500, 3, 10, 'BATCH')
 ON CONFLICT (code) DO NOTHING;

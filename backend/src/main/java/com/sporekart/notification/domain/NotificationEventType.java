@@ -36,5 +36,21 @@ public enum NotificationEventType {
     ENROLLMENT_CHECKOUT_ABANDONED,
 
     // Support Ticket Events
-    SUPPORT_TICKET_CLOSED
+    SUPPORT_TICKET_CREATED,
+    SUPPORT_TICKET_REPLY,
+    SUPPORT_TICKET_CLOSED,
+
+    // Training Announcements & Batches
+    TRAINING_BATCH_PUBLISHED,
+    TRAINING_ANNOUNCEMENT,
+
+    // Content & Promotions
+    BLOG_PUBLISHED,
+    PROMOTION_PUBLISHED,
+
+    // Admin Operational Alerts
+    ADMIN_NEW_ORDER,
+    ADMIN_ORDER_CANCELLED,
+    ADMIN_WITHDRAWAL_REQUESTED,
+    ADMIN_PAYMENT_FAILURE
 }

@@ -26,6 +26,17 @@ public class ShippingDtos {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class SimulateCourierEventRequest {
+        @NotNull(message = "Shipment Status is required")
+        private ShipmentStatus status;
+        private String location;
+        private String activity;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ShipmentResponse {
         private UUID id;
         private UUID orderId;

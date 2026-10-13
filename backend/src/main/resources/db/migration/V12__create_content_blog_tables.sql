@@ -57,3 +57,12 @@ CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_category_id ON blog_posts(category_id);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_author_id ON blog_posts(author_id);
+
+
+CREATE TABLE IF NOT EXISTS content_articles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    body_markdown TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

@@ -14,6 +14,7 @@ import { reportWebVitals } from './reportWebVitals';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import ReviewInvitationModal from './components/ReviewInvitationModal';
 import ProductReviewFormModal from './components/ProductReviewFormModal';
+import ScrollToTop from './components/ScrollToTop';
 
 // Code Splitting & Lazy Route Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -45,17 +46,24 @@ function OrderRedirect() {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(() => Boolean(localStorage.getItem('sporekart_token')));
   const [globalReviewModalItem, setGlobalReviewModalItem] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('sporekart_token');
     if (token) {
+      setAuthLoading(true);
       authApi.getCurrentUser()
         .then((res) => setUser(res.data.data))
         .catch(() => {
           localStorage.removeItem('sporekart_token');
           setUser(null);
+        })
+        .finally(() => {
+          setAuthLoading(false);
         });
+    } else {
+      setAuthLoading(false);
     }
 
     // Report Core Web Vitals (LCP, INP, CLS, TTFB)
@@ -67,7 +75,7 @@ export default function App() {
   }, []);
 
   const adminElement = (
-    <AdminProtectedRoute user={user}>
+    <AdminProtectedRoute user={user} loading={authLoading}>
       <AdminDashboardPage user={user} />
     </AdminProtectedRoute>
   );
@@ -76,6 +84,7 @@ export default function App() {
     <HelmetProvider>
       <CartProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
           <div className="min-h-screen flex flex-col justify-between bg-surface-cream text-typography-primary font-sans">
             <Navbar user={user} setUser={setUser} />
 
@@ -115,6 +124,7 @@ export default function App() {
                   <Route path="/training" element={<TrainingPage user={user} setUser={setUser} />} />
                   <Route path="/training/mushroom-cultivation" element={<TrainingPage user={user} setUser={setUser} />} />
                   <Route path="/training/spawn-production" element={<TrainingPage user={user} setUser={setUser} />} />
+                  <Route path="/training/spawn-production-lab-setup-training" element={<CourseDetailPage user={user} setUser={setUser} />} />
                   <Route path="/training/confirmation/:enrollmentId" element={<TrainingConfirmationPage />} />
                   <Route path="/training/:courseSlug" element={<CourseDetailPage user={user} setUser={setUser} />} />
 

@@ -4,12 +4,19 @@ spring:
     driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
     username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USERNAME:postgres.irwiiyowpppdynbmwwuz}}
     password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD:MyDbSporekart@123#}}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     properties:
       hibernate:
         dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        default_batch_fetch_size: 50
     show-sql: false
   flyway:
     enabled: ${SPRING_FLYWAY_ENABLED:true}
@@ -18,5 +25,5 @@ spring:
 
 logging:
   level:
-    com.sporekart: DEBUG
-    org.springframework.security: DEBUG
+    com.sporekart: INFO
+    org.springframework.security: WARN

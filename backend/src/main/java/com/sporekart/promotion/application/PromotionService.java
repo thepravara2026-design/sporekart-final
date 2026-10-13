@@ -20,11 +20,28 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class PromotionService {
 
     private final PromotionRepository promotionRepository;
     private final PromotionUsageRepository promotionUsageRepository;
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+    private final com.sporekart.identity.infrastructure.UserRepository userRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PromotionService(
+            PromotionRepository promotionRepository,
+            PromotionUsageRepository promotionUsageRepository,
+            com.sporekart.notification.application.NotificationEventService notificationEventService,
+            com.sporekart.identity.infrastructure.UserRepository userRepository) {
+        this.promotionRepository = promotionRepository;
+        this.promotionUsageRepository = promotionUsageRepository;
+        this.notificationEventService = notificationEventService;
+        this.userRepository = userRepository;
+    }
+
+    public PromotionService(PromotionRepository promotionRepository, PromotionUsageRepository promotionUsageRepository) {
+        this(promotionRepository, promotionUsageRepository, null, null);
+    }
 
     @Transactional
     public Promotion createPromotion(PromotionDtos.CreatePromotionRequest req) {
@@ -70,7 +87,35 @@ public class PromotionService {
                 .targetCourseId(req.getTargetCourseId())
                 .build();
 
-        return promotionRepository.save(promotion);
+        Promotion saved = promotionRepository.save(promotion);
+
+        if (saved.getStatus() == PromotionStatus.ACTIVE && notificationEventService != null && userRepository != null) {
+            try {
+                userRepository.findAll().stream()
+                        .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                        .forEach(user -> {
+                            notificationEventService.recordEvent(
+                                    com.sporekart.notification.domain.NotificationEventType.PROMOTION_PUBLISHED,
+                                    "PROMOTION",
+                                    saved.getId(),
+                                    user.getId(),
+                                    null,
+                                    null,
+                                    user.getFullName() != null ? user.getFullName() : "Grower",
+                                    "Special Offer: " + saved.getName() + " 🏷️",
+                                    java.util.Map.of(
+                                            "name", saved.getName(),
+                                            "code", saved.getCode(),
+                                            "description", saved.getDescription() != null ? saved.getDescription() : "",
+                                            "actionUrl", "/products"
+                                    ),
+                                    "PROMO_PUBLISHED:" + saved.getId() + ":" + user.getId()
+                            );
+                        });
+            } catch (Exception ignored) {}
+        }
+
+        return saved;
     }
 
     @Transactional

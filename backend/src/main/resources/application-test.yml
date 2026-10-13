@@ -3,10 +3,10 @@ spring:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
+    password:
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -25,5 +25,13 @@ app:
 sporekart:
   mail:
     use-real-smtp: false
-
-
+  twilio:
+    use-real-twilio: false
+  shiprocket:
+    use-real-shiprocket: false
+    webhook-token: test_secret_token_12345
+    pickup-location: Primary
+    pickup-pincode: 411001
+    tracking-base-url: https://track.shiprocket.in/
+    connect-timeout-ms: 5000
+    read-timeout-ms: 10000

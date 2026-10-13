@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { Sprout, GraduationCap, ShoppingBag, User, X, Menu, ShieldCheck, BookOpen, Info, PhoneCall } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
+import NotificationCenter from './NotificationCenter';
 import { clearSessionAndTokens } from '../api';
 
 export default function Navbar({ user, setUser }) {
@@ -112,6 +113,9 @@ export default function Navbar({ user, setUser }) {
 
             {/* Actions */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Notification Center */}
+              {user && <NotificationCenter user={user} />}
+
               {/* Cart Button */}
               <button
                 onClick={openDrawer}
@@ -129,22 +133,23 @@ export default function Navbar({ user, setUser }) {
               {/* User Account / Auth */}
               {user ? (
                 <div className="flex items-center gap-2">
-                  <Link 
-                    to="/dashboard" 
-                    aria-label="User Account Dashboard" 
-                    className="hidden sm:flex items-center gap-2 text-xs font-semibold bg-surface-cream hover:bg-surface-border text-forest-900 px-3.5 py-2.5 rounded-xl border border-surface-border transition-all button-press"
-                  >
-                    <User className="w-4 h-4 text-forest-700" />
-                    <span className="max-w-[110px] truncate">{user.fullName || 'Dashboard'}</span>
-                  </Link>
-                  {user.role === 'ROLE_ADMIN' && (
+                  {user.role === 'ROLE_ADMIN' ? (
                     <Link 
                       to="/admin" 
                       aria-label="Admin Control Console" 
                       className="hidden sm:flex items-center gap-2 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-3.5 py-2 rounded-xl transition-all button-press"
                     >
                       <ShieldCheck className="w-4 h-4 text-gold" />
-                      <span>Admin</span>
+                      <span>Admin Console</span>
+                    </Link>
+                  ) : (
+                    <Link 
+                      to="/dashboard" 
+                      aria-label="User Account Dashboard" 
+                      className="hidden sm:flex items-center gap-2 text-xs font-semibold bg-surface-cream hover:bg-surface-border text-forest-900 px-3.5 py-2.5 rounded-xl border border-surface-border transition-all button-press"
+                    >
+                      <User className="w-4 h-4 text-forest-700" />
+                      <span className="max-w-[110px] truncate">{user.fullName || 'Dashboard'}</span>
                     </Link>
                   )}
                   <button 
@@ -235,15 +240,7 @@ export default function Navbar({ user, setUser }) {
 
             {user ? (
               <div className="pt-4 border-t border-surface-border flex flex-col gap-2">
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-cream text-forest-900 font-semibold text-sm border border-surface-border"
-                >
-                  <User className="w-5 h-5 text-forest-700" />
-                  <span>Dashboard ({user.fullName})</span>
-                </Link>
-                {user.role === 'ROLE_ADMIN' && (
+                {user.role === 'ROLE_ADMIN' ? (
                   <Link
                     to="/admin"
                     onClick={() => setIsMenuOpen(false)}
@@ -251,6 +248,15 @@ export default function Navbar({ user, setUser }) {
                   >
                     <ShieldCheck className="w-5 h-5 text-gold" />
                     <span>Admin Control Console</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-cream text-forest-900 font-semibold text-sm border border-surface-border"
+                  >
+                    <User className="w-5 h-5 text-forest-700" />
+                    <span>Dashboard ({user.fullName})</span>
                   </Link>
                 )}
                 <button

@@ -11,7 +11,7 @@ ALTER TABLE order_items ADD COLUMN IF NOT EXISTS gst_amount_inr NUMERIC(10, 2) N
 ALTER TABLE order_items ADD COLUMN IF NOT EXISTS line_total_inr NUMERIC(10, 2) NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS order_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     previous_state VARCHAR(50),
     new_state VARCHAR(50) NOT NULL,

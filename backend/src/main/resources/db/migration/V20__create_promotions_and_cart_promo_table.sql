@@ -5,7 +5,7 @@ ALTER TABLE carts ADD COLUMN IF NOT EXISTS applied_promo_code VARCHAR(100);
 
 -- 2. Create promotions table
 CREATE TABLE IF NOT EXISTS promotions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     code VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS promotions (
 
 -- 3. Create promotion_usages table
 CREATE TABLE IF NOT EXISTS promotion_usages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     promotion_id UUID NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     session_id VARCHAR(255),
@@ -45,8 +45,8 @@ CREATE INDEX IF NOT EXISTS idx_promotion_usages_promo_user ON promotion_usages(p
 -- 4. Seed initial active promo codes
 INSERT INTO promotions (id, name, code, description, type, discount_value, maximum_discount, minimum_order_value, status, usage_limit, per_customer_limit, priority)
 VALUES 
-    (uuid_generate_v4(), 'Sporekart 10% Special', 'SPORE10', 'Get 10% OFF on gourmet mushrooms & spawn bags (Min Order ₹299)', 'PERCENTAGE', 10.00, 200.00, 299.00, 'ACTIVE', 1000, 5, 10),
-    (uuid_generate_v4(), 'Welcome ₹50 Discount', 'WELCOME50', 'Flat ₹50 OFF for all new growers (Min Order ₹199)', 'FIXED_AMOUNT', 50.00, 50.00, 199.00, 'ACTIVE', 500, 1, 5),
-    (uuid_generate_v4(), 'Free Cold-Chain Shipping', 'FREESHIP', 'Free refrigerated cold-chain delivery on any order', 'FREE_SHIPPING', 0.00, NULL, 0.00, 'ACTIVE', 2000, 10, 8),
-    (uuid_generate_v4(), 'Fungi Super 20% Discount', 'FUNGI20', 'Get 20% OFF on orders over ₹499 (Max discount ₹500)', 'PERCENTAGE', 20.00, 500.00, 499.00, 'ACTIVE', 500, 2, 12)
+    (gen_random_uuid(), 'Sporekart 10% Special', 'SPORE10', 'Get 10% OFF on gourmet mushrooms & spawn bags (Min Order ₹299)', 'PERCENTAGE', 10.00, 200.00, 299.00, 'ACTIVE', 1000, 5, 10),
+    (gen_random_uuid(), 'Welcome ₹50 Discount', 'WELCOME50', 'Flat ₹50 OFF for all new growers (Min Order ₹199)', 'FIXED_AMOUNT', 50.00, 50.00, 199.00, 'ACTIVE', 500, 1, 5),
+    (gen_random_uuid(), 'Free Cold-Chain Shipping', 'FREESHIP', 'Free refrigerated cold-chain delivery on any order', 'FREE_SHIPPING', 0.00, NULL, 0.00, 'ACTIVE', 2000, 10, 8),
+    (gen_random_uuid(), 'Fungi Super 20% Discount', 'FUNGI20', 'Get 20% OFF on orders over ₹499 (Max discount ₹500)', 'PERCENTAGE', 20.00, 500.00, 499.00, 'ACTIVE', 500, 2, 12)
 ON CONFLICT (code) DO NOTHING;

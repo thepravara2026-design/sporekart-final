@@ -51,13 +51,26 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      clearTokenOnly();
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('sporekart_unauthorized'));
-        const currentPath = window.location.pathname;
-        if (currentPath.startsWith('/admin') && currentPath !== '/admin/login') {
-          window.location.href = '/admin/login';
+    if (error.response) {
+      if (error.response.status === 401) {
+        clearTokenOnly();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('sporekart_unauthorized'));
+          const currentPath = window.location.pathname;
+          if (currentPath.startsWith('/admin') && currentPath !== '/admin/login') {
+            window.location.href = '/admin/login';
+          }
+        }
+      }
+      // Normalize error message on both error and response data for seamless consumer consumption
+      const data = error.response.data;
+      if (data && typeof data === 'object') {
+        const extractedMsg = data.error?.message || data.message;
+        if (extractedMsg) {
+          error.message = extractedMsg;
+          if (!data.message) {
+            data.message = extractedMsg;
+          }
         }
       }
     }
@@ -66,8 +79,6 @@ api.interceptors.response.use(
 );
 
 export const authApi = {
-  requestOtp: (identifier) => api.post('/auth/otp/request', { identifier }),
-  verifyOtp: (identifier, otpCode, fullName) => api.post('/auth/otp/verify', { identifier, otpCode, fullName }),
   loginWithGoogle: (googleData) => api.post('/auth/oauth/google', googleData),
   getCurrentUser: () => api.get('/auth/me'),
 };
@@ -166,6 +177,12 @@ export const paymentApi = {
 
 export const shippingApi = {
   checkPincode: (pincode) => api.get(`/shipping/check-pincode/${pincode}`),
+  createShipment: (orderId) => api.post('/shipping/create', { orderId }),
+  getShipmentByOrder: (orderId) => api.get(`/shipping/order/${orderId}`),
+  updateAndGetTracking: (shipmentId) => api.get(`/shipping/track/${shipmentId}`),
+  simulateCourierEvent: (shipmentId, status, location, activity) =>
+    api.post(`/shipping/simulate-event/${shipmentId}`, { status, location, activity }),
+  cancelShipment: (shipmentId, reason) => api.post(`/shipping/cancel/${shipmentId}`, null, { params: { reason } }),
 };
 
 export const supportApi = {
@@ -178,8 +195,6 @@ export const supportApi = {
 };
 
 export const adminApi = {
-  requestAdminOtp: (identifier) => api.post('/admin/auth/otp/request', { identifier }),
-  verifyAdminOtp: (identifier, otpCode) => api.post('/admin/auth/otp/verify', { identifier, otpCode }),
   getBlogPosts: (status) => api.get('/admin/content/posts', { params: { status } }),
   createBlogPost: (data) => api.post('/admin/content/posts', data),
   publishBlogPost: (id) => api.post(`/admin/content/posts/${id}/publish`),
@@ -250,6 +265,20 @@ export const analyticsApi = {
   trackProductView: (productId, productSlug, productTitle) => api.post('/analytics/track-product-view', { productId, productSlug, productTitle }),
   getFunnelSummary: () => api.get('/analytics/funnel'),
   getRecentEvents: () => api.get('/analytics/events'),
+};
+
+export const notificationApi = {
+  getNotifications: (params = {}) => api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+};
+
+export const adminNotificationApi = {
+  getInAppNotifications: (params = {}) => api.get('/admin/notifications/in-app', { params }),
+  getInAppUnreadCount: () => api.get('/admin/notifications/unread-count'),
+  markInAppAsRead: (id) => api.patch(`/admin/notifications/in-app/${id}/read`),
+  markInAppAllAsRead: () => api.patch('/admin/notifications/in-app/read-all'),
 };
 
 export default api;

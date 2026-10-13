@@ -18,7 +18,7 @@ const parseJwt = (token) => {
   }
 };
 
-export default function GoogleLoginButton({ onSuccess, onError, loading, setLoading }) {
+export default function GoogleLoginButton({ onSuccess, onError, loading, setLoading, isAdminMode = false }) {
   const googleButtonRef = useRef(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [gsiError, setGsiError] = useState(false);
@@ -60,15 +60,19 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
   const handleDevMockGoogleLogin = async () => {
     if (setLoading) setLoading(true);
     try {
-      const mockSub = 'google_user_' + Math.floor(100000 + Math.random() * 900000);
-      const mockEmail = `demo.google.${Math.floor(Math.random() * 1000)}@gmail.com`;
+      const mockSub = isAdminMode
+        ? 'google_admin_thepravara2026'
+        : 'google_user_' + Math.floor(100000 + Math.random() * 900000);
+      const mockEmail = isAdminMode
+        ? 'thepravara2026@gmail.com'
+        : `demo.google.${Math.floor(Math.random() * 1000)}@gmail.com`;
 
       const mockData = {
         googleSub: mockSub,
         email: mockEmail,
-        firstName: 'Google',
-        lastName: 'User',
-        fullName: 'Google Agri Customer',
+        firstName: isAdminMode ? 'Sporekart' : 'Google',
+        lastName: isAdminMode ? 'Admin' : 'User',
+        fullName: isAdminMode ? 'Sporekart Administrator' : 'Google Agri Customer',
         idToken: 'mock_google_id_token_' + Date.now(),
       };
 
@@ -137,7 +141,9 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
                 disabled={loading}
                 className="text-[11px] text-forest-700 hover:underline font-medium"
               >
-                ⚡ Dev Mode: Quick Google Login Test
+                {isAdminMode
+                  ? '⚡ Dev Mode: Sign in as thepravara2026@gmail.com (Sole Admin Entity)'
+                  : '⚡ Dev Mode: Quick Google Login Test'}
               </button>
             </div>
           )}
@@ -167,7 +173,13 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
               d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
             />
           </svg>
-          <span>{loading ? 'Signing in with Google...' : 'Continue with Google (Dev Mode)'}</span>
+          <span>
+            {loading
+              ? 'Signing in with Google...'
+              : isAdminMode
+              ? 'Continue as thepravara2026@gmail.com (Dev Admin)'
+              : 'Continue with Google (Dev Mode)'}
+          </span>
         </button>
       )}
     </div>

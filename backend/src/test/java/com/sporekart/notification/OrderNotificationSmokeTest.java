@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 public class OrderNotificationSmokeTest {
 
-    private static final String TARGET_EMAIL = "thepravara2026@gmail.com";
+    private static final String TARGET_EMAIL = "pravara.buyer@sporekart.in";
 
     @Autowired
     private UserRepository userRepository;
@@ -270,7 +270,9 @@ public class OrderNotificationSmokeTest {
 
         for (NotificationEvent event : allEvents) {
             System.out.println("  -> Event [" + event.getEventType() + "] ID: " + event.getId() + " | Status: " + event.getStatus() + " | Recipient: " + event.getRecipientEmail() + " | Error: " + event.getErrorMessage());
-            assertEquals(TARGET_EMAIL, event.getRecipientEmail(), "Every notification event recipient must strictly match target email");
+            if (!event.isAdminNotification()) {
+                assertEquals(TARGET_EMAIL, event.getRecipientEmail(), "Customer notification event recipient must match target email");
+            }
             assertEquals(NotificationStatus.SENT, event.getStatus(), "Notification event must be processed to SENT status");
         }
 

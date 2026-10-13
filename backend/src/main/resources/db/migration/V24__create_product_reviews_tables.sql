@@ -2,7 +2,7 @@
 
 -- 1. Product Reviews Table
 CREATE TABLE IF NOT EXISTS product_reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     product_variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL,
     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS product_reviews (
 
 -- 2. Product Review Images Table
 CREATE TABLE IF NOT EXISTS product_review_images (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     review_id UUID NOT NULL REFERENCES product_reviews(id) ON DELETE CASCADE,
     image_url TEXT NOT NULL,
     storage_key VARCHAR(255),
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS product_review_images (
 
 -- 3. Review Invitation State Table
 CREATE TABLE IF NOT EXISTS review_invitation_states (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     order_item_id UUID NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class ApiResponse<T> {
 
     private boolean success;
+    private String message;
     private T data;
     private String requestId;
     private ErrorDetail error;
@@ -41,6 +42,7 @@ public class ApiResponse<T> {
         String reqId = RequestIdContext.getCurrentRequestId();
         return ApiResponse.<T>builder()
                 .success(false)
+                .message(message)
                 .error(ErrorDetail.builder()
                         .code(code)
                         .message(message)

@@ -1,3 +1,19 @@
+
+CREATE TABLE IF NOT EXISTS customer_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    gstin VARCHAR(50),
+    farm_size_sqft INT,
+    has_training_capability BOOLEAN NOT NULL DEFAULT FALSE,
+    training_capability_granted_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS category_id UUID;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS duration_days INT DEFAULT 1;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS fee_inr DECIMAL(10, 2) DEFAULT 0.00;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
 -- V10: Create Training Module Tables & Customer Capability Fields
 
 ALTER TABLE customer_profiles 

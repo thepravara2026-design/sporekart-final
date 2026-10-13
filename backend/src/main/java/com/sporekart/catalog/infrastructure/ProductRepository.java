@@ -5,6 +5,7 @@ import com.sporekart.catalog.domain.ProductStatus;
 import com.sporekart.catalog.domain.ProductType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,16 +17,24 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+    @EntityGraph(attributePaths = {"category", "variants"})
     Optional<Product> findBySlug(String slug);
     boolean existsBySlug(String slug);
     
+    @EntityGraph(attributePaths = {"category", "variants"})
     List<Product> findByIsActiveTrue();
+
+    @EntityGraph(attributePaths = {"category", "variants"})
     List<Product> findByStatusAndIsActiveTrue(ProductStatus status);
+
+    @EntityGraph(attributePaths = {"category", "variants"})
     List<Product> findByProductTypeAndIsActiveTrue(ProductType type);
 
+    @EntityGraph(attributePaths = {"category", "variants"})
     @Query("SELECT p FROM Product p LEFT JOIN p.category c WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE AND (c.slug = :categorySlug OR p.productType = :productType)")
     List<Product> findByCategorySlugOrProductType(@Param("categorySlug") String categorySlug, @Param("productType") ProductType productType);
 
+    @EntityGraph(attributePaths = {"category", "variants"})
     @Query("SELECT p FROM Product p JOIN p.category c WHERE c.slug = :categorySlug AND p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE")
     List<Product> findByCategorySlug(@Param("categorySlug") String categorySlug);
 

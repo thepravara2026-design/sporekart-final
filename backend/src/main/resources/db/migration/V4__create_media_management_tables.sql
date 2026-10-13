@@ -2,7 +2,7 @@
 
 -- 1. Media Assets Table (Metadata repository for Supabase Storage objects)
 CREATE TABLE IF NOT EXISTS media_assets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     storage_provider VARCHAR(50) NOT NULL DEFAULT 'SUPABASE',
     bucket VARCHAR(100) NOT NULL DEFAULT 'sporekart-media',
     storage_key VARCHAR(255) NOT NULL UNIQUE,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
 
 -- 2. Entity Association Links (Preventing orphaned media)
 CREATE TABLE IF NOT EXISTS media_product_links (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     media_id UUID NOT NULL REFERENCES media_assets(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS media_product_links (
 );
 
 CREATE TABLE IF NOT EXISTS media_course_links (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     media_id UUID NOT NULL REFERENCES media_assets(id) ON DELETE CASCADE,
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

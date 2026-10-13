@@ -46,33 +46,89 @@ public class CartService {
     @Transactional
     public Cart getOrCreateCart(UUID userId, String sessionId) {
         if (userId != null) {
-            Optional<Cart> userCartOpt = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
+            try {
+                cartRepository.acquireAdvisoryLock("cart_user_" + userId);
+            } catch (Exception ignored) {
+            }
+
+            java.util.List<Cart> userCarts = cartRepository.findAllByUserIdAndStatusOrderByUpdatedAtDesc(userId, CartStatus.ACTIVE);
+            if (userCarts == null || userCarts.isEmpty()) {
+                Optional<Cart> fallback = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
+                userCarts = fallback.map(java.util.List::of).orElse(java.util.Collections.emptyList());
+            }
+
             Cart userCart;
-            if (userCartOpt.isPresent()) {
-                userCart = userCartOpt.get();
+            if (!userCarts.isEmpty()) {
+                userCart = userCarts.get(0);
+                if (userCarts.size() > 1) {
+                    for (int i = 1; i < userCarts.size(); i++) {
+                        Cart extra = userCarts.get(i);
+                        mergeGuestItemsIntoUserCart(extra, userCart);
+                        extra.setStatus(CartStatus.CONVERTED);
+                        cartRepository.save(extra);
+                    }
+                    userCart = cartRepository.save(userCart);
+                }
             } else {
                 userCart = cartRepository.save(new Cart(userId, null));
             }
 
             if (sessionId != null && !sessionId.trim().isEmpty()) {
-                Optional<Cart> guestCartOpt = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
-                if (guestCartOpt.isPresent()) {
-                    Cart guestCart = guestCartOpt.get();
-                    if (!guestCart.getId().equals(userCart.getId())) {
+                try {
+                    cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
+                } catch (Exception ignored) {
+                }
+
+                java.util.List<Cart> guestCarts = cartRepository.findAllBySessionIdAndStatusOrderByUpdatedAtDesc(sessionId, CartStatus.ACTIVE);
+                if (guestCarts == null || guestCarts.isEmpty()) {
+                    Optional<Cart> fallbackGuest = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+                    guestCarts = fallbackGuest.map(java.util.List::of).orElse(java.util.Collections.emptyList());
+                }
+
+                boolean mergedAny = false;
+                for (Cart guestCart : guestCarts) {
+                    if (guestCart != null && !guestCart.getId().equals(userCart.getId())) {
                         mergeGuestItemsIntoUserCart(guestCart, userCart);
                         guestCart.setStatus(CartStatus.CONVERTED);
+                        guestCart.setUserId(userId);
                         guestCart.setSessionId(null);
                         cartRepository.save(guestCart);
-                        return cartRepository.save(userCart);
+                        mergedAny = true;
                     }
+                }
+                if (mergedAny) {
+                    userCart = cartRepository.save(userCart);
                 }
             }
             return userCart;
         }
 
         if (sessionId != null && !sessionId.trim().isEmpty()) {
-            return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
-                    .orElseGet(() -> cartRepository.save(new Cart(null, sessionId)));
+            try {
+                cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
+            } catch (Exception ignored) {
+            }
+
+            java.util.List<Cart> guestCarts = cartRepository.findAllBySessionIdAndStatusOrderByUpdatedAtDesc(sessionId, CartStatus.ACTIVE);
+            if (guestCarts == null || guestCarts.isEmpty()) {
+                Optional<Cart> fallbackGuest = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+                guestCarts = fallbackGuest.map(java.util.List::of).orElse(java.util.Collections.emptyList());
+            }
+
+            if (!guestCarts.isEmpty()) {
+                Cart guestCart = guestCarts.get(0);
+                if (guestCarts.size() > 1) {
+                    for (int i = 1; i < guestCarts.size(); i++) {
+                        Cart extra = guestCarts.get(i);
+                        mergeGuestItemsIntoUserCart(extra, guestCart);
+                        extra.setStatus(CartStatus.CONVERTED);
+                        cartRepository.save(extra);
+                    }
+                    guestCart = cartRepository.save(guestCart);
+                }
+                return guestCart;
+            }
+            return cartRepository.save(new Cart(null, sessionId));
         }
 
         throw new IllegalArgumentException("Either userId or sessionId must be provided");

@@ -19,13 +19,34 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BlogContentService {
 
     private final BlogCategoryRepository categoryRepository;
     private final BlogAuthorRepository authorRepository;
     private final BlogTagRepository tagRepository;
     private final BlogPostRepository postRepository;
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+    private final com.sporekart.identity.infrastructure.UserRepository userRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public BlogContentService(
+            BlogCategoryRepository categoryRepository,
+            BlogAuthorRepository authorRepository,
+            BlogTagRepository tagRepository,
+            BlogPostRepository postRepository,
+            com.sporekart.notification.application.NotificationEventService notificationEventService,
+            com.sporekart.identity.infrastructure.UserRepository userRepository) {
+        this.categoryRepository = categoryRepository;
+        this.authorRepository = authorRepository;
+        this.tagRepository = tagRepository;
+        this.postRepository = postRepository;
+        this.notificationEventService = notificationEventService;
+        this.userRepository = userRepository;
+    }
+
+    public BlogContentService(BlogCategoryRepository categoryRepository, BlogAuthorRepository authorRepository, BlogTagRepository tagRepository, BlogPostRepository postRepository) {
+        this(categoryRepository, authorRepository, tagRepository, postRepository, null, null);
+    }
 
     // --- Category Management ---
     @Transactional
@@ -174,7 +195,37 @@ public class BlogContentService {
                 .orElseThrow(() -> new IllegalArgumentException("Blog post not found: " + postId));
         post.publish();
         log.info("Published blog post: {} (slug: {})", post.getTitle(), post.getSlug());
-        return postRepository.save(post);
+        BlogPost saved = postRepository.save(post);
+
+        if (userRepository != null && notificationEventService != null) {
+            try {
+                userRepository.findAll().stream()
+                    .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                    .forEach(user -> {
+                        notificationEventService.recordEvent(
+                                com.sporekart.notification.domain.NotificationEventType.BLOG_PUBLISHED,
+                                "BLOG_POST",
+                                saved.getId(),
+                                user.getId(),
+                                null,
+                                null,
+                                user.getFullName() != null ? user.getFullName() : "Grower",
+                                "New Grower Guide: " + saved.getTitle() + " 📖",
+                                java.util.Map.of(
+                                        "title", saved.getTitle(),
+                                        "slug", saved.getSlug(),
+                                        "summary", saved.getSummary() != null ? saved.getSummary() : "",
+                                        "actionUrl", "/blog/" + saved.getSlug()
+                                ),
+                                "BLOG_PUBLISHED:" + saved.getId() + ":" + user.getId()
+                        );
+                    });
+        } catch (Exception e) {
+            log.error("Failed to record blog publication notifications: {}", e.getMessage());
+        }
+        }
+
+        return saved;
     }
 
     @Transactional

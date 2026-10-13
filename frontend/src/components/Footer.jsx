@@ -18,51 +18,66 @@ export default function Footer() {
   return (
     <footer id="footer" className="bg-forest-900 border-t border-forest-800 pt-16 pb-12 text-surface-neutral text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Trust Badges */}
+        {/* Trust Badges - Interactive Navigation Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-12 border-b border-forest-800">
-          <div className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift">
-            <ShieldCheck className="w-8 h-8 text-sage shrink-0" />
+          <Link 
+            to="/products/spawn-seeds" 
+            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+          >
+            <ShieldCheck className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm">Lab Certified Spawn</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Lab Certified Spawn</h4>
               <p className="text-[11px] text-sage/80">100% pure grain mother cultures</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift">
-            <Truck className="w-8 h-8 text-sage shrink-0" />
+          </Link>
+
+          <Link 
+            to="/contact" 
+            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+          >
+            <Truck className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm">Cold-Chain Express</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Cold-Chain Express</h4>
               <p className="text-[11px] text-sage/80">Shiprocket delivery across India</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift">
-            <CreditCard className="w-8 h-8 text-sage shrink-0" />
+          </Link>
+
+          <Link 
+            to="/orders" 
+            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+          >
+            <CreditCard className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm">Secure Razorpay</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Secure Razorpay</h4>
               <p className="text-[11px] text-sage/80">UPI, Cards, NetBanking, Wallet</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift">
-            <Award className="w-8 h-8 text-sage shrink-0" />
+          </Link>
+
+          <Link 
+            to="/training" 
+            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+          >
+            <Award className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm">Certified Training</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Certified Training</h4>
               <p className="text-[11px] text-sage/80">Online & Offline lab masterclasses</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Footer Navigation Columns */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 py-12">
           {/* Brand & Enterprise Info */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-forest-700 flex items-center justify-center text-white font-bold shadow-level-1">
+            <Link to="/" aria-label="Sporekart Agritech Home" className="inline-flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-forest-700 group-hover:bg-forest-600 flex items-center justify-center text-white font-bold shadow-level-1 transition-colors">
                 <Sprout className="w-6 h-6" />
               </div>
               <div>
-                <span className="font-display font-bold text-xl text-white">Spore<span className="text-leaf">kart</span></span>
+                <span className="font-display font-bold text-xl text-white group-hover:text-leaf transition-colors">Spore<span className="text-leaf">kart</span></span>
                 <span className="block text-[10px] text-sage font-semibold tracking-wider uppercase">Shriyap Enterprise</span>
               </div>
-            </div>
+            </Link>
             <p className="text-xs text-sage/90 leading-relaxed">
               India's pioneer mushroom agritech platform managed by <strong>Shriyap Enterprise</strong>. Dedicated to fresh organic mushroom supply, high-yield grain spawn, ready-to-grow kits, and commercial grower incubation.
             </p>
@@ -74,7 +89,14 @@ export default function Footer() {
               </div>
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-leaf flex-shrink-0 mt-0.5" />
-                <span>Basapura village, Behind Taralabalu school, Davangere-577001, Karnataka</span>
+                <a 
+                  href="https://maps.google.com/?q=Basapura+village,+Behind+Taralabalu+school,+Davangere-577001,+Karnataka" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-white transition-colors"
+                >
+                  Basapura village, Behind Taralabalu school, Davangere-577001, Karnataka ↗
+                </a>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-leaf flex-shrink-0" />
@@ -113,6 +135,7 @@ export default function Footer() {
           <div>
             <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">E-Commerce Catalog</h3>
             <ul className="space-y-2.5 text-xs text-sage">
+              <li><Link to="/products" className="hover:text-white transition-colors font-medium text-surface-cream">All Mushroom Products</Link></li>
               <li><Link to="/products/fresh-mushrooms" className="hover:text-white transition-colors">Fresh Button & Oyster Mushrooms</Link></li>
               <li><Link to="/products/dry-mushrooms" className="hover:text-white transition-colors">Dehydrated Gourmet Mushrooms</Link></li>
               <li><Link to="/products/spawn-seeds" className="hover:text-white transition-colors">Milky & Oyster Grain Spawn Seeds</Link></li>
@@ -125,16 +148,18 @@ export default function Footer() {
           <div>
             <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">Training & Guides</h3>
             <ul className="space-y-2.5 text-xs text-sage">
-              <li><Link to="/training" className="hover:text-white transition-colors">Commercial Cultivation Masterclass</Link></li>
-              <li><Link to="/training" className="hover:text-white transition-colors">Spawn Production & Lab Setup</Link></li>
-              <li><Link to="/blog" className="hover:text-white transition-colors">Mushroom Cultivation Handbook</Link></li>
+              <li><Link to="/training" className="hover:text-white transition-colors font-medium text-surface-cream">All Training Masterclasses</Link></li>
+              <li><Link to="/training/commercial-mushroom-cultivation-masterclass" className="hover:text-white transition-colors">Commercial Cultivation Masterclass</Link></li>
+              <li><Link to="/training/spawn-production-tissue-culture-masterclass" className="hover:text-white transition-colors">Spawn Production & Lab Setup</Link></li>
+              <li><Link to="/mushroom-cultivation-guide" className="hover:text-white transition-colors">Mushroom Cultivation Handbook</Link></li>
+              <li><Link to="/mushroom-spawn-guide" className="hover:text-white transition-colors">Mushroom Spawn Technical Guide</Link></li>
               <li><Link to="/blog" className="hover:text-white transition-colors">Agritech Knowledge Blog</Link></li>
             </ul>
           </div>
 
-          {/* Connect & Social Integrations */}
+          {/* Connect & Quick Access */}
           <div>
-            <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">Connect & Order Online</h3>
+            <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">Connect & Quick Links</h3>
             <p className="text-xs text-sage/90 leading-relaxed mb-4">
               Get instant assistance via WhatsApp or follow our farm updates on Instagram. Compliant with FSSAI & National Seeds Policy standards.
             </p>
@@ -165,17 +190,37 @@ export default function Footer() {
             <div className="flex flex-wrap gap-2">
               <Link to="/about" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">About Us</Link>
               <Link to="/contact" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Contact Us</Link>
+              <Link to="/orders" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Track Orders</Link>
+              <Link to="/cart" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Cart</Link>
             </div>
           </div>
         </div>
 
-        {/* Copyright & Enterprise Legal Notice */}
-        <div className="pt-8 border-t border-forest-800 text-center text-xs text-sage/70 space-y-1">
-          <p>© {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.</p>
-          <p className="text-[11px] text-sage/50">High-yield mushroom grain spawn, fresh gourmet produce, & lab masterclasses.</p>
+        {/* Copyright & Enterprise Legal Notice with Quick Footer Navigation */}
+        <div className="pt-8 border-t border-forest-800 flex flex-col sm:flex-row items-center justify-between text-xs text-sage/70 gap-4">
+          <div className="space-y-1 text-center sm:text-left">
+            <p>© {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.</p>
+            <p className="text-[11px] text-sage/50">High-yield mushroom grain spawn, fresh gourmet produce, & lab masterclasses.</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-sage/80">
+            <Link to="/" className="hover:text-white transition-colors">Home</Link>
+            <span>•</span>
+            <Link to="/products" className="hover:text-white transition-colors">Catalog</Link>
+            <span>•</span>
+            <Link to="/training" className="hover:text-white transition-colors">Training</Link>
+            <span>•</span>
+            <Link to="/blog" className="hover:text-white transition-colors">Blog</Link>
+            <span>•</span>
+            <Link to="/mushroom-cultivation-guide" className="hover:text-white transition-colors">Cultivation Guide</Link>
+            <span>•</span>
+            <Link to="/mushroom-spawn-guide" className="hover:text-white transition-colors">Spawn Guide</Link>
+            <span>•</span>
+            <Link to="/about" className="hover:text-white transition-colors">About</Link>
+            <span>•</span>
+            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
-

@@ -33,6 +33,12 @@ public interface ShippingProvider {
         private String state;
         private String pincode;
         private BigDecimal totalAmountInr;
+        private BigDecimal weightKg;
+        private BigDecimal lengthCm;
+        private BigDecimal breadthCm;
+        private BigDecimal heightCm;
+        private String pickupLocation;
+        private String pickupPincode;
         private List<ShipmentItemCommand> items;
     }
 
@@ -45,6 +51,7 @@ public interface ShippingProvider {
         private String sku;
         private int quantity;
         private BigDecimal priceInr;
+        private BigDecimal weightKg;
     }
 
     @Data

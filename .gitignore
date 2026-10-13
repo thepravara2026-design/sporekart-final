@@ -42,6 +42,7 @@ playwright-report/
 **/playwright-report/
 test-results/
 **/test-results/
+!docs/test-results/
 
 # CLI & Local Temp directories
 .temp/

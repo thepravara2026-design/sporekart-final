@@ -4,7 +4,7 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFA
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS payment_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     payment_id UUID REFERENCES payments(id) ON DELETE CASCADE,
     event_type VARCHAR(100) NOT NULL,
     event_id VARCHAR(100) UNIQUE, -- Razorpay webhook event ID for duplicate webhook protection

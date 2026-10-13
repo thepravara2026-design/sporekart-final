@@ -328,6 +328,16 @@ public class WalletService {
                     ),
                     "WALLET_WD_REQ:" + saved.getId()
             );
+
+            notificationEventService.recordAdminNotification(
+                    com.sporekart.notification.domain.NotificationEventType.ADMIN_WITHDRAWAL_REQUESTED,
+                    "WALLET_WITHDRAWAL",
+                    saved.getId(),
+                    "Wallet Withdrawal Request: ₹" + request.getAmount(),
+                    "Withdrawal ref #" + saved.getWithdrawalReference() + " for ₹" + request.getAmount() + " requires review.",
+                    "/admin?tab=wallet",
+                    "ADMIN_WD_REQ:" + saved.getId()
+            );
         } catch (Exception e) {
             log.error("Error recording wallet withdrawal requested notification: {}", e.getMessage());
         }

@@ -42,10 +42,24 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        if (userRepository.findByEmail("thepravara2026@gmail.com").isEmpty()) {
+            userRepository.save(User.builder()
+                    .email("thepravara2026@gmail.com")
+                    .phone("+919876543210")
+                    .firstName("Sporekart")
+                    .lastName("Admin")
+                    .fullName("Sporekart Administrator")
+                    .role(UserRole.ROLE_ADMIN)
+                    .isVerified(true)
+                    .isEmailVerified(true)
+                    .isPhoneVerified(true)
+                    .build());
+        }
+
         if (userRepository.findByEmail("admin@sporekart.in").isEmpty()) {
             userRepository.save(User.builder()
                     .email("admin@sporekart.in")
-                    .phone("+919876543210")
+                    .phone("+919876543211")
                     .firstName("Sporekart")
                     .lastName("Admin")
                     .fullName("Sporekart Admin")
@@ -55,6 +69,7 @@ public class DataInitializer implements CommandLineRunner {
                     .isPhoneVerified(true)
                     .build());
         }
+
 
         if (productRepository.count() < 30) {
             initCatalogData();

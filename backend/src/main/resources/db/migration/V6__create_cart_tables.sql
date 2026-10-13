@@ -1,7 +1,7 @@
 -- Sporekart Database Migration V6: Cart & Checkout Bounded Context
 
 CREATE TABLE IF NOT EXISTS carts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     session_id VARCHAR(100) UNIQUE,
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, CONVERTED, ABANDONED
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS carts (
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
     variant_id UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
     quantity INT NOT NULL CHECK (quantity > 0),

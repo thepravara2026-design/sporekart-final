@@ -1,7 +1,7 @@
 package com.sporekart.notification.api;
 
-import com.sporekart.notification.domain.NotificationEvent;
-import com.sporekart.notification.infrastructure.NotificationEventRepository;
+import com.sporekart.notification.api.dto.NotificationDto;
+import com.sporekart.notification.application.NotificationEventService;
 import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.shared.application.ForbiddenOperationException;
 import lombok.RequiredArgsConstructor;
@@ -12,19 +12,21 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/notifications")
+@RequestMapping({"/notifications", "/api/v1/notifications"})
 @RequiredArgsConstructor
 public class CustomerNotificationController {
 
-    private final NotificationEventRepository notificationRepository;
+    private final NotificationEventService notificationEventService;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Page<NotificationEvent>>> getCustomerNotifications(
+    public ResponseEntity<ApiResponse<Page<NotificationDto>>> getCustomerNotifications(
             Authentication authentication,
+            @RequestParam(defaultValue = "false") boolean unreadOnly,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -32,10 +34,47 @@ public class CustomerNotificationController {
         if (userId == null) {
             throw new ForbiddenOperationException("Authentication required");
         }
-        Page<NotificationEvent> result = notificationRepository.findByUserIdOrderByCreatedAtDesc(
-                userId, PageRequest.of(page, size)
+        int clampedSize = Math.min(Math.max(size, 1), 50);
+        Page<NotificationDto> result = notificationEventService.getUserNotifications(
+                userId, unreadOnly, PageRequest.of(page, clampedSize)
         );
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/unread-count")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getUnreadCount(Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            throw new ForbiddenOperationException("Authentication required");
+        }
+        long count = notificationEventService.getUnreadCount(userId);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("unreadCount", count)));
+    }
+
+    @RequestMapping(value = "/{id}/read", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<NotificationDto>> markAsRead(
+            Authentication authentication,
+            @PathVariable UUID id
+    ) {
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            throw new ForbiddenOperationException("Authentication required");
+        }
+        NotificationDto dto = notificationEventService.markAsRead(id, userId);
+        return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
+    @RequestMapping(value = "/read-all", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> markAllAsRead(Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            throw new ForbiddenOperationException("Authentication required");
+        }
+        int updated = notificationEventService.markAllAsRead(userId);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("markedCount", updated)));
     }
 
     private UUID extractUserId(Authentication authentication) {

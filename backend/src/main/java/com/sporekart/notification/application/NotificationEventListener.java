@@ -105,6 +105,17 @@ public class NotificationEventListener {
                     ),
                     dedupKey
             );
+
+            // Record Admin Operational Alert
+            notificationEventService.recordAdminNotification(
+                    NotificationEventType.ADMIN_NEW_ORDER,
+                    "ORDER",
+                    order.getId(),
+                    "New Order #" + order.getOrderNumber() + " Received",
+                    "Order value ₹" + (order.getTotalAmountInr() != null ? order.getTotalAmountInr() : "0.00") + " placed by " + recipientName,
+                    "/admin?tab=orders&id=" + order.getId(),
+                    "ADMIN_NEW_ORDER:" + order.getId()
+            );
         } catch (Exception e) {
             log.error("Error creating ORDER_CONFIRMED notification event for order {}: {}", orderId, e.getMessage(), e);
         }

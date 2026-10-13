@@ -10,7 +10,9 @@ import java.util.UUID;
 @Table(name = "notification_events", indexes = {
         @Index(name = "idx_notification_events_status", columnList = "status, created_at"),
         @Index(name = "idx_notification_events_user", columnList = "user_id"),
-        @Index(name = "idx_notification_events_dedup", columnList = "deduplication_key", unique = true)
+        @Index(name = "idx_notification_events_dedup", columnList = "deduplication_key", unique = true),
+        @Index(name = "idx_notification_events_in_app_feed", columnList = "user_id, is_read, created_at"),
+        @Index(name = "idx_notification_events_admin_in_app", columnList = "is_admin_notification, is_read, created_at")
 })
 @Getter
 @Setter
@@ -108,6 +110,28 @@ public class NotificationEvent {
 
     @Column(name = "deduplication_key", nullable = false, unique = true)
     private String deduplicationKey;
+
+    @Column(name = "is_read", nullable = false)
+    @Builder.Default
+    private boolean isRead = false;
+
+    @Column(name = "read_at")
+    private ZonedDateTime readAt;
+
+    @Column(name = "action_url", length = 500)
+    private String actionUrl;
+
+    @Column(name = "category", length = 64)
+    @Builder.Default
+    private String category = "GENERAL";
+
+    @Column(name = "target_role", length = 50)
+    @Builder.Default
+    private String targetRole = "ROLE_CUSTOMER";
+
+    @Column(name = "is_admin_notification", nullable = false)
+    @Builder.Default
+    private boolean isAdminNotification = false;
 
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -49,11 +49,26 @@ public class OrderService {
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.infrastructure.UserRepository userRepository;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.shipping.application.ShippingService shippingService;
+
+    @org.springframework.beans.factory.annotation.Value("${sporekart.shiprocket.tracking-base-url:https://track.shiprocket.in/}")
+    private String trackingBaseUrl = "https://track.shiprocket.in/";
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse createOrderFromCart(UUID userId, String sessionId, String idempotencyKey, CreateOrderRequest request) {
+        // Admin restriction check
+        if (userId != null) {
+            userRepository.findById(userId).ifPresent(u -> {
+                if ("thepravara2026@gmail.com".equalsIgnoreCase(u.getEmail()) || u.getRole() == com.sporekart.identity.domain.UserRole.ROLE_ADMIN) {
+                    throw new IllegalStateException("The admin account (thepravara2026@gmail.com) is purely dedicated for administrative operations and cannot place customer orders.");
+                }
+            });
+        }
+
         // 1. Idempotency Check
         if (idempotencyKey != null && !idempotencyKey.trim().isEmpty()) {
+
             Optional<Order> existing = orderRepository.findByIdempotencyKey(idempotencyKey);
             if (existing.isPresent()) {
                 return mapToResponse(existing.get());
@@ -210,7 +225,6 @@ public class OrderService {
         order.setDiscountTotalAmountInr(discountTotal.setScale(2, RoundingMode.HALF_UP));
         order.setTotalAmountInr(totalAmount.setScale(2, RoundingMode.HALF_UP));
 
-
         // 7. Add Initial Order Event
         OrderEvent initialEvent = OrderEvent.builder()
                 .order(order)
@@ -297,7 +311,6 @@ public class OrderService {
         return generateInvoicePdf(orderId, userId, null);
     }
 
-
     @Transactional
     public List<OrderResponse> getUserOrders(UUID userId, String sessionId) {
         List<Order> orders;
@@ -330,7 +343,6 @@ public class OrderService {
     public List<OrderResponse> getUserOrders(UUID userId) {
         return getUserOrders(userId, null);
     }
-
 
     @Transactional
     public void setRazorpayOrderId(UUID orderId, String razorpayOrderId) {
@@ -373,6 +385,18 @@ public class OrderService {
         OrderStatus previousStatus = order.getStatus();
         if (previousStatus == newStatus) {
             return mapToResponse(order);
+        }
+
+        // RULE 1: Cancelled or Refunded orders are immutable terminal states and cannot be re-opened or modified
+        if (previousStatus == OrderStatus.CANCELLED || previousStatus == OrderStatus.REFUNDED) {
+            throw new IllegalStateException("Order #" + order.getOrderNumber() + " is already " + previousStatus + " and cannot be modified or re-opened.");
+        }
+
+        // RULE 2: Once SHIPPED, direct arbitrary manual update to DELIVERED by Admin is restricted; status changes must be driven by courier updates/webhooks
+        if (previousStatus == OrderStatus.SHIPPED && newStatus == OrderStatus.DELIVERED) {
+            if (updatedBy != null && updatedBy.startsWith("ADMIN")) {
+                throw new IllegalStateException("Order #" + order.getOrderNumber() + " is currently in transit with the courier partner. Delivery status updates must be driven by Courier Shipment tracking updates or carrier webhooks.");
+            }
         }
 
         boolean isPaidOrder = (previousStatus == OrderStatus.PAID || previousStatus == OrderStatus.CONFIRMED || previousStatus == OrderStatus.PROCESSING);
@@ -457,6 +481,16 @@ public class OrderService {
                         ),
                         "ORDER_CANCELLED:" + saved.getId()
                 );
+
+                notificationEventService.recordAdminNotification(
+                        com.sporekart.notification.domain.NotificationEventType.ADMIN_ORDER_CANCELLED,
+                        "ORDER",
+                        saved.getId(),
+                        "Order #" + saved.getOrderNumber() + " Cancelled",
+                        "Customer cancelled order #" + saved.getOrderNumber() + ". Reason: " + (reason != null ? reason : "Cancelled"),
+                        "/admin?tab=orders&id=" + saved.getId(),
+                        "ADMIN_ORDER_CANCELLED:" + saved.getId()
+                );
             } catch (Exception e) {
                 org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_CANCELLED notification: {}", e.getMessage());
             }
@@ -533,6 +567,17 @@ public class OrderService {
             }
         }
 
+        // Cancel associated courier shipment if active
+        try {
+            shippingService.getShipmentByOrderId(orderId).ifPresent(s -> {
+                if (s.getStatus() != com.sporekart.shipping.domain.ShipmentStatus.CANCELLED) {
+                    shippingService.cancelShipment(s.getId(), "Order cancelled prior to delivery");
+                }
+            });
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: Shipment cancel notification skipped: {}", e.getMessage());
+        }
+
         return updateOrderStatus(orderId, nextStatus, formattedReason, userId != null ? "CUSTOMER:" + userId : "GUEST");
     }
 
@@ -586,6 +631,19 @@ public class OrderService {
         return "SK-" + datePrefix + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
     }
 
+    @Transactional
+    public void updateOrderShippingDetails(UUID orderId, String courierPartner, String trackingNumber, String trackingUrl) {
+        orderRepository.findById(orderId).ifPresent(order -> {
+            order.setCourierPartner(courierPartner);
+            order.setTrackingNumber(trackingNumber);
+            order.setTrackingUrl(trackingUrl);
+            if (order.getShippedAt() == null) {
+                order.setShippedAt(java.time.OffsetDateTime.now());
+            }
+            orderRepository.save(order);
+        });
+    }
+
     public OrderResponse mapToResponse(Order order) {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
@@ -603,12 +661,24 @@ public class OrderService {
         response.setCancellationReason(order.getCancellationReason());
         response.setRazorpayOrderId(order.getRazorpayOrderId());
         response.setRazorpayPaymentId(order.getRazorpayPaymentId());
-        
-        String defaultAwb = order.getId() != null ? "AWB-897" + order.getId().toString().substring(0, 6).toUpperCase() : "AWB-897000000";
-        response.setCourierPartner(order.getCourierPartner() != null ? order.getCourierPartner() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? "BlueDart Express" : null));
-        response.setTrackingNumber(order.getTrackingNumber() != null ? order.getTrackingNumber() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? defaultAwb : null));
-        response.setTrackingUrl(order.getTrackingUrl() != null ? order.getTrackingUrl() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? "https://track.shiprocket.in/" + defaultAwb : null));
-        response.setShippedAt(order.getShippedAt() != null ? order.getShippedAt() : (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED ? order.getUpdatedAt() : null));
+
+        if (order.getCourierPartner() != null && !order.getCourierPartner().isBlank()) {
+            response.setCourierPartner(order.getCourierPartner());
+            response.setTrackingNumber(order.getTrackingNumber());
+            response.setTrackingUrl(order.getTrackingUrl());
+            response.setShippedAt(order.getShippedAt());
+        } else if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            String defaultAwb = order.getId() != null ? "AWB-897" + order.getId().toString().substring(0, 6).toUpperCase() : "AWB-897000000";
+            response.setCourierPartner("BlueDart Express");
+            response.setTrackingNumber(defaultAwb);
+            response.setTrackingUrl(buildTrackingUrl(defaultAwb));
+            response.setShippedAt(order.getUpdatedAt());
+        } else {
+            response.setCourierPartner(null);
+            response.setTrackingNumber(null);
+            response.setTrackingUrl(null);
+            response.setShippedAt(null);
+        }
 
         response.setShippingAddress(OrderAddressSnapshot.fromJson(order.getShippingAddressJson()));
         response.setCreatedAt(order.getCreatedAt());
@@ -648,5 +718,14 @@ public class OrderService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<OrderResponse> getAllOrders(org.springframework.data.domain.Pageable pageable) {
         return orderRepository.findAll(pageable).map(this::mapToResponse);
+    }
+
+    private String buildTrackingUrl(String awbCode) {
+        if (awbCode == null || awbCode.isBlank()) return "";
+        String base = trackingBaseUrl != null ? trackingBaseUrl.trim() : "https://track.shiprocket.in/";
+        if (!base.endsWith("/")) {
+            base += "/";
+        }
+        return base + awbCode.trim();
     }
 }

@@ -8,7 +8,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS is_phone_verified BOOLEAN NOT NULL DE
 
 -- 2. Customer Identity Providers Table (Multi-provider linking: Google OAuth, Phone OTP, Email OTP)
 CREATE TABLE IF NOT EXISTS customer_identities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider VARCHAR(50) NOT NULL, -- GOOGLE, PHONE_OTP, EMAIL_OTP
     provider_subject VARCHAR(255) NOT NULL, -- e.g., google_sub, phone_number, email_address
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS customer_identities (
 
 -- 3. Customer Addresses Table (Separate entity for address book)
 CREATE TABLE IF NOT EXISTS customer_addresses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     recipient_name VARCHAR(150) NOT NULL,
     phone VARCHAR(20) NOT NULL,
@@ -40,3 +40,15 @@ ALTER TABLE otps ADD COLUMN IF NOT EXISTS otp_type VARCHAR(50) NOT NULL DEFAULT 
 CREATE INDEX IF NOT EXISTS idx_customer_identities_user_id ON customer_identities(user_id);
 CREATE INDEX IF NOT EXISTS idx_customer_addresses_user_id ON customer_addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_otps_identifier_type ON otps(identifier, otp_type);
+
+
+-- Create customer_profiles table
+CREATE TABLE IF NOT EXISTS customer_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    gstin VARCHAR(50),
+    farm_size_sqft INT,
+    has_training_capability BOOLEAN NOT NULL DEFAULT FALSE,
+    training_capability_granted_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

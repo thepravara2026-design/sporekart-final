@@ -1,7 +1,7 @@
 -- Sporekart Database Migration V25: Training & Workshop Review & Feedback System
 
 CREATE TABLE IF NOT EXISTS training_reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     batch_id UUID NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
     enrollment_id UUID NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,

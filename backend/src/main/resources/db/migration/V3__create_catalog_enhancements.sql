@@ -16,7 +16,7 @@ ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL
 
 -- 4. Product Offers Table
 CREATE TABLE IF NOT EXISTS product_offers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
     offer_name VARCHAR(150) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS product_offers (
 
 -- 5. Product Media Table (Replaces flat image fields with structured media relationships)
 CREATE TABLE IF NOT EXISTS product_media (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
     media_url TEXT NOT NULL,

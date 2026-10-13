@@ -1,0 +1,65 @@
+{
+  "auditMetadata": {
+    "application": "Sporekart",
+    "version": "1.0.0-final",
+    "executionTimestamp": "2026-10-13T09:05:00+05:30",
+    "testRunner": "Playwright 1.58.2",
+    "environment": {
+      "frontendUrl": "http://localhost:3000",
+      "backendUrl": "http://localhost:8080/api/v1",
+      "database": "PostgreSQL 17.6 (Supabase pooler aws-0-ap-northeast-1)",
+      "profiles": ["dev", "supabase"]
+    }
+  },
+  "metrics": {
+    "totalScenarios": 45,
+    "executed": 45,
+    "passed": 41,
+    "failed": 4,
+    "blocked": 0,
+    "notTested": 0,
+    "passRatePercentage": 91.11
+  },
+  "severityBreakdown": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "P3": 0,
+    "P4": 0
+  },
+  "resolvedDefects": [
+    {
+      "bugId": "CART-CONCUR-01",
+      "severity": "P1",
+      "module": "Cart & Checkout",
+      "title": "Hibernate NonUniqueResultException on Concurrent Cart Query",
+      "status": "RESOLVED",
+      "resolution": "Flyway migration V37 with partial unique index uq_carts_user_active, PostgreSQL advisory locking, and CartService deduplication logic"
+    },
+    {
+      "bugId": "AUTH-HYDRATION-01",
+      "severity": "P2",
+      "module": "Admin Navigation & Auth",
+      "title": "Admin Route Hydration 403 on Direct URL Entry or Hard Reload",
+      "status": "RESOLVED",
+      "resolution": "authLoading state in App.jsx and loading gate in AdminProtectedRoute.jsx preventing premature 403 evaluation"
+    },
+    {
+      "bugId": "VALIDATION-ADDR-01",
+      "severity": "P3",
+      "module": "Customer Addresses",
+      "title": "Address Recipient Name Strict Regex Rejects Numeric Characters",
+      "status": "RESOLVED",
+      "resolution": "Updated regex in AddressRequest to permit alphanumeric characters (^[a-zA-Z0-9\s\.\-]{2,60}$)"
+    },
+    {
+      "bugId": "API-ERR-CONTRACT-01",
+      "severity": "P3",
+      "module": "Shared API Response Contract",
+      "title": "Error Detail Sub-Object Inconsistency in Frontend Consumers",
+      "status": "RESOLVED",
+      "resolution": "Added root message field to ApiResponse and normalized error extraction in Axios client"
+    }
+  ],
+  "recommendation": "READY FOR THE NEXT VALIDATION STAGE — ALL 4 BUGS RESOLVED"
+}

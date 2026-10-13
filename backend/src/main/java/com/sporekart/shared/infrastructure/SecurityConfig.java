@@ -75,7 +75,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/search", "/search/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/training/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/shipping/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/shipping/check-pincode/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/seo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/promotions/available", "/promotions/**").permitAll()
@@ -83,11 +83,14 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
                     .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/shipping/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()
                     .requestMatchers("/admin/auth/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/shipping/create", "/shipping/cancel/**", "/shipping/simulate-event/**").hasRole("ADMIN")
                     .anyRequest().authenticated();
+
             })
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)

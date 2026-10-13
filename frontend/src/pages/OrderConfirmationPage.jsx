@@ -88,7 +88,7 @@ export default function OrderConfirmationPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Invoice generation error. Please try again from Dashboard.');
+      console.error('Invoice generation error:', err);
     } finally {
       setDownloadingInvoice(false);
     }

@@ -13,7 +13,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    show-sql: true
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
+    show-sql: false
   flyway:
     enabled: ${SPRING_FLYWAY_ENABLED:true}
     baseline-on-migrate: true
@@ -21,11 +24,14 @@ spring:
 
 logging:
   level:
-    com.sporekart: DEBUG
-    org.springframework.security: DEBUG
+    com.sporekart: INFO
+    org.springframework.security: WARN
 
 app:
   jwt:
     secret: ${JWT_SECRET:dGVzdF9kZXZfc2VjcmV0X2tleV9mb3JfbG9jYWxfZGV2ZWxvcG1lbnRfb25seV8zMmJ5dGVz}
 
+sporekart:
+  shiprocket:
+    use-real-shiprocket: false
 

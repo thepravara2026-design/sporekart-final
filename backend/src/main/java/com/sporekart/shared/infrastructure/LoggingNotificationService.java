@@ -11,19 +11,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "sporekart.mail.use-real-smtp", havingValue = "false", matchIfMissing = true)
 public class LoggingNotificationService implements NotificationService {
-
-    private final TwilioSmsService twilioSmsService;
-
-    @Override
-    public void sendOtpSms(String phone, String code) {
-        String messageText = "Your Sporekart verification code is: " + code + ". Valid for 5 minutes. Do not share this OTP with anyone.";
-        twilioSmsService.sendSms(phone, messageText);
-        log.info("Dispatched OTP SMS via Twilio to phone: {}", phone);
-    }
-
-    @Override
-    public void sendOtpEmail(String email, String code) {
-        log.info("Dispatched OTP Email to email: {} [server-side notification]", email);
-    }
+    // Note: Authentication OTP has been retired. Business transactional emails
+    // are handled by NotificationEventService.
 }
-
