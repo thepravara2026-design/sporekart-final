@@ -26,6 +26,8 @@ public class WalletService {
     private final WalletTransactionRepository transactionRepository;
     private final WalletWithdrawalRepository withdrawalRepository;
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+    private final WalletTopupIntentRepository topupIntentRepository;
+    private final com.sporekart.payment.application.PaymentGateway paymentGateway;
 
     @Transactional
     public Wallet getOrCreateWallet(UUID userId, String userType) {
@@ -592,6 +594,103 @@ public class WalletService {
                 .createdAt(wt.getCreatedAt())
                 .createdBy(wt.getCreatedBy())
                 .build();
+    }
+
+    @Transactional
+    public WalletDtos.AddMoneyResponse createTopupIntent(UUID userId, BigDecimal amount) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID is required for wallet topup");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Top-up amount must be greater than zero");
+        }
+        if (amount.compareTo(new BigDecimal("100000.00")) > 0) {
+            throw new IllegalArgumentException("Maximum top-up amount per transaction is ₹100,000");
+        }
+
+        String topupRef = "TOPUP-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        com.sporekart.payment.application.PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(
+                null, topupRef, amount
+        );
+
+        WalletTopupIntent intent = WalletTopupIntent.builder()
+                .userId(userId)
+                .amount(amount)
+                .currency(result.getCurrency())
+                .razorpayOrderId(result.getRazorpayOrderId())
+                .transactionReference(topupRef)
+                .status("PENDING")
+                .build();
+        topupIntentRepository.save(intent);
+
+        return WalletDtos.AddMoneyResponse.builder()
+                .razorpayOrderId(result.getRazorpayOrderId())
+                .amountInr(amount)
+                .currency(result.getCurrency())
+                .razorpayKeyId(result.getRazorpayKeyId())
+                .transactionReference(topupRef)
+                .build();
+    }
+
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public WalletTransaction verifyTopup(
+            UUID userId,
+            String razorpayOrderId,
+            String razorpayPaymentId,
+            String razorpaySignature
+    ) {
+        if (userId == null) {
+            throw new com.sporekart.shared.application.ForbiddenOperationException("Authentication required to verify topup");
+        }
+        if (razorpayOrderId == null || razorpayOrderId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Razorpay Order ID is required for topup verification");
+        }
+        if (razorpayPaymentId == null || razorpayPaymentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Razorpay Payment ID is required for topup verification");
+        }
+
+        WalletTopupIntent intent = topupIntentRepository.findByRazorpayOrderId(razorpayOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("No topup intent found for Razorpay order ID: " + razorpayOrderId));
+
+        if (!userId.equals(intent.getUserId())) {
+            log.error("WALLET TOPUP FORGERY ATTEMPT: User {} attempted to verify topup intent owned by user {}", userId, intent.getUserId());
+            throw new com.sporekart.shared.application.ForbiddenOperationException("Access denied: You are not authorized to verify this topup intent");
+        }
+
+        if ("COMPLETED".equals(intent.getStatus())) {
+            log.info("Topup intent {} already completed, returning existing transaction", razorpayOrderId);
+            return transactionRepository.findByIdempotencyKey("topup_" + intent.getRazorpayPaymentId())
+                    .orElseThrow(() -> new IllegalStateException("Completed topup transaction record missing"));
+        }
+
+        boolean validSig = paymentGateway.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+        if (!validSig) {
+            throw new IllegalArgumentException("Invalid Razorpay payment signature for wallet topup");
+        }
+
+        // Authoritative amount from persisted server-side intent:
+        BigDecimal authoritativeAmount = intent.getAmount();
+
+        WalletTransaction txn = creditWallet(
+                userId,
+                authoritativeAmount,
+                WalletTransactionType.TOPUP,
+                WalletSourceType.TOPUP,
+                razorpayPaymentId,
+                null,
+                null,
+                razorpayPaymentId,
+                "Wallet Topup via Razorpay (" + razorpayPaymentId + ")",
+                "topup_" + razorpayPaymentId,
+                "CUSTOMER_TOPUP"
+        );
+
+        intent.setStatus("COMPLETED");
+        intent.setRazorpayPaymentId(razorpayPaymentId);
+        intent.setCompletedAt(OffsetDateTime.now());
+        topupIntentRepository.save(intent);
+
+        return txn;
     }
 
     private WalletDtos.WithdrawalResponse mapToWithdrawalResponse(WalletWithdrawal w) {

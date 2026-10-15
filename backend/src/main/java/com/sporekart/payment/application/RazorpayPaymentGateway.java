@@ -25,12 +25,21 @@ public class RazorpayPaymentGateway implements PaymentGateway {
     @Value("${app.razorpay.webhook-secret:}")
     private String webhookSecret;
 
+    @Value("${app.razorpay.mock-mode:false}")
+    private boolean mockMode;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
+
     @Override
     public InitiatePaymentResult createPaymentOrder(UUID orderId, String orderNumber, BigDecimal amountInr) {
         String razorpayOrderId;
         if (isMockMode()) {
             razorpayOrderId = "order_mock_" + UUID.randomUUID().toString().substring(0, 8);
         } else {
+            if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
+                throw new IllegalStateException("Razorpay payment gateway credentials (key-id/key-secret) are not configured. Cannot process real payment order.");
+            }
             try {
                 RazorpayClient client = new RazorpayClient(keyId, keySecret);
                 JSONObject orderRequest = new JSONObject();
@@ -56,11 +65,19 @@ public class RazorpayPaymentGateway implements PaymentGateway {
 
     @Override
     public boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String signature) {
-        if (isMockMode()) {
-            return true;
+        if (signature == null || signature.trim().isEmpty()) {
+            return false;
         }
 
-        if (signature == null || "mock_signature".equals(signature)) {
+        if (isMockMode()) {
+            return !"mock_signature_invalid".equals(signature);
+        }
+
+        if ("mock_signature".equals(signature) || "mock_signature_bypass".equals(signature)) {
+            return false;
+        }
+
+        if (keySecret == null || keySecret.trim().isEmpty()) {
             return false;
         }
 
@@ -70,9 +87,20 @@ public class RazorpayPaymentGateway implements PaymentGateway {
             options.put("razorpay_payment_id", razorpayPaymentId);
             options.put("razorpay_signature", signature);
 
-            return Utils.verifyPaymentSignature(options, keySecret);
+            if (Utils.verifyPaymentSignature(options, keySecret)) {
+                return true;
+            }
+            String expectedHmac = calculateHmacSha256(razorpayOrderId + "|" + razorpayPaymentId, keySecret);
+            return java.security.MessageDigest.isEqual(
+                    expectedHmac.getBytes(StandardCharsets.UTF_8),
+                    signature.getBytes(StandardCharsets.UTF_8)
+            );
         } catch (Exception e) {
-            return false;
+            String expectedHmac = calculateHmacSha256(razorpayOrderId + "|" + razorpayPaymentId, keySecret);
+            return java.security.MessageDigest.isEqual(
+                    expectedHmac.getBytes(StandardCharsets.UTF_8),
+                    signature.getBytes(StandardCharsets.UTF_8)
+            );
         }
     }
 
@@ -86,10 +114,25 @@ public class RazorpayPaymentGateway implements PaymentGateway {
             return true;
         }
 
+        if (webhookSecret == null || webhookSecret.trim().isEmpty() || "mock_webhook_signature".equals(signatureHeader)) {
+            return false;
+        }
+
         try {
-            return Utils.verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
+            if (Utils.verifyWebhookSignature(rawBody, signatureHeader, webhookSecret)) {
+                return true;
+            }
+            String calculated = calculateHmacSha256(rawBody, webhookSecret);
+            return java.security.MessageDigest.isEqual(
+                    calculated.getBytes(StandardCharsets.UTF_8),
+                    signatureHeader.getBytes(StandardCharsets.UTF_8)
+            );
         } catch (Exception e) {
-            return calculateHmacSha256(rawBody, webhookSecret).equals(signatureHeader);
+            String calculated = calculateHmacSha256(rawBody, webhookSecret);
+            return java.security.MessageDigest.isEqual(
+                    calculated.getBytes(StandardCharsets.UTF_8),
+                    signatureHeader.getBytes(StandardCharsets.UTF_8)
+            );
         }
     }
 
@@ -99,6 +142,9 @@ public class RazorpayPaymentGateway implements PaymentGateway {
         String status = "PROCESSED";
 
         if (!isMockMode()) {
+            if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
+                throw new IllegalStateException("Razorpay gateway credentials are not configured for processing refunds.");
+            }
             try {
                 RazorpayClient client = new RazorpayClient(keyId, keySecret);
                 JSONObject refundRequest = new JSONObject();
@@ -120,8 +166,62 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                 .build();
     }
 
-    private boolean isMockMode() {
-        return keyId == null || keyId.trim().isEmpty() || keyId.startsWith("rzp_test_mock");
+    @Override
+    public GatewayPaymentDetails fetchPayment(String razorpayPaymentId) {
+        if (isMockMode()) {
+            String status = razorpayPaymentId != null && razorpayPaymentId.contains("failed") ? "failed" : "captured";
+            Long amountPaise = null;
+            if (razorpayPaymentId != null && razorpayPaymentId.contains("mismatched_amount")) {
+                amountPaise = 1L;
+            }
+            return GatewayPaymentDetails.builder()
+                    .paymentId(razorpayPaymentId)
+                    .orderId(null)
+                    .status(status)
+                    .amountPaise(amountPaise)
+                    .currency("INR")
+                    .method("card")
+                    .build();
+        }
+
+        if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
+            throw new IllegalStateException("Razorpay gateway credentials (key-id/key-secret) are not configured for fetching payment details.");
+        }
+
+        try {
+            RazorpayClient client = new RazorpayClient(keyId, keySecret);
+            com.razorpay.Payment rzpPayment = client.payments.fetch(razorpayPaymentId);
+
+            Long amount = null;
+            Object amtObj = rzpPayment.get("amount");
+            if (amtObj instanceof Number) {
+                amount = ((Number) amtObj).longValue();
+            }
+
+            return GatewayPaymentDetails.builder()
+                    .paymentId(rzpPayment.get("id"))
+                    .orderId(rzpPayment.get("order_id"))
+                    .status(rzpPayment.get("status"))
+                    .amountPaise(amount)
+                    .currency(rzpPayment.get("currency"))
+                    .method(rzpPayment.get("method"))
+                    .email(rzpPayment.get("email"))
+                    .contact(rzpPayment.get("contact"))
+                    .build();
+        } catch (RazorpayException e) {
+            throw new RuntimeException("Failed to fetch Razorpay payment: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean isMockMode() {
+        if (mockMode) {
+            return true;
+        }
+        if (activeProfile != null && (activeProfile.contains("test") || activeProfile.contains("dev"))) {
+            return keyId == null || keyId.trim().isEmpty() || keyId.startsWith("rzp_test_mock");
+        }
+        return keyId != null && keyId.startsWith("rzp_test_mock");
     }
 
     private String calculateHmacSha256(String data, String secret) {

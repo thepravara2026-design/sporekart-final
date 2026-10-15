@@ -81,12 +81,27 @@ public class PaymentDtos {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class InitiateEnrollmentPaymentRequest {
+        @NotNull(message = "Enrollment ID is required")
+        private UUID enrollmentId;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class VerifyEnrollmentPaymentRequest {
         @NotNull(message = "Enrollment ID is required")
         private UUID enrollmentId;
 
         @NotBlank(message = "Payment method is required")
         private String paymentMethod;
+
+        private String razorpayOrderId;
+
+        private String razorpayPaymentId;
+
+        private String razorpaySignature;
 
         private String transactionReference;
     }

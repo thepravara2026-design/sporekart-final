@@ -1491,19 +1491,19 @@ export default function AdminDashboardPage({ user }) {
   };
 
   const openActiveOrdersAnalytics = () => {
-    const activeList = orders.filter(o => !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(o.status));
+    const activeList = orders.filter(o => ['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status));
     const count = analytics?.activeOrders ?? (activeList.length || orders.length || 0);
     setAnalyticsModalConfig({
       domain: 'Orders & Fulfillment',
       title: 'Active Orders Fulfillment Queue',
       metric: `${count} Active Orders`,
-      subtitle: 'Customer purchase orders awaiting courier dispatch, warehouse packaging, or delivery.',
+      subtitle: 'Customer purchase orders with confirmed payments awaiting courier dispatch, warehouse packaging, or delivery.',
       badge: 'Fulfillment Queue',
       badgeColor: 'amber',
       icon: ShoppingBag,
       breakdown: [
-        { label: 'Pending Payment', value: orders.filter(o => o.status === 'PENDING_PAYMENT').length },
-        { label: 'Paid / Processing', value: orders.filter(o => o.status === 'PAID' || o.status === 'PROCESSING' || o.status === 'CONFIRMED').length },
+        { label: 'Paid / Confirmed', value: orders.filter(o => o.status === 'PAID' || o.status === 'CONFIRMED').length },
+        { label: 'Processing (Warehouse)', value: orders.filter(o => o.status === 'PROCESSING').length },
         { label: 'Shipped (In Transit)', value: orders.filter(o => o.status === 'SHIPPED').length },
       ],
       items: (activeList.length ? activeList : orders).map(o => ({
@@ -4886,7 +4886,7 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Active Fulfillment Queue"
-              value={orders.filter(o => ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING'].includes(o.status)).length}
+              value={orders.filter(o => ['PAID', 'CONFIRMED', 'PROCESSING'].includes(o.status)).length}
               badge="Needs Action"
               badgeStyle="bg-amber-500/10 text-amber-800"
               icon={Clock}
@@ -4924,7 +4924,7 @@ export default function AdminDashboardPage({ user }) {
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h3 className="font-display font-extrabold text-lg text-typography-primary flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-forest-700 shrink-0" /> All Customer Orders Directory ({orders.length})
+                  <ShoppingBag className="w-5 h-5 text-forest-700 shrink-0" /> All Customer Orders Directory ({orders.filter(o => o.status !== 'PENDING_PAYMENT').length})
                 </h3>
                 <p className="text-xs text-typography-secondary">Manage customer purchase lifecycles, courier logistics integrations, and admin cancellation/refund actions.</p>
               </div>
@@ -4960,8 +4960,9 @@ export default function AdminDashboardPage({ user }) {
                 </thead>
                 <tbody className="divide-y divide-surface-border">
                   {orders
+                    .filter(o => o.status !== 'PENDING_PAYMENT')
                     .filter(o => {
-                      if (orderFilter === 'ACTIVE') return ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status);
+                      if (orderFilter === 'ACTIVE') return ['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status);
                       if (orderFilter === 'ORDER HISTORY') return ['DELIVERED', 'CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(o.status);
                       if (orderFilter === 'ALL') return true;
                       return o.status === orderFilter;

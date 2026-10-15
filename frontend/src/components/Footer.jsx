@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, ShieldCheck, Truck, CreditCard, Award, Mail, Phone, MapPin, Building2 } from 'lucide-react';
+import { Sprout, ShieldCheck, Truck, CreditCard, Award, Mail, Phone, MapPin, Building2, Send, Check } from 'lucide-react';
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -14,81 +14,122 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+const FacebookIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.325V1.325C24 .597 23.405 0 22.675 0z"/>
+  </svg>
+);
+
+const YouTubeIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+
 export default function Footer() {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    if (newsletterEmail && newsletterEmail.includes('@')) {
+      setNewsletterSubmitted(true);
+      setTimeout(() => {
+        setNewsletterEmail('');
+        setNewsletterSubmitted(false);
+      }, 5000);
+    }
+  };
+
   return (
-    <footer id="footer" className="bg-forest-900 border-t border-forest-800 pt-16 pb-12 text-surface-neutral text-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Trust Badges - Interactive Navigation Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-12 border-b border-forest-800">
+    <footer id="footer" className="relative bg-[#0C2518] border-t border-forest-800 pt-16 pb-12 text-surface-neutral text-sm overflow-hidden">
+      
+      {/* Subtle Botanical Mushroom Watermark Illustration in Bottom Right */}
+      <div className="absolute -bottom-8 -right-8 w-72 h-72 opacity-[0.04] pointer-events-none text-white select-none">
+        <svg viewBox="0 0 200 200" fill="currentColor">
+          <path d="M100 20 C60 20 20 60 20 95 C20 115 50 125 75 125 L75 175 C75 185 85 190 100 190 C115 190 125 185 125 175 L125 125 C150 125 180 115 180 95 C180 60 140 20 100 20 Z" />
+        </svg>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Top Trust Badges */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-12 border-b border-forest-800/80">
           <Link 
             to="/products/spawn-seeds" 
-            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
           >
-            <ShieldCheck className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
+            <ShieldCheck className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Lab Certified Spawn</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Lab Certified Spawn</h4>
               <p className="text-[11px] text-sage/80">100% pure grain mother cultures</p>
             </div>
           </Link>
 
           <Link 
             to="/contact" 
-            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
           >
-            <Truck className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
+            <Truck className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Cold-Chain Express</h4>
-              <p className="text-[11px] text-sage/80">Shiprocket delivery across India</p>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Cold-Chain Express</h4>
+              <p className="text-[11px] text-sage/80">Fast express delivery across India</p>
             </div>
           </Link>
 
           <Link 
             to="/orders" 
-            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
           >
-            <CreditCard className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
+            <CreditCard className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Secure Razorpay</h4>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Secure Razorpay</h4>
               <p className="text-[11px] text-sage/80">UPI, Cards, NetBanking, Wallet</p>
             </div>
           </Link>
 
           <Link 
             to="/training" 
-            className="flex items-center gap-3 p-4 rounded-card bg-forest-800/60 border border-forest-700/50 hover-lift hover:border-forest-600 transition-all group"
+            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
           >
-            <Award className="w-8 h-8 text-sage group-hover:text-leaf transition-colors shrink-0" />
+            <Award className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
             <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-leaf transition-colors">Certified Training</h4>
-              <p className="text-[11px] text-sage/80">Online & Offline lab masterclasses</p>
+              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Certified Training</h4>
+              <p className="text-[11px] text-sage/80">Practical farm & lab masterclasses</p>
             </div>
           </Link>
         </div>
 
-        {/* Footer Navigation Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 py-12">
-          {/* Brand & Enterprise Info */}
-          <div className="space-y-4">
+        {/* 4 Main Footer Navigation Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-12">
+          
+          {/* Column 1: Brand & Enterprise Info (4 Cols) */}
+          <div className="md:col-span-4 space-y-4">
             <Link to="/" aria-label="Sporekart Agritech Home" className="inline-flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-forest-700 group-hover:bg-forest-600 flex items-center justify-center text-white font-bold shadow-level-1 transition-colors">
-                <Sprout className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-forest-800 group-hover:bg-forest-700 flex items-center justify-center text-white font-bold shadow-sm transition-colors">
+                <Sprout className="w-6 h-6 text-emerald-300" />
               </div>
               <div>
-                <span className="font-display font-bold text-xl text-white group-hover:text-leaf transition-colors">Spore<span className="text-leaf">kart</span></span>
-                <span className="block text-[10px] text-sage font-semibold tracking-wider uppercase">Shriyap Enterprise</span>
+                <span className="font-display font-bold text-xl text-white group-hover:text-emerald-300 transition-colors">
+                  Spore<span className="text-emerald-400">kart</span>
+                </span>
+                <span className="block text-[9px] text-sage font-semibold tracking-wider uppercase">
+                  Smart Farming. Healthy Living.
+                </span>
               </div>
             </Link>
-            <p className="text-xs text-sage/90 leading-relaxed">
-              India's pioneer mushroom agritech platform managed by <strong>Shriyap Enterprise</strong>. Dedicated to fresh organic mushroom supply, high-yield grain spawn, ready-to-grow kits, and commercial grower incubation.
+            
+            <p className="text-xs text-sage/90 leading-relaxed max-w-sm">
+              India’s mushroom agritech platform managed by <strong>Shriyap Enterprise</strong>. Dedicated to fresh organic mushrooms, high-yield grain spawn seeds, and commercial grower training.
             </p>
 
-            <div className="text-xs space-y-2.5 text-surface-cream/90 pt-1">
+            <div className="text-xs space-y-2 text-surface-cream/80 pt-1">
               <div className="flex items-start gap-2.5">
-                <Building2 className="w-4 h-4 text-leaf flex-shrink-0 mt-0.5" />
+                <Building2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span><strong>Shriyap Enterprise</strong></span>
               </div>
               <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-leaf flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <a 
                   href="https://maps.google.com/?q=Basapura+village,+Behind+Taralabalu+school,+Davangere-577001,+Karnataka" 
                   target="_blank" 
@@ -99,41 +140,52 @@ export default function Footer() {
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-leaf flex-shrink-0" />
-                <a href="tel:+917204709870" className="hover:text-white font-medium transition-colors">+91 7204709870</a>
+                <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <a href="tel:+917204709870" className="hover:text-white transition-colors">+91 7204709870</a>
               </div>
               <div className="flex items-center gap-2.5">
-                <WhatsAppIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <a 
-                  href="https://wa.me/917204709870" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-emerald-300 hover:text-emerald-200 font-semibold transition-colors flex items-center gap-1"
-                >
-                  WhatsApp: +91 7204709870 ↗
-                </a>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <InstagramIcon className="w-4 h-4 text-pink-400 flex-shrink-0" />
-                <a 
-                  href="https://www.instagram.com/sporekart" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-pink-300 hover:text-pink-200 font-semibold transition-colors flex items-center gap-1"
-                >
-                  www.instagram.com/sporekart ↗
-                </a>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-leaf flex-shrink-0" />
+                <Mail className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <a href="mailto:support@sporekart.in" className="hover:text-white transition-colors">support@sporekart.in</a>
               </div>
             </div>
+
+            {/* Newsletter Subscription */}
+            <div className="pt-2 max-w-sm">
+              <p className="text-xs text-sage/90 font-medium mb-2">
+                Stay Connected — updates, offers & farm stories:
+              </p>
+              <form onSubmit={handleNewsletterSubmit} className="relative">
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Your email address"
+                    required
+                    className="w-full px-4 py-2 rounded-full bg-forest-800/80 border border-forest-700 text-xs text-white placeholder-sage/60 focus:outline-none focus:border-emerald-400 pr-10 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Subscribe to newsletter"
+                    className="absolute right-1 w-7 h-7 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-colors button-press"
+                  >
+                    {newsletterSubmitted ? <Check className="w-3.5 h-3.5" /> : <Send className="w-3 h-3" />}
+                  </button>
+                </div>
+                {newsletterSubmitted && (
+                  <p className="text-[11px] text-emerald-400 mt-1 font-medium animate-fade-in">
+                    ✓ Subscribed successfully!
+                  </p>
+                )}
+              </form>
+            </div>
           </div>
 
-          {/* Product Categories */}
-          <div>
-            <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">E-Commerce Catalog</h3>
+          {/* Column 2: Product Categories (3 Cols) */}
+          <div className="md:col-span-3 space-y-3">
+            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
+              E-Commerce Catalog
+            </h3>
             <ul className="space-y-2.5 text-xs text-sage">
               <li><Link to="/products" className="hover:text-white transition-colors font-medium text-surface-cream">All Mushroom Products</Link></li>
               <li><Link to="/products/fresh-mushrooms" className="hover:text-white transition-colors">Fresh Button & Oyster Mushrooms</Link></li>
@@ -144,9 +196,11 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Training & Guides */}
-          <div>
-            <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">Training & Guides</h3>
+          {/* Column 3: Training & Guides (2.5 Cols) */}
+          <div className="md:col-span-2 space-y-3">
+            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
+              Training & Guides
+            </h3>
             <ul className="space-y-2.5 text-xs text-sage">
               <li><Link to="/training" className="hover:text-white transition-colors font-medium text-surface-cream">All Training Masterclasses</Link></li>
               <li><Link to="/training/commercial-mushroom-cultivation-masterclass" className="hover:text-white transition-colors">Commercial Cultivation Masterclass</Link></li>
@@ -157,51 +211,52 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Connect & Quick Access */}
-          <div>
-            <h3 className="font-display font-bold text-white text-sm mb-4 uppercase tracking-wider">Connect & Quick Links</h3>
-            <p className="text-xs text-sage/90 leading-relaxed mb-4">
-              Get instant assistance via WhatsApp or follow our farm updates on Instagram. Compliant with FSSAI & National Seeds Policy standards.
+          {/* Column 4: Connect & Quick Access (2.5 Cols) */}
+          <div className="md:col-span-3 space-y-3">
+            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
+              Connect & Quick Links
+            </h3>
+            <p className="text-xs text-sage/90 leading-relaxed mb-3">
+              Instant WhatsApp support and regular farm updates on Instagram.
             </p>
             
-            {/* Social Integration Quick Buttons */}
-            <div className="space-y-2.5 mb-5">
+            {/* Quick Action Badges */}
+            <div className="space-y-2 mb-3">
               <a
                 href="https://wa.me/917204709870"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-level-1 transition-all button-press"
+                className="w-full px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all button-press"
               >
                 <WhatsAppIcon className="w-4 h-4 text-white" />
-                <span>Chat on WhatsApp (+91 7204709870)</span>
+                <span>Chat on WhatsApp</span>
               </a>
 
               <a
                 href="https://www.instagram.com/sporekart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-pink-600 via-purple-600 to-amber-600 hover:opacity-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-level-1 transition-all button-press"
+                className="w-full px-3.5 py-2 bg-gradient-to-r from-pink-600 via-purple-600 to-amber-600 hover:opacity-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all button-press"
               >
                 <InstagramIcon className="w-4 h-4 text-white" />
-                <span>Follow on Instagram (@sporekart)</span>
+                <span>Instagram @sporekart</span>
               </a>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Link to="/about" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">About Us</Link>
-              <Link to="/contact" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Contact Us</Link>
-              <Link to="/orders" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Track Orders</Link>
-              <Link to="/cart" className="px-3 py-1.5 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Cart</Link>
+            <div className="flex flex-wrap gap-1.5">
+              <Link to="/about" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">About Us</Link>
+              <Link to="/sustainability" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Sustainability</Link>
+              <Link to="/contact" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Contact Us</Link>
+              <Link to="/orders" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Track Orders</Link>
+              <Link to="/cart" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Cart</Link>
             </div>
           </div>
+
         </div>
 
-        {/* Copyright & Enterprise Legal Notice with Quick Footer Navigation */}
-        <div className="pt-8 border-t border-forest-800 flex flex-col sm:flex-row items-center justify-between text-xs text-sage/70 gap-4">
-          <div className="space-y-1 text-center sm:text-left">
-            <p>© {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.</p>
-            <p className="text-[11px] text-sage/50">High-yield mushroom grain spawn, fresh gourmet produce, & lab masterclasses.</p>
-          </div>
+        {/* Bottom Bar: Quick Navigation Links + Copyright */}
+        <div className="pt-8 border-t border-forest-800/80 flex flex-col lg:flex-row items-center justify-between text-xs text-sage/70 gap-4">
+          <p>© {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-sage/80">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <span>•</span>
@@ -215,11 +270,14 @@ export default function Footer() {
             <span>•</span>
             <Link to="/mushroom-spawn-guide" className="hover:text-white transition-colors">Spawn Guide</Link>
             <span>•</span>
+            <Link to="/sustainability" className="hover:text-white transition-colors">Sustainability</Link>
+            <span>•</span>
             <Link to="/about" className="hover:text-white transition-colors">About</Link>
             <span>•</span>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
+
       </div>
     </footer>
   );

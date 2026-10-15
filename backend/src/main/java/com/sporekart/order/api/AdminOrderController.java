@@ -36,7 +36,9 @@ public class AdminOrderController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "25") int size
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "status", required = false) OrderStatus status,
+            @RequestParam(value = "includeUnpaid", defaultValue = "false") boolean includeUnpaid
     ) {
         int cappedSize = Math.min(Math.max(1, size), 100);
         Pageable pageable = PageRequest.of(
@@ -44,7 +46,7 @@ public class AdminOrderController {
                 cappedSize,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders(pageable)));
+        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders(pageable, status, includeUnpaid)));
     }
 
     @GetMapping("/{id}")
@@ -83,6 +85,9 @@ public class AdminOrderController {
     public ResponseEntity<byte[]> downloadPackingSlip(@PathVariable("id") UUID id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + id));
+        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException("Packing slip cannot be generated for an unpaid order awaiting payment confirmation.");
+        }
         byte[] pdfBytes = com.sporekart.order.application.PackingSlipPdfGenerator.generatePackingSlipPdf(order);
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();

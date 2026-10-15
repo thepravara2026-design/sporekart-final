@@ -37,6 +37,30 @@ public class CartService {
     private final com.sporekart.promotion.application.PromotionService promotionService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private javax.sql.DataSource dataSource;
+    private volatile Boolean isPostgreSql = null;
+
+    private boolean isPostgres() {
+        if (isPostgreSql == null) {
+            synchronized (this) {
+                if (isPostgreSql == null) {
+                    if (dataSource == null) {
+                        isPostgreSql = false;
+                    } else {
+                        try (java.sql.Connection conn = dataSource.getConnection()) {
+                            String productName = conn.getMetaData().getDatabaseProductName();
+                            isPostgreSql = productName != null && productName.toLowerCase().contains("postgres");
+                        } catch (Exception e) {
+                            isPostgreSql = false;
+                        }
+                    }
+                }
+            }
+        }
+        return Boolean.TRUE.equals(isPostgreSql);
+    }
+
     @Transactional
     public CartResponse getCartResponse(UUID userId, String sessionId) {
         Cart cart = getOrCreateCart(userId, sessionId);
@@ -46,9 +70,11 @@ public class CartService {
     @Transactional
     public Cart getOrCreateCart(UUID userId, String sessionId) {
         if (userId != null) {
-            try {
-                cartRepository.acquireAdvisoryLock("cart_user_" + userId);
-            } catch (Exception ignored) {
+            if (isPostgres()) {
+                try {
+                    cartRepository.acquireAdvisoryLock("cart_user_" + userId);
+                } catch (Exception ignored) {
+                }
             }
 
             java.util.List<Cart> userCarts = cartRepository.findAllByUserIdAndStatusOrderByUpdatedAtDesc(userId, CartStatus.ACTIVE);
@@ -74,9 +100,11 @@ public class CartService {
             }
 
             if (sessionId != null && !sessionId.trim().isEmpty()) {
-                try {
-                    cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
-                } catch (Exception ignored) {
+                if (isPostgres()) {
+                    try {
+                        cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
+                    } catch (Exception ignored) {
+                    }
                 }
 
                 java.util.List<Cart> guestCarts = cartRepository.findAllBySessionIdAndStatusOrderByUpdatedAtDesc(sessionId, CartStatus.ACTIVE);
@@ -104,9 +132,11 @@ public class CartService {
         }
 
         if (sessionId != null && !sessionId.trim().isEmpty()) {
-            try {
-                cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
-            } catch (Exception ignored) {
+            if (isPostgres()) {
+                try {
+                    cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
+                } catch (Exception ignored) {
+                }
             }
 
             java.util.List<Cart> guestCarts = cartRepository.findAllBySessionIdAndStatusOrderByUpdatedAtDesc(sessionId, CartStatus.ACTIVE);

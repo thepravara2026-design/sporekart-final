@@ -516,7 +516,7 @@ export default function DashboardPage({ user, setUser }) {
 
   // Filter Active vs Completed/Cancelled Orders & Incomplete Checkouts
   const activeOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
-    ['PENDING_PAYMENT', 'PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)
+    ['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)
   );
   const historyOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
     ['DELIVERED', 'CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(o.status)

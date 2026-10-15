@@ -100,4 +100,64 @@ describe('FE-12: Order Confirmation & Invoice Rendering Component Tests', () => 
       expect(orderApi.downloadInvoice).toHaveBeenCalledWith('ord-888');
     });
   });
+
+  it('renders pending confirmation state and Complete Payment button when order is in PENDING_PAYMENT state', async () => {
+    const pendingOrderData = {
+      ...mockOrderData,
+      id: 'ord-pending-123',
+      orderNumber: 'ORD-2026-PENDING',
+      status: 'PENDING_PAYMENT',
+      paymentStatus: 'PENDING',
+    };
+    orderApi.getOrderById.mockResolvedValue({
+      data: { success: true, data: pendingOrderData },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/order-confirmation/ord-pending-123']}>
+        <Routes>
+          <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Payment Pending Confirmation')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Payment Confirmed!')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /complete payment now/i })).toBeInTheDocument();
+    expect(screen.getByText('AWAITING PAYMENT')).toBeInTheDocument();
+    expect(screen.getByText('Total Amount Due')).toBeInTheDocument();
+  });
+
+  it('renders confirmed success state when order status is PAID', async () => {
+    const paidOrderData = {
+      ...mockOrderData,
+      id: 'ord-paid-456',
+      orderNumber: 'ORD-2026-PAID',
+      status: 'PAID',
+      paymentStatus: 'PAID',
+      razorpayPaymentId: 'pay_confirmed_123',
+    };
+    orderApi.getOrderById.mockResolvedValue({
+      data: { success: true, data: paidOrderData },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/order-confirmation/ord-paid-456']}>
+        <Routes>
+          <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Payment Confirmed!')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Payment Pending Confirmation')).not.toBeInTheDocument();
+    expect(screen.getByText('Total Amount Paid')).toBeInTheDocument();
+    expect(screen.getByText('pay_confirmed_123')).toBeInTheDocument();
+  });
 });

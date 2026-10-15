@@ -22,10 +22,25 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/initiate-enrollment")
+    public ResponseEntity<ApiResponse<PaymentDtos.InitiatePaymentResponse>> initiateEnrollmentPayment(
+            @Valid @RequestBody PaymentDtos.InitiateEnrollmentPaymentRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        java.util.UUID userId = extractUserId(authentication);
+        if (userId == null) {
+            throw new com.sporekart.shared.application.ForbiddenOperationException("Authentication required to initiate enrollment payment");
+        }
+        PaymentDtos.InitiatePaymentResponse response = paymentService.initiateEnrollmentPayment(request.getEnrollmentId(), userId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<PaymentDtos.VerifyPaymentResponse>> verifyPayment(
-            @Valid @RequestBody PaymentDtos.VerifyPaymentRequest request) {
-        PaymentDtos.VerifyPaymentResponse response = paymentService.verifyPayment(request);
+            @Valid @RequestBody PaymentDtos.VerifyPaymentRequest request,
+            @RequestHeader(name = "X-Session-ID", required = false) String sessionId,
+            org.springframework.security.core.Authentication authentication) {
+        java.util.UUID userId = extractUserId(authentication);
+        PaymentDtos.VerifyPaymentResponse response = paymentService.verifyPayment(request, userId, sessionId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

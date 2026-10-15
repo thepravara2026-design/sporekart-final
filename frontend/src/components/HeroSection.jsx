@@ -1,156 +1,152 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, GraduationCap, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Sprout, ShieldCheck, Leaf, Cpu, ArrowRight } from 'lucide-react';
+
+const TRUST_INDICATORS = [
+  {
+    icon: Sprout,
+    title: 'Natural Freshness',
+    subtitle: '100% Chemical-Free',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Farm to Table',
+    subtitle: 'Traceable Quality',
+  },
+  {
+    icon: Leaf,
+    title: 'Sustainable Practices',
+    subtitle: 'Farming Practices',
+  },
+  {
+    icon: Cpu,
+    title: 'Technology Driven',
+    subtitle: 'Better Yields',
+  },
+];
 
 export default function HeroSection() {
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    // Check if user prefers reduced motion
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mediaQuery.matches) return;
-
-    let animationFrameId;
-
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-      
-      // Calculate smooth normalized mouse offsets (-8px to +8px)
-      const targetX = ((clientX / innerWidth) - 0.5) * 16;
-      const targetY = ((clientY / innerHeight) - 0.5) * 16;
-
-      animationFrameId = requestAnimationFrame(() => {
-        setParallax({ x: targetX, y: targetY });
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
   return (
     <section 
       id="hero" 
-      className="relative w-full mt-3 sm:mt-4 px-4 sm:px-6 lg:px-8"
-      aria-label="Sporekart Hero Banner"
+      className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4"
+      aria-label="Sporekart Agritech Hero Section"
     >
-      <div className="relative w-full min-h-[560px] sm:min-h-[600px] lg:min-h-[660px] rounded-hero overflow-hidden text-white shadow-level-3 flex items-center">
-        {/* LAYER 1: Full-Bleed Hero Visual Canvas */}
-        <div 
-          className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
-          style={{
-            transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)`,
-            transition: 'transform 0.4s ease-out'
-          }}
-        >
-          <img
-            src="/hero-bg.png"
-            alt="Farm Fresh Organic Oyster & Button Mushrooms Sporekart India"
-            width="2000"
-            height="1200"
-            loading="eager"
-            decoding="async"
-            className="w-full h-full object-cover object-[85%_center] lg:object-[right_center] scale-105 animate-ken-burns transition-transform duration-1000"
-          />
-        </div>
+      {/* Soft warm ivory hero container matching GreenSpore reference aesthetic */}
+      <div className="relative w-full rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-[#FAF8F3] via-[#F6F2E8] to-[#EFE8DD] border border-surface-border p-6 sm:p-10 lg:p-12 overflow-hidden shadow-level-1">
+        
+        {/* Ambient natural lighting glows */}
+        <div className="absolute top-0 right-1/4 w-[520px] h-[520px] bg-emerald-100/40 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-amber-100/35 rounded-full blur-[110px] pointer-events-none" />
 
-        {/* LAYER 2: Sophisticated Cinematic Gradient Overlays for Text Readability */}
-        {/* Global ambient dark tone for rich cinematic contrast */}
-        <div className="absolute inset-0 z-1 bg-forest-950/30 pointer-events-none" />
-
-        {/* Desktop & Tablet: Left-to-Right Gradient (Dark on sleft, fading smoothly to 0% transparency on right to expose mushroom imagery) */}
-        <div 
-          className="hidden md:block absolute inset-0 z-2 pointer-events-none" 
-          style={{
-            background: 'linear-gradient(90deg, rgba(38, 90, 4, 0.99) 0%, rgba(4, 137, 4, 1) 0%, rgba(0, 210, 102, 0) 60%, rgba(15, 31, 23, 0.05) 85%, transparent 30%)'
-          }}
-        />
-
-        {/* Mobile: Top-to-Bottom / Radial Gradient for seamless text readability without obscuring visual focus */}
-        <div 
-          className="md:hidden absolute inset-0 z-2 pointer-events-none"
-          style={{
-            background: 'linear-gradient(180deg, rgba(15, 31, 23, 0.95) 0%, rgba(15, 31, 23, 0.85) 60%, rgba(15, 31, 23, 0.40) 100%)'
-          }}
-        />
-
-        {/* Layer 3: Subtle Glowing Ambient Light Accent */}
-        <div className="absolute top-1/4 left-10 w-96 h-96 bg-leaf/15 rounded-full blur-[120px] pointer-events-none z-3" />
-
-        {/* LAYER 4: Existing Sporekart Content Overlaid on Left Portion */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 md:py-20 flex items-center">
-          <div className="w-full max-w-xl lg:max-w-[620px] space-y-6 text-left">
-            {/* 1. Badge */}
-            <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-pill bg-forest-800/80 backdrop-blur-md border border-forest-700/60 text-sage text-xs font-semibold tracking-wide shadow-level-1">
-              <Sparkles className="w-3.5 h-3.5 text-gold animate-pulse shrink-0" />
-              <span>India's Premier Mushroom Agritech &amp; Training Platform</span>
-            </div>
-
-            {/* 2. Main Heading */}
-            <h1 className="animate-fade-up font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-[1.12]">
-              Fresh Mushrooms, <br className="hidden sm:inline" />
-              <span className="text-leaf">Pure Grain Spawn</span> &amp; Certified Training
-            </h1>
-
-            {/* 3. Subheading / Description */}
-            <p className="animate-fade-up text-surface-cream/95 text-base sm:text-lg leading-relaxed max-w-xl font-normal">
-              Sporekart delivers lab-tested high-yield mushroom spawn seeds, fresh button &amp; oyster varieties, DIY home growing kits, and comprehensive commercial cultivation training across India.
-            </p>
-
-            {/* 4. CTA Buttons */}
-            <div className="animate-fade-up flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-              <Link
-                to="/products"
-                className="w-full sm:w-auto btn-primary text-base px-8 py-4 shadow-level-2 flex items-center justify-center gap-2.5 button-press group hover:shadow-level-3 transition-all duration-300"
-              >
-                <Sprout className="w-5 h-5 text-white group-hover:rotate-12 transition-transform duration-300" />
-                <span>Explore Products</span>
-              </Link>
-              <Link
-                to="/training"
-                className="w-full sm:w-auto btn-light text-base px-8 py-4 shadow-level-1 flex items-center justify-center gap-2.5 button-press group hover:shadow-level-2 transition-all duration-300"
-              >
-                <GraduationCap className="w-5 h-5 text-forest-700 group-hover:scale-110 transition-transform duration-300" />
-                <span>Training Workshops</span>
-              </Link>
-            </div>
-
-            {/* 5. Supporting Info Badges */}
-            <div className="animate-fade-up grid grid-cols-3 gap-3 pt-6 border-t border-forest-700/60 text-sage text-xs sm:text-sm font-medium">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-leaf shrink-0" />
-                <span>Lab Tested Spawn</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-leaf shrink-0" />
-                <span>Cold-Chain Express</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-leaf shrink-0" />
-                <span>100% Organic Fresh</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Trust / Quality Card positioned on Right Side over Visual Focus Area */}
-        <div className="hidden lg:block absolute bottom-10 right-12 z-20 max-w-sm animate-fade-in">
-          <div className="p-4 rounded-card bg-forest-950/85 backdrop-blur-md border border-forest-700/60 shadow-level-3 group hover:border-forest-600/80 transition-all duration-300">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-white text-sm tracking-wide">Farm Fresh Organic Mushrooms</h3>
-                <p className="text-xs text-sage mt-0.5">Harvested Daily • Delivered in 24-48 Hours</p>
-              </div>
-              <span className="px-3 py-1 bg-forest-700/60 text-sage text-xs font-bold rounded-pill border border-forest-600/50 shrink-0 shadow-sm">
-                FSSAI Approved
+        {/* Two-Column Hero Content */}
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
+          
+          {/* Left Column: Eyebrow, Main Headline, Description, CTAs, Trust Indicators */}
+          <div className="lg:col-span-6 xl:col-span-7 space-y-5 sm:space-y-6">
+            
+            {/* Eyebrow */}
+            <div className="inline-block">
+              <span className="text-[11px] sm:text-xs font-bold tracking-[0.22em] text-forest-800/85 uppercase font-sans">
+                PREMIUM MUSHROOMS / SUSTAINABLE AGRITECH
               </span>
             </div>
+
+            {/* Main Headline in DM Serif Display */}
+            <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-[58px] xl:text-[66px] text-forest-900 leading-[1.08] tracking-tight">
+              Nature’s Goodness.<br className="hidden sm:inline" /> Grown Smarter.
+            </h1>
+
+            {/* Supporting Description */}
+            <p className="text-typography-secondary text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
+              We bring you farm-fresh mushrooms using thoughtful growing practices and modern agritech, bringing nature’s goodness to your table.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
+              <Link
+                to="/products"
+                className="bg-forest-900 hover:bg-forest-800 text-white font-semibold text-sm sm:text-base px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-level-1 hover-lift transition-all button-press"
+              >
+                <span>Explore Our Products</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                to="/#farm"
+                className="text-forest-900 hover:text-forest-700 font-semibold text-sm sm:text-base px-4 py-3.5 inline-flex items-center gap-2 transition-colors group"
+              >
+                <span>Discover Our Farm</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            {/* 4 Trust Indicators */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 pt-6 border-t border-forest-900/10">
+              {TRUST_INDICATORS.map((ind) => {
+                const Icon = ind.icon;
+                return (
+                  <div key={ind.title} className="flex items-center gap-3">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-forest-900/15 bg-white/80 flex items-center justify-center shrink-0 shadow-sm">
+                      <Icon className="w-5 h-5 text-forest-800" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-forest-900 leading-tight">
+                        {ind.title}
+                      </h4>
+                      <p className="text-[10px] sm:text-xs text-typography-muted leading-tight mt-0.5">
+                        {ind.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
+
+          {/* Right Column: Hero Crate Visual with Sporekart Branding */}
+          <div className="lg:col-span-6 xl:col-span-5 relative w-full flex items-center justify-center">
+            <div className="relative w-full aspect-[16/10] sm:aspect-[16/11] lg:aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-level-2 border border-surface-border/70 group">
+              <img
+                src="/sporekart-hero-crate.jpg"
+                alt="Sporekart farm-fresh gourmet mushrooms in branded wooden crate"
+                width="1280"
+                height="720"
+                loading="eager"
+                decoding="async"
+                className="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+              />
+              {/* Subtle natural lighting gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent pointer-events-none" />
+
+              {/* Handwritten "Fresh from our farms" badge overlay */}
+              <div className="absolute top-4 right-4 sm:top-6 sm:right-6 pointer-events-none text-white select-none text-right drop-shadow-md">
+                <span
+                  className="text-base sm:text-xl md:text-2xl font-normal tracking-wide block italic"
+                  style={{ fontFamily: 'Georgia, serif' }}
+                >
+                  Fresh from<br />our farms
+                </span>
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 ml-auto mt-0.5 text-white/90 drop-shadow"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M8 4c4 0 9 2 9 8m0 0l-3-3m3 3l3-3"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
         </div>
+
       </div>
     </section>
   );

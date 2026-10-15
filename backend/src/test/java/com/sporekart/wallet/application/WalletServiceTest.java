@@ -34,6 +34,12 @@ class WalletServiceTest {
     @Mock
     private com.sporekart.notification.application.NotificationEventService notificationEventService;
 
+    @Mock
+    private WalletTopupIntentRepository topupIntentRepository;
+
+    @Mock
+    private com.sporekart.payment.application.PaymentGateway paymentGateway;
+
     @InjectMocks
     private WalletService walletService;
 
@@ -173,5 +179,73 @@ class WalletServiceTest {
         assertNotNull(refundTxn);
         assertEquals(new BigDecimal("1250.00"), wallet.getAvailableBalance());
         assertEquals(WalletTransactionType.REFUND, refundTxn.getTransactionType());
+    }
+
+    @Test
+    @DisplayName("Should create topup intent with persisted record and gateway order")
+    void testCreateTopupIntent() {
+        com.sporekart.payment.application.PaymentGateway.InitiatePaymentResult initResult =
+                com.sporekart.payment.application.PaymentGateway.InitiatePaymentResult.builder()
+                        .razorpayOrderId("order_topup_123")
+                        .amountInr(new BigDecimal("500.00"))
+                        .currency("INR")
+                        .razorpayKeyId("rzp_test_key")
+                        .build();
+
+        when(paymentGateway.createPaymentOrder(isNull(), anyString(), eq(new BigDecimal("500.00"))))
+                .thenReturn(initResult);
+        when(topupIntentRepository.save(any(WalletTopupIntent.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        WalletDtos.AddMoneyResponse res = walletService.createTopupIntent(userId, new BigDecimal("500.00"));
+
+        assertNotNull(res);
+        assertEquals("order_topup_123", res.getRazorpayOrderId());
+        assertEquals(new BigDecimal("500.00"), res.getAmountInr());
+        verify(topupIntentRepository, times(1)).save(any(WalletTopupIntent.class));
+    }
+
+    @Test
+    @DisplayName("Should verify topup using authoritative intent amount, ignoring client manipulation")
+    void testVerifyTopupAuthoritativeAmount() {
+        WalletTopupIntent intent = WalletTopupIntent.builder()
+                .userId(userId)
+                .amount(new BigDecimal("500.00")) // Authoritative amount
+                .razorpayOrderId("order_topup_123")
+                .transactionReference("TOPUP-123")
+                .status("PENDING")
+                .build();
+
+        when(topupIntentRepository.findByRazorpayOrderId("order_topup_123")).thenReturn(Optional.of(intent));
+        when(paymentGateway.verifySignature("order_topup_123", "pay_123", "valid_sig")).thenReturn(true);
+        when(walletRepository.findByUserIdWithLock(userId)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any(WalletTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        WalletTransaction txn = walletService.verifyTopup(userId, "order_topup_123", "pay_123", "valid_sig");
+
+        assertNotNull(txn);
+        // Balance increases by exactly 500 (authoritative), not any client value
+        assertEquals(new BigDecimal("1500.00"), wallet.getAvailableBalance());
+        assertEquals("COMPLETED", intent.getStatus());
+        assertEquals("pay_123", intent.getRazorpayPaymentId());
+        verify(topupIntentRepository, times(1)).save(intent);
+    }
+
+    @Test
+    @DisplayName("Should reject topup verification when signature is invalid")
+    void testVerifyTopupInvalidSignature() {
+        WalletTopupIntent intent = WalletTopupIntent.builder()
+                .userId(userId)
+                .amount(new BigDecimal("500.00"))
+                .razorpayOrderId("order_topup_123")
+                .status("PENDING")
+                .build();
+
+        when(topupIntentRepository.findByRazorpayOrderId("order_topup_123")).thenReturn(Optional.of(intent));
+        when(paymentGateway.verifySignature("order_topup_123", "pay_123", "bad_sig")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                walletService.verifyTopup(userId, "order_topup_123", "pay_123", "bad_sig")
+        );
     }
 }

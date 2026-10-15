@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, CreditCard, Smartphone, Building2, CheckCircle2, 
-  AlertCircle, Lock, ArrowLeft, Loader2, Sparkles, Wallet
+  AlertCircle, Lock, ArrowLeft, Loader2, Sparkles, Wallet, Check
 } from 'lucide-react';
 import { paymentApi, walletApi } from '../api';
 import { useCart } from '../context/CartContext';
+import { loadRazorpayCheckoutScript } from '../utils/payment';
 
 export default function PaymentPage() {
   const [searchParams] = useSearchParams();
@@ -22,15 +23,13 @@ export default function PaymentPage() {
   const [wallet, setWallet] = useState({ availableBalance: 0 });
   const [useWallet, setUseWallet] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI', 'CARD', 'NETBANKING'
-  const [upiId, setUpiId] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [selectedBank, setSelectedBank] = useState('');
-
   const [processing, setProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  useEffect(() => {
+    // Inject Razorpay Checkout SDK dynamically (PCI-DSS SAQ A compliant)
+    loadRazorpayCheckoutScript();
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -74,6 +73,68 @@ export default function PaymentPage() {
   const remainingGatewayAmount = Math.max(0, orderTotal - walletDeduction);
   const isFullyPaidByWallet = useWallet && walletDeduction >= orderTotal;
 
+  const launchRazorpayModal = async (rzpData) => {
+    await loadRazorpayCheckoutScript();
+    return new Promise((resolve, reject) => {
+      if (!window.Razorpay) {
+        reject(new Error('Razorpay Checkout SDK is still loading. Please retry in a few seconds.'));
+        return;
+      }
+
+      const options = {
+        key: rzpData.razorpayKeyId,
+        amount: Math.round((rzpData.amountInr || remainingGatewayAmount) * 100),
+        currency: rzpData.currency || 'INR',
+        name: 'Sporekart Agritech',
+        description: summary?.title || 'Payment for Order',
+        order_id: rzpData.razorpayOrderId,
+        handler: async (response) => {
+          try {
+            if (type === 'enrollment') {
+              const verifyRes = await paymentApi.verifyEnrollmentPayment(
+                id,
+                'RAZORPAY',
+                response.razorpay_payment_id,
+                response.razorpay_order_id,
+                response.razorpay_signature
+              );
+              resolve(verifyRes);
+            } else {
+              const verifyRes = await paymentApi.verifyPayment(
+                id,
+                response.razorpay_order_id,
+                response.razorpay_payment_id,
+                response.razorpay_signature
+              );
+              resolve(verifyRes);
+            }
+          } catch (err) {
+            reject(err);
+          }
+        },
+        prefill: {
+          name: summary?.customerName || '',
+          email: summary?.customerEmail || '',
+          contact: summary?.customerPhone || '',
+        },
+        modal: {
+          ondismiss: () => {
+            reject(new Error('Payment window closed by user.'));
+          },
+        },
+        theme: {
+          color: '#1a4332',
+        },
+      };
+
+      const rzpInstance = new window.Razorpay(options);
+      rzpInstance.on('payment.failed', (failResponse) => {
+        reject(new Error(failResponse.error?.description || 'Payment failed at gateway'));
+      });
+      rzpInstance.open();
+    });
+  };
+
   const handleProcessPayment = async (e) => {
     e.preventDefault();
     setProcessing(true);
@@ -97,7 +158,7 @@ export default function PaymentPage() {
         }
 
         if (isFullyPaidByWallet) {
-          // If fully paid by wallet, complete checkout immediately!
+          // If fully paid by wallet, complete checkout immediately
           if (type === 'enrollment') {
             await paymentApi.verifyEnrollmentPayment(id, 'SPOREKART_WALLET', `WALLET_TXN_${Date.now()}`);
           } else {
@@ -115,53 +176,48 @@ export default function PaymentPage() {
         }
       }
 
-      // Process remaining amount via Gateway
-      setTimeout(async () => {
-        try {
+      // Initiate Razorpay Order on server
+      let initRes;
+      if (type === 'enrollment') {
+        initRes = await paymentApi.initiateEnrollmentPayment(id);
+      } else {
+        initRes = await paymentApi.initiatePayment(id);
+      }
+
+      const rzpData = initRes.data?.data;
+      if (!rzpData || !rzpData.razorpayOrderId) {
+        throw new Error('Failed to initiate payment session with server.');
+      }
+
+      // If Razorpay SDK is available and public key configured, open authentic Razorpay modal
+      if (window.Razorpay && rzpData.razorpayKeyId && !rzpData.razorpayOrderId.startsWith('order_mock_')) {
+        await launchRazorpayModal(rzpData);
+        await fetchCart();
+        setPaymentSuccess(true);
+        setTimeout(() => {
+          navigate(type === 'enrollment' ? `/training/confirmation/${id}` : `/order-confirmation/${id}`);
+        }, 1200);
+      } else {
+        // Safe simulation fallback for offline local mock mode
+        if (rzpData.razorpayOrderId.startsWith('order_mock_') || rzpData.razorpayOrderId.startsWith('FREE-ENROLL')) {
+          const mockPaymentId = `pay_mock_${Date.now()}`;
           if (type === 'enrollment') {
-            const res = await paymentApi.verifyEnrollmentPayment(
-              id,
-              useWallet ? `MIXED_WALLET_${paymentMethod}` : `MOCK_${paymentMethod}`,
-              `TXN-${Date.now()}`
-            );
-            if (res.data && res.data.success) {
-              setPaymentSuccess(true);
-              setTimeout(() => {
-                navigate(`/training/confirmation/${id}`);
-              }, 1200);
-            } else {
-              setError(res.data?.message || 'Payment verification failed');
-            }
+            await paymentApi.verifyEnrollmentPayment(id, 'MOCK_GATEWAY', mockPaymentId, rzpData.razorpayOrderId, 'mock_signature_bypass');
           } else {
-            const initRes = await paymentApi.initiatePayment(id);
-            const razorpayOrderId = initRes.data?.data?.razorpayOrderId || `order_mock_${Date.now()}`;
-            const mockPaymentId = `pay_mock_${Date.now()}`;
-
-            const verifyRes = await paymentApi.verifyPayment(
-              id,
-              razorpayOrderId,
-              mockPaymentId,
-              'mock_signature_bypass'
-            );
-
-            if (verifyRes.data && verifyRes.data.success) {
-              await fetchCart();
-              setPaymentSuccess(true);
-              setTimeout(() => {
-                navigate(`/order-confirmation/${id}`);
-              }, 1200);
-            } else {
-              setError(verifyRes.data?.message || 'Payment verification failed');
-            }
+            await paymentApi.verifyPayment(id, rzpData.razorpayOrderId, mockPaymentId, 'mock_signature_bypass');
           }
-        } catch (err) {
-          setError(err.response?.data?.error?.message || err.response?.data?.message || 'Payment transaction failed. Please try again.');
-        } finally {
-          setProcessing(false);
+          await fetchCart();
+          setPaymentSuccess(true);
+          setTimeout(() => {
+            navigate(type === 'enrollment' ? `/training/confirmation/${id}` : `/order-confirmation/${id}`);
+          }, 1200);
+        } else {
+          throw new Error('Razorpay Checkout SDK is unavailable. Please check your network connection.');
         }
-      }, 1200);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed processing checkout payment.');
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Payment transaction failed. Please try again.');
+    } finally {
       setProcessing(false);
     }
   };
@@ -200,58 +256,54 @@ export default function PaymentPage() {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-xs font-semibold text-typography-muted hover:text-forest-900 mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-bold text-typography-secondary hover:text-forest-900 transition-colors mb-6 button-press"
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      {/* Header Banner */}
-      <div className="bg-forest-900 text-white border border-forest-800 p-6 sm:p-8 rounded-container mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-level-2">
-        <div>
-          <div className="flex items-center gap-2 text-leaf text-xs font-bold uppercase tracking-wider mb-1">
-            <ShieldCheck className="w-4 h-4" /> 256-Bit Encrypted Gateway
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold">Complete Payment</h1>
-          <p className="text-xs text-sage mt-1">
-            {type === 'enrollment' ? 'Confirm your training course enrollment fee.' : 'Confirm payment for your Sporekart order.'}
-          </p>
-        </div>
-
-        <div className="bg-forest-800 border border-forest-700 p-4 rounded-card text-right shadow-level-1">
-          <span className="text-xs text-sage block font-medium">Total Amount Payable</span>
-          <span className="text-2xl font-bold text-white font-mono">₹{summary?.amountInr?.toLocaleString('en-IN')}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* Payment Methods Section */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        {/* Main Payment Section */}
         <div className="md:col-span-7 space-y-6">
-          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1 space-y-6">
-            {/* Sporekart Wallet Option Card */}
-            <div className="mb-6 p-4 bg-surface-cream rounded-card border border-surface-border space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={useWallet}
-                    onChange={(e) => setUseWallet(e.target.checked)}
-                    disabled={availableBal <= 0}
-                    className="w-4 h-4 text-forest-700 rounded border-surface-border focus:ring-forest-700"
-                  />
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-typography-primary text-xs flex items-center gap-1.5">
-                      <Wallet className="w-4 h-4 text-forest-700" /> Use Sporekart Wallet Balance
-                    </span>
-                    <span className="text-[11px] text-typography-muted block">
-                      Available Balance: <strong className="text-forest-800 font-mono">₹{availableBal.toLocaleString('en-IN')}</strong>
-                    </span>
-                  </div>
-                </label>
+          <div className="bg-surface-white border border-surface-border rounded-container p-6 shadow-level-1">
+            <div className="flex items-center justify-between border-b border-surface-border pb-4 mb-6">
+              <div>
+                <h2 className="text-lg font-bold text-forest-900">Secure Checkout</h2>
+                <p className="text-xs text-typography-secondary">
+                  Complete your {type === 'enrollment' ? 'masterclass booking' : 'order payment'}
+                </p>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-forest-700/10 flex items-center justify-center text-forest-700">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+            </div>
 
-                {useWallet && (
-                  <span className="px-2.5 py-1 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
-                    {isFullyPaidByWallet ? '100% COVERED BY WALLET' : `₹${walletDeduction} APPLIED`}
-                  </span>
+            {/* Wallet Deductions Toggle Card */}
+            <div className="mb-6 p-4 rounded-xl border border-surface-border bg-surface-cream/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-forest-700/10 flex items-center justify-center text-forest-700">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-forest-900">Sporekart Wallet</h4>
+                    <p className="text-[11px] text-typography-muted font-mono">
+                      Balance: ₹{availableBal.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </div>
+
+                {availableBal > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setUseWallet(!useWallet)}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                      useWallet
+                        ? 'bg-forest-700 text-white border-forest-700 shadow-sm'
+                        : 'bg-surface-white text-forest-800 border-surface-border hover:border-forest-700'
+                    }`}
+                  >
+                    {useWallet ? 'Applied' : 'Use Balance'}
+                  </button>
                 )}
               </div>
 
@@ -273,126 +325,43 @@ export default function PaymentPage() {
               )}
             </div>
 
-            <h3 className="text-sm font-bold text-forest-900 mb-4 uppercase tracking-wider">
-              {isFullyPaidByWallet ? 'Confirm Checkout' : 'Select Gateway Payment Method'}
-            </h3>
+            {/* Payment Gateway Information Box (PCI-DSS SAQ A Compliant) */}
+            {!isFullyPaidByWallet && (
+              <div className="space-y-4 mb-6">
+                <div className="p-4 bg-surface-cream rounded-xl border border-surface-border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-forest-900 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-forest-700" /> Razorpay Trusted Payment Gateway
+                    </span>
+                    <span className="text-[10px] bg-green-600/10 text-green-700 border border-green-600/20 font-bold px-2 py-0.5 rounded-full uppercase">
+                      PCI-DSS SAQ A
+                    </span>
+                  </div>
 
-            {/* Payment Method Selector Tabs */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('UPI')}
-                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
-                  paymentMethod === 'UPI'
-                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
-                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
-                }`}
-              >
-                <Smartphone className="w-5 h-5 text-forest-700" />
-                <span>UPI / GPay</span>
-              </button>
+                  <p className="text-xs text-typography-secondary leading-relaxed">
+                    Card details, UPI VPAs, and netbanking credentials are encrypted and processed securely inside the official Razorpay Checkout environment. Sporekart never stores or touches sensitive cardholder data.
+                  </p>
 
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('CARD')}
-                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
-                  paymentMethod === 'CARD'
-                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
-                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
-                }`}
-              >
-                <CreditCard className="w-5 h-5 text-forest-700" />
-                <span>Card</span>
-              </button>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[11px] font-semibold text-typography-primary">
+                    <div className="flex items-center gap-1.5 p-2 bg-surface-white rounded-lg border border-surface-border/70">
+                      <Smartphone className="w-3.5 h-3.5 text-forest-700 shrink-0" />
+                      <span>UPI & QR</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 bg-surface-white rounded-lg border border-surface-border/70">
+                      <CreditCard className="w-3.5 h-3.5 text-forest-700 shrink-0" />
+                      <span>Cards & EMI</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 bg-surface-white rounded-lg border border-surface-border/70">
+                      <Building2 className="w-3.5 h-3.5 text-forest-700 shrink-0" />
+                      <span>Net Banking</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('NETBANKING')}
-                className={`p-3 rounded-card border flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all button-press ${
-                  paymentMethod === 'NETBANKING'
-                    ? 'bg-surface-cream border-forest-700 text-forest-900 shadow-level-1'
-                    : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
-                }`}
-              >
-                <Building2 className="w-5 h-5 text-forest-700" />
-                <span>Net Banking</span>
-              </button>
-            </div>
-
-            {/* Form Fields */}
+            {/* Form & Actions */}
             <form onSubmit={handleProcessPayment} className="space-y-4">
-              {paymentMethod === 'UPI' && (
-                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
-                  <label className="block text-xs font-semibold text-typography-primary">
-                    VPA / UPI ID (Optional for Mock)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. user@okhdfcbank"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
-                  />
-                  <p className="text-[10px] text-typography-muted">Instant authorization using Google Pay, PhonePe, Paytm, or BHIM.</p>
-                </div>
-              )}
-
-              {paymentMethod === 'CARD' && (
-                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
-                  <div>
-                    <label className="block text-xs font-semibold text-typography-primary mb-1">Card Number</label>
-                    <input
-                      type="text"
-                      placeholder="4532 •••• •••• 8892"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-typography-primary mb-1">Expiry (MM/YY)</label>
-                      <input
-                        type="text"
-                        placeholder="12/28"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-typography-primary mb-1">CVV</label>
-                      <input
-                        type="password"
-                        placeholder="•••"
-                        maxLength="4"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 placeholder-typography-muted focus:outline-none focus:border-forest-700 shadow-level-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {paymentMethod === 'NETBANKING' && (
-                <div className="space-y-3 bg-surface-cream p-4 rounded-card border border-surface-border">
-                  <label className="block text-xs font-semibold text-typography-primary">Select Bank</label>
-                  <select
-                    value={selectedBank}
-                    onChange={(e) => setSelectedBank(e.target.value)}
-                    className="w-full bg-surface-white border border-surface-border rounded-input px-4 py-2.5 text-xs text-forest-900 focus:outline-none focus:border-forest-700 shadow-level-1"
-                  >
-                    <option value="">-- Choose Popular Bank --</option>
-                    <option value="HDFC">HDFC Bank</option>
-                    <option value="ICICI">ICICI Bank</option>
-                    <option value="SBI">State Bank of India</option>
-                    <option value="AXIS">Axis Bank</option>
-                    <option value="KOTAK">Kotak Mahindra Bank</option>
-                  </select>
-                </div>
-              )}
-
               {error && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-input text-xs text-rose-700 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
@@ -413,9 +382,13 @@ export default function PaymentPage() {
                   <>
                     <CheckCircle2 className="w-5 h-5 text-white" /> Payment Success! Redirecting...
                   </>
+                ) : isFullyPaidByWallet ? (
+                  <>
+                    <Check className="w-4 h-4 text-white" /> Pay ₹{orderTotal.toLocaleString('en-IN')} with Wallet Balance
+                  </>
                 ) : (
                   <>
-                    <Lock className="w-4 h-4 text-white" /> Pay ₹{summary?.amountInr?.toLocaleString('en-IN')} Securely
+                    <Lock className="w-4 h-4 text-white" /> Pay ₹{remainingGatewayAmount.toLocaleString('en-IN')} via Razorpay
                   </>
                 )}
               </button>
@@ -456,7 +429,7 @@ export default function PaymentPage() {
             <div className="p-3 bg-surface-cream border border-surface-border rounded-input text-[11px] text-typography-secondary flex items-start gap-2">
               <Sparkles className="w-4 h-4 shrink-0 text-forest-700 mt-0.5" />
               <span>
-                Mock Gateway active. Click <strong>Pay Securely</strong> to immediately complete authorization and confirm your order/enrollment.
+                Razorpay 256-bit SSL encrypted gateway integration. Instant authorization and verified order confirmation.
               </span>
             </div>
           </div>

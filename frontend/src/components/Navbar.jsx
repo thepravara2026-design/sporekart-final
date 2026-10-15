@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Sprout, GraduationCap, ShoppingBag, User, X, Menu, ShieldCheck, BookOpen, Info, PhoneCall } from 'lucide-react';
+import { Sprout, ShoppingBag, User, X, Menu, ShieldCheck, Search, ArrowRight } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
 import NotificationCenter from './NotificationCenter';
@@ -45,7 +45,33 @@ export default function Navbar({ user, setUser }) {
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Track scroll position to subtly deepen glass intensity
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Our Products', path: '/products' },
+    { name: 'Our Farm', path: '/#farm' },
+    { name: 'About Us', path: '/about' },
+    { name: 'Sustainability', path: '/sustainability' },
+    { name: 'Training', path: '/training' },
+    { name: 'Blog', path: '/blog' },
+  ];
+
+  const isNavActive = (path) => {
+    if (path === '/') return location.pathname === '/' && !location.hash;
+    if (path.startsWith('/#')) return location.hash === path.substring(1);
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   return (
     <>
@@ -54,108 +80,111 @@ export default function Navbar({ user, setUser }) {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-40 w-full bg-surface-white/95 backdrop-blur-md border-b border-surface-border shadow-level-1 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between min-h-[4.5rem] py-2.5 gap-2 sm:gap-4">
+      {/* Static / Fixed Glass Navigation Header */}
+      <header 
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          isScrolled
+            ? 'bg-surface-white/95 backdrop-blur-xl border-b border-surface-border shadow-level-1'
+            : 'bg-surface-white/90 backdrop-blur-md border-b border-surface-border/80 shadow-sm'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[3.5rem] sm:min-h-[4.25rem] py-1.5 sm:py-2 gap-2 sm:gap-4">
             {/* Logo */}
-            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-2.5 group min-h-[44px] shrink-0">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-forest-700 flex items-center justify-center shadow-level-1 group-hover:bg-forest-800 transition-colors duration-200">
-                <Sprout className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-2 sm:gap-2.5 group min-h-[40px] sm:min-h-[44px] shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-forest-900 to-forest-800 flex items-center justify-center shadow-level-1 group-hover:scale-105 transition-all duration-200 shrink-0">
+                <Sprout className="w-5 h-5 text-white" />
               </div>
-              <div className="hidden sm:block">
-                <span className="font-display font-bold text-xl sm:text-2xl tracking-tight text-forest-900 leading-none block">
+              <div className="flex flex-col justify-center min-w-0">
+                <span className="font-display font-bold text-lg sm:text-2xl tracking-tight text-forest-900 leading-tight block">
                   Spore<span className="text-forest-700">kart</span>
                 </span>
-                <span className="block text-[9px] sm:text-[10px] text-typography-secondary font-semibold tracking-widest uppercase opacity-90 mt-0.5">
-                  India Agritech
+                <span className="hidden min-[400px]:block text-[8px] sm:text-[9px] text-typography-muted font-semibold tracking-wider sm:tracking-widest uppercase mt-0.5 leading-none">
+                  Smart Farming. Healthy Living.
                 </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav aria-label="Primary Navigation" className="hidden lg:flex items-center gap-1 xl:gap-2 font-medium text-xs xl:text-sm text-typography-secondary shrink-0">
-              <Link 
-                to="/products" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/products') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
-              >
-                <Sprout className="w-4 h-4 text-forest-700" /> Products
-              </Link>
-              <Link 
-                to="/training" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/training') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
-              >
-                <GraduationCap className="w-4 h-4 text-forest-700" /> Training
-              </Link>
-              <Link 
-                to="/blog" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/blog') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
-              >
-                <BookOpen className="w-4 h-4 text-forest-700" /> Blog
-              </Link>
-              <Link 
-                to="/about" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/about') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
-              >
-                <Info className="w-4 h-4 text-forest-700" /> About
-              </Link>
-              <Link 
-                to="/contact" 
-                className={`hover:text-forest-700 transition-colors flex items-center gap-1.5 min-h-[40px] px-2.5 xl:px-3.5 py-2 rounded-xl ${isActive('/contact') ? 'text-forest-800 bg-surface-cream font-semibold border border-surface-border' : ''}`}
-              >
-                <PhoneCall className="w-4 h-4 text-forest-700" /> Contact
-              </Link>
+            {/* Desktop Navigation Links (>= 1280px / xl) - Modern Glass Pill Tabs */}
+            <nav aria-label="Primary Navigation" className="hidden xl:flex items-center gap-1 font-sans text-xs font-semibold tracking-wide text-typography-secondary shrink-0 bg-surface-neutral/80 p-1 rounded-full border border-surface-border/60">
+              {navItems.map((item) => {
+                const active = isNavActive(item.path);
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`relative px-3.5 py-1.5 rounded-full transition-all duration-200 ${
+                      active 
+                        ? 'bg-forest-900 text-white font-bold shadow-sm' 
+                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5'
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
             </nav>
 
-            {/* Desktop Global Search Bar */}
-            <div className="hidden md:block flex-1 min-w-[140px] max-w-[220px] xl:max-w-[320px] mx-1 xl:mx-3">
-              <GlobalSearch />
-            </div>
+            {/* Compact Desktop Navigation Links for Large Screens (1024px - 1279px) */}
+            <nav aria-label="Primary Navigation Compact" className="hidden lg:flex xl:hidden items-center gap-0.5 font-sans text-xs font-semibold text-typography-secondary shrink-0 bg-surface-neutral/80 p-1 rounded-full border border-surface-border/60">
+              {navItems.map((item) => {
+                const active = isNavActive(item.path);
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`relative px-2.5 py-1 rounded-full transition-all duration-200 ${
+                      active 
+                        ? 'bg-forest-900 text-white font-bold shadow-sm' 
+                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5'
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {/* Notification Center */}
+            {/* Actions: Search, Account, Cart & Shop Now */}
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* Notification Center (if logged in) */}
               {user && <NotificationCenter user={user} />}
 
-              {/* Cart Button */}
+              {/* Desktop/Tablet Search Toggle Button */}
               <button
-                onClick={openDrawer}
-                className="relative p-2.5 rounded-xl bg-surface-neutral hover:bg-surface-cream border border-surface-border text-typography-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center button-press hover-lift"
-                aria-label={`Shopping cart with ${cart.itemCount} items`}
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                aria-label="Toggle Global Search"
+                className="hidden md:flex p-2 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] items-center justify-center button-press shrink-0"
               >
-                <ShoppingBag className="w-5 h-5 text-forest-700" />
-                {cart.itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gold text-white text-[11px] font-bold rounded-pill flex items-center justify-center shadow-level-1 animate-scale-in">
-                    {cart.itemCount}
-                  </span>
-                )}
+                <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </button>
 
               {/* User Account / Auth */}
               {user ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                   {user.role === 'ROLE_ADMIN' ? (
                     <Link 
                       to="/admin" 
                       aria-label="Admin Control Console" 
-                      className="hidden sm:flex items-center gap-2 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-3.5 py-2 rounded-xl transition-all button-press"
+                      className="flex items-center gap-1.5 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-2.5 sm:px-3 py-1.5 rounded-full transition-all button-press shrink-0"
                     >
-                      <ShieldCheck className="w-4 h-4 text-gold" />
-                      <span>Admin Console</span>
+                      <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+                      <span className="hidden sm:inline">Admin Console</span>
                     </Link>
                   ) : (
                     <Link 
                       to="/dashboard" 
                       aria-label="User Account Dashboard" 
-                      className="hidden sm:flex items-center gap-2 text-xs font-semibold bg-surface-cream hover:bg-surface-border text-forest-900 px-3.5 py-2.5 rounded-xl border border-surface-border transition-all button-press"
+                      className="p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                      title={user.fullName || 'Dashboard'}
                     >
-                      <User className="w-4 h-4 text-forest-700" />
-                      <span className="max-w-[110px] truncate">{user.fullName || 'Dashboard'}</span>
+                      <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                     </Link>
                   )}
                   <button 
                     onClick={handleLogout} 
                     aria-label="Log out of account" 
-                    className="text-xs text-typography-muted hover:text-rose-600 min-h-[44px] px-2.5 transition-colors font-medium"
+                    className="text-xs text-typography-muted hover:text-rose-600 px-2 py-1 transition-colors font-medium hidden sm:inline"
                   >
                     Logout
                   </button>
@@ -163,79 +192,104 @@ export default function Navbar({ user, setUser }) {
               ) : (
                 <button
                   data-testid="desktop-login-btn"
-                  onClick={() => {
-                    console.log('>>> [NAVBAR] Desktop login button clicked!');
-                    setIsAuthModalOpen(true);
-                  }}
+                  onClick={() => setIsAuthModalOpen(true)}
                   aria-label="Login or Sign Up for an Account"
-                  className="btn-primary text-xs sm:text-sm px-4 py-2.5 shrink-0 shadow-level-1"
+                  className="p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                  title="Login / Account"
                 >
-                  Login / Signup
+                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </button>
               )}
+
+              {/* Cart Button */}
+              <button
+                onClick={openDrawer}
+                className="relative p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                aria-label={`Shopping cart with ${cart.itemCount} items`}
+              >
+                <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-forest-900" />
+                {cart.itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-forest-900 text-white text-[10px] sm:text-[11px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {cart.itemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Prominent Shop Now CTA Button */}
+              <Link
+                to="/products"
+                className="hidden sm:inline-flex bg-gradient-to-r from-forest-900 to-forest-800 hover:from-forest-800 hover:to-forest-700 text-white font-medium text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full items-center gap-1.5 transition-all shadow-level-1 hover:shadow-glow button-press shrink-0 ml-0.5 sm:ml-1"
+              >
+                <span>Shop Now</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
 
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-expanded={isMenuOpen}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
-                className="lg:hidden p-2 rounded-xl text-typography-primary bg-surface-neutral hover:bg-surface-cream min-h-[44px] min-w-[44px] flex items-center justify-center border border-surface-border"
+                className="lg:hidden p-1.5 sm:p-2 rounded-full text-typography-primary hover:bg-forest-900/5 min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center shrink-0 ml-0.5 transition-colors"
               >
-                {isMenuOpen ? <X className="w-6 h-6 text-forest-700" /> : <Menu className="w-6 h-6 text-forest-900" />}
+                {isMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6 text-forest-700" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-forest-900" />}
               </button>
             </div>
           </div>
 
+          {/* Desktop/Tablet Collapsible Global Search Drawer */}
+          {isSearchOpen && (
+            <div className="hidden md:block pt-2 pb-3 border-t border-surface-border/60 animate-fade-in">
+              <div className="max-w-2xl mx-auto flex items-center gap-3">
+                <div className="flex-1">
+                  <GlobalSearch />
+                </div>
+                <button
+                  onClick={() => setIsSearchOpen(false)}
+                  className="p-2 text-typography-muted hover:text-typography-primary text-xs font-semibold rounded-lg hover:bg-forest-900/5"
+                  aria-label="Close Search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Mobile Integrated Search Bar */}
-          <div className="md:hidden pb-3 pt-1">
+          <div className="md:hidden pb-2.5 pt-1 border-t border-surface-border/50">
             <GlobalSearch isMobile={true} />
           </div>
         </div>
 
-        {/* Mobile Slide-over Drawer */}
+        {/* Mobile Slide-down Glass Drawer */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-surface-border bg-surface-offwhite/98 backdrop-blur-xl animate-fade-in px-4 py-6 space-y-4 max-h-[85vh] overflow-y-auto shadow-level-2">
-            <nav className="flex flex-col gap-2">
+          <div className="lg:hidden border-t border-surface-border bg-surface-white/98 backdrop-blur-2xl shadow-level-3 px-4 py-5 space-y-4 max-h-[calc(100vh-5rem)] overflow-y-auto animate-fade-in">
+            {/* Quick Action: Shop Now CTA in Mobile Drawer */}
+            <div className="sm:hidden pb-1">
               <Link
                 to="/products"
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/products') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
+                className="w-full bg-forest-900 hover:bg-forest-800 text-white font-semibold text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-level-1 button-press transition-colors"
               >
-                <Sprout className="w-5 h-5 text-forest-700" />
-                <span>Products & Spawn Catalog</span>
+                <span>Shop All Products</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link
-                to="/training"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/training') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
-              >
-                <GraduationCap className="w-5 h-5 text-forest-700" />
-                <span>Workshops & Training</span>
-              </Link>
-              <Link
-                to="/blog"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/blog') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
-              >
-                <BookOpen className="w-5 h-5 text-forest-700" />
-                <span>Agritech Blog</span>
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/about') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
-              >
-                <Info className="w-5 h-5 text-forest-700" />
-                <span>About Sporekart</span>
-              </Link>
-              <Link
-                to="/contact"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl font-semibold text-sm border transition-all ${isActive('/contact') ? 'bg-surface-cream border-forest-700/30 text-forest-900' : 'bg-surface-white border-surface-border text-typography-secondary hover:text-forest-700'}`}
-              >
-                <PhoneCall className="w-5 h-5 text-forest-700" />
-                <span>Support & Contact</span>
-              </Link>
+            </div>
+            <nav className="flex flex-col gap-1.5">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center justify-between p-3.5 rounded-xl font-medium text-sm transition-all ${
+                    isNavActive(item.path)
+                      ? 'bg-surface-cream text-forest-900 font-bold border border-forest-700/20'
+                      : 'text-typography-secondary hover:text-forest-900 hover:bg-surface-neutral'
+                  }`}
+                >
+                  <span>{item.name}</span>
+                  <ArrowRight className="w-4 h-4 text-typography-muted" />
+                </Link>
+              ))}
             </nav>
 
             {user ? (

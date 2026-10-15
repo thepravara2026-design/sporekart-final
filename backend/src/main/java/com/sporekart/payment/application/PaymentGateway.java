@@ -33,6 +33,21 @@ public interface PaymentGateway {
         private String status; // PROCESSED, PENDING
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class GatewayPaymentDetails {
+        private String paymentId;
+        private String orderId;
+        private String status; // "captured", "authorized", "failed"
+        private Long amountPaise;
+        private String currency; // "INR"
+        private String method; // "card", "upi", "netbanking", "wallet"
+        private String email;
+        private String contact;
+    }
+
     InitiatePaymentResult createPaymentOrder(UUID orderId, String orderNumber, BigDecimal amountInr);
 
     boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String signature);
@@ -40,4 +55,8 @@ public interface PaymentGateway {
     boolean verifyWebhookSignature(String rawBody, String signatureHeader);
 
     RefundResult refund(String razorpayPaymentId, BigDecimal amountInr, String reason);
+
+    GatewayPaymentDetails fetchPayment(String razorpayPaymentId);
+
+    boolean isMockMode();
 }

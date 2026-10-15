@@ -93,23 +93,8 @@ public class WalletController {
         if (userId == null) {
             throw new ForbiddenOperationException("Authentication required to add money to wallet");
         }
-        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Topup amount must be greater than zero");
-        }
 
-        String topupRef = "TOPUP-" + System.currentTimeMillis();
-        PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(
-                null, topupRef, request.getAmount()
-        );
-
-        WalletDtos.AddMoneyResponse response = WalletDtos.AddMoneyResponse.builder()
-                .razorpayOrderId(result.getRazorpayOrderId())
-                .amountInr(request.getAmount())
-                .currency(result.getCurrency())
-                .razorpayKeyId(result.getRazorpayKeyId())
-                .transactionReference(topupRef)
-                .build();
-
+        WalletDtos.AddMoneyResponse response = walletService.createTopupIntent(userId, request.getAmount());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -117,35 +102,18 @@ public class WalletController {
     public ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>> verifyAddMoney(
             Authentication authentication,
             @RequestBody WalletDtos.VerifyAddMoneyRequest request,
-            @RequestParam BigDecimal amount
+            @RequestParam(required = false) BigDecimal amount
     ) {
         UUID userId = extractUserId(authentication);
         if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required");
+            throw new ForbiddenOperationException("Authentication required to verify wallet topup");
         }
 
-        boolean validSig = paymentGateway.verifySignature(
+        WalletTransaction txn = walletService.verifyTopup(
+                userId,
                 request.getRazorpayOrderId(),
                 request.getRazorpayPaymentId(),
                 request.getRazorpaySignature()
-        );
-
-        if (!validSig) {
-            throw new IllegalArgumentException("Invalid Razorpay payment signature for wallet topup");
-        }
-
-        WalletTransaction txn = walletService.creditWallet(
-                userId,
-                amount,
-                WalletTransactionType.TOPUP,
-                WalletSourceType.TOPUP,
-                request.getRazorpayPaymentId(),
-                null,
-                null,
-                request.getRazorpayPaymentId(),
-                "Wallet Topup via Razorpay (" + request.getRazorpayPaymentId() + ")",
-                "topup_" + request.getRazorpayPaymentId(),
-                "CUSTOMER_TOPUP"
         );
 
         WalletDtos.WalletTransactionResponse res = WalletDtos.WalletTransactionResponse.builder()

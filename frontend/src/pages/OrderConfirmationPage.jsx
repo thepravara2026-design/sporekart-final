@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   CheckCircle2, PackageCheck, Download, Truck, MapPin, 
-  Calendar, ShoppingBag, ArrowRight, Loader2, FileText
+  Calendar, ShoppingBag, ArrowRight, Loader2, FileText,
+  Clock, AlertCircle, RefreshCw, CreditCard
 } from 'lucide-react';
 import { orderApi } from '../api';
 
@@ -22,13 +23,13 @@ export default function OrderConfirmationPage() {
     }
   }, [orderId]);
 
-  // Polling for webhook payment confirmation if order is in PENDING state
+  // Polling for gateway/webhook payment confirmation if order is in PENDING state
   useEffect(() => {
     let pollInterval;
     let pollCount = 0;
     const maxPolls = 6;
 
-    if (order && (order.status === 'PENDING' || order.paymentStatus === 'PENDING')) {
+    if (order && (order.status === 'PENDING_PAYMENT' || order.status === 'PENDING' || order.paymentStatus === 'PENDING')) {
       setPolling(true);
       pollInterval = setInterval(async () => {
         pollCount += 1;
@@ -37,7 +38,8 @@ export default function OrderConfirmationPage() {
           if (res.data && res.data.success) {
             const updated = res.data.data;
             setOrder(updated);
-            if (updated.status !== 'PENDING' || updated.paymentStatus === 'PAID' || pollCount >= maxPolls) {
+            const confirmed = ['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(updated.status) || updated.paymentStatus === 'PAID';
+            if (confirmed || pollCount >= maxPolls) {
               clearInterval(pollInterval);
               setPolling(false);
             }
@@ -121,22 +123,63 @@ export default function OrderConfirmationPage() {
   }
 
   const shippingAddr = order.shippingAddress;
+  const isPaidOrConfirmed = ['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) || order.paymentStatus === 'PAID';
+  const isPending = order.status === 'PENDING_PAYMENT' || order.status === 'PENDING' || order.paymentStatus === 'PENDING';
+  const isCancelledOrRefunded = ['CANCELLED', 'REFUNDED', 'REFUND_PENDING'].includes(order.status);
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto animate-fade-in text-forest-900">
-      {/* Confirmation Success Header */}
+      {/* Confirmation / Status Header */}
       <div className="text-center space-y-3 mb-10">
-        <div className="w-16 h-16 bg-green-600/10 border border-green-600/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
-          {polling ? <Loader2 className="w-9 h-9 text-forest-700 animate-spin" /> : <CheckCircle2 className="w-10 h-10 text-green-600" />}
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
-          {polling ? 'Syncing Payment Status...' : 'Payment Confirmed!'}
-        </h1>
-        <p className="text-sm text-typography-secondary max-w-md mx-auto">
-          {polling
-            ? `Verifying payment settlement with gateway for order #${order.orderNumber}...`
-            : `Thank you for your purchase. Your order #${order.orderNumber} has been confirmed and is being processed.`}
-        </p>
+        {polling ? (
+          <>
+            <div className="w-16 h-16 bg-blue-500/10 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
+              <Loader2 className="w-9 h-9 text-blue-600 animate-spin" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
+              Syncing Payment Status...
+            </h1>
+            <p className="text-sm text-typography-secondary max-w-md mx-auto">
+              Verifying payment settlement with gateway for order #{order.orderNumber}...
+            </p>
+          </>
+        ) : isPending ? (
+          <>
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
+              <Clock className="w-9 h-9 text-amber-600 animate-pulse" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
+              Payment Pending Confirmation
+            </h1>
+            <p className="text-sm text-typography-secondary max-w-md mx-auto">
+              Your order #{order.orderNumber} is awaiting payment confirmation. Your order will be confirmed and processed once payment is completed.
+            </p>
+          </>
+        ) : isCancelledOrRefunded ? (
+          <>
+            <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
+              <AlertCircle className="w-9 h-9 text-rose-600" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
+              Order {order.status === 'REFUNDED' ? 'Refunded' : 'Cancelled'}
+            </h1>
+            <p className="text-sm text-typography-secondary max-w-md mx-auto">
+              Order #{order.orderNumber} is {order.status.toLowerCase()}. {order.cancellationReason || ''}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 bg-green-600/10 border border-green-600/30 rounded-full flex items-center justify-center mx-auto shadow-level-1">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest-900">
+              Payment Confirmed!
+            </h1>
+            <p className="text-sm text-typography-secondary max-w-md mx-auto">
+              Thank you for your purchase. Your order #{order.orderNumber} has been confirmed and is being processed.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -147,8 +190,14 @@ export default function OrderConfirmationPage() {
               <h3 className="text-sm font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
                 <PackageCheck className="w-4 h-4 text-forest-700" /> Purchased Items ({order.items?.length || 0})
               </h3>
-              <span className="text-xs font-bold text-green-600 bg-green-600/10 border border-green-600/30 px-2.5 py-1 rounded-pill">
-                {order.status || 'PAID'}
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-pill ${
+                isPending
+                  ? 'text-amber-800 bg-amber-500/10 border border-amber-500/30'
+                  : isCancelledOrRefunded
+                  ? 'text-rose-700 bg-rose-500/10 border border-rose-500/30'
+                  : 'text-green-600 bg-green-600/10 border border-green-600/30'
+              }`}>
+                {isPending ? 'PENDING PAYMENT' : (order.status || 'PAID')}
               </span>
             </div>
 
@@ -176,14 +225,31 @@ export default function OrderConfirmationPage() {
                 <span className="text-forest-900 font-mono">₹{order.shippingFeeInr?.toLocaleString('en-IN') || '0'}</span>
               </div>
               <div className="border-t border-surface-border pt-2 flex justify-between font-bold text-sm text-forest-900">
-                <span>Total Amount Paid</span>
+                <span>{isPending ? 'Total Amount Due' : 'Total Amount Paid'}</span>
                 <span className="text-forest-700 font-mono">₹{order.totalAmountInr?.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            {order.status === 'DELIVERED' ? (
+            {isPending ? (
+              <>
+                <button
+                  onClick={() => navigate(`/payment?type=order&id=${order.id}`)}
+                  className="w-full sm:w-auto flex-1 btn-primary text-xs py-3 px-4 flex items-center justify-center gap-2 shadow-level-1"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Complete Payment Now</span>
+                </button>
+                <button
+                  onClick={() => loadOrder(false)}
+                  className="w-full sm:w-auto flex-1 btn-secondary text-xs py-3 px-4 flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4 text-forest-700" />
+                  <span>Check Status Again</span>
+                </button>
+              </>
+            ) : order.status === 'DELIVERED' ? (
               <button
                 onClick={handleDownloadInvoice}
                 disabled={downloadingInvoice}
@@ -241,7 +307,9 @@ export default function OrderConfirmationPage() {
               </div>
               <div className="flex justify-between py-1 border-b border-surface-border">
                 <span className="text-typography-muted">Payment Ref</span>
-                <span className="font-mono text-forest-700 font-semibold">{order.razorpayPaymentId || 'CONFIRMED'}</span>
+                <span className={`font-mono font-semibold ${isPending ? 'text-amber-700' : 'text-forest-700'}`}>
+                  {order.razorpayPaymentId || (isPending ? 'AWAITING PAYMENT' : 'CONFIRMED')}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-typography-muted">Estimated Delivery</span>

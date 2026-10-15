@@ -403,7 +403,10 @@ public class OrderService {
 
         if (isPaidOrder && (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUND_PENDING || newStatus == OrderStatus.REFUNDED)) {
             newStatus = OrderStatus.REFUNDED;
-            if (order.getUserId() != null && order.getTotalAmountInr() != null && order.getTotalAmountInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            // Prevent double wallet refund: if status update was triggered by PaymentService (SYSTEM_REFUND),
+            // PaymentService has already credited or dispatched the refund.
+            boolean alreadyRefundedByPaymentService = "SYSTEM_REFUND".equals(updatedBy) || "PAYMENT_SERVICE".equals(updatedBy);
+            if (!alreadyRefundedByPaymentService && order.getUserId() != null && order.getTotalAmountInr() != null && order.getTotalAmountInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 String walletReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Order Cancellation Refund";
                 try {
                     walletService.processRefundToWallet(
@@ -717,7 +720,23 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<OrderResponse> getAllOrders(org.springframework.data.domain.Pageable pageable) {
-        return orderRepository.findAll(pageable).map(this::mapToResponse);
+        return getAllOrders(pageable, null, false);
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<OrderResponse> getAllOrders(
+            org.springframework.data.domain.Pageable pageable,
+            OrderStatus statusFilter,
+            boolean includeUnpaid
+    ) {
+        if (statusFilter != null) {
+            return orderRepository.findByStatus(statusFilter, pageable).map(this::mapToResponse);
+        }
+        if (includeUnpaid) {
+            return orderRepository.findAll(pageable).map(this::mapToResponse);
+        }
+        // Orders display only after payment confirmation (excluding PENDING_PAYMENT)
+        return orderRepository.findByStatusNot(OrderStatus.PENDING_PAYMENT, pageable).map(this::mapToResponse);
     }
 
     private String buildTrackingUrl(String awbCode) {

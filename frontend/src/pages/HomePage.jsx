@@ -1,24 +1,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, Flame, Star,
-  Building2, Layers, ShieldCheck, HeartHandshake, BookOpen, FileText, 
-  Clock, User, CheckCircle, Users, ChevronRight, HelpCircle, Plus, Minus,
-  ChevronDown, Phone, Mail, MapPin, Send, MessageSquare, Wrench
+  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, 
+  Layers, ShieldCheck, HeartHandshake, Phone, Mail, MapPin, Send, MessageSquare, 
+  Wrench, ChevronRight, HelpCircle, ChevronDown
 } from 'lucide-react';
 import { catalogApi, trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
-import AvailabilityBadge from '../components/AvailabilityBadge';
-import MediaImage from '../components/MediaImage';
 import HeroSection from '../components/HeroSection';
-import LatestCustomerReviews from '../components/LatestCustomerReviews';
-import ProductCard from '../components/ProductCard';
-import ProductGrid from '../components/ProductGrid';
+import MushroomVarietiesSection from '../components/MushroomVarietiesSection';
+import FarmTechnologySection from '../components/FarmTechnologySection';
+import WhyChooseUsSection from '../components/WhyChooseUsSection';
+import TrainingEducationSection from '../components/TrainingEducationSection';
+import SustainabilitySection from '../components/SustainabilitySection';
+import CustomerTestimonialsSection from '../components/CustomerTestimonialsSection';
 import CategoryCarousel from '../components/CategoryCarousel';
-import TrainingCarousel from '../components/TrainingCarousel';
 import TrainingGlimpseCarousel from '../components/TrainingGlimpseCarousel';
-import AboutSection from '../components/AboutSection';
-import BlogSection from '../components/BlogSection';
 import ContactSection from '../components/ContactSection';
 import { useCart } from '../context/CartContext';
 
@@ -64,7 +61,6 @@ const getCategoryIcon = (slug = '', name = '') => {
   return Layers;
 };
 
-
 export default function HomePage({ onAddToCart: propOnAddToCart }) {
   const { addToCart } = useCart();
   const location = useLocation();
@@ -74,7 +70,6 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
   const [loading, setLoading] = useState(true);
 
   const [categories, setCategories] = useState([]);
-  const [selectedVariants, setSelectedVariants] = useState({});
 
   const displayCategories = useMemo(() => {
     if (categories && categories.length > 0) {
@@ -128,7 +123,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
     fetchData();
   }, []);
 
-  // Smooth scroll support for hash navigation (e.g. /#training, /#faq)
+  // Smooth scroll support for hash navigation (e.g. /#farm, /#training, /#sustainability, /#faq)
   useEffect(() => {
     if (location.hash) {
       const targetId = location.hash.replace('#', '');
@@ -140,13 +135,6 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       }
     }
   }, [location]);
-
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    if (contactFormData.name && contactFormData.emailOrPhone) {
-      setContactSubmitted(true);
-    }
-  };
 
   const FAQS = [
     {
@@ -188,7 +176,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
   };
 
   return (
-    <div className="space-y-20 pb-20 animate-fade-in text-typography-primary">
+    <div className="space-y-12 sm:space-y-16 pb-20 animate-fade-in text-typography-primary">
       <SeoHead
         title="Sporekart — Fresh Mushrooms, Pure Grain Spawn & Certified Training in India"
         description="India's leading platform for organic fresh button & oyster mushrooms, 1st generation grain spawn seeds, indoor DIY growing kits, and certified commercial grower workshops."
@@ -196,50 +184,45 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         structuredData={websiteSchema}
       />
 
-      {/* 1. HERO SECTION */}
+      {/* SECTION B: HERO SECTION */}
       <HeroSection />
 
-      {/* 2. CATEGORY SECTION */}
+      {/* SECTION C: MUSHROOM VARIETIES SHOWCASE */}
+      <MushroomVarietiesSection />
+
+      {/* SECTION D: OUR FARM AND TECHNOLOGY */}
+      <div id="about">
+        <FarmTechnologySection />
+      </div>
+
+      {/* SECTION E: WHY CHOOSE SPOREKART */}
+      <WhyChooseUsSection />
+
+      {/* SECTION F: TRAINING AND EDUCATION */}
+      <div id="training" className="space-y-10">
+        <TrainingEducationSection />
+        
+        
+        {glimpses.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <TrainingGlimpseCarousel glimpses={glimpses} />
+          </div>
+        )}
+      </div>
+
+      {/* SECTION G: SUSTAINABILITY COMMITMENT */}
+      <SustainabilitySection />
+
+      {/* SECTION H: CUSTOMER TESTIMONIALS */}
+      <CustomerTestimonialsSection />
+
+      {/* CATEGORY EXPLORATION & LIVE CATALOG SECTION */}
       <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <CategoryCarousel categories={displayCategories} />
       </section>
 
-      {/* 3. PRODUCTS SECTION */}
-      <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-surface-white p-4 rounded-2xl animate-pulse h-64 border border-surface-border"></div>
-            ))}
-          </div>
-        ) : (
-          <ProductGrid
-            title="Featured Products & Seeds"
-            subtitle="High-demand laboratory-certified mushroom products available across India"
-            products={[...products].sort((a, b) => Boolean(b.isPopular) - Boolean(a.isPopular))}
-            itemsPerPage={8}
-            onAddToCart={propOnAddToCart}
-          />
-        )}
-      </section>
 
-      {/* 4. TRAINING SECTION */}
-      <section id="training" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <TrainingCarousel courses={courses} />
-        <TrainingGlimpseCarousel glimpses={glimpses} />
-      </section>
-
-      {/* 5. ABOUT SECTION */}
-      <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AboutSection showLearnMore={true} />
-      </section>
-
-      {/* 6. BLOGS SECTION */}
-      <section id="blogs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <BlogSection limit={3} />
-      </section>
-
-      {/* 7. FAQ SECTION */}
+      {/* FAQ SECTION */}
       <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-surface-white rounded-hero p-8 sm:p-12 border border-surface-border shadow-level-1 space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -250,9 +233,6 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-forest-900">
               Frequently Asked Questions
             </h2>
-            <p className="text-typography-secondary text-sm">
-              Everything you need to know about spawn ordering, cold-chain delivery, masterclasses, and grower buyback support.
-            </p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-4">
@@ -297,10 +277,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         </div>
       </section>
 
-      {/* 7.5. LATEST CUSTOMER REVIEWS SECTION */}
-      <LatestCustomerReviews />
-
-      {/* 8. CONTACT SECTION */}
+      {/* CONTACT & ENTERPRISE SECTION */}
       <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ContactSection />
       </section>

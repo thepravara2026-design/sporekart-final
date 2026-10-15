@@ -2,11 +2,12 @@ package com.sporekart.order.infrastructure;
 
 import com.sporekart.order.domain.Order;
 import com.sporekart.order.domain.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +35,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByStatus(OrderStatus status);
 
+    Page<Order> findByStatusNot(OrderStatus status, Pageable pageable);
+
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
     @Query("""
         SELECT pv.product.id, SUM(oi.quantity) as totalSales
         FROM OrderItem oi
@@ -46,9 +51,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     """)
     List<Object[]> findTopSellingProductIds();
 
-    @Query("SELECT COALESCE(SUM(o.totalAmountInr), 0) FROM Order o WHERE o.status NOT IN (com.sporekart.order.domain.OrderStatus.CANCELLED)")
+    @Query("SELECT COALESCE(SUM(o.totalAmountInr), 0) FROM Order o WHERE o.status IN (com.sporekart.order.domain.OrderStatus.PAID, com.sporekart.order.domain.OrderStatus.CONFIRMED, com.sporekart.order.domain.OrderStatus.PROCESSING, com.sporekart.order.domain.OrderStatus.SHIPPED, com.sporekart.order.domain.OrderStatus.DELIVERED)")
     java.math.BigDecimal calculateTotalRevenueInr();
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.status IN (com.sporekart.order.domain.OrderStatus.PENDING_PAYMENT, com.sporekart.order.domain.OrderStatus.PAID, com.sporekart.order.domain.OrderStatus.CONFIRMED, com.sporekart.order.domain.OrderStatus.PROCESSING, com.sporekart.order.domain.OrderStatus.SHIPPED)")
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.status IN (com.sporekart.order.domain.OrderStatus.PAID, com.sporekart.order.domain.OrderStatus.CONFIRMED, com.sporekart.order.domain.OrderStatus.PROCESSING, com.sporekart.order.domain.OrderStatus.SHIPPED)")
     Long countActiveOrders();
 }

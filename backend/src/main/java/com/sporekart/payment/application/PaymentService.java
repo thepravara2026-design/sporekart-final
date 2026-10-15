@@ -77,11 +77,14 @@ public class PaymentService {
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentDtos.VerifyPaymentResponse verifyPayment(PaymentDtos.VerifyPaymentRequest request) {
-        boolean validSignature = paymentGateway.verifySignature(
-                request.getRazorpayOrderId(),
-                request.getRazorpayPaymentId(),
-                request.getRazorpaySignature()
-        );
+        return verifyPayment(request, null, null);
+    }
+
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public PaymentDtos.VerifyPaymentResponse verifyPayment(
+            PaymentDtos.VerifyPaymentRequest request,
+            UUID callerUserId,
+            String callerSessionId) {
 
         // Source of truth for order association is DB Payment entity linked to razorpayOrderId
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
@@ -96,6 +99,75 @@ public class PaymentService {
             log.error("POTENTIAL FRAUD / MISMATCH ATTEMPT: Client provided orderId={} does not match payment record orderId={} for razorpayOrderId={}",
                     request.getOrderId(), targetOrderId, request.getRazorpayOrderId());
             throw new IllegalArgumentException("Payment verification failed: Mismatched order reference");
+        }
+
+        // Idempotency check: if already captured, return success immediately without duplicate inventory processing
+        if (payment.getStatus() == PaymentStatus.CAPTURED) {
+            log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(), targetOrderId);
+            return PaymentDtos.VerifyPaymentResponse.builder()
+                    .isSuccess(true)
+                    .message("Payment already verified")
+                    .orderId(targetOrderId)
+                    .build();
+        }
+
+        // Caller ownership verification (if caller context provided)
+        if (callerUserId != null || callerSessionId != null) {
+            OrderResponse order = orderService.getOrderById(targetOrderId);
+            if (order.getUserId() != null) {
+                if (callerUserId == null || !callerUserId.equals(order.getUserId())) {
+                    log.warn("Payment verification denied: Authenticated user {} is not owner of order {}", callerUserId, targetOrderId);
+                    throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
+                }
+            } else if (order.getSessionId() != null) {
+                if (callerSessionId != null && !callerSessionId.equals(order.getSessionId())) {
+                    log.warn("Payment verification denied: Guest session {} does not match order session {}", callerSessionId, order.getSessionId());
+                    throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
+                }
+            }
+        }
+
+        boolean validSignature = paymentGateway.verifySignature(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature()
+        );
+
+        // Authoritative server-to-server gateway check
+        PaymentGateway.GatewayPaymentDetails gatewayDetails = paymentGateway.fetchPayment(request.getRazorpayPaymentId());
+        if (gatewayDetails != null) {
+            if (!paymentGateway.isMockMode()) {
+                if (!"captured".equalsIgnoreCase(gatewayDetails.getStatus()) && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                    log.error("Gateway status verification failed: status is {} for paymentId={}", gatewayDetails.getStatus(), request.getRazorpayPaymentId());
+                    validSignature = false;
+                }
+                if (gatewayDetails.getAmountPaise() != null && payment.getAmountInr() != null) {
+                    long expectedPaise = payment.getAmountInr().multiply(new BigDecimal("100")).longValue();
+                    if (gatewayDetails.getAmountPaise() != expectedPaise) {
+                        log.error("Gateway amount mismatch: received {} paise, expected {} paise", gatewayDetails.getAmountPaise(), expectedPaise);
+                        validSignature = false;
+                    }
+                }
+                if (gatewayDetails.getCurrency() != null && !"INR".equalsIgnoreCase(gatewayDetails.getCurrency())) {
+                    log.error("Gateway currency mismatch: received {}, expected INR", gatewayDetails.getCurrency());
+                    validSignature = false;
+                }
+                if (gatewayDetails.getOrderId() != null && !gatewayDetails.getOrderId().equals(request.getRazorpayOrderId())) {
+                    log.error("Gateway order ID mismatch: gateway order {} != expected order {}", gatewayDetails.getOrderId(), request.getRazorpayOrderId());
+                    validSignature = false;
+                }
+            } else {
+                // In mock mode: respect test status/amount flags if simulated
+                if ("failed".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                    validSignature = false;
+                }
+                if (gatewayDetails.getAmountPaise() != null && payment.getAmountInr() != null) {
+                    long expectedPaise = payment.getAmountInr().multiply(new BigDecimal("100")).longValue();
+                    if (gatewayDetails.getAmountPaise() != expectedPaise) {
+                        validSignature = false;
+                    }
+                }
+            }
         }
 
         payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
@@ -136,7 +208,7 @@ public class PaymentService {
             PaymentEvent event = PaymentEvent.builder()
                     .payment(payment)
                     .eventType("PAYMENT_FAILED_INVALID_SIGNATURE")
-                    .eventDataJson("{\"reason\":\"Invalid signature\"}")
+                    .eventDataJson("{\"reason\":\"Invalid signature or gateway verification failure\"}")
                     .createdBy("FRONTEND_VERIFY")
                     .build();
             payment.addEvent(event);
@@ -171,11 +243,16 @@ public class PaymentService {
             }
 
             JsonNode payload = root.path("payload").path("payment").path("entity");
-            String razorpayOrderId = payload.path("order_id").asText();
-            String razorpayPaymentId = payload.path("id").asText();
+            String razorpayOrderId = payload.path("order_id").asText("");
+            String razorpayPaymentId = payload.path("id").asText("");
 
-            Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
-                    .orElseGet(() -> paymentRepository.findByRazorpayPaymentId(razorpayPaymentId).orElse(null));
+            Payment payment = null;
+            if (!razorpayOrderId.trim().isEmpty()) {
+                payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId).orElse(null);
+            }
+            if (payment == null && !razorpayPaymentId.trim().isEmpty()) {
+                payment = paymentRepository.findByRazorpayPaymentId(razorpayPaymentId).orElse(null);
+            }
 
             if ("payment.captured".equalsIgnoreCase(eventType) || "order.paid".equalsIgnoreCase(eventType)) {
                 if (payment != null) {
@@ -213,6 +290,30 @@ public class PaymentService {
                         orderService.confirmOrderInventory(order.getId());
                     }
                 }
+
+                // Handle training enrollment if associated with this payment
+                if (payment != null && payment.getOrderId() == null && payment.getEvents() != null) {
+                    UUID enrollmentId = payment.getEvents().stream()
+                            .filter(e -> "ENROLLMENT_PAYMENT_INITIATED".equals(e.getEventType()))
+                            .findFirst()
+                            .map(e -> {
+                                try {
+                                    return UUID.fromString(objectMapper.readTree(e.getEventDataJson()).path("enrollmentId").asText());
+                                } catch (Exception ex) {
+                                    return null;
+                                }
+                            })
+                            .orElse(null);
+
+                    if (enrollmentId != null) {
+                        try {
+                            trainingService.confirmEnrollmentPayment(enrollmentId, razorpayPaymentId);
+                            log.info("Confirmed training enrollment {} via webhook", enrollmentId);
+                        } catch (Exception ex) {
+                            log.error("Failed to confirm training enrollment {} from webhook: {}", enrollmentId, ex.getMessage());
+                        }
+                    }
+                }
             } else if ("payment.failed".equalsIgnoreCase(eventType)) {
                 if (payment != null && payment.getStatus() != PaymentStatus.FAILED) {
                     payment.setStatus(PaymentStatus.FAILED);
@@ -231,6 +332,36 @@ public class PaymentService {
                     }
                     paymentRepository.save(payment);
                 }
+            } else if ("refund.processed".equalsIgnoreCase(eventType) || "refund.failed".equalsIgnoreCase(eventType)) {
+                JsonNode refundNode = root.path("payload").path("refund").path("entity");
+                String refundId = refundNode.path("id").asText();
+                String refPaymentId = refundNode.path("payment_id").asText(razorpayPaymentId);
+
+                Payment refPayment = payment;
+                if (refPayment == null && refPaymentId != null && !refPaymentId.isBlank()) {
+                    refPayment = paymentRepository.findByRazorpayPaymentId(refPaymentId).orElse(null);
+                }
+
+                if (refPayment != null && "refund.processed".equalsIgnoreCase(eventType)) {
+                    refPayment.setStatus(PaymentStatus.REFUNDED);
+                    paymentRepository.save(refPayment);
+                }
+
+                try {
+                    PaymentEvent event = PaymentEvent.builder()
+                            .payment(refPayment)
+                            .eventType(eventType)
+                            .eventId(eventId)
+                            .eventDataJson(rawBody)
+                            .createdBy("RAZORPAY_WEBHOOK")
+                            .build();
+                    paymentEventRepository.save(event);
+                } catch (org.springframework.dao.DataIntegrityViolationException dive) {
+                    log.warn("Concurrent duplicate refund webhook event ID: {}", eventId);
+                    return "Webhook event already processed (idempotent ignore)";
+                }
+
+                log.info("Processed webhook {} for refund ID {} on payment {}", eventType, refundId, refPaymentId);
             }
 
             return "Webhook processed successfully: " + eventType;
@@ -374,6 +505,56 @@ public class PaymentService {
         }
     }
 
+    @Transactional
+    public PaymentDtos.InitiatePaymentResponse initiateEnrollmentPayment(UUID enrollmentId, UUID userId) {
+        if (enrollmentId == null) {
+            throw new IllegalArgumentException("Enrollment ID is required");
+        }
+        com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
+        if (userId == null || !userId.equals(enrollment.getUserId())) {
+            throw new ForbiddenOperationException("Access denied: You are not authorized to initiate payment for this enrollment");
+        }
+
+        BigDecimal feeInr = enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO;
+        if (feeInr.compareTo(BigDecimal.ZERO) <= 0) {
+            return PaymentDtos.InitiatePaymentResponse.builder()
+                    .razorpayOrderId("FREE-ENROLL-" + enrollment.getId())
+                    .amountInr(BigDecimal.ZERO)
+                    .currency("INR")
+                    .razorpayKeyId(null)
+                    .orderId(null)
+                    .build();
+        }
+
+        String receipt = "ENROLL-" + enrollment.getId();
+        PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(null, receipt, feeInr);
+
+        Payment payment = Payment.builder()
+                .orderId(null)
+                .razorpayOrderId(result.getRazorpayOrderId())
+                .amountInr(feeInr)
+                .currency(result.getCurrency())
+                .status(PaymentStatus.INITIATED)
+                .build();
+
+        PaymentEvent event = PaymentEvent.builder()
+                .payment(payment)
+                .eventType("ENROLLMENT_PAYMENT_INITIATED")
+                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"amount\":\"" + feeInr + "\"}")
+                .createdBy("CUSTOMER")
+                .build();
+        payment.addEvent(event);
+        paymentRepository.save(payment);
+
+        return PaymentDtos.InitiatePaymentResponse.builder()
+                .razorpayOrderId(result.getRazorpayOrderId())
+                .amountInr(feeInr)
+                .currency(result.getCurrency())
+                .razorpayKeyId(result.getRazorpayKeyId())
+                .orderId(null)
+                .build();
+    }
+
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request) {
         return verifyEnrollmentPayment(request, null);
@@ -393,36 +574,101 @@ public class PaymentService {
             throw new ForbiddenOperationException("Access denied: You are not authorized to process payment for this training enrollment");
         }
 
-        String txRef = request.getTransactionReference();
-        if (txRef == null || txRef.trim().isEmpty()) {
-            throw new IllegalArgumentException("Transaction reference is required for payment verification");
+        // Idempotency: if already confirmed, return success
+        if (enrollment.getStatus() == com.sporekart.training.domain.EnrollmentStatus.CONFIRMED) {
+            return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
+                    .isSuccess(true)
+                    .message("Training enrollment already confirmed")
+                    .enrollmentId(enrollment.getId())
+                    .paymentReference(enrollment.getPaymentReference())
+                    .build();
         }
 
-        Payment payment = Payment.builder()
-                .orderId(null)
-                .razorpayOrderId("ENROLLMENT-" + enrollment.getId())
-                .razorpayPaymentId(txRef)
-                .amountInr(enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO)
-                .currency("INR")
-                .status(PaymentStatus.CAPTURED)
-                .build();
+        BigDecimal feeInr = enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO;
+        String rzpOrderId = request.getRazorpayOrderId();
+        String rzpPaymentId = request.getRazorpayPaymentId() != null ? request.getRazorpayPaymentId() : request.getTransactionReference();
+        String signature = request.getRazorpaySignature();
+
+        if (feeInr.compareTo(BigDecimal.ZERO) <= 0) {
+            // Free enrollment bypass/confirmation
+            String ref = (rzpPaymentId != null && !rzpPaymentId.trim().isEmpty()) ? rzpPaymentId : "FREE_ENROLLMENT";
+            com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(enrollment.getId(), ref);
+            return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
+                    .isSuccess(true)
+                    .message("Free training enrollment confirmed")
+                    .enrollmentId(confirmedEnrollment.getId())
+                    .paymentReference(ref)
+                    .build();
+        }
+
+        // Paid course enrollment:
+        if (paymentGateway.isMockMode()) {
+            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Transaction reference is required for payment verification");
+            }
+            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
+                rzpOrderId = "ENROLLMENT-" + enrollment.getId();
+            }
+            if (signature == null || signature.trim().isEmpty()) {
+                signature = "mock_signature";
+            }
+        } else {
+            // Production / non-mock mode: strictly require all Razorpay parameters
+            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Order ID is required for paid enrollment verification");
+            }
+            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Payment ID is required for paid enrollment verification");
+            }
+            if (signature == null || signature.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Signature is required for paid enrollment verification");
+            }
+            boolean validSig = paymentGateway.verifySignature(rzpOrderId, rzpPaymentId, signature);
+            if (!validSig) {
+                log.error("Invalid signature on enrollment payment. Order: {}, Payment: {}", rzpOrderId, rzpPaymentId);
+                throw new IllegalArgumentException("Invalid Razorpay payment signature for training enrollment");
+            }
+        }
+
+        // Look up or link the Payment entity
+        Optional<Payment> existingPaymentOpt = paymentRepository.findByRazorpayOrderId(rzpOrderId);
+        Payment payment;
+        if (existingPaymentOpt.isPresent()) {
+            payment = existingPaymentOpt.get();
+            if (payment.getAmountInr().compareTo(feeInr) < 0) {
+                throw new IllegalArgumentException("Payment amount is less than required training course fee");
+            }
+            payment.setRazorpayPaymentId(rzpPaymentId);
+            payment.setRazorpaySignature(signature);
+            payment.setStatus(PaymentStatus.CAPTURED);
+        } else {
+            payment = Payment.builder()
+                    .orderId(null)
+                    .razorpayOrderId(rzpOrderId)
+                    .razorpayPaymentId(rzpPaymentId)
+                    .razorpaySignature(signature)
+                    .amountInr(feeInr)
+                    .currency("INR")
+                    .status(PaymentStatus.CAPTURED)
+                    .build();
+        }
 
         PaymentEvent event = PaymentEvent.builder()
                 .payment(payment)
                 .eventType("ENROLLMENT_PAYMENT_CAPTURED")
-                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"paymentReference\":\"" + txRef + "\"}")
+                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"paymentReference\":\"" + rzpPaymentId + "\"}")
                 .createdBy("FRONTEND_ENROLLMENT_VERIFY")
                 .build();
         payment.addEvent(event);
         paymentRepository.save(payment);
 
-        com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), txRef);
+        com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), rzpPaymentId);
 
         return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
                 .isSuccess(true)
                 .message("Training enrollment payment successful")
                 .enrollmentId(confirmedEnrollment.getId())
-                .paymentReference(txRef)
+                .paymentReference(rzpPaymentId)
                 .build();
     }
 }

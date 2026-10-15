@@ -168,11 +168,19 @@ export const reviewApi = {
 
 export const paymentApi = {
   initiatePayment: (orderId) => api.post('/payment/initiate', { orderId }),
+  initiateEnrollmentPayment: (enrollmentId) => api.post('/payment/initiate-enrollment', { enrollmentId }),
   verifyPayment: (orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature) =>
     api.post('/payment/verify', { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature }),
   getPaymentSummary: (type, id) => api.get('/payment/summary', { params: { type, id } }),
-  verifyEnrollmentPayment: (enrollmentId, paymentMethod, transactionReference) =>
-    api.post('/payment/verify-enrollment', { enrollmentId, paymentMethod, transactionReference }),
+  verifyEnrollmentPayment: (enrollmentId, paymentMethod, transactionReference, razorpayOrderId, razorpaySignature) =>
+    api.post('/payment/verify-enrollment', {
+      enrollmentId,
+      paymentMethod,
+      transactionReference,
+      razorpayPaymentId: transactionReference,
+      razorpayOrderId,
+      razorpaySignature,
+    }),
 };
 
 export const shippingApi = {

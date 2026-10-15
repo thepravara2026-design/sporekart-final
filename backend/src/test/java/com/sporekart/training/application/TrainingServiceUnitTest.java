@@ -51,6 +51,24 @@ public class TrainingServiceUnitTest {
     private CertificateRepository certificateRepository;
 
     @Mock
+    private TrainingReviewRepository trainingReviewRepository;
+
+    @Mock
+    private TrainingGlimpseRepository trainingGlimpseRepository;
+
+    @Mock
+    private com.sporekart.identity.infrastructure.UserRepository userRepository;
+
+    @Mock
+    private com.sporekart.wallet.application.WalletService walletService;
+
+    @Mock
+    private com.sporekart.promotion.application.PromotionService promotionService;
+
+    @Mock
+    private com.sporekart.notification.application.NotificationEventService notificationEventService;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks

@@ -60,62 +60,73 @@ export default function CategoryCarousel({ categories = [], className = '' }) {
         </div>
       </div>
 
-      {/* Creative Horizontal Carousel Track */}
+      {/* Creative Circular Category Track */}
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3.5 sm:gap-5 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0"
+        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-4 sm:gap-6 md:gap-8 pb-4 pt-2 -mx-4 px-4 sm:mx-0 sm:px-2 items-start"
       >
         {categories.map((cat, idx) => {
           const IconComp = cat.IconComp || Layers;
-          const bgGradients = [
-            'from-emerald-900/90 via-forest-900/80 to-forest-950',
-            'from-amber-900/90 via-stone-900/80 to-stone-950',
-            'from-teal-900/90 via-emerald-950/80 to-stone-950',
-            'from-purple-900/90 via-indigo-950/80 to-slate-950',
-            'from-stone-900/90 via-forest-950/80 to-slate-950',
+          const ringGradients = [
+            'from-forest-800 via-leaf to-gold',
+            'from-amber-700 via-gold to-forest-800',
+            'from-emerald-800 via-leaf to-teal-700',
+            'from-forest-900 via-moss to-leaf',
+            'from-soil via-gold to-forest-800',
           ];
-          const gradientStyle = bgGradients[idx % bgGradients.length];
+          const ringGradient = ringGradients[idx % ringGradients.length];
 
           return (
             <Link
               key={cat.id || cat.slug}
               to={`/products/${cat.slug}`}
-              className="w-[160px] xs:w-[180px] sm:w-[220px] shrink-0 snap-start relative rounded-2xl overflow-hidden group shadow-level-2 hover:shadow-level-3 transition-all duration-300 border border-surface-border/80 flex flex-col justify-between h-[210px] sm:h-[240px]"
+              className="w-[120px] sm:w-[150px] md:w-[170px] shrink-0 snap-start flex flex-col items-center text-center group focus:outline-none transition-transform duration-300"
             >
-              {/* Background Thumbnail Image with Gradient Overlay */}
-              <div className="absolute inset-0 z-0">
-                <MediaImage
-                  src={cat.imgUrl}
-                  alt={cat.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-90"
-                />
-                <div className={`absolute inset-0 bg-gradient-to-t ${gradientStyle} opacity-85 group-hover:opacity-75 transition-opacity duration-300`} />
-              </div>
+              {/* Circular Card Graphic with Concentric Rings */}
+              <div className="relative">
+                {/* Outer Ambient Glow Effect on Hover */}
+                <div className="absolute inset-0 rounded-full blur-md bg-leaf/20 group-hover:bg-gold/30 transition-all duration-500 scale-95 group-hover:scale-105 pointer-events-none" />
 
-              {/* Top Badge & Icon */}
-              <div className="relative z-10 p-3.5 flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-white group-hover:text-forest-900 transition-all duration-300 shadow-sm">
-                  <IconComp className="w-5 h-5" />
+                {/* Gradient Ring Frame */}
+                <div className={`relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full p-1 sm:p-1.5 bg-gradient-to-tr ${ringGradient} shadow-level-2 group-hover:shadow-glow transition-all duration-300 transform group-hover:scale-105 group-hover:-rotate-1`}>
+                  {/* Inner White Bezel */}
+                  <div className="w-full h-full rounded-full p-0.5 sm:p-1 bg-surface-white overflow-hidden shadow-inner">
+                    {/* Inner Circular Image Container */}
+                    <div className="w-full h-full rounded-full overflow-hidden relative bg-gradient-to-br from-forest-800 to-forest-950 flex items-center justify-center">
+                      {/* Artistic Botanical Icon Watermark if image is loading or blocked by network */}
+                      <IconComp className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-leaf/40 absolute transition-transform duration-500 group-hover:scale-110 group-hover:text-gold/50" />
+
+                      <img
+                        src={cat.imgUrl}
+                        alt={cat.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full rounded-full object-cover group-hover:scale-115 transition-transform duration-700 ease-out brightness-95 group-hover:brightness-105 relative z-1"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      {/* Subtle Vignette Gradient for Depth */}
+                      <div className="absolute inset-0 z-2 rounded-full bg-gradient-to-t from-forest-950/40 via-transparent to-transparent opacity-40 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
 
-                <span className="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[9px] sm:text-[10px] font-bold text-white uppercase tracking-wider border border-white/25">
-                  Explore
-                </span>
+                {/* Floating Category Icon Badge */}
+                <div className="absolute bottom-0 right-0 sm:bottom-1 sm:right-1 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-forest-900 text-gold border-2 border-surface-white flex items-center justify-center shadow-level-2 group-hover:bg-gold group-hover:text-forest-950 group-hover:scale-110 transition-all duration-300">
+                  <IconComp className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                </div>
               </div>
 
-              {/* Bottom Details & CTA */}
-              <div className="relative z-10 p-3.5 pt-0 space-y-1">
-                <h3 className="font-display font-extrabold text-sm sm:text-base text-white group-hover:text-emerald-300 transition-colors line-clamp-1">
+              {/* Category Name & Action (Description Excluded) */}
+              <div className="mt-3 space-y-1 w-full px-1">
+                <h3 className="font-display font-bold text-xs sm:text-sm md:text-base text-forest-900 group-hover:text-forest-700 transition-colors line-clamp-2 leading-tight">
                   {cat.name}
                 </h3>
-                <p className="text-[10px] sm:text-[11px] text-white/80 line-clamp-2 leading-tight">
-                  {cat.desc || 'Lab certified offerings'}
-                </p>
-
-                <div className="pt-2 flex items-center text-[10px] sm:text-[11px] font-bold text-emerald-300 group-hover:text-white transition-all">
-                  <span>Browse Products</span>
-                  <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-1 transition-transform" />
-                </div>
+                <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] font-semibold text-leaf group-hover:text-forest-700 transition-colors">
+                  <span>Explore</span>
+                  <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </span>
               </div>
             </Link>
           );

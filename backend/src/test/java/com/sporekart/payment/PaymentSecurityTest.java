@@ -106,6 +106,30 @@ public class PaymentSecurityTest {
     }
 
     @Test
+    void testProductionModeRejectsMissingCredentialsAndInvalidMockSignatures() {
+        com.sporekart.payment.application.RazorpayPaymentGateway gateway = new com.sporekart.payment.application.RazorpayPaymentGateway();
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "keyId", "");
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "keySecret", "");
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "activeProfile", "prod");
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "mockMode", false);
+
+        assertFalse(gateway.isMockMode(), "Production mode without mock keys or mockMode flag must NOT be mock mode");
+        assertThrows(IllegalStateException.class, () ->
+                gateway.createPaymentOrder(UUID.randomUUID(), "ORD-PROD-1", new BigDecimal("100.00")),
+                "Must throw IllegalStateException when credentials missing in production"
+        );
+        assertFalse(gateway.verifySignature("order_123", "pay_123", "any_sig"), "Must return false when keySecret missing");
+
+        // Verify null/empty signature is rejected even in mock mode
+        org.springframework.test.util.ReflectionTestUtils.setField(gateway, "mockMode", true);
+        assertTrue(gateway.isMockMode());
+        assertFalse(gateway.verifySignature("order_123", "pay_123", null), "Null signature must be rejected even in mock mode");
+        assertFalse(gateway.verifySignature("order_123", "pay_123", "   "), "Empty signature must be rejected even in mock mode");
+        assertFalse(gateway.verifySignature("order_123", "pay_123", "mock_signature_invalid"), "Invalid mock signature must be rejected");
+        assertTrue(gateway.verifySignature("order_123", "pay_123", "valid_mock_sig"), "Valid mock signature should succeed in mock mode");
+    }
+
+    @Test
     void testUnauthenticatedOrWrongOwnerPaymentSummaryReturnsForbidden() {
         UUID ownerUserId = UUID.randomUUID();
         UUID attackerUserId = UUID.randomUUID();

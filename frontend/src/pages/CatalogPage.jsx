@@ -26,8 +26,14 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
 
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState('newest');
+
+  // Keep searchQuery in sync with URL searchParams if URL changes
+  useEffect(() => {
+    const q = searchParams.get('search') || searchParams.get('q') || '';
+    setSearchQuery(q);
+  }, [searchParams]);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);

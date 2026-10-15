@@ -18,6 +18,7 @@ import ScrollToTop from './components/ScrollToTop';
 
 // Code Splitting & Lazy Route Loading
 const HomePage = lazy(() => import('./pages/HomePage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const CatalogPage = lazy(() => import('./pages/CatalogPage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const TrainingPage = lazy(() => import('./pages/TrainingPage'));
@@ -28,6 +29,7 @@ const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 const TrainingConfirmationPage = lazy(() => import('./pages/TrainingConfirmationPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const SustainabilityPage = lazy(() => import('./pages/SustainabilityPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
@@ -85,7 +87,7 @@ export default function App() {
       <CartProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
-          <div className="min-h-screen flex flex-col justify-between bg-surface-cream text-typography-primary font-sans">
+          <div className="min-h-screen flex flex-col justify-between bg-surface-cream text-typography-primary font-sans w-full">
             <Navbar user={user} setUser={setUser} />
 
             <main id="main-content" tabIndex="-1" className="flex-grow focus:outline-none">
@@ -93,6 +95,7 @@ export default function App() {
                 <Routes>
                   {/* Core SEO Routes */}
                   <Route path="/" element={<HomePage />} />
+                  <Route path="/landing" element={<LandingPage />} />
                   
                   {/* Product Catalog & Category Routes */}
                   <Route path="/products" element={<CatalogPage />} />
@@ -130,6 +133,7 @@ export default function App() {
 
                   {/* Company & Support Routes */}
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/sustainability" element={<SustainabilityPage />} />
                   <Route path="/contact" element={<ContactPage />} />
 
                   {/* Blog & Knowledge Center Routes */}
