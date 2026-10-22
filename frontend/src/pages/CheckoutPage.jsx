@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag } from 'lucide-react';
+import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag, Smartphone, Building2, Wallet } from 'lucide-react';
 import { customerApi, orderApi, authApi } from '../api';
 import { useCart } from '../context/CartContext';
 import MediaImage from '../components/MediaImage';
@@ -21,6 +21,7 @@ export default function CheckoutPage({ user, setUser }) {
   const [submitting, setSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [validating, setValidating] = useState(true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('upi');
 
   // New Address Form State & Validation
   const [newAddress, setNewAddress] = useState({
@@ -190,7 +191,7 @@ export default function CheckoutPage({ user, setUser }) {
       if (res.data && res.data.success) {
         const orderData = res.data.data;
         await fetchCart();
-        navigate(`/payment?type=order&id=${orderData.id}`);
+        navigate(`/payment?type=order&id=${orderData.id}&method=${selectedPaymentMethod}`);
       }
     } catch (err) {
       const status = err.response?.status;
@@ -447,6 +448,116 @@ export default function CheckoutPage({ user, setUser }) {
               ))}
             </div>
           </div>
+
+          {/* Step 3: Select Payment Method */}
+          <div className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1">
+            <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+              <h3 className="text-lg font-display font-bold text-forest-900 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-forest-700" /> 3. Select Payment Method
+              </h3>
+              <span className="text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
+                <ShieldCheck className="w-3.5 h-3.5" /> Razorpay Test Gateway Active
+              </span>
+            </div>
+
+            <p className="text-xs text-typography-secondary">
+              Choose your preferred payment method. Free to pay via UPI, QR, Net Banking, Cards, or Sporekart Wallet with 0% extra fee.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* UPI & QR */}
+              <div
+                onClick={() => setSelectedPaymentMethod('upi')}
+                className={`p-4 rounded-card border cursor-pointer transition-all relative ${
+                  selectedPaymentMethod === 'upi'
+                    ? 'bg-surface-cream border-forest-700 ring-1 ring-forest-700 shadow-sm'
+                    : 'bg-surface-white border-surface-border hover:border-forest-700/40'
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold text-xs text-forest-900 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-forest-700" /> UPI & Instant QR
+                  </span>
+                  {selectedPaymentMethod === 'upi' && <CheckCircle2 className="w-4 h-4 text-forest-700" />}
+                </div>
+                <p className="text-[11px] text-typography-muted">
+                  Google Pay, PhonePe, Paytm, BHIM & Dynamic QR
+                </p>
+                <span className="inline-block mt-2 text-[10px] bg-green-100/70 text-green-800 font-bold px-2 py-0.5 rounded">
+                  0% Surcharge • Instant
+                </span>
+              </div>
+
+              {/* Cards */}
+              <div
+                onClick={() => setSelectedPaymentMethod('card')}
+                className={`p-4 rounded-card border cursor-pointer transition-all relative ${
+                  selectedPaymentMethod === 'card'
+                    ? 'bg-surface-cream border-forest-700 ring-1 ring-forest-700 shadow-sm'
+                    : 'bg-surface-white border-surface-border hover:border-forest-700/40'
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold text-xs text-forest-900 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-forest-700" /> Credit / Debit Cards
+                  </span>
+                  {selectedPaymentMethod === 'card' && <CheckCircle2 className="w-4 h-4 text-forest-700" />}
+                </div>
+                <p className="text-[11px] text-typography-muted">
+                  Visa, MasterCard, RuPay, Maestro & EMI
+                </p>
+                <span className="inline-block mt-2 text-[10px] bg-forest-700/10 text-forest-800 font-bold px-2 py-0.5 rounded">
+                  RBI 3D-Secure 256-bit SSL
+                </span>
+              </div>
+
+              {/* Net Banking */}
+              <div
+                onClick={() => setSelectedPaymentMethod('netbanking')}
+                className={`p-4 rounded-card border cursor-pointer transition-all relative ${
+                  selectedPaymentMethod === 'netbanking'
+                    ? 'bg-surface-cream border-forest-700 ring-1 ring-forest-700 shadow-sm'
+                    : 'bg-surface-white border-surface-border hover:border-forest-700/40'
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold text-xs text-forest-900 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-forest-700" /> Net Banking
+                  </span>
+                  {selectedPaymentMethod === 'netbanking' && <CheckCircle2 className="w-4 h-4 text-forest-700" />}
+                </div>
+                <p className="text-[11px] text-typography-muted">
+                  SBI, HDFC, ICICI, Axis, Kotak, PNB & 50+ Banks
+                </p>
+                <span className="inline-block mt-2 text-[10px] bg-forest-700/10 text-forest-800 font-bold px-2 py-0.5 rounded">
+                  Direct Bank Authorization
+                </span>
+              </div>
+
+              {/* Wallet */}
+              <div
+                onClick={() => setSelectedPaymentMethod('wallet')}
+                className={`p-4 rounded-card border cursor-pointer transition-all relative ${
+                  selectedPaymentMethod === 'wallet'
+                    ? 'bg-surface-cream border-forest-700 ring-1 ring-forest-700 shadow-sm'
+                    : 'bg-surface-white border-surface-border hover:border-forest-700/40'
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold text-xs text-forest-900 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <Wallet className="w-4 h-4 text-forest-700" /> Sporekart Ag-Wallet
+                  </span>
+                  {selectedPaymentMethod === 'wallet' && <CheckCircle2 className="w-4 h-4 text-forest-700" />}
+                </div>
+                <p className="text-[11px] text-typography-muted">
+                  Use stored credit balance for instant 1-click checkout
+                </p>
+                <span className="inline-block mt-2 text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">
+                  Instant Balance Deduct
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar Summary */}
@@ -492,6 +603,36 @@ export default function CheckoutPage({ user, setUser }) {
                 <span>Total Amount Payable</span>
                 <span className="text-forest-700 text-2xl font-display">₹{cart.estimatedTotalInr}</span>
               </div>
+            </div>
+
+            {/* Selected Method Indicator */}
+            <div className="p-3 bg-surface-cream rounded-xl border border-surface-border text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {selectedPaymentMethod === 'upi' ? (
+                  <Smartphone className="w-4 h-4 text-forest-700" />
+                ) : selectedPaymentMethod === 'card' ? (
+                  <CreditCard className="w-4 h-4 text-forest-700" />
+                ) : selectedPaymentMethod === 'netbanking' ? (
+                  <Building2 className="w-4 h-4 text-forest-700" />
+                ) : (
+                  <Wallet className="w-4 h-4 text-forest-700" />
+                )}
+                <div>
+                  <span className="text-typography-muted text-[10px] uppercase font-bold block">Selected Payment</span>
+                  <span className="font-bold text-forest-900">
+                    {selectedPaymentMethod === 'upi'
+                      ? 'UPI & Instant QR'
+                      : selectedPaymentMethod === 'card'
+                      ? 'Credit / Debit Cards'
+                      : selectedPaymentMethod === 'netbanking'
+                      ? 'Net Banking'
+                      : 'Sporekart Ag-Wallet'}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                READY
+              </span>
             </div>
 
             <button
