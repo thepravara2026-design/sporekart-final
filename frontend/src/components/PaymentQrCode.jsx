@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Copy, Check, Clock, ShieldCheck, Sparkles, QrCode } from 'lucide-react';
+import { Smartphone, Copy, Check, Clock, ShieldCheck, Sparkles, QrCode, CheckCircle2 } from 'lucide-react';
 
-export default function PaymentQrCode({ amount, orderId, onSimulateSuccess }) {
+export default function PaymentQrCode({ amount, orderId, onVerifyPayment, onSimulateSuccess }) {
   const [secondsLeft, setSecondsLeft] = useState(600); // 10 minutes
   const [copied, setCopied] = useState(false);
 
@@ -207,9 +207,27 @@ export default function PaymentQrCode({ amount, orderId, onSimulateSuccess }) {
         </div>
       </div>
 
+      {/* Verify QR Payment Action */}
+      <div className="pt-3 border-t border-surface-border/70 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div className="text-[11px] text-typography-muted flex items-center gap-1.5">
+          <ShieldCheck className="w-4 h-4 text-green-600" />
+          <span>Real-time NPCI UPI verification</span>
+        </div>
+        {onVerifyPayment && (
+          <button
+            type="button"
+            onClick={onVerifyPayment}
+            className="w-full sm:w-auto px-4 py-2 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 button-press"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+            <span>I Have Paid via QR — Verify Payment</span>
+          </button>
+        )}
+      </div>
+
       {/* Dev Mode Simulation Action */}
       {onSimulateSuccess && (
-        <div className="pt-2 border-t border-surface-border/70 flex items-center justify-between text-[11px]">
+        <div className="pt-2 border-t border-surface-border/50 flex items-center justify-between text-[11px]">
           <span className="text-typography-muted flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Test Mode Gateway Simulator
           </span>

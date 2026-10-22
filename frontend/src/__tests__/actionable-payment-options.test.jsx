@@ -211,4 +211,109 @@ describe('Actionable Payment Options & Razorpay Gateway Integration', () => {
       expect(paymentApi.verifyPayment).toHaveBeenCalled();
     });
   });
+
+  it('validates UPI URLs, fills test UPI credentials, and executes direct UPI verification', async () => {
+    paymentApi.initiatePayment.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          razorpayOrderId: 'order_test_rzp_upi',
+          amountInr: 1500,
+          currency: 'INR',
+          razorpayKeyId: 'rzp_test_Tqs0MmdXUl8FRk',
+        },
+      },
+    });
+
+    paymentApi.verifyPayment.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          isSuccess: true,
+          message: 'Payment verified successfully',
+        },
+      },
+    });
+
+    renderPaymentPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Choose Payment Method/i)).toBeInTheDocument();
+    });
+
+    // Go to UPI ID / VPA subtab
+    const vpaTab = screen.getByRole('button', { name: /UPI ID \(VPA\)/i });
+    fireEvent.click(vpaTab);
+
+    // Enter a UPI URL
+    const vpaInput = screen.getByPlaceholderText(/e\.g\. mobile@okhdfcbank or user@paytm/i);
+    fireEvent.change(vpaInput, { target: { value: 'upi://pay?pa=farmer.rajesh@okhdfcbank&pn=Sporekart&am=1500' } });
+
+    // Should detect and show verified UPI address
+    expect(screen.getByText(/Verified UPI Address:/i)).toBeInTheDocument();
+    expect(screen.getByText('farmer.rajesh@okhdfcbank')).toBeInTheDocument();
+
+    // Click "Use Test UPI (success@razorpay)"
+    const fillTestUpiBtn = screen.getByRole('button', { name: /Use Test UPI \(success@razorpay\)/i });
+    fireEvent.click(fillTestUpiBtn);
+    expect(vpaInput.value).toBe('success@razorpay');
+
+    // Click "Verify UPI & Complete Order"
+    const verifyUpiBtn = screen.getByRole('button', { name: /Verify UPI & Complete Order/i });
+    fireEvent.click(verifyUpiBtn);
+
+    await waitFor(() => {
+      expect(paymentApi.initiatePayment).toHaveBeenCalledWith('ord-123');
+      expect(paymentApi.verifyPayment).toHaveBeenCalledWith(
+        'ord-123',
+        'order_test_rzp_upi',
+        expect.stringMatching(/^pay_upi_/),
+        'upi_verified_sig'
+      );
+    });
+  });
+
+  it('executes direct QR payment verification via I Have Paid via QR button', async () => {
+    paymentApi.initiatePayment.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          razorpayOrderId: 'order_test_rzp_qr',
+          amountInr: 1500,
+          currency: 'INR',
+          razorpayKeyId: 'rzp_test_Tqs0MmdXUl8FRk',
+        },
+      },
+    });
+
+    paymentApi.verifyPayment.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          isSuccess: true,
+          message: 'Payment verified successfully',
+        },
+      },
+    });
+
+    renderPaymentPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Instant Dynamic UPI QR/i)).toBeInTheDocument();
+    });
+
+    // Click "I Have Paid via QR — Verify Payment"
+    const verifyQrBtn = screen.getByRole('button', { name: /I Have Paid via QR — Verify Payment/i });
+    fireEvent.click(verifyQrBtn);
+
+    await waitFor(() => {
+      expect(paymentApi.initiatePayment).toHaveBeenCalledWith('ord-123');
+      expect(paymentApi.verifyPayment).toHaveBeenCalledWith(
+        'ord-123',
+        'order_test_rzp_qr',
+        expect.stringMatching(/^pay_qr_/),
+        'qr_verified_sig'
+      );
+    });
+  });
 });

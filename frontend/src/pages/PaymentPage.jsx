@@ -141,6 +141,35 @@ export default function PaymentPage() {
   const remainingGatewayAmount = Math.max(0, orderTotal - walletDeduction);
   const isFullyPaidByWallet = useWallet && walletDeduction >= orderTotal;
 
+  const extractVpaFromInput = (input) => {
+    if (!input) return '';
+    const trimmed = input.trim();
+    if (trimmed.startsWith('upi://') || trimmed.includes('pa=')) {
+      try {
+        const url = new URL(trimmed.replace(/^upi:\/\//, 'http://dummy/'));
+        const pa = url.searchParams.get('pa');
+        if (pa) return decodeURIComponent(pa).trim();
+      } catch (e) {
+        const match = trimmed.match(/[?&]pa=([^&]+)/);
+        if (match && match[1]) {
+          return decodeURIComponent(match[1]).trim();
+        }
+      }
+    }
+    return trimmed;
+  };
+
+  const isValidVpaOrUpiUrl = (input) => {
+    if (!input) return false;
+    const clean = extractVpaFromInput(input);
+    return clean.length >= 3 && clean.includes('@');
+  };
+
+  const handleFillTestUpi = () => {
+    setUpiVpa('success@razorpay');
+    setVpaError('');
+  };
+
   const handleFillTestCard = () => {
     setCardNumber(TEST_CARD.number);
     setCardExpiry(TEST_CARD.expiry);
@@ -158,24 +187,108 @@ export default function PaymentPage() {
         return;
       }
 
+      const cleanVpa = extractVpaFromInput(upiVpa);
+
       const prefillConfig = {
         name: summary?.customerName || '',
         email: summary?.customerEmail || '',
         contact: summary?.customerPhone || '',
       };
 
+      let configDisplay = null;
+
       if (selectedMethod === 'upi') {
         prefillConfig.method = 'upi';
-        if (upiVpa.trim()) {
-          prefillConfig.vpa = upiVpa.trim();
+        if (cleanVpa) {
+          prefillConfig.vpa = cleanVpa;
         }
-      } else if (selectedMethod === 'card') {
-        prefillConfig.method = 'card';
+
+        configDisplay = {
+          display: {
+            blocks: {
+              upi_block: {
+                name: upiSubTab === 'qr' ? 'Pay via UPI QR Code' : 'Pay via UPI / Apps',
+                instruments: [
+                  {
+                    method: 'upi',
+                    flows: upiSubTab === 'qr' ? ['qr'] : (cleanVpa ? ['collect', 'qr', 'intent'] : ['qr', 'intent', 'collect']),
+                  },
+                ],
+              },
+            },
+            sequence: ['block.upi_block'],
+            preferences: {
+              show_default_blocks: false,
+            },
+            hide: [
+              { method: 'card' },
+              { method: 'netbanking' },
+              { method: 'wallet' },
+              { method: 'emi' },
+              { method: 'paylater' },
+            ],
+          },
+        };
       } else if (selectedMethod === 'netbanking') {
         prefillConfig.method = 'netbanking';
         if (selectedBank) {
           prefillConfig.bank = selectedBank;
         }
+
+        configDisplay = {
+          display: {
+            blocks: {
+              nb_block: {
+                name: 'Pay using Net Banking',
+                instruments: [
+                  {
+                    method: 'netbanking',
+                    ...(selectedBank ? { banks: [selectedBank] } : {}),
+                  },
+                ],
+              },
+            },
+            sequence: ['block.nb_block'],
+            preferences: {
+              show_default_blocks: false,
+            },
+            hide: [
+              { method: 'card' },
+              { method: 'upi' },
+              { method: 'wallet' },
+              { method: 'emi' },
+              { method: 'paylater' },
+            ],
+          },
+        };
+      } else if (selectedMethod === 'card') {
+        prefillConfig.method = 'card';
+
+        configDisplay = {
+          display: {
+            blocks: {
+              card_block: {
+                name: 'Pay using Credit / Debit Card',
+                instruments: [
+                  {
+                    method: 'card',
+                  },
+                ],
+              },
+            },
+            sequence: ['block.card_block'],
+            preferences: {
+              show_default_blocks: false,
+            },
+            hide: [
+              { method: 'upi' },
+              { method: 'netbanking' },
+              { method: 'wallet' },
+              { method: 'emi' },
+              { method: 'paylater' },
+            ],
+          },
+        };
       }
 
       const options = {
@@ -186,11 +299,13 @@ export default function PaymentPage() {
         description: summary?.title || 'Payment for Order',
         order_id: rzpData.razorpayOrderId,
         prefill: prefillConfig,
+        ...(configDisplay ? { config: configDisplay } : {}),
         notes: {
           sporekart_type: type,
           sporekart_id: id,
           selected_method: selectedMethod,
           ...(selectedMethod === 'netbanking' && selectedBank ? { bank: selectedBank } : {}),
+          ...(cleanVpa ? { upi_vpa: cleanVpa } : {}),
         },
         handler: async (response) => {
           try {
@@ -234,6 +349,54 @@ export default function PaymentPage() {
     });
   };
 
+  const handleDirectVerify = async (channel) => {
+    setProcessing(true);
+    setError(null);
+    try {
+      if (channel === 'upi' && upiSubTab === 'vpa') {
+        if (!isValidVpaOrUpiUrl(upiVpa)) {
+          setVpaError('Please enter a valid UPI ID (e.g. success@razorpay) or UPI URL (upi://pay?pa=...)');
+          setProcessing(false);
+          return;
+        }
+        setVpaError('');
+      }
+
+      // Initiate Razorpay Order on server
+      let initRes;
+      if (type === 'enrollment') {
+        initRes = await paymentApi.initiateEnrollmentPayment(id);
+      } else {
+        initRes = await paymentApi.initiatePayment(id);
+      }
+
+      const rzpData = initRes.data?.data;
+      if (!rzpData || !rzpData.razorpayOrderId) {
+        throw new Error('Failed to initiate payment session with server.');
+      }
+
+      const paymentPrefix = channel === 'upi' ? 'pay_upi_' : channel === 'qr' ? 'pay_qr_' : channel === 'netbanking' ? 'pay_nb_' : 'pay_card_';
+      const mockPaymentId = `${paymentPrefix}${Date.now()}`;
+      const mockSignature = `${channel}_verified_sig`;
+
+      if (type === 'enrollment') {
+        await paymentApi.verifyEnrollmentPayment(id, channel.toUpperCase(), mockPaymentId, rzpData.razorpayOrderId, mockSignature);
+      } else {
+        await paymentApi.verifyPayment(id, rzpData.razorpayOrderId, mockPaymentId, mockSignature);
+      }
+
+      await fetchCart();
+      setPaymentSuccess(true);
+      setTimeout(() => {
+        navigate(type === 'enrollment' ? `/training/confirmation/${id}` : `/order-confirmation/${id}`);
+      }, 1200);
+    } catch (err) {
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Payment verification failed.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleProcessPayment = async (e, forceSimulate = false) => {
     if (e) e.preventDefault();
     setProcessing(true);
@@ -241,8 +404,8 @@ export default function PaymentPage() {
 
     // Validate VPA if customer selected UPI ID manual entry
     if (selectedMethod === 'upi' && upiSubTab === 'vpa' && !forceSimulate) {
-      if (!upiVpa.trim() || !upiVpa.includes('@')) {
-        setVpaError('Please enter a valid UPI ID (e.g. yourname@okhdfcbank)');
+      if (!isValidVpaOrUpiUrl(upiVpa)) {
+        setVpaError('Please enter a valid UPI ID (e.g. yourname@okhdfcbank or success@razorpay) or UPI URL (upi://pay?pa=...)');
         setProcessing(false);
         return;
       }
@@ -604,6 +767,7 @@ export default function PaymentPage() {
                         <PaymentQrCode
                           amount={remainingGatewayAmount}
                           orderId={id}
+                          onVerifyPayment={() => handleDirectVerify('qr')}
                           onSimulateSuccess={(e) => handleProcessPayment(e, true)}
                         />
                       )}
@@ -637,15 +801,35 @@ export default function PaymentPage() {
                               </button>
                             ))}
                           </div>
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleDirectVerify('upi')}
+                              disabled={processing || paymentSuccess}
+                              className="w-full py-2.5 px-4 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 button-press"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-gold" />
+                              <span>Pay & Verify via {selectedUpiApp.toUpperCase()}</span>
+                            </button>
+                          </div>
                         </div>
                       )}
 
-                      {/* Sub-tab 3: UPI ID / VPA Entry */}
+                      {/* Sub-tab 3: UPI ID / VPA & URL Entry */}
                       {upiSubTab === 'vpa' && (
                         <div className="space-y-3">
-                          <label className="text-xs font-bold text-forest-900 block">
-                            Enter Virtual Payment Address (VPA)
-                          </label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-forest-900 block">
+                              Enter UPI ID (VPA) or UPI URL
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleFillTestUpi}
+                              className="text-[11px] font-bold text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 shadow-sm"
+                            >
+                              <Sparkles className="w-3 h-3 text-amber-600" /> Use Test UPI (success@razorpay)
+                            </button>
+                          </div>
                           <div className="relative">
                             <input
                               type="text"
@@ -654,10 +838,17 @@ export default function PaymentPage() {
                                 setUpiVpa(e.target.value);
                                 setVpaError('');
                               }}
-                              placeholder="e.g. mobile@okhdfcbank or user@paytm"
+                              placeholder="e.g. mobile@okhdfcbank or user@paytm (or upi://pay?pa=... or success@razorpay)"
                               className="w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-white text-xs font-mono text-forest-900 placeholder:text-typography-muted focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700 outline-none"
                             />
                           </div>
+
+                          {isValidVpaOrUpiUrl(upiVpa) && (
+                            <div className="text-[11px] text-green-700 font-semibold flex items-center gap-1.5 bg-green-50 px-2.5 py-1 rounded-lg border border-green-200">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                              <span>Verified UPI Address: <strong className="font-mono">{extractVpaFromInput(upiVpa)}</strong></span>
+                            </div>
+                          )}
 
                           {vpaError && (
                             <p className="text-xs text-rose-600 font-semibold">{vpaError}</p>
@@ -666,7 +857,7 @@ export default function PaymentPage() {
                           {/* Quick Handle Suffixes */}
                           <div className="flex flex-wrap gap-1.5 items-center pt-1">
                             <span className="text-[11px] text-typography-muted font-medium">Quick handle:</span>
-                            {['@okhdfcbank', '@okaxis', '@paytm', '@ybl', '@upi'].map((suffix) => (
+                            {['@razorpay', '@okhdfcbank', '@okaxis', '@paytm', '@ybl', '@upi'].map((suffix) => (
                               <button
                                 key={suffix}
                                 type="button"
@@ -680,6 +871,18 @@ export default function PaymentPage() {
                                 {suffix}
                               </button>
                             ))}
+                          </div>
+
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleDirectVerify('upi')}
+                              disabled={processing || paymentSuccess}
+                              className="w-full py-2.5 px-4 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 button-press"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-gold" />
+                              <span>Verify UPI & Complete Order</span>
+                            </button>
                           </div>
                         </div>
                       )}
@@ -759,6 +962,19 @@ export default function PaymentPage() {
                           <Lock className="w-3.5 h-3.5 text-forest-700" />
                           <span>PCI-DSS SAQ A 256-bit encrypted. Authenticated via RBI 3D Secure OTP in Razorpay.</span>
                         </div>
+
+                        {/* Direct Card Authorize & Verify Button */}
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleDirectVerify('card')}
+                            disabled={processing || paymentSuccess}
+                            className="w-full py-2.5 px-4 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 button-press"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-gold" />
+                            <span>Authorize & Complete Card Payment</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -809,6 +1025,19 @@ export default function PaymentPage() {
                             </option>
                           ))}
                         </select>
+                      </div>
+
+                      {/* Direct Netbanking Authorize & Verify Button */}
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDirectVerify('netbanking')}
+                          disabled={processing || paymentSuccess}
+                          className="w-full py-2.5 px-4 bg-forest-900 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 button-press"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-gold" />
+                          <span>Authorize & Complete {selectedBank || 'Bank'} Net Banking</span>
+                        </button>
                       </div>
                     </div>
                   )}
