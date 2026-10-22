@@ -2,15 +2,18 @@ import { test, expect } from '@playwright/test';
 
 test.describe('FE-16 & FE-17: Training Course Browse, Batch Enrollment & Confirmation', () => {
   test('User inspects course details, enrolls in upcoming batch, completes payment, and receives confirmation', async ({ page, context }) => {
-    // 0. Ensure fresh guest session
-    await context.clearCookies();
-    await page.goto('/');
-    await page.evaluate(() => localStorage.clear()).catch(() => {});
-    await page.reload();
+    test.setTimeout(90000);
+    // 0. Ensure fresh guest session directly on /training
+    page.on('console', msg => console.log(`[BROWSER ${msg.type()}]:`, msg.text()));
+    page.on('pageerror', err => console.log('[PAGE ERROR]:', err));
 
-    // 1. Visit Training Masterclasses Page
+    await context.clearCookies();
     await page.goto('/training');
-    await expect(page).toHaveURL(/\/training/);
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15000 });
 
     // 2. Select First Available Course & Click Enroll Now
@@ -18,40 +21,60 @@ test.describe('FE-16 & FE-17: Training Course Browse, Batch Enrollment & Confirm
     await expect(enrollBtn).toBeVisible({ timeout: 20000 });
     await enrollBtn.click();
 
-    // 3. Authenticate via OTP in Auth Modal (if guest)
-    const testEmail = `trainee_${Date.now()}@sporekart.com`;
-    const mobileInput = page.getByTestId('auth-identifier-input');
-    const confirmPaymentBtn = page.getByRole('button', { name: /Confirm Seat & Proceed to Payment|Proceed to Payment/i });
-
-    await Promise.race([
-      mobileInput.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {}),
-      confirmPaymentBtn.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    ]);
-
-    if (await mobileInput.isVisible().catch(() => false)) {
-      await mobileInput.fill(testEmail);
-      await page.getByTestId('send-otp-btn').click();
-
-      const otpInput = page.getByTestId('otp-code-input');
-      await otpInput.waitFor({ state: 'visible', timeout: 15000 });
-      await otpInput.fill('123456');
-      await page.getByTestId('verify-otp-btn').click();
+    // 3. Authenticate via Google Dev Auth in Auth Modal (if guest)
+    const googleDevBtn = page.getByRole('button', { name: /Quick Google Login Test|Continue with Google \(Dev Mode\)/i }).first();
+    await googleDevBtn.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
+    if (await googleDevBtn.isVisible()) {
+      await googleDevBtn.click();
+      await expect(googleDevBtn).not.toBeVisible({ timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(1000);
     }
 
-    // 4. Click Confirm Seat & Proceed to Payment in Batch Preview Modal
-    await confirmPaymentBtn.waitFor({ state: 'visible', timeout: 20000 });
-    await confirmPaymentBtn.click();
+    // 4. Fill Trainee Profile Modal & Proceed to Payment
+    await expect(page.getByText(/Loading profile details/i)).not.toBeVisible({ timeout: 15000 }).catch(() => {});
+
+    const recipientInput = page.locator('#recipientName');
+    const proceedPaymentBtn = page.getByRole('button', { name: /Save Profile & Proceed to Payment|Confirm Seat & Proceed to Payment|Proceed to Payment/i }).first();
+
+    await expect(recipientInput).toBeVisible({ timeout: 15000 });
+
+    const uniquePhone = '8' + Math.floor(100000000 + Math.random() * 900000000);
+    await recipientInput.fill('Playwright Trainee');
+    const phoneInput = page.locator('#phone');
+    await phoneInput.fill(uniquePhone);
+    await page.locator('#pincode').fill('560001');
+    await page.waitForTimeout(500);
+
+    // Ensure phone number was retained through PIN lookup
+    if ((await phoneInput.inputValue()) !== uniquePhone) {
+      await phoneInput.fill(uniquePhone);
+    }
+
+    await page.locator('#state').selectOption('Karnataka');
+    await page.waitForTimeout(400);
+
+    const citySelect = page.locator('select#city');
+    if (await citySelect.isVisible().catch(() => false)) {
+      await citySelect.selectOption({ index: 1 });
+    } else {
+      await page.locator('input#city').fill('Bengaluru');
+    }
+    await page.locator('#line1').fill('123 Agri Campus Road');
+
+    await expect(proceedPaymentBtn).toBeVisible({ timeout: 10000 });
+    await expect(proceedPaymentBtn).toBeEnabled({ timeout: 10000 });
+    await proceedPaymentBtn.click();
 
     // 5. Verify Payment Gateway Loaded for Enrollment
-    await expect(page).toHaveURL(/\/payment\?type=enrollment/, { timeout: 20000 });
+    await page.waitForURL(/\/payment\?type=enrollment/, { timeout: 25000 });
     
     // 6. Authorize Payment
-    const payBtn = page.getByRole('button', { name: /Pay ₹.*Securely/i });
+    const payBtn = page.getByRole('button', { name: /Pay ₹.*via Razorpay|Pay ₹.*Securely|Pay .*with Wallet Balance/i }).first();
     await expect(payBtn).toBeVisible({ timeout: 10000 });
     await payBtn.click();
 
     // 7. Verify Training Confirmation Screen Loaded
-    await expect(page).toHaveURL(/\/training\/confirmation\//, { timeout: 20000 });
-    await expect(page.getByText(/Seat Reserved|Enrollment Confirmed|Training Masterclass/i).first()).toBeVisible({ timeout: 10000 });
+    await page.waitForURL(/\/training\/confirmation\//, { timeout: 25000 });
+    await expect(page.getByText(/Seat Reserved|Enrollment Confirmed|Training Masterclass|Confirmed/i).first()).toBeVisible({ timeout: 15000 });
   });
 });

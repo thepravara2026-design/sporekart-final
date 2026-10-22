@@ -450,7 +450,9 @@ public class WalletService {
         if (typeStr != null && !typeStr.trim().isEmpty() && !"ALL".equalsIgnoreCase(typeStr)) {
             try {
                 typeEnum = WalletTransactionType.valueOf(typeStr.trim().toUpperCase());
-            } catch (Exception ignored) {}
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid transaction type filter: " + typeStr);
+            }
         }
 
         Page<WalletTransaction> pageResult = transactionRepository.filterTransactions(wallet.getId(), typeEnum, search, pageable);
@@ -478,7 +480,9 @@ public class WalletService {
             try {
                 WithdrawalStatus status = WithdrawalStatus.valueOf(statusStr.trim().toUpperCase());
                 return withdrawalRepository.findByStatusOrderByCreatedAtDesc(status, pageable).map(this::mapToWithdrawalResponse);
-            } catch (Exception ignored) {}
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid withdrawal status filter: " + statusStr);
+            }
         }
         return withdrawalRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::mapToWithdrawalResponse);
     }
@@ -537,7 +541,7 @@ public class WalletService {
                     null,
                     null,
                     "Admin Manual Credit: " + reason,
-                    "adj_cr_" + System.currentTimeMillis(),
+                    "adj_cr_" + UUID.randomUUID(),
                     adminUser != null ? adminUser : "ADMIN"
             );
         } else {
@@ -550,7 +554,7 @@ public class WalletService {
                     null,
                     null,
                     "Admin Manual Debit: " + reason,
-                    "adj_dr_" + System.currentTimeMillis(),
+                    "adj_dr_" + UUID.randomUUID(),
                     adminUser != null ? adminUser : "ADMIN"
             );
         }

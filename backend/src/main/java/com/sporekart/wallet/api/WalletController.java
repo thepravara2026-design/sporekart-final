@@ -5,6 +5,7 @@ import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.wallet.application.WalletService;
 import com.sporekart.wallet.domain.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -64,7 +65,7 @@ public class WalletController {
     @PostMapping("/withdraw")
     public ResponseEntity<ApiResponse<WalletDtos.WithdrawalResponse>> requestWithdrawal(
             Authentication authentication,
-            @RequestBody WalletDtos.WithdrawRequest request
+            @Valid @RequestBody WalletDtos.WithdrawRequest request
     ) {
         UUID userId = extractUserId(authentication);
         if (userId == null) {
@@ -87,7 +88,7 @@ public class WalletController {
     @PostMapping("/add-money")
     public ResponseEntity<ApiResponse<WalletDtos.AddMoneyResponse>> addMoney(
             Authentication authentication,
-            @RequestBody WalletDtos.AddMoneyRequest request
+            @Valid @RequestBody WalletDtos.AddMoneyRequest request
     ) {
         UUID userId = extractUserId(authentication);
         if (userId == null) {
@@ -101,7 +102,7 @@ public class WalletController {
     @PostMapping("/verify-add-money")
     public ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>> verifyAddMoney(
             Authentication authentication,
-            @RequestBody WalletDtos.VerifyAddMoneyRequest request,
+            @Valid @RequestBody WalletDtos.VerifyAddMoneyRequest request,
             @RequestParam(required = false) BigDecimal amount
     ) {
         UUID userId = extractUserId(authentication);
@@ -132,7 +133,7 @@ public class WalletController {
     @PostMapping("/checkout-pay")
     public ResponseEntity<ApiResponse<WalletDtos.WalletCheckoutPayResponse>> processCheckoutWalletPay(
             Authentication authentication,
-            @RequestBody WalletDtos.WalletCheckoutPayRequest request
+            @Valid @RequestBody WalletDtos.WalletCheckoutPayRequest request
     ) {
         UUID userId = extractUserId(authentication);
         if (userId == null) {

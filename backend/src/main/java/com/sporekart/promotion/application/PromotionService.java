@@ -3,6 +3,7 @@ package com.sporekart.promotion.application;
 import com.sporekart.promotion.api.PromotionDtos;
 import com.sporekart.promotion.domain.*;
 import com.sporekart.promotion.infrastructure.*;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -112,7 +113,9 @@ public class PromotionService {
                                     "PROMO_PUBLISHED:" + saved.getId() + ":" + user.getId()
                             );
                         });
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(PromotionService.class).warn("Failed to broadcast promo notification to users: {}", e.getMessage());
+            }
         }
 
         return saved;
@@ -121,7 +124,7 @@ public class PromotionService {
     @Transactional
     public Promotion updatePromotion(UUID id, PromotionDtos.CreatePromotionRequest req) {
         Promotion promotion = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Promotion not found: " + id));
 
         String cleanCode = req.getCode().trim();
         if (!promotion.getCode().equals(cleanCode) && promotionRepository.existsByCode(cleanCode)) {
@@ -155,7 +158,7 @@ public class PromotionService {
     @Transactional
     public Promotion toggleStatus(UUID id, PromotionStatus status) {
         Promotion promotion = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Promotion not found: " + id));
         promotion.setStatus(status);
         return promotionRepository.save(promotion);
     }
@@ -229,58 +232,9 @@ public class PromotionService {
                     .build();
         }
 
-        if (promo.getStatus() != PromotionStatus.ACTIVE) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This promo code is currently " + promo.getStatus().name().toLowerCase())
-                    .build();
-        }
-
-        OffsetDateTime now = OffsetDateTime.now();
-        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This offer is not active yet")
-                    .build();
-        }
-
-        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This promo code has expired")
-                    .build();
-        }
-
-        if (promo.getUsageLimit() != null && promo.getUsageCount() >= promo.getUsageLimit()) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("Usage limit reached for this promo code")
-                    .build();
-        }
-
-        if (userId != null && promo.getPerCustomerLimit() != null) {
-            long userUsageCount = promotionUsageRepository.countByPromotionIdAndUserId(promo.getId(), userId);
-            if (userUsageCount >= promo.getPerCustomerLimit()) {
-                return PromotionDtos.PromotionValidationResult.builder()
-                        .valid(false)
-                        .code(promo.getCode())
-                        .name(promo.getName())
-                        .targetAudience(promo.getTargetAudience())
-                        .message("You have already used this promo code")
-                        .build();
-            }
+        PromotionDtos.PromotionValidationResult commonError = validateCommonPromotionRules(promo, userId);
+        if (commonError != null) {
+            return commonError;
         }
 
         if (promo.getMinimumOrderValue() != null && cartSubtotal.compareTo(promo.getMinimumOrderValue()) < 0) {
@@ -380,58 +334,9 @@ public class PromotionService {
                     .build();
         }
 
-        if (promo.getStatus() != PromotionStatus.ACTIVE) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This promo code is currently " + promo.getStatus().name().toLowerCase())
-                    .build();
-        }
-
-        OffsetDateTime now = OffsetDateTime.now();
-        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This offer is not active yet")
-                    .build();
-        }
-
-        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("This promo code has expired")
-                    .build();
-        }
-
-        if (promo.getUsageLimit() != null && promo.getUsageCount() >= promo.getUsageLimit()) {
-            return PromotionDtos.PromotionValidationResult.builder()
-                    .valid(false)
-                    .code(promo.getCode())
-                    .name(promo.getName())
-                    .targetAudience(promo.getTargetAudience())
-                    .message("Usage limit reached for this promo code")
-                    .build();
-        }
-
-        if (userId != null && promo.getPerCustomerLimit() != null) {
-            long userUsageCount = promotionUsageRepository.countByPromotionIdAndUserId(promo.getId(), userId);
-            if (userUsageCount >= promo.getPerCustomerLimit()) {
-                return PromotionDtos.PromotionValidationResult.builder()
-                        .valid(false)
-                        .code(promo.getCode())
-                        .name(promo.getName())
-                        .targetAudience(promo.getTargetAudience())
-                        .message("You have already used this promo code")
-                        .build();
-            }
+        PromotionDtos.PromotionValidationResult commonError = validateCommonPromotionRules(promo, userId);
+        if (commonError != null) {
+            return commonError;
         }
 
         if (promo.getMinimumOrderValue() != null && originalFee != null && originalFee.compareTo(promo.getMinimumOrderValue()) < 0) {
@@ -518,5 +423,63 @@ public class PromotionService {
                     .build();
             promotionUsageRepository.save(usage);
         }
+    }
+
+    private PromotionDtos.PromotionValidationResult validateCommonPromotionRules(Promotion promo, UUID userId) {
+        if (promo.getStatus() != PromotionStatus.ACTIVE) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code is currently " + promo.getStatus().name().toLowerCase())
+                    .build();
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This offer is not active yet")
+                    .build();
+        }
+
+        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("This promo code has expired")
+                    .build();
+        }
+
+        if (promo.getUsageLimit() != null && promo.getUsageCount() >= promo.getUsageLimit()) {
+            return PromotionDtos.PromotionValidationResult.builder()
+                    .valid(false)
+                    .code(promo.getCode())
+                    .name(promo.getName())
+                    .targetAudience(promo.getTargetAudience())
+                    .message("Usage limit reached for this promo code")
+                    .build();
+        }
+
+        if (userId != null && promo.getPerCustomerLimit() != null) {
+            long userUsageCount = promotionUsageRepository.countByPromotionIdAndUserId(promo.getId(), userId);
+            if (userUsageCount >= promo.getPerCustomerLimit()) {
+                return PromotionDtos.PromotionValidationResult.builder()
+                        .valid(false)
+                        .code(promo.getCode())
+                        .name(promo.getName())
+                        .targetAudience(promo.getTargetAudience())
+                        .message("You have already used this promo code")
+                        .build();
+            }
+        }
+
+        return null;
     }
 }

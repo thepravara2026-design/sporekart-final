@@ -4,6 +4,7 @@ import { generateTestUser, authenticateInBrowser, API_BASE } from './audit_helpe
 test.describe('PHASE 3D: Order Cancellation & Refund Initiation Lifecycle', () => {
 
   test('CANCEL-01: Customer Cancels Eligible Paid Order with Reason & Verifies State', async ({ page }) => {
+    test.setTimeout(60000);
     const testUser = generateTestUser('cancel_order');
     const { authData } = await authenticateInBrowser(page, testUser, false);
 
@@ -74,20 +75,21 @@ test.describe('PHASE 3D: Order Cancellation & Refund Initiation Lifecycle', () =
 
     // 4. Fill Reason in Cancellation Modal
     const modal = page.locator('div[role="dialog"], .fixed').filter({ hasText: /Cancel Order/i }).first();
-    await expect(modal).toBeVisible({ timeout: 10000 });
+    await expect(modal).toBeVisible({ timeout: 15000 });
 
-    const confirmCancelBtn = modal.getByRole('button', { name: /Confirm Cancellation|Yes, Cancel/i }).first();
+    const confirmCancelBtn = modal.getByRole('button', { name: /Confirm Order Cancellation|Confirm Cancellation|Yes, Cancel/i }).first();
+    await expect(confirmCancelBtn).toBeVisible({ timeout: 10000 });
     await confirmCancelBtn.click();
 
-    // 5. Verify Order Status updates to CANCELLED in UI
-    await expect(page.getByText(/CANCELLED/i).first()).toBeVisible({ timeout: 15000 });
+    // 5. Verify Order Status updates to CANCELLED or REFUNDED in UI
+    await expect(page.getByText(/CANCELLED|REFUNDED/i).first()).toBeVisible({ timeout: 15000 });
 
-    // 6. Verify via API that order status is CANCELLED
+    // 6. Verify via API that order status is CANCELLED or REFUNDED
     const verifyRes = await page.request.get(`${API_BASE}/orders/${orderId}`, {
       headers: { Authorization: `Bearer ${authData.token}` }
     });
     const verifyJson = await verifyRes.json();
-    expect(verifyJson.data.status).toBe('CANCELLED');
+    expect(['CANCELLED', 'REFUNDED']).toContain(verifyJson.data.status);
   });
 
   test('CANCEL-02: Duplicate Cancellation Attempt Is Idempotently Rejected', async ({ page }) => {

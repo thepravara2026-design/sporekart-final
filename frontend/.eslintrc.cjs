@@ -14,6 +14,7 @@ module.exports = {
   rules: {
     'react/prop-types': 'off',
     'react/no-unescaped-entities': 'off',
+    'no-empty': ['error', { allowEmptyCatch: true }],
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
   },
 };

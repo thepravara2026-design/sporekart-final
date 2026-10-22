@@ -11,6 +11,7 @@ import com.sporekart.media.domain.MediaStatus;
 import com.sporekart.media.domain.MediaType;
 import com.sporekart.media.infrastructure.MediaAssetRepository;
 import com.sporekart.media.infrastructure.MediaProductLinkRepository;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,7 +101,7 @@ public class MediaModuleTest {
         assertEquals(MediaStatus.ARCHIVED, asset.getStatus());
         assertNotNull(asset.getDeletedAt());
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> mediaService.getMediaAsset(initRes.getMediaId()));
+        Exception ex = assertThrows(ResourceNotFoundException.class, () -> mediaService.getMediaAsset(initRes.getMediaId()));
         assertTrue(ex.getMessage().contains("deleted"));
     }
 

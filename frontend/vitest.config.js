@@ -8,6 +8,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.jsx'],
     include: ['src/__tests__/**/*.test.{js,jsx}'],
-    pool: 'forks',
+    pool: 'threads',
   },
 });

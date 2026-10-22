@@ -19,15 +19,16 @@ test.describe('PHASE 2: Browser Smoke Test Baseline', () => {
     ];
 
     for (const route of routes) {
+      console.log(`Checking route: ${route}`);
       const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       expect(response.status()).toBeLessThan(400);
 
       // Verify page container renders
-      await expect(page.locator('#main-content')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('#main-content')).toBeVisible({ timeout: 15000 });
 
       // Verify Navbar and Footer render
-      await expect(page.locator('header, nav').first()).toBeVisible();
-      await expect(page.locator('footer').first()).toBeVisible();
+      await expect(page.locator('header, nav').first()).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('footer').first()).toBeVisible({ timeout: 15000 });
     }
 
     // Verify no fatal crashes or critical unhandled JavaScript errors
@@ -44,7 +45,7 @@ test.describe('PHASE 2: Browser Smoke Test Baseline', () => {
     await expect(page.getByText(/thepravara2026@gmail.com/i).first()).toBeVisible();
 
     // Verify Admin Control Login button is displayed
-    const adminLoginLink = page.getByRole('link', { name: /Admin Control Login/i });
+    const adminLoginLink = page.getByRole('link', { name: /Admin Sign-In Portal|Admin Control Login/i });
     await expect(adminLoginLink).toBeVisible();
   });
 

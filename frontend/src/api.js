@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = '/api/v1';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api/v1';
 
 // Helper to get or generate guest session ID
 export const getOrCreateSessionId = () => {
@@ -133,9 +133,9 @@ export const trainingApi = {
   getMyReviews: () => api.get('/training/my-reviews'),
   getPendingReviews: () => api.get('/training/pending-reviews'),
   getGlimpses: () => api.get('/training/glimpses'),
-  getAdminGlimpses: () => api.get('/training/admin/glimpses'),
-  saveGlimpse: (data) => api.post('/training/admin/glimpses', data),
-  deleteGlimpse: (id) => api.delete(`/training/admin/glimpses/${id}`),
+  getAdminGlimpses: () => api.get('/admin/training/glimpses'),
+  saveGlimpse: (data) => api.post('/admin/training/glimpses', data),
+  deleteGlimpse: (id) => api.delete(`/admin/training/glimpses/${id}`),
 };
 
 export const orderApi = {
@@ -167,6 +167,21 @@ export const reviewApi = {
 
 
 export const paymentApi = {
+  // Standard Razorpay endpoints
+  createOrder: (amount, currency = 'INR', receipt = null, orderId = null) =>
+    api.post('/create-order', { amount, currency, receipt, order_id: orderId }),
+  verifyPaymentStandard: (razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId = null) =>
+    api.post('/verify-payment', {
+      order_id: razorpayOrderId,
+      razorpay_order_id: razorpayOrderId,
+      payment_id: razorpayPaymentId,
+      razorpay_payment_id: razorpayPaymentId,
+      signature: razorpaySignature,
+      razorpay_signature: razorpaySignature,
+      sporekart_order_id: orderId,
+    }),
+
+  // Domain-specific Sporekart payment lifecycle methods
   initiatePayment: (orderId) => api.post('/payment/initiate', { orderId }),
   initiateEnrollmentPayment: (enrollmentId) => api.post('/payment/initiate-enrollment', { enrollmentId }),
   verifyPayment: (orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature) =>
@@ -180,6 +195,21 @@ export const paymentApi = {
       razorpayPaymentId: transactionReference,
       razorpayOrderId,
       razorpaySignature,
+    }),
+};
+
+export const razorpayApi = {
+  createOrder: (amount, currency = 'INR', receipt = null, orderId = null) =>
+    api.post('/create-order', { amount, currency, receipt, order_id: orderId }),
+  verifyPayment: (razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId = null) =>
+    api.post('/verify-payment', {
+      order_id: razorpayOrderId,
+      razorpay_order_id: razorpayOrderId,
+      payment_id: razorpayPaymentId,
+      razorpay_payment_id: razorpayPaymentId,
+      signature: razorpaySignature,
+      razorpay_signature: razorpaySignature,
+      sporekart_order_id: orderId,
     }),
 };
 

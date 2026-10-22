@@ -48,7 +48,7 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
         setProduct(prod);
         
         if (prod.id) {
-          analyticsApi.trackProductView(prod.id, prod.slug, prod.title).catch(() => {});
+          analyticsApi.trackProductView(prod.id, prod.slug, prod.title).catch((err) => console.warn('Failed to track product view:', err));
         }
         
         if (prod.variants && prod.variants.length > 0) {
@@ -188,7 +188,7 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 animate-fade-in pb-24 md:pb-12" data-testid="product-detail">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 md:pb-16 space-y-8 sm:space-y-10 animate-fade-in" data-testid="product-detail">
       <SeoHead
         title={`${product.title} (${selectedVariant?.variantName || ''}) — Buy Online in India | Sporekart`}
         description={product.description?.substring(0, 160)}

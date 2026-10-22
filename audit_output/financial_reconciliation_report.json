@@ -1,0 +1,1404 @@
+{
+  "order_items_math": {
+    "total_items_checked": 133,
+    "mismatches_count": 0,
+    "mismatches": []
+  },
+  "order_subtotal_vs_items": {
+    "total_orders_checked": 133,
+    "mismatches_count": 133,
+    "mismatches": [
+      {
+        "order_id": "87bbb06d-8e6d-4aea-ac16-c8f1689bb852",
+        "order_number": "SK-20261017-818908",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "c6c04be3-79ac-4092-b485-2b304d4024bc",
+        "order_number": "SK-20261018-664890",
+        "status": "DELIVERED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "b967fe92-ca35-4777-afe2-16ae5121391d",
+        "order_number": "SK-20261018-810124",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "bade40d0-93d4-4271-b948-778419279c7c",
+        "order_number": "SK-20261013-959848",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "059966c9-3b93-467d-9809-1a26d62b55c8",
+        "order_number": "SK-20261017-658922",
+        "status": "REFUNDED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "04bbdc3a-ba65-43c4-8999-42e3bb44c2f3",
+        "order_number": "SK-20261017-731444",
+        "status": "REFUNDED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "7e0fa573-e134-4c19-ab85-fff1239b0d44",
+        "order_number": "SK-20261013-246200",
+        "status": "CANCELLED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "5bb8c4fb-3a0d-422e-889d-5ed5e9686a1f",
+        "order_number": "SK-20261013-743659",
+        "status": "REFUNDED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "66d4c722-8676-4d9b-b227-0f15d89683cd",
+        "order_number": "SK-20261018-716476",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "30d642d0-fdde-438a-bae4-ac493f64421e",
+        "order_number": "SK-20261018-797515",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "2fb2b169-4202-44f1-9fca-48cfcd29c2d0",
+        "order_number": "SK-20261017-363645",
+        "status": "CANCELLED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "102c3a09-0ca6-462a-93f1-16e9666c4efc",
+        "order_number": "SK-20261018-757901",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "e83d490c-1910-48a0-8fe7-480749eb90f0",
+        "order_number": "SK-20261018-588535",
+        "status": "PAID",
+        "subtotal": 2250.0,
+        "items_sum": 2655.0,
+        "diff": 405.0
+      },
+      {
+        "order_id": "1b609c06-8531-4e84-8b78-fd303aa12fe9",
+        "order_number": "SK-20261018-493739",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "ee99ed0b-f551-482a-bc7f-ab1f19b3fa27",
+        "order_number": "SK-20261018-771485",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "d9750338-c465-402d-9e09-8c5490af0c45",
+        "order_number": "SK-20261018-044278",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "45ca8d6d-c3f7-4d48-b8fb-9c47e9290d6a",
+        "order_number": "SK-20261018-386364",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "c1238636-c28a-4188-acb4-8e573d226678",
+        "order_number": "SK-20261013-321832",
+        "status": "PAID",
+        "subtotal": 900.0,
+        "items_sum": 1062.0,
+        "diff": 162.0
+      },
+      {
+        "order_id": "ca1d814a-27c5-4d86-80a3-2fec165a0928",
+        "order_number": "SK-20261018-063890",
+        "status": "REFUNDED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "6a05345e-5e2a-4f50-a033-e288530ca474",
+        "order_number": "SK-20261017-519193",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "11631337-5ac6-43ac-9fa5-076c768f41a7",
+        "order_number": "SK-20261012-980117",
+        "status": "REFUNDED",
+        "subtotal": 450.0,
+        "items_sum": 531.0,
+        "diff": 81.0
+      },
+      {
+        "order_id": "b6203373-3aa9-46d1-a829-c48e483ec4ad",
+        "order_number": "SK-20261018-257208",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "1a809e84-4814-4e6e-aa3b-8661a4b6718e",
+        "order_number": "SK-20261017-502866",
+        "status": "REFUNDED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "480f4b50-08ed-4ebf-a1dc-e2c2443f9af0",
+        "order_number": "SK-20261018-317068",
+        "status": "PAID",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "339a5083-83cb-452a-9424-5b26476db1c3",
+        "order_number": "SK-20261017-985836",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 890.0,
+        "items_sum": 1050.2,
+        "diff": 160.2
+      },
+      {
+        "order_id": "d882d683-493d-4d47-8aa3-e411d7fb8abb",
+        "order_number": "SK-20261018-642281",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "cd9bd219-347b-4b4d-9363-44d8260dce36",
+        "order_number": "SK-20261018-793523",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "e2f25f68-120a-426b-8819-1bdba0381ee6",
+        "order_number": "SK-20261017-150727",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "583fe34b-d1a7-4f9b-8259-56b728b8affb",
+        "order_number": "SK-20261018-821107",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "3240ebd7-de9b-4a02-ae66-433316202aea",
+        "order_number": "SK-20261018-062961",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "5eb64e69-27f6-47ee-ab56-59071e5d4390",
+        "order_number": "SK-20261018-798969",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "569ca352-6463-4c11-b76b-167d10f9485a",
+        "order_number": "SK-20261017-457047",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "3d2baf0f-c933-4a09-9d58-b717870b08f3",
+        "order_number": "SK-20261018-818935",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "5f6f3488-a5f1-4a74-b8e5-c8f392fb1afb",
+        "order_number": "SK-20261018-013712",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "2d9602be-9ae5-43a7-9f25-babe0f3f69fe",
+        "order_number": "SK-20261018-543441",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "4dec85f0-cb95-4666-a96e-3bb7d0c890cb",
+        "order_number": "SK-20261013-645004",
+        "status": "PAID",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "e2824b2e-b780-4764-874b-42bc03fa2cde",
+        "order_number": "SK-20261018-463750",
+        "status": "REFUNDED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "8fed559c-96f4-4a79-888f-d093328d5b29",
+        "order_number": "SK-20261018-191242",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "1ed5f9bd-8924-4e51-a057-1afad23e4e76",
+        "order_number": "SK-20261018-810488",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "9135bfcd-05a6-4c60-9f0f-6aaa908f8c52",
+        "order_number": "SK-20261013-241257",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "3d3f5cab-c847-4a0d-917a-d33de7aa9267",
+        "order_number": "SK-20261018-133193",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "52f5e022-9d33-4703-8d53-6811f3d9b58b",
+        "order_number": "SK-20261018-513162",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "46ecf61b-b41c-4621-bd38-24fce00c2560",
+        "order_number": "SK-20261018-152592",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "bef7723e-c513-4166-8106-d9c78ea00154",
+        "order_number": "SK-20261017-469258",
+        "status": "REFUNDED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "72d64251-e321-4802-b608-aed0c2f94f79",
+        "order_number": "SK-20261018-525659",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "ab73597d-316a-45a6-aeac-c9092dd29619",
+        "order_number": "SK-20261018-894898",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "a0cdeecd-51a0-44f2-ae21-39295a7ceadb",
+        "order_number": "SK-20261017-866289",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 360.0,
+        "items_sum": 403.2,
+        "diff": 43.2
+      },
+      {
+        "order_id": "4a3e089c-ee0b-4383-bd61-3a615bc14fab",
+        "order_number": "SK-20261017-515306",
+        "status": "PAID",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "9156d8bf-a578-4538-b937-fa9c661135f6",
+        "order_number": "SK-20261013-390271",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "b2cae304-a7a4-4503-b413-1059e404ad2f",
+        "order_number": "SK-20261018-081200",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "13fb7475-72ab-4731-aa51-86cda6ff603d",
+        "order_number": "SK-20261018-123474",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "05cf9f7f-c627-462d-88e7-17905a8d1d69",
+        "order_number": "SK-20261018-600384",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "8fca82e0-3b66-4091-9c52-0d4a766dd184",
+        "order_number": "SK-20261018-912492",
+        "status": "REFUNDED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "e858d527-19c8-4db7-8b88-5c24a1990e9c",
+        "order_number": "SK-20261018-331750",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "25f15b7a-6d48-41d6-ad81-2c51d3bb1e6a",
+        "order_number": "SK-20261018-850215",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "a565dba3-f601-43a6-b240-296383328c0e",
+        "order_number": "SK-20261013-678196",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "5513a4da-010c-4176-a00a-5794bd93a4fa",
+        "order_number": "SK-20261017-068276",
+        "status": "SHIPPED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "7d986bb8-ea5a-40bc-a3ba-e4c6abee29ec",
+        "order_number": "SK-20261017-131610",
+        "status": "PAID",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "60654756-7a20-437d-ae72-65c7d96bda16",
+        "order_number": "SK-20261018-362945",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "a4a03e09-923c-4410-9f3e-977a0069fa4d",
+        "order_number": "SK-20261017-520027",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "402cae77-db90-4867-a75b-30b36953e22e",
+        "order_number": "SK-20261017-609573",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "f289ccb8-f776-420f-85c1-a0ecb8d328de",
+        "order_number": "SK-20261018-475148",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "5f15ca7b-5c1c-4ea1-8605-3056e74b4018",
+        "order_number": "SK-20261017-171595",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "d61a8e8a-31cb-4257-8b14-9918f68acbe9",
+        "order_number": "SK-20261014-010982",
+        "status": "PAID",
+        "subtotal": 900.0,
+        "items_sum": 1062.0,
+        "diff": 162.0
+      },
+      {
+        "order_id": "e984b69a-82a1-4880-8f4a-02e68e17836f",
+        "order_number": "SK-20261017-525679",
+        "status": "REFUNDED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "501cab83-124f-4bc1-a113-5f873bc1800a",
+        "order_number": "SK-20261017-979271",
+        "status": "CANCELLED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "c7d73a64-ec2c-49e4-af75-bcd08c393ca7",
+        "order_number": "SK-20261018-344026",
+        "status": "CANCELLED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "f43d584b-9b1b-4746-a53c-8054c794f8cb",
+        "order_number": "SK-20261018-928056",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "c1018abf-e755-46e1-8283-b04c78bcf812",
+        "order_number": "SK-20261018-448236",
+        "status": "DELIVERED",
+        "subtotal": 1500.0,
+        "items_sum": 1680.0,
+        "diff": 180.0
+      },
+      {
+        "order_id": "5582b04f-c84a-4838-8d46-7297e9f71f0b",
+        "order_number": "SK-20261017-254615",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "b7ec2fae-df8c-4667-9b53-017c2142e035",
+        "order_number": "SK-20261017-631353",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "78f1e7f2-2380-4822-a718-a641869d2284",
+        "order_number": "SK-20261017-202853",
+        "status": "CANCELLED",
+        "subtotal": 2250.0,
+        "items_sum": 2520.0,
+        "diff": 270.0
+      },
+      {
+        "order_id": "a9147f52-7cea-4cd5-acb4-8f40b588fc30",
+        "order_number": "SK-20261017-840558",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "701718fe-9c92-4440-a936-7852d703bd1f",
+        "order_number": "SK-20261018-584321",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "2ccf7b5d-1ace-4b20-b82d-ed0692017ef5",
+        "order_number": "SK-20261017-788067",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "85a3c672-6200-46ec-844c-bde0cf6a2b53",
+        "order_number": "SK-20261018-515269",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "a7013d96-2e09-469d-a057-5c71bb5e4c52",
+        "order_number": "SK-20261018-152026",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "dad1981b-529f-4ac3-b9dc-56d94670fee4",
+        "order_number": "SK-20261018-266063",
+        "status": "SHIPPED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "ae7d26f1-dd8a-4bd3-8d1a-271118a60aa1",
+        "order_number": "SK-20261017-280128",
+        "status": "PAID",
+        "subtotal": 890.0,
+        "items_sum": 1050.2,
+        "diff": 160.2
+      },
+      {
+        "order_id": "86496e41-42fc-48a7-be76-e76ced8ce9ca",
+        "order_number": "SK-20261012-570067",
+        "status": "REFUNDED",
+        "subtotal": 850.0,
+        "items_sum": 1003.0,
+        "diff": 153.0
+      },
+      {
+        "order_id": "0cc63dcc-87d1-48f7-a020-4b63c30aee07",
+        "order_number": "SK-20261018-041684",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "1d64d712-96dd-4387-b6de-ccff643d268d",
+        "order_number": "SK-20261018-110631",
+        "status": "PAID",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "81fed250-6ccf-4e98-b32a-d8f3486871bc",
+        "order_number": "SK-20261017-920795",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 360.0,
+        "items_sum": 403.2,
+        "diff": 43.2
+      },
+      {
+        "order_id": "04b2d415-fffb-401a-8c61-b611026bff34",
+        "order_number": "SK-20261018-261442",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "b41a8e8a-62a6-4c40-a63e-748e04c7a412",
+        "order_number": "SK-20261012-613351",
+        "status": "REFUNDED",
+        "subtotal": 320.0,
+        "items_sum": 358.4,
+        "diff": 38.4
+      },
+      {
+        "order_id": "cb4bdf71-f8f3-4a49-bc6f-0f18d601ea87",
+        "order_number": "SK-20261018-879003",
+        "status": "REFUNDED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "413e6a8e-76c1-4238-b079-5932f24f0815",
+        "order_number": "SK-20261017-156924",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 360.0,
+        "items_sum": 403.2,
+        "diff": 43.2
+      },
+      {
+        "order_id": "12d8035a-3dbd-49be-9a12-2bc18ba02ecc",
+        "order_number": "SK-20261018-496902",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "1913d553-597f-43a4-bf7b-117a94ed0c57",
+        "order_number": "SK-20261017-572105",
+        "status": "PROCESSING",
+        "subtotal": 360.0,
+        "items_sum": 403.2,
+        "diff": 43.2
+      },
+      {
+        "order_id": "5c6d8aa0-1468-495a-8a85-305a08b62bcf",
+        "order_number": "SK-20261017-565585",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "d657ed56-9f1a-450b-a137-6b8bcdba0768",
+        "order_number": "SK-20261017-989205",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 890.0,
+        "items_sum": 1050.2,
+        "diff": 160.2
+      },
+      {
+        "order_id": "4ceec233-7fe0-4aab-9840-2078194607d2",
+        "order_number": "SK-20261018-827126",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "72d89ef2-cf63-490c-a1a1-7749ee3c39e2",
+        "order_number": "SK-20261018-524285",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "5edbdcc1-b426-40ec-902b-e1b01dc71bff",
+        "order_number": "SK-20261013-900206",
+        "status": "CANCELLED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "3a5f6d26-ac57-4256-8a9d-8631c5dc453d",
+        "order_number": "SK-20261017-965926",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "54c77bfb-7fbf-46e8-9c5c-66d598f6d59e",
+        "order_number": "SK-20261018-386035",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "0e94ba63-c7c1-4aa8-8228-08321ecb04bb",
+        "order_number": "SK-20261012-372580",
+        "status": "DELIVERED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "00422955-3fa6-4b97-9c45-233d1b175e53",
+        "order_number": "SK-20261018-994605",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "d25744a3-ac95-4603-9d09-f0af8a847861",
+        "order_number": "SK-20261017-413919",
+        "status": "DELIVERED",
+        "subtotal": 1500.0,
+        "items_sum": 1680.0,
+        "diff": 180.0
+      },
+      {
+        "order_id": "cc83ca04-1c7a-4802-9a05-8e891bf39dc7",
+        "order_number": "SK-20261018-246120",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "68b6e640-b1aa-46bf-ae14-a32512b7cd49",
+        "order_number": "SK-20261018-075157",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "4d10e90f-8f7d-450b-ab4b-3ea305225258",
+        "order_number": "SK-20261018-746094",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "a892df92-d1cb-4305-af36-da34db36510d",
+        "order_number": "SK-20261017-493644",
+        "status": "REFUNDED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "8ac8c670-e1cc-4b22-a073-ec855978aadb",
+        "order_number": "SK-20261017-991576",
+        "status": "CANCELLED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "bb20b5ef-a92a-41fd-a824-8323c9f94a5b",
+        "order_number": "SK-20261017-625532",
+        "status": "DELIVERED",
+        "subtotal": 1500.0,
+        "items_sum": 1680.0,
+        "diff": 180.0
+      },
+      {
+        "order_id": "637ad3a5-3241-483a-b824-628d6a1be1be",
+        "order_number": "SK-20261013-521932",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "ed4c6a04-9b9c-4b5f-a95f-c8d2fb1c5f99",
+        "order_number": "SK-20261018-297980",
+        "status": "PAID",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "96e78f49-69bb-40c0-9e4f-0003558f49a2",
+        "order_number": "SK-20261017-645422",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "66a395c7-9ae8-4b2b-b853-9ec3c6e5ea67",
+        "order_number": "SK-20261013-482399",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "baec7da9-d45e-4ad4-a249-9ed1ac6d7f24",
+        "order_number": "SK-20261012-696749",
+        "status": "PAID",
+        "subtotal": 210.0,
+        "items_sum": 235.2,
+        "diff": 25.2
+      },
+      {
+        "order_id": "a812c8c2-14aa-4f38-a83b-b1c43769b7ba",
+        "order_number": "SK-20261018-659809",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 398.0,
+        "items_sum": 445.76,
+        "diff": 47.76
+      },
+      {
+        "order_id": "34368a9d-2714-43e9-8edb-b40b0106f542",
+        "order_number": "SK-20261018-012059",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 1500.0,
+        "items_sum": 1680.0,
+        "diff": 180.0
+      },
+      {
+        "order_id": "bd44e14c-b63a-4e80-bed9-395935b29529",
+        "order_number": "SK-20261018-803641",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "ec3efce4-c84e-4a47-9f63-2e10f85a784e",
+        "order_number": "SK-20261018-695692",
+        "status": "SHIPPED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "048bedd7-b292-4928-8b04-e3c72c06448d",
+        "order_number": "SK-20261017-853979",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "bdd39467-07f2-4d48-a1e1-b3e3340ea15e",
+        "order_number": "SK-20261013-638439",
+        "status": "SHIPPED",
+        "subtotal": 180.0,
+        "items_sum": 189.0,
+        "diff": 9.0
+      },
+      {
+        "order_id": "bad5e0ed-4c11-40ad-b890-cb6e986c8818",
+        "order_number": "SK-20261018-550636",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "8f1ca36b-fac5-4758-9013-2eb9decf148a",
+        "order_number": "SK-20261018-783374",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "ea573f65-c7fd-4b82-b49f-a9e0e190e2d0",
+        "order_number": "SK-20261018-380472",
+        "status": "CANCELLED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "e8893804-1fe2-449c-8764-339c9e1b76e1",
+        "order_number": "SK-20261018-593181",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "ce751391-e098-4fdd-8c39-effe4de059b6",
+        "order_number": "SK-20261018-219341",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "2225ae2d-9272-4b22-b0dc-f18567e41586",
+        "order_number": "SK-20261018-180034",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "0c550989-4658-46aa-922f-d72e20780389",
+        "order_number": "SK-20261018-694770",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "11a1d302-b664-4529-9cd8-1a5ab8be7080",
+        "order_number": "SK-20261018-108186",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "ecceb0f2-e09c-49fa-bc4a-efa4935284d7",
+        "order_number": "SK-20261018-858346",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "423c9537-8a96-40e7-9692-e08832ec52fe",
+        "order_number": "SK-20261017-734849",
+        "status": "CANCELLED",
+        "subtotal": 180.0,
+        "items_sum": 201.6,
+        "diff": 21.6
+      },
+      {
+        "order_id": "93434ec7-5eef-4f9a-b678-b3d7b2606326",
+        "order_number": "SK-20261017-699616",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 1500.0,
+        "items_sum": 1680.0,
+        "diff": 180.0
+      },
+      {
+        "order_id": "0767d613-2bf4-4318-902d-49fd316b08c4",
+        "order_number": "SK-20261017-362819",
+        "status": "DELIVERED",
+        "subtotal": 360.0,
+        "items_sum": 403.2,
+        "diff": 43.2
+      },
+      {
+        "order_id": "3c97aae2-6f0e-492c-beda-ec442fef8626",
+        "order_number": "SK-20261018-132411",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "e9a953e3-3150-47a9-a75a-8541608013f6",
+        "order_number": "SK-20261018-425506",
+        "status": "SHIPPED",
+        "subtotal": 750.0,
+        "items_sum": 840.0,
+        "diff": 90.0
+      },
+      {
+        "order_id": "1e34c5a1-e2c5-4c2e-8951-a422f1fe12cc",
+        "order_number": "SK-20261018-205320",
+        "status": "PENDING_PAYMENT",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "c27a53db-a922-48c3-a2c6-5c7b1d56e2df",
+        "order_number": "SK-20261018-737787",
+        "status": "DELIVERED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      },
+      {
+        "order_id": "88464f60-22f5-45e6-a5d2-f02491c60fc1",
+        "order_number": "SK-20261018-942475",
+        "status": "REFUNDED",
+        "subtotal": 199.0,
+        "items_sum": 222.88,
+        "diff": 23.88
+      }
+    ]
+  },
+  "order_total_formula": {
+    "total_orders_checked": 133,
+    "mismatches_count": 0,
+    "mismatches": []
+  },
+  "order_vs_payment": {
+    "paid_orders_checked": 53,
+    "mismatches_count": 0,
+    "mismatches": []
+  },
+  "wallet_transactions_ledger": {
+    "total_transactions_checked": 126,
+    "mismatches_count": 17,
+    "mismatches": [
+      {
+        "tx_id": "6a827403-bc46-4df2-8ed4-d270bb40b99c",
+        "wallet_id": "7ef0fa42-5ff8-43d9-af1a-42e505252025",
+        "type": "ADJUSTMENT",
+        "amount": 100.0,
+        "balance_before": 0.0,
+        "balance_after": 100.0,
+        "expected_after": 0.0,
+        "diff": 100.0,
+        "description": "Admin Manual Credit: Phase 7 Role Test Wallet Courtesy Credit"
+      },
+      {
+        "tx_id": "f902f6c6-d23a-4c85-80ac-baa2107eaf0b",
+        "wallet_id": "7ef0fa42-5ff8-43d9-af1a-42e505252025",
+        "type": "ADJUSTMENT",
+        "amount": 100.0,
+        "balance_before": 100.0,
+        "balance_after": 200.0,
+        "expected_after": 100.0,
+        "diff": 100.0,
+        "description": "Admin Manual Credit: Phase 7 Role Test Wallet Courtesy Credit"
+      },
+      {
+        "tx_id": "e42c9f32-012a-4818-ac74-e94088d83a42",
+        "wallet_id": "7ef0fa42-5ff8-43d9-af1a-42e505252025",
+        "type": "ADJUSTMENT",
+        "amount": 100.0,
+        "balance_before": 200.0,
+        "balance_after": 300.0,
+        "expected_after": 200.0,
+        "diff": 100.0,
+        "description": "Admin Manual Credit: Phase 7 Role Test Wallet Courtesy Credit"
+      },
+      {
+        "tx_id": "5499d690-9a92-4ab2-a9b3-4953bb0f78c5",
+        "wallet_id": "7ef0fa42-5ff8-43d9-af1a-42e505252025",
+        "type": "ADJUSTMENT",
+        "amount": 100.0,
+        "balance_before": 300.0,
+        "balance_after": 400.0,
+        "expected_after": 300.0,
+        "diff": 100.0,
+        "description": "Admin Manual Credit: Phase 7 Role Test Wallet Courtesy Credit"
+      },
+      {
+        "tx_id": "370d4c81-6f79-42d3-9007-11c2e7226aca",
+        "wallet_id": "335ea653-db10-4931-8041-4a326bcce49f",
+        "type": "REVERSAL",
+        "amount": 100.0,
+        "balance_before": 200.0,
+        "balance_after": 300.0,
+        "expected_after": 200.0,
+        "diff": 100.0,
+        "description": "Withdrawal Reversal Credit: Bank account number mismatch on IFSC validation"
+      },
+      {
+        "tx_id": "4a788f1a-bc30-4d5a-b15e-48ad46a34664",
+        "wallet_id": "335ea653-db10-4931-8041-4a326bcce49f",
+        "type": "ADJUSTMENT",
+        "amount": 150.0,
+        "balance_before": 250.0,
+        "balance_after": 400.0,
+        "expected_after": 250.0,
+        "diff": 150.0,
+        "description": "Admin Manual Credit: Audit Promotional Goodwill Credit Injection"
+      },
+      {
+        "tx_id": "b603b07a-71ba-4fd8-b296-4d78af5d7491",
+        "wallet_id": "335ea653-db10-4931-8041-4a326bcce49f",
+        "type": "ADJUSTMENT",
+        "amount": 50.0,
+        "balance_before": 400.0,
+        "balance_after": 350.0,
+        "expected_after": 400.0,
+        "diff": 50.0,
+        "description": "Admin Manual Debit: Audit Correction of Excess Promotional Credit"
+      },
+      {
+        "tx_id": "055b5cf4-90ec-46af-b221-65c7aeb0688b",
+        "wallet_id": "2b4954d1-764a-4605-9c4b-a6e5cc48c210",
+        "type": "ADJUSTMENT",
+        "amount": 100.0,
+        "balance_before": 0.0,
+        "balance_after": 100.0,
+        "expected_after": 0.0,
+        "diff": 100.0,
+        "description": "Admin Manual Credit: test credit"
+      },
+      {
+        "tx_id": "42732173-d438-46ed-a0a5-b6a4fc283a0a",
+        "wallet_id": "84cd4a43-d40a-4bae-9489-79ea680a3e9f",
+        "type": "REVERSAL",
+        "amount": 100.0,
+        "balance_before": 200.0,
+        "balance_after": 300.0,
+        "expected_after": 200.0,
+        "diff": 100.0,
+        "description": "Withdrawal Reversal Credit: Bank account number mismatch on IFSC validation"
+      },
+      {
+        "tx_id": "7f81af77-6012-4690-bf95-004da0b487f3",
+        "wallet_id": "84cd4a43-d40a-4bae-9489-79ea680a3e9f",
+        "type": "ADJUSTMENT",
+        "amount": 150.0,
+        "balance_before": 250.0,
+        "balance_after": 400.0,
+        "expected_after": 250.0,
+        "diff": 150.0,
+        "description": "Admin Manual Credit: Audit Promotional Goodwill Credit Injection"
+      },
+      {
+        "tx_id": "957d56ca-fef4-4f3c-bf00-043e1fe04802",
+        "wallet_id": "84cd4a43-d40a-4bae-9489-79ea680a3e9f",
+        "type": "ADJUSTMENT",
+        "amount": 200.0,
+        "balance_before": 400.0,
+        "balance_after": 200.0,
+        "expected_after": 400.0,
+        "diff": 200.0,
+        "description": "Admin Manual Debit: Audit Correction of Goodwill Credit"
+      },
+      {
+        "tx_id": "0cf31797-d85a-40d8-9620-77c1bb55e18c",
+        "wallet_id": "dbc724c8-d2ea-4e5e-836d-f6276533bb14",
+        "type": "REVERSAL",
+        "amount": 100.0,
+        "balance_before": 200.0,
+        "balance_after": 300.0,
+        "expected_after": 200.0,
+        "diff": 100.0,
+        "description": "Withdrawal Reversal Credit: Bank account number mismatch on IFSC validation"
+      },
+      {
+        "tx_id": "9f5b7efd-5845-44c9-8541-385d9da10ca1",
+        "wallet_id": "dbc724c8-d2ea-4e5e-836d-f6276533bb14",
+        "type": "ADJUSTMENT",
+        "amount": 150.0,
+        "balance_before": 250.0,
+        "balance_after": 400.0,
+        "expected_after": 250.0,
+        "diff": 150.0,
+        "description": "Admin Manual Credit: Audit Promotional Goodwill Credit Injection"
+      },
+      {
+        "tx_id": "d04e3270-7fa7-4e3d-9bc8-c109248580c9",
+        "wallet_id": "dbc724c8-d2ea-4e5e-836d-f6276533bb14",
+        "type": "ADJUSTMENT",
+        "amount": 200.0,
+        "balance_before": 400.0,
+        "balance_after": 200.0,
+        "expected_after": 400.0,
+        "diff": 200.0,
+        "description": "Admin Manual Debit: Audit Correction of Goodwill Credit"
+      },
+      {
+        "tx_id": "d352fc9e-19e3-4e84-947d-0976b80573c2",
+        "wallet_id": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "type": "REVERSAL",
+        "amount": 100.0,
+        "balance_before": 200.0,
+        "balance_after": 300.0,
+        "expected_after": 200.0,
+        "diff": 100.0,
+        "description": "Withdrawal Reversal Credit: Bank account number mismatch on IFSC validation"
+      },
+      {
+        "tx_id": "de417b90-dda2-46e4-bbdb-f5852227d653",
+        "wallet_id": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "type": "ADJUSTMENT",
+        "amount": 150.0,
+        "balance_before": 250.0,
+        "balance_after": 400.0,
+        "expected_after": 250.0,
+        "diff": 150.0,
+        "description": "Admin Manual Credit: Audit Promotional Goodwill Credit Injection"
+      },
+      {
+        "tx_id": "cb6654de-206d-4ff6-bb32-62e02ae0741e",
+        "wallet_id": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "type": "ADJUSTMENT",
+        "amount": 200.0,
+        "balance_before": 400.0,
+        "balance_after": 200.0,
+        "expected_after": 400.0,
+        "diff": 200.0,
+        "description": "Admin Manual Debit: Audit Correction of Goodwill Credit"
+      }
+    ]
+  },
+  "wallet_current_vs_ledger": {
+    "wallets_with_tx_checked": 44,
+    "mismatches_count": 0,
+    "mismatches": []
+  },
+  "training_seat_counts": {
+    "total_batches_checked": 23,
+    "discrepancies_count": 12,
+    "discrepancies": [
+      {
+        "batch_id": "c5fa4899-3919-4c29-9556-dbe083f6d352",
+        "batch_code": "FUT-50380",
+        "capacity": 15,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "2e24f6b7-cc8f-4453-85e9-44c0e1ae2835",
+        "batch_code": "BATCH-LM-1792289049",
+        "capacity": 10,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 2,
+        "diff": 2,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "488539d6-2721-4187-95d7-d2b73f23e7d3",
+        "batch_code": "BATCH-FREE-1792289061",
+        "capacity": 20,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "5f0ad782-3c4b-440e-84d1-6612a671a14b",
+        "batch_code": "BATCH-RACE-1792289069",
+        "capacity": 2,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 6,
+        "diff": 6,
+        "overcapacity": true
+      },
+      {
+        "batch_id": "b047232d-61bb-460f-a5b6-6ead90a12405",
+        "batch_code": "BATCH-SHORT-1792289081",
+        "capacity": 5,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "cbc38347-701a-48e6-a2a4-9876172c044e",
+        "batch_code": "BATCH-RACE-1792289665",
+        "capacity": 2,
+        "batch_enrolled_count_column": 2,
+        "actual_enrollments_in_db": 5,
+        "diff": 3,
+        "overcapacity": true
+      },
+      {
+        "batch_id": "8052e5c9-48b2-4d4d-a72d-a6775a4c9d74",
+        "batch_code": "BATCH-SHORT-1792289679",
+        "capacity": 5,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "9402212b-c807-4bf0-813b-800afbed9a54",
+        "batch_code": "BATCH-RACE-1792289841",
+        "capacity": 2,
+        "batch_enrolled_count_column": 2,
+        "actual_enrollments_in_db": 5,
+        "diff": 3,
+        "overcapacity": true
+      },
+      {
+        "batch_id": "aaced004-62f7-43f9-8e40-edc2c1e43c4d",
+        "batch_code": "BATCH-SHORT-1792289857",
+        "capacity": 5,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "ff3e42a2-f294-4363-b668-d9efafeed8ba",
+        "batch_code": "BATCH-RACE-1792290678",
+        "capacity": 2,
+        "batch_enrolled_count_column": 2,
+        "actual_enrollments_in_db": 5,
+        "diff": 3,
+        "overcapacity": true
+      },
+      {
+        "batch_id": "85f7e026-b459-4c61-9c13-9dc91b3e5855",
+        "batch_code": "BATCH-SHORT-1792290693",
+        "capacity": 5,
+        "batch_enrolled_count_column": 0,
+        "actual_enrollments_in_db": 1,
+        "diff": 1,
+        "overcapacity": false
+      },
+      {
+        "batch_id": "c9de5649-0485-443f-87d5-c396c6c4aed7",
+        "batch_code": "BATCH-COMM-2026-01",
+        "capacity": 50,
+        "batch_enrolled_count_column": 7,
+        "actual_enrollments_in_db": 16,
+        "diff": 9,
+        "overcapacity": false
+      }
+    ]
+  },
+  "inventory_stock_reconciliation": {
+    "variants_with_inventory_checked": 19,
+    "mismatches_count": 0,
+    "mismatches": []
+  }
+}

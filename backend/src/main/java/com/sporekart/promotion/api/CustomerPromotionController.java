@@ -39,7 +39,9 @@ public class CustomerPromotionController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
             try {
                 userId = UUID.fromString(authentication.getName());
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(CustomerPromotionController.class).warn("Failed to parse user UUID from authentication name: {}", authentication.getName());
+            }
         }
 
         BigDecimal originalFee = BigDecimal.ZERO;

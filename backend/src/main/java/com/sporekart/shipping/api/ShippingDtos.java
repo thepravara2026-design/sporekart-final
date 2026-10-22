@@ -74,6 +74,17 @@ public class ShippingDtos {
         private String current_status;
         private String current_location;
         private String scans;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("scans")
+        public void setScans(com.fasterxml.jackson.databind.JsonNode node) {
+            if (node == null || node.isNull()) {
+                this.scans = null;
+            } else if (node.isTextual()) {
+                this.scans = node.asText();
+            } else {
+                this.scans = node.toString();
+            }
+        }
     }
 
     @Data

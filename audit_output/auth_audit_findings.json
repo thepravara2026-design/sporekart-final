@@ -1,0 +1,82 @@
+[
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/enroll",
+    "controller": "TrainingController.enroll",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/enroll'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/bookings",
+    "controller": "TrainingController.enroll",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/bookings'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/enrollments/{enrollmentId}/confirm-payment",
+    "controller": "TrainingController.confirmPayment",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/enrollments/{enrollmentId}/confirm-payment'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/enrollments/{enrollmentId}/cancel",
+    "controller": "TrainingController.cancelEnrollment",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/enrollments/{enrollmentId}/cancel'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/reviews",
+    "controller": "TrainingController.createReview",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/reviews'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "ADMIN_ROUTE_UNPROTECTED_BY_ROLE",
+    "severity": "HIGH",
+    "endpoint": "GET /training/admin/glimpses",
+    "controller": "TrainingController.getAdminGlimpses",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Route contains 'admin' but path '/training/admin/glimpses' does not match '/admin/**' and method has no @PreAuthorize('hasRole(\"ADMIN\")')."
+  },
+  {
+    "type": "ADMIN_ROUTE_UNPROTECTED_BY_ROLE",
+    "severity": "HIGH",
+    "endpoint": "POST /training/admin/glimpses",
+    "controller": "TrainingController.saveGlimpse",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Route contains 'admin' but path '/training/admin/glimpses' does not match '/admin/**' and method has no @PreAuthorize('hasRole(\"ADMIN\")')."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "POST /training/admin/glimpses",
+    "controller": "TrainingController.saveGlimpse",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP POST under public prefix '/training/admin/glimpses'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  },
+  {
+    "type": "ADMIN_ROUTE_UNPROTECTED_BY_ROLE",
+    "severity": "HIGH",
+    "endpoint": "DELETE /training/admin/glimpses/{id}",
+    "controller": "TrainingController.deleteGlimpse",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Route contains 'admin' but path '/training/admin/glimpses/{id}' does not match '/admin/**' and method has no @PreAuthorize('hasRole(\"ADMIN\")')."
+  },
+  {
+    "type": "MUTATING_METHOD_UNDER_PUBLIC_PREFIX",
+    "severity": "HIGH",
+    "endpoint": "DELETE /training/admin/glimpses/{id}",
+    "controller": "TrainingController.deleteGlimpse",
+    "current_auth": "PERMIT_ALL_OR_CONFIG",
+    "explanation": "Mutating HTTP DELETE under public prefix '/training/admin/glimpses/{id}'. Relies on anyRequest().authenticated() without explicit role check or is public."
+  }
+]

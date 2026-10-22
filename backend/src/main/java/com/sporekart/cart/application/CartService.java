@@ -15,6 +15,7 @@ import com.sporekart.catalog.infrastructure.ProductRepository;
 import com.sporekart.catalog.infrastructure.ProductVariantRepository;
 import com.sporekart.catalog.infrastructure.InventoryRecordRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -52,6 +56,7 @@ public class CartService {
                             String productName = conn.getMetaData().getDatabaseProductName();
                             isPostgreSql = productName != null && productName.toLowerCase().contains("postgres");
                         } catch (Exception e) {
+                            log.debug("Failed to determine database product name from datasource: {}", e.getMessage());
                             isPostgreSql = false;
                         }
                     }
@@ -73,7 +78,8 @@ public class CartService {
             if (isPostgres()) {
                 try {
                     cartRepository.acquireAdvisoryLock("cart_user_" + userId);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    log.warn("Failed to acquire advisory lock for user cart {}: {}", userId, e.getMessage());
                 }
             }
 
@@ -103,7 +109,8 @@ public class CartService {
                 if (isPostgres()) {
                     try {
                         cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        log.warn("Failed to acquire advisory lock for session cart {}: {}", sessionId, e.getMessage());
                     }
                 }
 
@@ -135,7 +142,8 @@ public class CartService {
             if (isPostgres()) {
                 try {
                     cartRepository.acquireAdvisoryLock("cart_session_" + sessionId.trim());
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    log.warn("Failed to acquire advisory lock for session cart {}: {}", sessionId, e.getMessage());
                 }
             }
 
@@ -262,9 +270,18 @@ public class CartService {
         if (guestCart == null || guestCart.getItems() == null || guestCart.getItems().isEmpty()) {
             return;
         }
+
+        Set<UUID> variantIds = guestCart.getItems().stream()
+                .map(CartItem::getVariantId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<UUID, ProductVariant> variantMap = variantIds.isEmpty() ? Collections.emptyMap() :
+                variantRepository.findAllById(variantIds).stream()
+                        .collect(Collectors.toMap(ProductVariant::getId, Function.identity(), (v1, v2) -> v1));
+
         for (CartItem guestItem : guestCart.getItems()) {
             Optional<CartItem> userItemOpt = cartItemRepository.findByCartIdAndVariantId(userCart.getId(), guestItem.getVariantId());
-            ProductVariant variant = variantRepository.findById(guestItem.getVariantId()).orElse(null);
+            ProductVariant variant = variantMap.get(guestItem.getVariantId());
             if (variant == null) continue;
 
             int availableStock = getAvailableStock(variant.getId(), variant.getStockQuantity());
@@ -365,14 +382,20 @@ public class CartService {
             return new CartValidationResponse(false, warnings, errors);
         }
 
+        Set<UUID> variantIds = cart.getItems().stream()
+                .map(CartItem::getVariantId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<UUID, ProductVariant> variantMap = variantIds.isEmpty() ? Collections.emptyMap() :
+                variantRepository.findAllById(variantIds).stream()
+                        .collect(Collectors.toMap(ProductVariant::getId, Function.identity(), (v1, v2) -> v1));
+
         for (CartItem item : cart.getItems()) {
-            Optional<ProductVariant> variantOpt = variantRepository.findById(item.getVariantId());
-            if (variantOpt.isEmpty()) {
+            ProductVariant variant = variantMap.get(item.getVariantId());
+            if (variant == null) {
                 errors.add("Item in cart is no longer available");
                 continue;
             }
-
-            ProductVariant variant = variantOpt.get();
             Product product = variant.getProduct();
             if (product == null || !product.isActive()) {
                 errors.add("Product '" + (product != null ? product.getTitle() : "Unknown") + "' is currently inactive");

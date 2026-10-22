@@ -5,6 +5,8 @@ import com.sporekart.training.domain.event.EnrollmentConfirmedEvent;
 import com.sporekart.training.infrastructure.*;
 import com.sporekart.identity.domain.User;
 import com.sporekart.identity.infrastructure.UserRepository;
+import com.sporekart.shared.application.ForbiddenOperationException;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import com.sporekart.training.api.TrainingDtos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +53,18 @@ public class TrainingService {
     // --- Categories & Courses ---
     @Transactional
     public CourseCategory createCategory(String name, String slug, String description) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category name is required");
+        }
+        if (slug == null || slug.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category slug is required");
+        }
+        if (categoryRepository.findBySlug(slug.trim()).isPresent()) {
+            throw new IllegalStateException("Category with slug '" + slug + "' already exists");
+        }
         CourseCategory category = CourseCategory.builder()
-                .name(name)
-                .slug(slug)
+                .name(name.trim())
+                .slug(slug.trim())
                 .description(description)
                 .build();
         return categoryRepository.save(category);
@@ -66,11 +77,26 @@ public class TrainingService {
 
     @Transactional
     public Course createCourse(UUID categoryId, String title, String slug, String description, Integer durationDays, BigDecimal feeInr) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course title is required");
+        }
+        if (slug == null || slug.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course slug is required");
+        }
+        if (durationDays == null || durationDays <= 0) {
+            throw new IllegalArgumentException("Course duration must be at least 1 day");
+        }
+        if (feeInr == null || feeInr.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Course fee cannot be negative");
+        }
+        if (courseRepository.findBySlug(slug.trim()).isPresent()) {
+            throw new IllegalStateException("Course with slug '" + slug + "' already exists");
+        }
         CourseCategory category = categoryId != null ? categoryRepository.findById(categoryId).orElse(null) : null;
         Course course = Course.builder()
                 .category(category)
-                .title(title)
-                .slug(slug)
+                .title(title.trim())
+                .slug(slug.trim())
                 .description(description)
                 .durationDays(durationDays)
                 .feeInr(feeInr)
@@ -88,13 +114,15 @@ public class TrainingService {
                 log.info("Auto-provisioning default upcoming batch for course: {}", course.getTitle());
                 String codeSlug = course.getSlug() != null ? course.getSlug().replace("-", "").toUpperCase() : "COURSE";
                 String batchCode = "BATCH-" + LocalDate.now().getYear() + "-" + codeSlug.substring(0, Math.min(6, codeSlug.length()));
-                createBatch(
-                        course.getId(),
-                        batchCode,
-                        LocalDate.now().plusDays(7),
-                        LocalDate.now().plusDays(7 + (course.getDurationDays() != null ? course.getDurationDays() : 7)),
-                        30
-                );
+                if (batchRepository.findByBatchCode(batchCode).isEmpty()) {
+                    createBatch(
+                            course.getId(),
+                            batchCode,
+                            LocalDate.now().plusDays(7),
+                            LocalDate.now().plusDays(7 + (course.getDurationDays() != null ? course.getDurationDays() : 7)),
+                            30
+                    );
+                }
             }
         }
         return courses;
@@ -108,12 +136,25 @@ public class TrainingService {
     // --- Batches & Schedules ---
     @Transactional
     public Batch createBatch(UUID courseId, String batchCode, LocalDate startDate, LocalDate endDate, Integer capacity) {
+        if (batchCode == null || batchCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Batch code is required");
+        }
+        if (capacity == null || capacity <= 0) {
+            throw new IllegalArgumentException("Batch capacity must be at least 1");
+        }
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Batch start date must be on or before end date");
+        }
+        if (batchRepository.findByBatchCode(batchCode.trim()).isPresent()) {
+            throw new IllegalStateException("Batch with code '" + batchCode + "' already exists");
+        }
+
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
 
         Batch batch = Batch.builder()
                 .course(course)
-                .batchCode(batchCode)
+                .batchCode(batchCode.trim())
                 .startDate(startDate)
                 .endDate(endDate)
                 .capacity(capacity)
@@ -130,12 +171,22 @@ public class TrainingService {
 
     @Transactional
     public BatchSchedule addBatchSchedule(UUID batchId, String topic, ZonedDateTime scheduledAt, Integer durationMinutes, String meetingLink) {
+        if (topic == null || topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("Schedule topic is required");
+        }
+        if (scheduledAt == null) {
+            throw new IllegalArgumentException("Scheduled time is required");
+        }
+        if (durationMinutes == null || durationMinutes <= 0) {
+            throw new IllegalArgumentException("Schedule duration must be greater than 0 minutes");
+        }
+
         Batch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found: " + batchId));
 
         BatchSchedule schedule = BatchSchedule.builder()
                 .batch(batch)
-                .topic(topic)
+                .topic(topic.trim())
                 .scheduledAt(scheduledAt)
                 .durationMinutes(durationMinutes)
                 .meetingLink(meetingLink)
@@ -157,7 +208,14 @@ public class TrainingService {
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment enrollCustomer(UUID userId, UUID batchId, String promoCode) {
         Batch batch = batchRepository.findWithLockById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found: " + batchId));
+
+        if (batch.getStatus() == BatchStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot enroll in a cancelled batch.");
+        }
+        if (batch.getStatus() == BatchStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot enroll in a completed batch.");
+        }
 
         if (!batch.hasAvailableCapacity()) {
             throw new BatchCapacityExceededException("Batch '" + batch.getBatchCode() + "' is full. Cannot enroll.");
@@ -213,22 +271,29 @@ public class TrainingService {
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment confirmEnrollmentPayment(UUID enrollmentId, String paymentReference) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found: " + enrollmentId));
 
         if (enrollment.getStatus() == EnrollmentStatus.CONFIRMED) {
             return enrollment;
         }
 
+        if (enrollment.getStatus() == EnrollmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot confirm payment for a cancelled enrollment.");
+        }
+
         UUID batchId = enrollment.getBatch().getId();
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found for enrollment"));
+
+        if (batch.getStatus() == BatchStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot confirm payment for a cancelled batch.");
+        }
         
         // Option A: Database-Level Atomic Capacity Update
         int updatedRows = batchRepository.incrementEnrolledCountIfCapacityAvailable(batchId);
         if (updatedRows == 0) {
             throw new BatchCapacityExceededException("Batch full during payment confirmation");
         }
-
-        Batch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("Batch not found for enrollment"));
 
         enrollment.setStatus(EnrollmentStatus.CONFIRMED);
         enrollment.setPaymentReference(paymentReference);
@@ -306,8 +371,12 @@ public class TrainingService {
             String refundStatus = "NONE";
             String refundId = null;
             if (e.getStatus() == EnrollmentStatus.CANCELLED) {
-                refundStatus = "REFUND_PROCESSED";
-                refundId = "rfnd_tr_" + e.getId().toString().substring(0, 8);
+                if (e.getPaymentReference() != null && !e.getPaymentReference().isBlank() && !"FREE_BYPASS".equalsIgnoreCase(e.getPaymentReference())) {
+                    refundStatus = "REFUND_PROCESSED";
+                    refundId = "rfnd_tr_" + e.getId().toString().substring(0, 8);
+                } else {
+                    refundStatus = "NOT_APPLICABLE";
+                }
             }
 
             BigDecimal fee = e.getFeePaidInr() != null ? e.getFeePaidInr() : BigDecimal.ZERO;
@@ -338,43 +407,52 @@ public class TrainingService {
     @Transactional(readOnly = true)
     public Enrollment getEnrollmentById(UUID enrollmentId) {
         return enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found: " + enrollmentId));
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Enrollment cancelEnrollment(UUID enrollmentId, UUID userId, String reason) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found: " + enrollmentId));
 
-        if (userId != null && !userId.equals(enrollment.getUserId())) {
-            throw new IllegalArgumentException("Access denied: You do not own this enrollment.");
+        EnrollmentStatus previousStatus = enrollment.getStatus();
+        if (previousStatus == EnrollmentStatus.CANCELLED) {
+            return enrollment;
         }
 
-        if (enrollment.getStatus() == EnrollmentStatus.CANCELLED) {
-            return enrollment;
+        if (previousStatus == EnrollmentStatus.COMPLETED) {
+            throw new IllegalStateException("Completed course enrollments cannot be cancelled or refunded.");
+        }
+
+        boolean isAdmin = false;
+        if (userId != null) {
+            isAdmin = userRepository.findById(userId)
+                    .map(u -> u.getRole() == com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                    .orElse(false);
+        }
+
+        if (userId != null && !userId.equals(enrollment.getUserId()) && !isAdmin) {
+            throw new ForbiddenOperationException("Access denied: You do not own this enrollment.");
         }
 
         Batch batch = enrollment.getBatch();
         LocalDate startDate = batch != null ? batch.getStartDate() : null;
 
-        if (startDate != null) {
+        if (!isAdmin && startDate != null) {
             if (LocalDate.now().plusDays(7).isAfter(startDate)) {
                 throw new IllegalStateException("Enrollment cancellation is only permitted at least 7 days before the batch start date.");
             }
         }
 
-        if (enrollment.getStatus() == EnrollmentStatus.CONFIRMED && batch != null) {
-            Batch lockedBatch = batchRepository.findWithLockById(batch.getId()).orElse(batch);
-            if (lockedBatch.getEnrolledCount() != null && lockedBatch.getEnrolledCount() > 0) {
-                lockedBatch.setEnrolledCount(lockedBatch.getEnrolledCount() - 1);
-                batchRepository.save(lockedBatch);
-            }
+        if (previousStatus == EnrollmentStatus.CONFIRMED && batch != null) {
+            batchRepository.decrementEnrolledCount(batch.getId());
         }
 
         enrollment.setStatus(EnrollmentStatus.CANCELLED);
         Enrollment saved = enrollmentRepository.save(enrollment);
 
-        if (saved.getUserId() != null && saved.getFeePaidInr() != null && saved.getFeePaidInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
+        // Only issue a financial refund if previous status was CONFIRMED (meaning payment was actually completed)
+        if (previousStatus == EnrollmentStatus.CONFIRMED && saved.getUserId() != null && saved.getFeePaidInr() != null && saved.getFeePaidInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
             walletService.processRefundToWallet(
                     saved.getUserId(),
                     saved.getFeePaidInr(),
@@ -416,9 +494,18 @@ public class TrainingService {
     @Transactional
     public Attendance markAttendance(UUID enrollmentId, UUID scheduleId, boolean isPresent) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found: " + enrollmentId));
         BatchSchedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new IllegalArgumentException("Schedule not found: " + scheduleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found: " + scheduleId));
+
+        if (enrollment.getStatus() != EnrollmentStatus.CONFIRMED && enrollment.getStatus() != EnrollmentStatus.COMPLETED) {
+            throw new IllegalStateException("Attendance can only be marked for confirmed or completed enrollments. Current status: " + enrollment.getStatus());
+        }
+
+        if (schedule.getBatch() != null && enrollment.getBatch() != null
+                && !schedule.getBatch().getId().equals(enrollment.getBatch().getId())) {
+            throw new IllegalArgumentException("Schedule does not belong to the batch for this enrollment");
+        }
 
         Attendance attendance = attendanceRepository.findByEnrollmentIdAndScheduleId(enrollmentId, scheduleId)
                 .orElseGet(() -> Attendance.builder()
@@ -434,11 +521,15 @@ public class TrainingService {
     @Transactional
     public Certificate completeCourseAndIssueCertificate(UUID enrollmentId, String grade) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found: " + enrollmentId));
 
         if (enrollment.getStatus() == EnrollmentStatus.COMPLETED) {
             return certificateRepository.findByEnrollmentId(enrollmentId)
                     .orElseThrow(() -> new IllegalStateException("Certificate missing for completed enrollment"));
+        }
+
+        if (enrollment.getStatus() != EnrollmentStatus.CONFIRMED) {
+            throw new IllegalStateException("Only confirmed course enrollments can be completed and issued a certificate. Current status: " + enrollment.getStatus());
         }
 
         Completion completion = Completion.builder()
@@ -483,12 +574,24 @@ public class TrainingService {
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required to submit a review");
         }
+        if (request == null) {
+            throw new IllegalArgumentException("Review request is required");
+        }
+        if (request.getRating() == null || request.getRating() < 1 || request.getRating() > 5) {
+            throw new IllegalArgumentException("Review rating must be between 1 and 5 stars");
+        }
+        if (request.getInstructorRating() != null && (request.getInstructorRating() < 1 || request.getInstructorRating() > 5)) {
+            throw new IllegalArgumentException("Instructor rating must be between 1 and 5 stars");
+        }
+        if (request.getReviewText() == null || request.getReviewText().trim().isEmpty()) {
+            throw new IllegalArgumentException("Review text is required");
+        }
 
         Enrollment enrollment = enrollmentRepository.findById(request.getEnrollmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment not found with ID: " + request.getEnrollmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with ID: " + request.getEnrollmentId()));
 
         if (!userId.equals(enrollment.getUserId())) {
-            throw new IllegalArgumentException("Access denied: You can only review your own course enrollments");
+            throw new ForbiddenOperationException("Access denied: You can only review your own course enrollments");
         }
 
         if (enrollment.getStatus() != EnrollmentStatus.CONFIRMED && enrollment.getStatus() != EnrollmentStatus.COMPLETED) {

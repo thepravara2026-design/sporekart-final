@@ -1,0 +1,2965 @@
+{
+  "flyway_migrations_count": 38,
+  "flyway_migrations": [
+    {
+      "version": 1,
+      "filename": "V1__init_schema.sql",
+      "description": "init schema",
+      "tables_created": [
+        "users",
+        "otps",
+        "categories",
+        "products",
+        "product_variants",
+        "product_images",
+        "courses",
+        "training_slots",
+        "training_bookings",
+        "orders",
+        "order_items",
+        "payments",
+        "shipments"
+      ]
+    },
+    {
+      "version": 2,
+      "filename": "V2__create_identity_and_customer_tables.sql",
+      "description": "create identity and customer tables",
+      "tables_created": [
+        "customer_identities",
+        "customer_addresses",
+        "customer_profiles"
+      ]
+    },
+    {
+      "version": 3,
+      "filename": "V3__create_catalog_enhancements.sql",
+      "description": "create catalog enhancements",
+      "tables_created": [
+        "product_offers",
+        "product_media"
+      ]
+    },
+    {
+      "version": 4,
+      "filename": "V4__create_media_management_tables.sql",
+      "description": "create media management tables",
+      "tables_created": [
+        "media_assets",
+        "media_product_links",
+        "media_course_links"
+      ]
+    },
+    {
+      "version": 5,
+      "filename": "V5__create_inventory_tables.sql",
+      "description": "create inventory tables",
+      "tables_created": [
+        "inventory_records",
+        "inventory_audit_events"
+      ]
+    },
+    {
+      "version": 6,
+      "filename": "V6__create_cart_tables.sql",
+      "description": "create cart tables",
+      "tables_created": [
+        "carts",
+        "cart_items"
+      ]
+    },
+    {
+      "version": 7,
+      "filename": "V7__create_order_tables.sql",
+      "description": "create order tables",
+      "tables_created": [
+        "order_events"
+      ]
+    },
+    {
+      "version": 8,
+      "filename": "V8__create_payment_tables.sql",
+      "description": "create payment tables",
+      "tables_created": [
+        "payment_events"
+      ]
+    },
+    {
+      "version": 9,
+      "filename": "V9__create_shipping_tables.sql",
+      "description": "create shipping tables",
+      "tables_created": [
+        "shipments",
+        "shipment_trackings"
+      ]
+    },
+    {
+      "version": 10,
+      "filename": "V10__create_training_tables.sql",
+      "description": "create training tables",
+      "tables_created": [
+        "customer_profiles",
+        "course_categories",
+        "courses",
+        "batches",
+        "batch_schedules",
+        "enrollments",
+        "attendances",
+        "completions",
+        "certificates"
+      ]
+    },
+    {
+      "version": 11,
+      "filename": "V11__create_customer_capabilities_table.sql",
+      "description": "create customer capabilities table",
+      "tables_created": [
+        "customer_capabilities"
+      ]
+    },
+    {
+      "version": 12,
+      "filename": "V12__create_content_blog_tables.sql",
+      "description": "create content blog tables",
+      "tables_created": [
+        "blog_categories",
+        "blog_authors",
+        "blog_tags",
+        "blog_posts",
+        "blog_post_tags",
+        "content_articles"
+      ]
+    },
+    {
+      "version": 13,
+      "filename": "V13__enhance_admin_audit_logs.sql",
+      "description": "enhance admin audit logs",
+      "tables_created": [
+        "admin_audit_logs"
+      ]
+    },
+    {
+      "version": 14,
+      "filename": "V14__create_comprehensive_support_tables.sql",
+      "description": "create comprehensive support tables",
+      "tables_created": [
+        "support_tickets",
+        "ticket_messages"
+      ]
+    },
+    {
+      "version": 15,
+      "filename": "V15__create_analytics_events_tables.sql",
+      "description": "create analytics events tables",
+      "tables_created": [
+        "analytics_events",
+        "analytics_metrics"
+      ]
+    },
+    {
+      "version": 16,
+      "filename": "V16__create_product_information_and_gallery_enhancements.sql",
+      "description": "create product information and gallery enhancements",
+      "tables_created": [
+        "product_information"
+      ]
+    },
+    {
+      "version": 17,
+      "filename": "V17__add_session_id_to_orders.sql",
+      "description": "add session id to orders",
+      "tables_created": []
+    },
+    {
+      "version": 18,
+      "filename": "V18__create_wallet_and_ledger_tables.sql",
+      "description": "create wallet and ledger tables",
+      "tables_created": [
+        "wallets",
+        "wallet_transactions",
+        "wallet_withdrawals"
+      ]
+    },
+    {
+      "version": 19,
+      "filename": "V19__add_tracking_url_and_packing_slip.sql",
+      "description": "add tracking url and packing slip",
+      "tables_created": []
+    },
+    {
+      "version": 20,
+      "filename": "V20__create_promotions_and_cart_promo_table.sql",
+      "description": "create promotions and cart promo table",
+      "tables_created": [
+        "promotions",
+        "promotion_usages"
+      ]
+    },
+    {
+      "version": 21,
+      "filename": "V21__add_secondary_indexes_and_jsonb_tuning.sql",
+      "description": "add secondary indexes and jsonb tuning",
+      "tables_created": []
+    },
+    {
+      "version": 22,
+      "filename": "V22__add_batch_and_course_promotion_targets.sql",
+      "description": "add batch and course promotion targets",
+      "tables_created": []
+    },
+    {
+      "version": 23,
+      "filename": "V23__add_target_audience_to_promotions.sql",
+      "description": "add target audience to promotions",
+      "tables_created": []
+    },
+    {
+      "version": 24,
+      "filename": "V24__create_product_reviews_tables.sql",
+      "description": "create product reviews tables",
+      "tables_created": [
+        "product_reviews",
+        "product_review_images",
+        "review_invitation_states"
+      ]
+    },
+    {
+      "version": 25,
+      "filename": "V25__create_training_reviews_tables.sql",
+      "description": "create training reviews tables",
+      "tables_created": [
+        "training_reviews"
+      ]
+    },
+    {
+      "version": 26,
+      "filename": "V26__create_training_gallery_tables.sql",
+      "description": "create training gallery tables",
+      "tables_created": [
+        "training_glimpses"
+      ]
+    },
+    {
+      "version": 27,
+      "filename": "V27__add_support_ticket_csat_and_auto_reply.sql",
+      "description": "add support ticket csat and auto reply",
+      "tables_created": []
+    },
+    {
+      "version": 28,
+      "filename": "V28__create_notification_events_table.sql",
+      "description": "create notification events table",
+      "tables_created": [
+        "notification_events"
+      ]
+    },
+    {
+      "version": 29,
+      "filename": "V29__add_alternate_phone_to_addresses.sql",
+      "description": "add alternate phone to addresses",
+      "tables_created": []
+    },
+    {
+      "version": 30,
+      "filename": "V30__relax_legacy_courses_constraints.sql",
+      "description": "relax legacy courses constraints",
+      "tables_created": []
+    },
+    {
+      "version": 31,
+      "filename": "V31__add_sms_notification_fields.sql",
+      "description": "add sms notification fields",
+      "tables_created": []
+    },
+    {
+      "version": 32,
+      "filename": "V32__add_wallet_non_negative_check.sql",
+      "description": "add wallet non negative check",
+      "tables_created": []
+    },
+    {
+      "version": 33,
+      "filename": "V33__make_payments_order_id_nullable.sql",
+      "description": "make payments order id nullable",
+      "tables_created": []
+    },
+    {
+      "version": 34,
+      "filename": "V34__add_performance_indexes.sql",
+      "description": "add performance indexes",
+      "tables_created": []
+    },
+    {
+      "version": 35,
+      "filename": "V35__enhance_notifications_for_in_app.sql",
+      "description": "enhance notifications for in app",
+      "tables_created": []
+    },
+    {
+      "version": 36,
+      "filename": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+      "description": "add shipping dimensions and unique constraint",
+      "tables_created": []
+    },
+    {
+      "version": 37,
+      "filename": "V37__deduplicate_and_unique_active_user_cart.sql",
+      "description": "deduplicate and unique active user cart",
+      "tables_created": []
+    },
+    {
+      "version": 38,
+      "filename": "V38__create_wallet_topup_intents.sql",
+      "description": "create wallet topup intents",
+      "tables_created": [
+        "wallet_topup_intents"
+      ]
+    }
+  ],
+  "flyway_created_tables": {
+    "users": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    phone VARCHAR(20) UNIQUE,\n    email VARCHAR(255) UNIQUE,\n    password_hash VARCHAR(255),\n    full_name VARCHAR(255) NOT NULL,\n    role VARCHAR(50) NOT NULL DEFAULT 'ROLE_CUSTOMER',\n    is_verified BOOLEAN NOT NULL DEFAULT FALSE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "otps": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    identifier VARCHAR(255) NOT NULL, -- phone or email\n    otp_code VARCHAR(10) NOT NULL,\n    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,\n    is_used BOOLEAN NOT NULL DEFAULT FALSE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "categories": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    name VARCHAR(100) NOT NULL,\n    slug VARCHAR(100) NOT NULL UNIQUE,\n    description TEXT,\n    image_url TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "products": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    category_id UUID REFERENCES categories(id) ON DELETE SET NULL,\n    title VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    description TEXT,\n    product_type VARCHAR(50) NOT NULL, -- FRESH_MUSHROOM, DRY_MUSHROOM, SPAWN_SEED, GROWING_KIT\n    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_variants": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    variant_name VARCHAR(100) NOT NULL, -- e.g., '200g', '500g', '1kg'\n    sku VARCHAR(100) UNIQUE NOT NULL,\n    price_inr NUMERIC(10, 2) NOT NULL,\n    compare_at_price_inr NUMERIC(10, 2),\n    stock_quantity INT NOT NULL DEFAULT 0,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_images": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    image_url TEXT NOT NULL,\n    is_primary BOOLEAN DEFAULT FALSE,\n    display_order INT DEFAULT 0"
+    },
+    "courses": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    title VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    description TEXT NOT NULL,\n    category VARCHAR(50) NOT NULL, -- CULTIVATION, SPAWN_PRODUCTION, BUSINESS_SUPPORT\n    mode VARCHAR(20) NOT NULL, -- ONLINE, OFFLINE\n    price_inr NUMERIC(10, 2) NOT NULL,\n    duration_hours INT NOT NULL,\n    syllabus_json TEXT,\n    image_url TEXT,\n    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "training_slots": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,\n    start_time TIMESTAMP WITH TIME ZONE NOT NULL,\n    end_time TIMESTAMP WITH TIME ZONE NOT NULL,\n    max_capacity INT NOT NULL,\n    booked_count INT NOT NULL DEFAULT 0,\n    location_or_link TEXT,\n    is_active BOOLEAN NOT NULL DEFAULT TRUE"
+    },
+    "training_bookings": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    slot_id UUID NOT NULL REFERENCES training_slots(id) ON DELETE CASCADE,\n    booking_status VARCHAR(50) NOT NULL DEFAULT 'CONFIRMED', -- CONFIRMED, CANCELLED\n    amount_paid_inr NUMERIC(10, 2) NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "orders": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID REFERENCES users(id) ON DELETE SET NULL,\n    order_number VARCHAR(50) NOT NULL UNIQUE,\n    total_amount_inr NUMERIC(10, 2) NOT NULL,\n    shipping_fee_inr NUMERIC(10, 2) NOT NULL DEFAULT 0,\n    status VARCHAR(50) NOT NULL DEFAULT 'CREATED', -- CREATED, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED\n    razorpay_order_id VARCHAR(100),\n    razorpay_payment_id VARCHAR(100),\n    shipping_address_json TEXT NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "order_items": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL,\n    product_title VARCHAR(255) NOT NULL,\n    variant_name VARCHAR(100) NOT NULL,\n    price_inr NUMERIC(10, 2) NOT NULL,\n    quantity INT NOT NULL"
+    },
+    "payments": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    razorpay_payment_id VARCHAR(100),\n    razorpay_order_id VARCHAR(100) NOT NULL,\n    razorpay_signature VARCHAR(255),\n    amount_inr NUMERIC(10, 2) NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'INITIATED', -- INITIATED, SUCCESS, FAILED\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "shipments": {
+      "version": 1,
+      "file": "V1__init_schema.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    shiprocket_order_id VARCHAR(100),\n    shiprocket_shipment_id VARCHAR(100),\n    tracking_number VARCHAR(100),\n    courier_name VARCHAR(100),\n    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "customer_identities": {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    provider VARCHAR(50) NOT NULL, -- GOOGLE, PHONE_OTP, EMAIL_OTP\n    provider_subject VARCHAR(255) NOT NULL, -- e.g., google_sub, phone_number, email_address\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT uk_provider_subject UNIQUE (provider, provider_subject)"
+    },
+    "customer_addresses": {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    recipient_name VARCHAR(150) NOT NULL,\n    phone VARCHAR(20) NOT NULL,\n    line1 VARCHAR(255) NOT NULL,\n    line2 VARCHAR(255),\n    city VARCHAR(100) NOT NULL,\n    state VARCHAR(100) NOT NULL,\n    pincode VARCHAR(10) NOT NULL,\n    is_default BOOLEAN NOT NULL DEFAULT FALSE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "customer_profiles": {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,\n    gstin VARCHAR(50),\n    farm_size_sqft INT,\n    has_training_capability BOOLEAN NOT NULL DEFAULT FALSE,\n    training_capability_granted_at TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_offers": {
+      "version": 3,
+      "file": "V3__create_catalog_enhancements.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,\n    offer_name VARCHAR(150) NOT NULL,\n    discount_percent NUMERIC(5, 2) DEFAULT 0.00,\n    discount_amount_inr NUMERIC(10, 2) DEFAULT 0.00,\n    valid_from TIMESTAMP WITH TIME ZONE NOT NULL,\n    valid_to TIMESTAMP WITH TIME ZONE NOT NULL,\n    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_media": {
+      "version": 3,
+      "file": "V3__create_catalog_enhancements.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,\n    media_url TEXT NOT NULL,\n    media_type VARCHAR(20) NOT NULL DEFAULT 'IMAGE', -- IMAGE, VIDEO\n    is_primary BOOLEAN NOT NULL DEFAULT FALSE,\n    display_order INT NOT NULL DEFAULT 0,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "media_assets": {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    storage_provider VARCHAR(50) NOT NULL DEFAULT 'SUPABASE',\n    bucket VARCHAR(100) NOT NULL DEFAULT 'sporekart-media',\n    storage_key VARCHAR(255) NOT NULL UNIQUE,\n    original_filename VARCHAR(255) NOT NULL,\n    mime_type VARCHAR(100) NOT NULL,\n    size_bytes BIGINT NOT NULL,\n    width INT,\n    height INT,\n    checksum VARCHAR(64),\n    media_type VARCHAR(50) NOT NULL DEFAULT 'IMAGE', -- IMAGE, VIDEO, DOCUMENT, PDF, CERTIFICATE\n    status VARCHAR(50) NOT NULL DEFAULT 'UPLOADING', -- UPLOADING, PROCESSING, READY, ACTIVE, FAILED, ARCHIVED\n    alt_text TEXT,\n    is_public BOOLEAN NOT NULL DEFAULT TRUE,\n    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n    deleted_at TIMESTAMP WITH TIME ZONE,\n    created_by UUID,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "media_product_links": {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    media_id UUID NOT NULL REFERENCES media_assets(id) ON DELETE CASCADE,\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,\n    is_primary BOOLEAN NOT NULL DEFAULT FALSE,\n    display_order INT NOT NULL DEFAULT 0,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "media_course_links": {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    media_id UUID NOT NULL REFERENCES media_assets(id) ON DELETE CASCADE,\n    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "inventory_records": {
+      "version": 5,
+      "file": "V5__create_inventory_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    variant_id UUID NOT NULL UNIQUE REFERENCES product_variants(id) ON DELETE CASCADE,\n    available_quantity INT NOT NULL DEFAULT 0,\n    reserved_quantity INT NOT NULL DEFAULT 0,\n    sold_quantity INT NOT NULL DEFAULT 0,\n    version BIGINT NOT NULL DEFAULT 0,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT chk_available_non_negative CHECK (available_quantity >= 0),\n    CONSTRAINT chk_reserved_non_negative CHECK (reserved_quantity >= 0),\n    CONSTRAINT chk_sold_non_negative CHECK (sold_quantity >= 0)"
+    },
+    "inventory_audit_events": {
+      "version": 5,
+      "file": "V5__create_inventory_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    variant_id UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,\n    event_type VARCHAR(50) NOT NULL, -- INITIALIZED, RESERVED, RELEASED, CONFIRMED_SOLD, CANCELLED_RESTOCKED, ADJUSTED\n    quantity_changed INT NOT NULL,\n    available_quantity_after INT NOT NULL,\n    reserved_quantity_after INT NOT NULL,\n    sold_quantity_after INT NOT NULL,\n    reference_id VARCHAR(100), -- Order ID / Reservation Token / Reason Reference\n    reason VARCHAR(255),\n    created_by VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "carts": {
+      "version": 6,
+      "file": "V6__create_cart_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID REFERENCES users(id) ON DELETE CASCADE,\n    session_id VARCHAR(100) UNIQUE,\n    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, CONVERTED, ABANDONED\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT chk_cart_owner CHECK (user_id IS NOT NULL OR session_id IS NOT NULL)"
+    },
+    "cart_items": {
+      "version": 6,
+      "file": "V6__create_cart_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,\n    variant_id UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,\n    quantity INT NOT NULL CHECK (quantity > 0),\n    unit_price_inr NUMERIC(10, 2) NOT NULL CHECK (unit_price_inr >= 0),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT uk_cart_variant UNIQUE (cart_id, variant_id)"
+    },
+    "order_events": {
+      "version": 7,
+      "file": "V7__create_order_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    previous_state VARCHAR(50),\n    new_state VARCHAR(50) NOT NULL,\n    reason TEXT,\n    created_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "payment_events": {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    payment_id UUID REFERENCES payments(id) ON DELETE CASCADE,\n    event_type VARCHAR(100) NOT NULL,\n    event_id VARCHAR(100) UNIQUE, -- Razorpay webhook event ID for duplicate webhook protection\n    event_data_json TEXT,\n    created_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "shipment_trackings": {
+      "version": 9,
+      "file": "V9__create_shipping_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    shipment_id UUID NOT NULL,\n    awb_code VARCHAR(100),\n    current_status VARCHAR(100) NOT NULL,\n    location VARCHAR(255),\n    activity VARCHAR(500),\n    timestamp TIMESTAMP WITH TIME ZONE,\n    event_data_json TEXT,\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_shipment_trackings_shipment_id FOREIGN KEY (shipment_id) REFERENCES shipments(id) ON DELETE CASCADE"
+    },
+    "course_categories": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    name VARCHAR(100) NOT NULL,\n    slug VARCHAR(100) NOT NULL UNIQUE,\n    description TEXT,\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP"
+    },
+    "batches": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    course_id UUID NOT NULL,\n    batch_code VARCHAR(100) NOT NULL UNIQUE,\n    start_date DATE NOT NULL,\n    end_date DATE NOT NULL,\n    capacity INT NOT NULL,\n    enrolled_count INT NOT NULL DEFAULT 0,\n    status VARCHAR(50) NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_batches_course_id FOREIGN KEY (course_id) REFERENCES courses(id)"
+    },
+    "batch_schedules": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    batch_id UUID NOT NULL,\n    topic VARCHAR(255) NOT NULL,\n    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,\n    duration_minutes INT NOT NULL,\n    meeting_link VARCHAR(500),\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_batch_schedules_batch_id FOREIGN KEY (batch_id) REFERENCES batches(id) ON DELETE CASCADE"
+    },
+    "enrollments": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    user_id UUID NOT NULL,\n    course_id UUID NOT NULL,\n    batch_id UUID NOT NULL,\n    status VARCHAR(50) NOT NULL,\n    fee_paid_inr DECIMAL(10, 2) NOT NULL,\n    payment_reference VARCHAR(100),\n    enrolled_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_enrollments_course_id FOREIGN KEY (course_id) REFERENCES courses(id),\n    CONSTRAINT fk_enrollments_batch_id FOREIGN KEY (batch_id) REFERENCES batches(id)"
+    },
+    "attendances": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    enrollment_id UUID NOT NULL,\n    schedule_id UUID NOT NULL,\n    is_present BOOLEAN NOT NULL DEFAULT FALSE,\n    marked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_attendances_enrollment_id FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE,\n    CONSTRAINT fk_attendances_schedule_id FOREIGN KEY (schedule_id) REFERENCES batch_schedules(id) ON DELETE CASCADE"
+    },
+    "completions": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    enrollment_id UUID NOT NULL UNIQUE,\n    user_id UUID NOT NULL,\n    course_id UUID NOT NULL,\n    completed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    grade VARCHAR(20),\n    CONSTRAINT fk_completions_enrollment_id FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)"
+    },
+    "certificates": {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    enrollment_id UUID NOT NULL UNIQUE,\n    certificate_code VARCHAR(100) NOT NULL UNIQUE,\n    issue_date DATE NOT NULL,\n    certificate_url VARCHAR(500),\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT fk_certificates_enrollment_id FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)"
+    },
+    "customer_capabilities": {
+      "version": 11,
+      "file": "V11__create_customer_capabilities_table.sql",
+      "raw_body": "customer_profile_id UUID NOT NULL,\n    capability VARCHAR(50) NOT NULL,\n    CONSTRAINT pk_customer_capabilities PRIMARY KEY (customer_profile_id, capability),\n    CONSTRAINT fk_customer_capabilities_profile FOREIGN KEY (customer_profile_id) REFERENCES customer_profiles(id) ON DELETE CASCADE"
+    },
+    "blog_categories": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    description TEXT,\n    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL"
+    },
+    "blog_authors": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    bio TEXT,\n    avatar_url VARCHAR(1024),\n    email VARCHAR(255),\n    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL"
+    },
+    "blog_tags": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL"
+    },
+    "blog_posts": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY,\n    title VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    summary TEXT,\n    content TEXT NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT',\n    author_id UUID REFERENCES blog_authors(id) ON DELETE SET NULL,\n    category_id UUID REFERENCES blog_categories(id) ON DELETE SET NULL,\n    featured_media_url VARCHAR(1024),\n    featured_media_alt_text VARCHAR(255),\n    meta_title VARCHAR(255),\n    meta_description TEXT,\n    canonical_url VARCHAR(1024),\n    is_indexable BOOLEAN NOT NULL DEFAULT FALSE,\n    reading_time_minutes INTEGER DEFAULT 5,\n    published_at TIMESTAMP WITH TIME ZONE,\n    scheduled_publish_at TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,\n    updated_at TIMESTAMP WITHOUT TIME ZONE"
+    },
+    "blog_post_tags": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,\n    tag_id UUID NOT NULL REFERENCES blog_tags(id) ON DELETE CASCADE,\n    PRIMARY KEY (post_id, tag_id)"
+    },
+    "content_articles": {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    title VARCHAR(255) NOT NULL,\n    slug VARCHAR(255) NOT NULL UNIQUE,\n    body_markdown TEXT NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "admin_audit_logs": {
+      "version": 13,
+      "file": "V13__enhance_admin_audit_logs.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    admin_user_id UUID NOT NULL,\n    action VARCHAR(255) NOT NULL,\n    resource_type VARCHAR(100),\n    resource_id VARCHAR(255),\n    old_value TEXT,\n    new_value TEXT,\n    details TEXT,\n    ip_address VARCHAR(50),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "support_tickets": {
+      "version": 14,
+      "file": "V14__create_comprehensive_support_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    ticket_number VARCHAR(50) UNIQUE,\n    user_id UUID REFERENCES users(id) ON DELETE SET NULL,\n    subject VARCHAR(255) NOT NULL,\n    message TEXT NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'OPEN',\n    priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',\n    category VARCHAR(50) NOT NULL DEFAULT 'GENERAL_SUPPORT',\n    order_id UUID,\n    payment_id UUID,\n    shipment_id UUID,\n    course_id UUID,\n    product_id UUID,\n    satisfaction_rating INT,\n    satisfaction_feedback TEXT,\n    closed_by VARCHAR(100),\n    closed_at TIMESTAMP WITH TIME ZONE,\n    is_auto_replied BOOLEAN DEFAULT FALSE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "ticket_messages": {
+      "version": 14,
+      "file": "V14__create_comprehensive_support_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,\n    sender_id UUID,\n    sender_type VARCHAR(50) NOT NULL, -- CUSTOMER, SUPPORT_AGENT, ADMIN, SYSTEM\n    sender_name VARCHAR(255) NOT NULL,\n    message TEXT NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "analytics_events": {
+      "version": 15,
+      "file": "V15__create_analytics_events_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    event_name VARCHAR(100) NOT NULL, -- ProductViewed, AddToCart, CheckoutStarted, OrderCreated, PaymentCaptured, OrderDelivered, EnrollmentCreated, EnrollmentConfirmed\n    metric_value NUMERIC(12, 2) DEFAULT 1.0,\n    user_id UUID,\n    reference_id VARCHAR(255),\n    event_data_json TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "analytics_metrics": {
+      "version": 15,
+      "file": "V15__create_analytics_events_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    event_name VARCHAR(255) NOT NULL,\n    metric_value DOUBLE PRECISION,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_information": {
+      "version": 16,
+      "file": "V16__create_product_information_and_gallery_enhancements.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,\n    \n    -- Basic Product & Trade Disclosures\n    brand_name VARCHAR(150) DEFAULT 'Sporekart Agritech',\n    country_of_origin VARCHAR(100) DEFAULT 'India',\n    manufacturer_details TEXT,\n    packer_details TEXT,\n    marketer_details TEXT,\n    customer_care_details TEXT,\n    net_quantity VARCHAR(50),\n    unit_of_measure VARCHAR(30),\n    \n    -- Food & FSSAI Compliance\n    fssai_license_number VARCHAR(50),\n    food_category VARCHAR(100),\n    is_vegetarian BOOLEAN DEFAULT TRUE,\n    ingredients TEXT,\n    allergen_info TEXT,\n    nutritional_info_json TEXT,\n    serving_size VARCHAR(50),\n    \n    -- Mushroom & Agritech Specific Disclosures\n    mushroom_species VARCHAR(150),\n    cultivation_method TEXT,\n    strain_variety VARCHAR(100),\n    recommended_substrate TEXT,\n    inoculation_guidance TEXT,\n    kit_contents TEXT,\n    cultivation_cycle_days INT,\n    environment_requirements TEXT,\n    \n    -- Storage & Handling Instructions\n    storage_instructions TEXT,\n    storage_temperature_guidance VARCHAR(100),\n    shelf_life_guidance VARCHAR(100),\n    handling_instructions TEXT,\n    safety_warnings TEXT,\n    \n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "wallets": {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID UNIQUE,\n    user_type VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER',\n    available_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,\n    pending_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,\n    withdrawable_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,\n    currency VARCHAR(10) NOT NULL DEFAULT 'INR',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "wallet_transactions": {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    transaction_reference VARCHAR(100) NOT NULL UNIQUE,\n    wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,\n    user_id UUID,\n    user_type VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER',\n    transaction_type VARCHAR(50) NOT NULL,\n    transaction_direction VARCHAR(20) NOT NULL,\n    amount NUMERIC(12, 2) NOT NULL,\n    currency VARCHAR(10) NOT NULL DEFAULT 'INR',\n    balance_before NUMERIC(12, 2) NOT NULL,\n    balance_after NUMERIC(12, 2) NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'SUCCESS',\n    source_type VARCHAR(50) NOT NULL,\n    source_id VARCHAR(255),\n    order_id UUID,\n    payment_id UUID,\n    refund_id VARCHAR(255),\n    enrollment_id UUID,\n    training_batch_id UUID,\n    withdrawal_id UUID,\n    parent_transaction_id UUID,\n    related_transaction_id UUID,\n    description TEXT,\n    metadata_json TEXT,\n    idempotency_key VARCHAR(255) UNIQUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    processed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    created_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "wallet_withdrawals": {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    withdrawal_reference VARCHAR(100) NOT NULL UNIQUE,\n    wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,\n    user_id UUID NOT NULL,\n    amount NUMERIC(12, 2) NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'REQUESTED',\n    bank_name VARCHAR(150),\n    account_number_masked VARCHAR(50),\n    ifsc_code VARCHAR(30),\n    account_holder_name VARCHAR(150),\n    admin_notes TEXT,\n    rejection_reason TEXT,\n    processed_by VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    processed_at TIMESTAMP WITH TIME ZONE,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "promotions": {
+      "version": 20,
+      "file": "V20__create_promotions_and_cart_promo_table.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    name VARCHAR(255) NOT NULL,\n    code VARCHAR(100) NOT NULL UNIQUE,\n    description TEXT,\n    type VARCHAR(50) NOT NULL, -- PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING\n    discount_value NUMERIC(12, 2),\n    maximum_discount NUMERIC(12, 2),\n    minimum_order_value NUMERIC(12, 2),\n    start_at TIMESTAMP WITH TIME ZONE,\n    end_at TIMESTAMP WITH TIME ZONE,\n    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, EXPIRED\n    usage_limit INT,\n    per_customer_limit INT,\n    usage_count INT NOT NULL DEFAULT 0,\n    stackable BOOLEAN NOT NULL DEFAULT FALSE,\n    priority INT NOT NULL DEFAULT 0,\n    target_category_slug VARCHAR(255),\n    target_product_id UUID,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "promotion_usages": {
+      "version": 20,
+      "file": "V20__create_promotions_and_cart_promo_table.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    promotion_id UUID NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,\n    user_id UUID REFERENCES users(id) ON DELETE SET NULL,\n    session_id VARCHAR(255),\n    order_id UUID REFERENCES orders(id) ON DELETE SET NULL,\n    discount_amount_inr NUMERIC(12, 2),\n    used_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "product_reviews": {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,\n    product_variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL,\n    customer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    order_item_id UUID NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,\n    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),\n    review_title VARCHAR(255),\n    review_text TEXT NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED',\n    is_verified_purchase BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    moderated_at TIMESTAMP WITH TIME ZONE,\n    moderated_by UUID REFERENCES users(id) ON DELETE SET NULL,\n    moderation_reason TEXT,\n    CONSTRAINT uk_product_reviews_customer_order_item UNIQUE (customer_id, order_item_id)"
+    },
+    "product_review_images": {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    review_id UUID NOT NULL REFERENCES product_reviews(id) ON DELETE CASCADE,\n    image_url TEXT NOT NULL,\n    storage_key VARCHAR(255),\n    display_order INT NOT NULL DEFAULT 0,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "review_invitation_states": {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    customer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,\n    order_item_id UUID NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,\n    invitation_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',\n    dismissed_at TIMESTAMP WITH TIME ZONE,\n    reviewed_at TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    CONSTRAINT uk_review_invitation_customer_order_item UNIQUE (customer_id, order_item_id)"
+    },
+    "training_reviews": {
+      "version": 25,
+      "file": "V25__create_training_reviews_tables.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,\n    batch_id UUID NOT NULL REFERENCES batches(id) ON DELETE CASCADE,\n    enrollment_id UUID NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,\n    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),\n    instructor_rating INT CHECK (instructor_rating >= 1 AND instructor_rating <= 5),\n    review_title VARCHAR(255),\n    review_text TEXT NOT NULL,\n    status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED',\n    is_verified_trainee BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    moderated_at TIMESTAMP WITH TIME ZONE,\n    moderated_by UUID REFERENCES users(id) ON DELETE SET NULL,\n    moderation_reason TEXT,\n    CONSTRAINT uk_training_reviews_user_enrollment UNIQUE (user_id, enrollment_id)"
+    },
+    "training_glimpses": {
+      "version": 26,
+      "file": "V26__create_training_gallery_tables.sql",
+      "raw_body": "id VARCHAR(36) PRIMARY KEY,\n    title VARCHAR(255) NOT NULL,\n    caption TEXT,\n    course_title VARCHAR(255),\n    location VARCHAR(255),\n    event_date VARCHAR(100),\n    attendee_count INT DEFAULT 0,\n    image_url TEXT NOT NULL,\n    display_order INT DEFAULT 0,\n    is_active BOOLEAN DEFAULT TRUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "notification_events": {
+      "version": 28,
+      "file": "V28__create_notification_events_table.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    event_type VARCHAR(64) NOT NULL,\n    entity_type VARCHAR(64) NOT NULL,\n    entity_id UUID NOT NULL,\n    user_id UUID,\n    recipient_email VARCHAR(255) NOT NULL,\n    recipient_name VARCHAR(255),\n    template_key VARCHAR(64) NOT NULL,\n    subject VARCHAR(255) NOT NULL,\n    payload_json TEXT NOT NULL,\n    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',\n    attempt_count INT NOT NULL DEFAULT 0,\n    last_attempt_at TIMESTAMP WITH TIME ZONE,\n    sent_at TIMESTAMP WITH TIME ZONE,\n    failed_at TIMESTAMP WITH TIME ZONE,\n    error_message TEXT,\n    provider VARCHAR(32) DEFAULT 'GMAIL',\n    provider_message_id VARCHAR(255),\n    deduplication_key VARCHAR(255) NOT NULL UNIQUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+    },
+    "wallet_topup_intents": {
+      "version": 38,
+      "file": "V38__create_wallet_topup_intents.sql",
+      "raw_body": "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL,\n    amount NUMERIC(12, 2) NOT NULL,\n    currency VARCHAR(10) NOT NULL DEFAULT 'INR',\n    razorpay_order_id VARCHAR(100) NOT NULL UNIQUE,\n    transaction_reference VARCHAR(100) NOT NULL,\n    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',\n    razorpay_payment_id VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    completed_at TIMESTAMP WITH TIME ZONE"
+    }
+  },
+  "flyway_altered_tables": {
+    "users": [
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)"
+      },
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS last_name VARCHAR(100)"
+      },
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN NOT NULL DEFAULT FALSE"
+      },
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS is_phone_verified BOOLEAN NOT NULL DEFAULT FALSE"
+      }
+    ],
+    "otps": [
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS attempt_count INT NOT NULL DEFAULT 0"
+      },
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS consumed BOOLEAN NOT NULL DEFAULT FALSE"
+      },
+      {
+        "version": 2,
+        "file": "V2__create_identity_and_customer_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS otp_type VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER_AUTH'"
+      }
+    ],
+    "categories": [
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE"
+      }
+    ],
+    "products": [
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE'"
+      },
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS hsn_code VARCHAR(20)"
+      },
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS gst_rate_percent NUMERIC(5, 2) NOT NULL DEFAULT 0.00"
+      },
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS meta_title VARCHAR(255)"
+      },
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS meta_description TEXT"
+      },
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS canonical_url TEXT"
+      }
+    ],
+    "product_variants": [
+      {
+        "version": 3,
+        "file": "V3__create_catalog_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE"
+      },
+      {
+        "version": 36,
+        "file": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+        "action": "ADD COLUMN IF NOT EXISTS weight_kg NUMERIC(6, 3) NOT NULL DEFAULT 0.250"
+      },
+      {
+        "version": 36,
+        "file": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+        "action": "ADD COLUMN IF NOT EXISTS length_cm NUMERIC(6, 2) NOT NULL DEFAULT 15.00"
+      },
+      {
+        "version": 36,
+        "file": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+        "action": "ADD COLUMN IF NOT EXISTS breadth_cm NUMERIC(6, 2) NOT NULL DEFAULT 15.00"
+      },
+      {
+        "version": 36,
+        "file": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+        "action": "ADD COLUMN IF NOT EXISTS height_cm NUMERIC(6, 2) NOT NULL DEFAULT 10.00"
+      }
+    ],
+    "orders": [
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS subtotal_amount_inr NUMERIC(10, 2) NOT NULL DEFAULT 0"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS gst_total_amount_inr NUMERIC(10, 2) NOT NULL DEFAULT 0"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS discount_total_amount_inr NUMERIC(10, 2) NOT NULL DEFAULT 0"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(100)"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS cancellation_reason TEXT"
+      },
+      {
+        "version": 17,
+        "file": "V17__add_session_id_to_orders.sql",
+        "action": "ADD COLUMN IF NOT EXISTS session_id VARCHAR(100)"
+      },
+      {
+        "version": 19,
+        "file": "V19__add_tracking_url_and_packing_slip.sql",
+        "action": "ADD COLUMN IF NOT EXISTS courier_partner VARCHAR(100)"
+      },
+      {
+        "version": 19,
+        "file": "V19__add_tracking_url_and_packing_slip.sql",
+        "action": "ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(100)"
+      },
+      {
+        "version": 19,
+        "file": "V19__add_tracking_url_and_packing_slip.sql",
+        "action": "ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(500)"
+      },
+      {
+        "version": 19,
+        "file": "V19__add_tracking_url_and_packing_slip.sql",
+        "action": "ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE"
+      }
+    ],
+    "order_items": [
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS gst_rate_percent NUMERIC(5, 2) NOT NULL DEFAULT 5.0"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS gst_amount_inr NUMERIC(10, 2) NOT NULL DEFAULT 0"
+      },
+      {
+        "version": 7,
+        "file": "V7__create_order_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS line_total_inr NUMERIC(10, 2) NOT NULL DEFAULT 0"
+      }
+    ],
+    "payments": [
+      {
+        "version": 8,
+        "file": "V8__create_payment_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'INR'"
+      },
+      {
+        "version": 8,
+        "file": "V8__create_payment_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+      },
+      {
+        "version": 33,
+        "file": "V33__make_payments_order_id_nullable.sql",
+        "action": "ALTER COLUMN order_id DROP NOT NULL"
+      },
+      {
+        "version": 33,
+        "file": "V33__make_payments_order_id_nullable.sql",
+        "action": "ALTER COLUMN razorpay_order_id DROP NOT NULL"
+      }
+    ],
+    "shipments": [
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS order_number VARCHAR(100)"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS shipment_id VARCHAR(100)"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS awb_code VARCHAR(100)"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS courier_id VARCHAR(50)"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS pickup_scheduled_at TIMESTAMP WITH TIME ZONE"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS shipping_address_json TEXT"
+      },
+      {
+        "version": 9,
+        "file": "V9__create_shipping_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+      },
+      {
+        "version": 19,
+        "file": "V19__add_tracking_url_and_packing_slip.sql",
+        "action": "ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(500)"
+      },
+      {
+        "version": 36,
+        "file": "V36__add_shipping_dimensions_and_unique_constraint.sql",
+        "action": "ADD CONSTRAINT uq_shipments_order_id UNIQUE (order_id)"
+      }
+    ],
+    "courses": [
+      {
+        "version": 10,
+        "file": "V10__create_training_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS category_id UUID"
+      },
+      {
+        "version": 10,
+        "file": "V10__create_training_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS duration_days INT DEFAULT 1"
+      },
+      {
+        "version": 10,
+        "file": "V10__create_training_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS fee_inr DECIMAL(10, 2) DEFAULT 0.00"
+      },
+      {
+        "version": 10,
+        "file": "V10__create_training_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+      },
+      {
+        "version": 30,
+        "file": "V30__relax_legacy_courses_constraints.sql",
+        "action": "ALTER COLUMN category DROP NOT NULL"
+      },
+      {
+        "version": 30,
+        "file": "V30__relax_legacy_courses_constraints.sql",
+        "action": "ALTER COLUMN mode DROP NOT NULL"
+      },
+      {
+        "version": 30,
+        "file": "V30__relax_legacy_courses_constraints.sql",
+        "action": "ALTER COLUMN price_inr DROP NOT NULL"
+      },
+      {
+        "version": 30,
+        "file": "V30__relax_legacy_courses_constraints.sql",
+        "action": "ALTER COLUMN duration_hours DROP NOT NULL"
+      },
+      {
+        "version": 30,
+        "file": "V30__relax_legacy_courses_constraints.sql",
+        "action": "ALTER COLUMN description DROP NOT NULL"
+      }
+    ],
+    "customer_profiles": [
+      {
+        "version": 10,
+        "file": "V10__create_training_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS has_training_capability BOOLEAN NOT NULL DEFAULT FALSE,\nADD COLUMN IF NOT EXISTS training_capability_granted_at TIMESTAMP WITH TIME ZONE"
+      }
+    ],
+    "admin_audit_logs": [
+      {
+        "version": 13,
+        "file": "V13__enhance_admin_audit_logs.sql",
+        "action": "ADD COLUMN IF NOT EXISTS resource_type VARCHAR(100),\nADD COLUMN IF NOT EXISTS resource_id VARCHAR(255),\nADD COLUMN IF NOT EXISTS old_value TEXT,\nADD COLUMN IF NOT EXISTS new_value TEXT,\nADD COLUMN IF NOT EXISTS ip_address VARCHAR(50)"
+      }
+    ],
+    "support_tickets": [
+      {
+        "version": 14,
+        "file": "V14__create_comprehensive_support_tables.sql",
+        "action": "ADD COLUMN IF NOT EXISTS ticket_number VARCHAR(50),\nADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',\nADD COLUMN IF NOT EXISTS category VARCHAR(50) NOT NULL DEFAULT 'GENERAL_SUPPORT',\nADD COLUMN IF NOT EXISTS order_id UUID,\nADD COLUMN IF NOT EXISTS payment_id UUID,\nADD COLUMN IF NOT EXISTS shipment_id UUID,\nADD COLUMN IF NOT EXISTS course_id UUID,\nADD COLUMN IF NOT EXISTS product_id UUID,\nADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+      },
+      {
+        "version": 27,
+        "file": "V27__add_support_ticket_csat_and_auto_reply.sql",
+        "action": "ADD COLUMN IF NOT EXISTS satisfaction_rating INTEGER,\nADD COLUMN IF NOT EXISTS satisfaction_feedback TEXT,\nADD COLUMN IF NOT EXISTS closed_by VARCHAR(50),\nADD COLUMN IF NOT EXISTS closed_at TIMESTAMP WITH TIME ZONE,\nADD COLUMN IF NOT EXISTS is_auto_replied BOOLEAN DEFAULT FALSE"
+      }
+    ],
+    "product_media": [
+      {
+        "version": 16,
+        "file": "V16__create_product_information_and_gallery_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS role VARCHAR(50) NOT NULL DEFAULT 'GALLERY'"
+      }
+    ],
+    "media_product_links": [
+      {
+        "version": 16,
+        "file": "V16__create_product_information_and_gallery_enhancements.sql",
+        "action": "ADD COLUMN IF NOT EXISTS role VARCHAR(50) NOT NULL DEFAULT 'GALLERY'"
+      }
+    ],
+    "carts": [
+      {
+        "version": 20,
+        "file": "V20__create_promotions_and_cart_promo_table.sql",
+        "action": "ADD COLUMN IF NOT EXISTS applied_promo_code VARCHAR(100)"
+      }
+    ],
+    "promotions": [
+      {
+        "version": 22,
+        "file": "V22__add_batch_and_course_promotion_targets.sql",
+        "action": "ADD COLUMN IF NOT EXISTS target_batch_id UUID"
+      },
+      {
+        "version": 22,
+        "file": "V22__add_batch_and_course_promotion_targets.sql",
+        "action": "ADD COLUMN IF NOT EXISTS target_course_id UUID"
+      },
+      {
+        "version": 22,
+        "file": "V22__add_batch_and_course_promotion_targets.sql",
+        "action": "ADD COLUMN IF NOT EXISTS target_type VARCHAR(50) DEFAULT 'ALL'"
+      },
+      {
+        "version": 23,
+        "file": "V23__add_target_audience_to_promotions.sql",
+        "action": "ADD COLUMN IF NOT EXISTS target_audience VARCHAR(50) DEFAULT 'BOTH'"
+      }
+    ],
+    "customer_addresses": [
+      {
+        "version": 29,
+        "file": "V29__add_alternate_phone_to_addresses.sql",
+        "action": "ADD COLUMN IF NOT EXISTS alternate_phone VARCHAR(20)"
+      }
+    ],
+    "notification_events": [
+      {
+        "version": 31,
+        "file": "V31__add_sms_notification_fields.sql",
+        "action": "ADD COLUMN IF NOT EXISTS recipient_phone VARCHAR(64),\n    ADD COLUMN IF NOT EXISTS delivery_channel VARCHAR(32) DEFAULT 'EMAIL_AND_SMS',\n    ADD COLUMN IF NOT EXISTS sms_status VARCHAR(32) DEFAULT 'PENDING',\n    ADD COLUMN IF NOT EXISTS sms_sent_at TIMESTAMP WITH TIME ZONE,\n    ADD COLUMN IF NOT EXISTS sms_failed_at TIMESTAMP WITH TIME ZONE,\n    ADD COLUMN IF NOT EXISTS sms_error_message TEXT,\n    ADD COLUMN IF NOT EXISTS sms_provider VARCHAR(32) DEFAULT 'TWILIO',\n    ADD COLUMN IF NOT EXISTS sms_provider_message_id VARCHAR(255)"
+      },
+      {
+        "version": 31,
+        "file": "V31__add_sms_notification_fields.sql",
+        "action": "ALTER COLUMN recipient_email DROP NOT NULL"
+      },
+      {
+        "version": 35,
+        "file": "V35__enhance_notifications_for_in_app.sql",
+        "action": "ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT FALSE,\n    ADD COLUMN IF NOT EXISTS read_at TIMESTAMP WITH TIME ZONE,\n    ADD COLUMN IF NOT EXISTS action_url VARCHAR(500),\n    ADD COLUMN IF NOT EXISTS category VARCHAR(64) DEFAULT 'GENERAL',\n    ADD COLUMN IF NOT EXISTS target_role VARCHAR(50) DEFAULT 'ROLE_CUSTOMER',\n    ADD COLUMN IF NOT EXISTS is_admin_notification BOOLEAN NOT NULL DEFAULT FALSE"
+      }
+    ],
+    "wallets": [
+      {
+        "version": 32,
+        "file": "V32__add_wallet_non_negative_check.sql",
+        "action": "ADD CONSTRAINT check_wallet_available_balance_non_negative CHECK (available_balance >= 0.00)"
+      }
+    ]
+  },
+  "flyway_created_indexes": [
+    {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "index_name": "idx_customer_identities_user_id",
+      "table_name": "customer_identities",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "index_name": "idx_customer_addresses_user_id",
+      "table_name": "customer_addresses",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 2,
+      "file": "V2__create_identity_and_customer_tables.sql",
+      "index_name": "idx_otps_identifier_type",
+      "table_name": "otps",
+      "unique": false,
+      "columns": "identifier, otp_type"
+    },
+    {
+      "version": 3,
+      "file": "V3__create_catalog_enhancements.sql",
+      "index_name": "idx_product_offers_product_id",
+      "table_name": "product_offers",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 3,
+      "file": "V3__create_catalog_enhancements.sql",
+      "index_name": "idx_product_media_product_id",
+      "table_name": "product_media",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 3,
+      "file": "V3__create_catalog_enhancements.sql",
+      "index_name": "idx_products_status_active",
+      "table_name": "products",
+      "unique": false,
+      "columns": "status, is_active"
+    },
+    {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "index_name": "idx_media_assets_status",
+      "table_name": "media_assets",
+      "unique": false,
+      "columns": "status, is_deleted"
+    },
+    {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "index_name": "idx_media_product_links_product",
+      "table_name": "media_product_links",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 4,
+      "file": "V4__create_media_management_tables.sql",
+      "index_name": "idx_media_course_links_course",
+      "table_name": "media_course_links",
+      "unique": false,
+      "columns": "course_id"
+    },
+    {
+      "version": 5,
+      "file": "V5__create_inventory_tables.sql",
+      "index_name": "idx_inventory_records_variant_id",
+      "table_name": "inventory_records",
+      "unique": false,
+      "columns": "variant_id"
+    },
+    {
+      "version": 5,
+      "file": "V5__create_inventory_tables.sql",
+      "index_name": "idx_inventory_audit_events_variant_id",
+      "table_name": "inventory_audit_events",
+      "unique": false,
+      "columns": "variant_id"
+    },
+    {
+      "version": 6,
+      "file": "V6__create_cart_tables.sql",
+      "index_name": "idx_carts_user_id",
+      "table_name": "carts",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 6,
+      "file": "V6__create_cart_tables.sql",
+      "index_name": "idx_carts_session_id",
+      "table_name": "carts",
+      "unique": false,
+      "columns": "session_id"
+    },
+    {
+      "version": 6,
+      "file": "V6__create_cart_tables.sql",
+      "index_name": "idx_cart_items_cart_id",
+      "table_name": "cart_items",
+      "unique": false,
+      "columns": "cart_id"
+    },
+    {
+      "version": 7,
+      "file": "V7__create_order_tables.sql",
+      "index_name": "idx_orders_user_id",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 7,
+      "file": "V7__create_order_tables.sql",
+      "index_name": "idx_orders_order_number",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "order_number"
+    },
+    {
+      "version": 7,
+      "file": "V7__create_order_tables.sql",
+      "index_name": "idx_orders_idempotency_key",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "idempotency_key"
+    },
+    {
+      "version": 7,
+      "file": "V7__create_order_tables.sql",
+      "index_name": "idx_order_events_order_id",
+      "table_name": "order_events",
+      "unique": false,
+      "columns": "order_id"
+    },
+    {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "index_name": "idx_payments_order_id",
+      "table_name": "payments",
+      "unique": false,
+      "columns": "order_id"
+    },
+    {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "index_name": "idx_payments_razorpay_order_id",
+      "table_name": "payments",
+      "unique": false,
+      "columns": "razorpay_order_id"
+    },
+    {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "index_name": "idx_payments_razorpay_payment_id",
+      "table_name": "payments",
+      "unique": false,
+      "columns": "razorpay_payment_id"
+    },
+    {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "index_name": "idx_payment_events_payment_id",
+      "table_name": "payment_events",
+      "unique": false,
+      "columns": "payment_id"
+    },
+    {
+      "version": 8,
+      "file": "V8__create_payment_tables.sql",
+      "index_name": "idx_payment_events_event_id",
+      "table_name": "payment_events",
+      "unique": false,
+      "columns": "event_id"
+    },
+    {
+      "version": 9,
+      "file": "V9__create_shipping_tables.sql",
+      "index_name": "idx_shipments_order_id",
+      "table_name": "shipments",
+      "unique": false,
+      "columns": "order_id"
+    },
+    {
+      "version": 9,
+      "file": "V9__create_shipping_tables.sql",
+      "index_name": "idx_shipments_awb_code",
+      "table_name": "shipments",
+      "unique": false,
+      "columns": "awb_code"
+    },
+    {
+      "version": 9,
+      "file": "V9__create_shipping_tables.sql",
+      "index_name": "idx_shipments_shipment_id",
+      "table_name": "shipments",
+      "unique": false,
+      "columns": "shipment_id"
+    },
+    {
+      "version": 9,
+      "file": "V9__create_shipping_tables.sql",
+      "index_name": "idx_shipment_trackings_shipment_id",
+      "table_name": "shipment_trackings",
+      "unique": false,
+      "columns": "shipment_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_courses_category_id",
+      "table_name": "courses",
+      "unique": false,
+      "columns": "category_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_courses_slug",
+      "table_name": "courses",
+      "unique": false,
+      "columns": "slug"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_batches_course_id",
+      "table_name": "batches",
+      "unique": false,
+      "columns": "course_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_batch_schedules_batch_id",
+      "table_name": "batch_schedules",
+      "unique": false,
+      "columns": "batch_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_enrollments_user_id",
+      "table_name": "enrollments",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_enrollments_batch_id",
+      "table_name": "enrollments",
+      "unique": false,
+      "columns": "batch_id"
+    },
+    {
+      "version": 10,
+      "file": "V10__create_training_tables.sql",
+      "index_name": "idx_certificates_certificate_code",
+      "table_name": "certificates",
+      "unique": false,
+      "columns": "certificate_code"
+    },
+    {
+      "version": 11,
+      "file": "V11__create_customer_capabilities_table.sql",
+      "index_name": "idx_customer_capabilities_profile",
+      "table_name": "customer_capabilities",
+      "unique": false,
+      "columns": "customer_profile_id"
+    },
+    {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "index_name": "idx_blog_posts_status",
+      "table_name": "blog_posts",
+      "unique": false,
+      "columns": "status"
+    },
+    {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "index_name": "idx_blog_posts_published_at",
+      "table_name": "blog_posts",
+      "unique": false,
+      "columns": "published_at"
+    },
+    {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "index_name": "idx_blog_posts_category_id",
+      "table_name": "blog_posts",
+      "unique": false,
+      "columns": "category_id"
+    },
+    {
+      "version": 12,
+      "file": "V12__create_content_blog_tables.sql",
+      "index_name": "idx_blog_posts_author_id",
+      "table_name": "blog_posts",
+      "unique": false,
+      "columns": "author_id"
+    },
+    {
+      "version": 15,
+      "file": "V15__create_analytics_events_tables.sql",
+      "index_name": "idx_analytics_events_name",
+      "table_name": "analytics_events",
+      "unique": false,
+      "columns": "event_name"
+    },
+    {
+      "version": 15,
+      "file": "V15__create_analytics_events_tables.sql",
+      "index_name": "idx_analytics_events_created",
+      "table_name": "analytics_events",
+      "unique": false,
+      "columns": "created_at"
+    },
+    {
+      "version": 16,
+      "file": "V16__create_product_information_and_gallery_enhancements.sql",
+      "index_name": "idx_product_information_product_id",
+      "table_name": "product_information",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 17,
+      "file": "V17__add_session_id_to_orders.sql",
+      "index_name": "idx_orders_session_id",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "session_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallets_user_id",
+      "table_name": "wallets",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_txns_wallet_id",
+      "table_name": "wallet_transactions",
+      "unique": false,
+      "columns": "wallet_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_txns_user_id",
+      "table_name": "wallet_transactions",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_txns_order_id",
+      "table_name": "wallet_transactions",
+      "unique": false,
+      "columns": "order_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_txns_enrollment_id",
+      "table_name": "wallet_transactions",
+      "unique": false,
+      "columns": "enrollment_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_txns_created_at",
+      "table_name": "wallet_transactions",
+      "unique": false,
+      "columns": "created_at"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_withdrawals_wallet_id",
+      "table_name": "wallet_withdrawals",
+      "unique": false,
+      "columns": "wallet_id"
+    },
+    {
+      "version": 18,
+      "file": "V18__create_wallet_and_ledger_tables.sql",
+      "index_name": "idx_wallet_withdrawals_user_id",
+      "table_name": "wallet_withdrawals",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 20,
+      "file": "V20__create_promotions_and_cart_promo_table.sql",
+      "index_name": "idx_promotions_code",
+      "table_name": "promotions",
+      "unique": false,
+      "columns": "code"
+    },
+    {
+      "version": 20,
+      "file": "V20__create_promotions_and_cart_promo_table.sql",
+      "index_name": "idx_promotions_status",
+      "table_name": "promotions",
+      "unique": false,
+      "columns": "status"
+    },
+    {
+      "version": 20,
+      "file": "V20__create_promotions_and_cart_promo_table.sql",
+      "index_name": "idx_promotion_usages_promo_user",
+      "table_name": "promotion_usages",
+      "unique": false,
+      "columns": "promotion_id, user_id"
+    },
+    {
+      "version": 21,
+      "file": "V21__add_secondary_indexes_and_jsonb_tuning.sql",
+      "index_name": "idx_orders_user_id_status",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "user_id, status"
+    },
+    {
+      "version": 21,
+      "file": "V21__add_secondary_indexes_and_jsonb_tuning.sql",
+      "index_name": "idx_product_variants_product_id",
+      "table_name": "product_variants",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 21,
+      "file": "V21__add_secondary_indexes_and_jsonb_tuning.sql",
+      "index_name": "idx_otps_identifier_type",
+      "table_name": "otps",
+      "unique": false,
+      "columns": "identifier, otp_type, consumed"
+    },
+    {
+      "version": 22,
+      "file": "V22__add_batch_and_course_promotion_targets.sql",
+      "index_name": "idx_promotions_target_batch",
+      "table_name": "promotions",
+      "unique": false,
+      "columns": "target_batch_id"
+    },
+    {
+      "version": 22,
+      "file": "V22__add_batch_and_course_promotion_targets.sql",
+      "index_name": "idx_promotions_target_course",
+      "table_name": "promotions",
+      "unique": false,
+      "columns": "target_course_id"
+    },
+    {
+      "version": 23,
+      "file": "V23__add_target_audience_to_promotions.sql",
+      "index_name": "idx_promotions_target_audience",
+      "table_name": "promotions",
+      "unique": false,
+      "columns": "target_audience"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_product_reviews_product_id",
+      "table_name": "product_reviews",
+      "unique": false,
+      "columns": "product_id"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_product_reviews_customer_id",
+      "table_name": "product_reviews",
+      "unique": false,
+      "columns": "customer_id"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_product_reviews_status",
+      "table_name": "product_reviews",
+      "unique": false,
+      "columns": "status"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_product_reviews_created_at",
+      "table_name": "product_reviews",
+      "unique": false,
+      "columns": "created_at"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_review_images_review_id",
+      "table_name": "product_review_images",
+      "unique": false,
+      "columns": "review_id"
+    },
+    {
+      "version": 24,
+      "file": "V24__create_product_reviews_tables.sql",
+      "index_name": "idx_review_invitations_customer_id",
+      "table_name": "review_invitation_states",
+      "unique": false,
+      "columns": "customer_id"
+    },
+    {
+      "version": 25,
+      "file": "V25__create_training_reviews_tables.sql",
+      "index_name": "idx_training_reviews_course_id",
+      "table_name": "training_reviews",
+      "unique": false,
+      "columns": "course_id"
+    },
+    {
+      "version": 25,
+      "file": "V25__create_training_reviews_tables.sql",
+      "index_name": "idx_training_reviews_user_id",
+      "table_name": "training_reviews",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 25,
+      "file": "V25__create_training_reviews_tables.sql",
+      "index_name": "idx_training_reviews_status",
+      "table_name": "training_reviews",
+      "unique": false,
+      "columns": "status"
+    },
+    {
+      "version": 25,
+      "file": "V25__create_training_reviews_tables.sql",
+      "index_name": "idx_training_reviews_created_at",
+      "table_name": "training_reviews",
+      "unique": false,
+      "columns": "created_at"
+    },
+    {
+      "version": 26,
+      "file": "V26__create_training_gallery_tables.sql",
+      "index_name": "idx_training_glimpses_active_order",
+      "table_name": "training_glimpses",
+      "unique": false,
+      "columns": "is_active, display_order"
+    },
+    {
+      "version": 28,
+      "file": "V28__create_notification_events_table.sql",
+      "index_name": "idx_notification_events_status",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "status, created_at"
+    },
+    {
+      "version": 28,
+      "file": "V28__create_notification_events_table.sql",
+      "index_name": "idx_notification_events_user",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 28,
+      "file": "V28__create_notification_events_table.sql",
+      "index_name": "idx_notification_events_dedup",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "deduplication_key"
+    },
+    {
+      "version": 31,
+      "file": "V31__add_sms_notification_fields.sql",
+      "index_name": "idx_notification_events_recipient_phone",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "recipient_phone"
+    },
+    {
+      "version": 31,
+      "file": "V31__add_sms_notification_fields.sql",
+      "index_name": "idx_notification_events_sms_status",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "sms_status"
+    },
+    {
+      "version": 34,
+      "file": "V34__add_performance_indexes.sql",
+      "index_name": "idx_products_type_category_active",
+      "table_name": "products",
+      "unique": false,
+      "columns": "product_type, category_id, is_active"
+    },
+    {
+      "version": 34,
+      "file": "V34__add_performance_indexes.sql",
+      "index_name": "idx_orders_user_created",
+      "table_name": "orders",
+      "unique": false,
+      "columns": "user_id, created_at DESC"
+    },
+    {
+      "version": 34,
+      "file": "V34__add_performance_indexes.sql",
+      "index_name": "idx_enrollments_user_created",
+      "table_name": "enrollments",
+      "unique": false,
+      "columns": "user_id, enrolled_at DESC"
+    },
+    {
+      "version": 34,
+      "file": "V34__add_performance_indexes.sql",
+      "index_name": "idx_tickets_user_id",
+      "table_name": "support_tickets",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 35,
+      "file": "V35__enhance_notifications_for_in_app.sql",
+      "index_name": "idx_notification_events_in_app_feed",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "user_id, is_read, created_at DESC"
+    },
+    {
+      "version": 35,
+      "file": "V35__enhance_notifications_for_in_app.sql",
+      "index_name": "idx_notification_events_admin_in_app",
+      "table_name": "notification_events",
+      "unique": false,
+      "columns": "is_admin_notification, is_read, created_at DESC"
+    },
+    {
+      "version": 38,
+      "file": "V38__create_wallet_topup_intents.sql",
+      "index_name": "idx_wallet_topup_intents_user",
+      "table_name": "wallet_topup_intents",
+      "unique": false,
+      "columns": "user_id"
+    },
+    {
+      "version": 38,
+      "file": "V38__create_wallet_topup_intents.sql",
+      "index_name": "idx_wallet_topup_intents_rzp_order",
+      "table_name": "wallet_topup_intents",
+      "unique": false,
+      "columns": "razorpay_order_id"
+    }
+  ],
+  "jpa_entities_count": 55,
+  "jpa_entities": {
+    "AdminAuditLog": {
+      "package": "com.sporekart.admin.domain",
+      "table_name": "admin_audit_logs",
+      "file": "backend/src/main/java/com/sporekart\\admin\\domain\\AdminAuditLog.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "AnalyticsEvent": {
+      "package": "com.sporekart.analytics.domain",
+      "table_name": "analytics_events",
+      "file": "backend/src/main/java/com/sporekart\\analytics\\domain\\AnalyticsEvent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "AnalyticsMetric": {
+      "package": "com.sporekart.analytics.domain",
+      "table_name": "analytics_metrics",
+      "file": "backend/src/main/java/com/sporekart\\analytics\\domain\\AnalyticsMetric.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 4
+    },
+    "Cart": {
+      "package": "com.sporekart.cart.domain",
+      "table_name": "carts",
+      "file": "backend/src/main/java/com/sporekart\\cart\\domain\\Cart.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "CartItem": {
+      "package": "com.sporekart.cart.domain",
+      "table_name": "cart_items",
+      "file": "backend/src/main/java/com/sporekart\\cart\\domain\\CartItem.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "Category": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "categories",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\Category.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "InventoryAuditEvent": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "inventory_audit_events",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\InventoryAuditEvent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 11
+    },
+    "InventoryRecord": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "inventory_records",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\InventoryRecord.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 8
+    },
+    "Product": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "products",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\Product.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 16
+    },
+    "ProductInformation": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "product_information",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductInformation.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 32
+    },
+    "ProductMedia": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "product_media",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductMedia.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "ProductOffer": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "product_offers",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductOffer.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "ProductVariant": {
+      "package": "com.sporekart.catalog.domain",
+      "table_name": "product_variants",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductVariant.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "Article": {
+      "package": "com.sporekart.content.domain",
+      "table_name": "content_articles",
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\Article.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 5
+    },
+    "BlogAuthor": {
+      "package": "com.sporekart.content.domain",
+      "table_name": "blog_authors",
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\BlogAuthor.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "BlogCategory": {
+      "package": "com.sporekart.content.domain",
+      "table_name": "blog_categories",
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\BlogCategory.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 5
+    },
+    "BlogPost": {
+      "package": "com.sporekart.content.domain",
+      "table_name": "blog_posts",
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\BlogPost.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 19
+    },
+    "BlogTag": {
+      "package": "com.sporekart.content.domain",
+      "table_name": "blog_tags",
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\BlogTag.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 4
+    },
+    "CustomerAddress": {
+      "package": "com.sporekart.customer.domain",
+      "table_name": "customer_addresses",
+      "file": "backend/src/main/java/com/sporekart\\customer\\domain\\CustomerAddress.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 13
+    },
+    "CustomerProfile": {
+      "package": "com.sporekart.customer.domain",
+      "table_name": "customer_profiles",
+      "file": "backend/src/main/java/com/sporekart\\customer\\domain\\CustomerProfile.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "CustomerIdentity": {
+      "package": "com.sporekart.identity.domain",
+      "table_name": "customer_identities",
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\CustomerIdentity.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 5
+    },
+    "Otp": {
+      "package": "com.sporekart.identity.domain",
+      "table_name": "otps",
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\Otp.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "User": {
+      "package": "com.sporekart.identity.domain",
+      "table_name": "users",
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\User.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 13
+    },
+    "MediaAsset": {
+      "package": "com.sporekart.media.domain",
+      "table_name": "media_assets",
+      "file": "backend/src/main/java/com/sporekart\\media\\domain\\MediaAsset.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 19
+    },
+    "MediaCourseLink": {
+      "package": "com.sporekart.media.domain",
+      "table_name": "media_course_links",
+      "file": "backend/src/main/java/com/sporekart\\media\\domain\\MediaCourseLink.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 4
+    },
+    "MediaProductLink": {
+      "package": "com.sporekart.media.domain",
+      "table_name": "media_product_links",
+      "file": "backend/src/main/java/com/sporekart\\media\\domain\\MediaProductLink.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "NotificationEvent": {
+      "package": "com.sporekart.notification.domain",
+      "table_name": "notification_events",
+      "file": "backend/src/main/java/com/sporekart\\notification\\domain\\NotificationEvent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 35
+    },
+    "Order": {
+      "package": "com.sporekart.order.domain",
+      "table_name": "orders",
+      "file": "backend/src/main/java/com/sporekart\\order\\domain\\Order.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 21
+    },
+    "OrderEvent": {
+      "package": "com.sporekart.order.domain",
+      "table_name": "order_events",
+      "file": "backend/src/main/java/com/sporekart\\order\\domain\\OrderEvent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "OrderItem": {
+      "package": "com.sporekart.order.domain",
+      "table_name": "order_items",
+      "file": "backend/src/main/java/com/sporekart\\order\\domain\\OrderItem.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "Payment": {
+      "package": "com.sporekart.payment.domain",
+      "table_name": "payments",
+      "file": "backend/src/main/java/com/sporekart\\payment\\domain\\Payment.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "PaymentEvent": {
+      "package": "com.sporekart.payment.domain",
+      "table_name": "payment_events",
+      "file": "backend/src/main/java/com/sporekart\\payment\\domain\\PaymentEvent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "Promotion": {
+      "package": "com.sporekart.promotion.domain",
+      "table_name": "promotions",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\domain\\Promotion.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 24
+    },
+    "PromotionUsage": {
+      "package": "com.sporekart.promotion.domain",
+      "table_name": "promotion_usages",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\domain\\PromotionUsage.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "ProductReview": {
+      "package": "com.sporekart.review.domain",
+      "table_name": "product_reviews",
+      "file": "backend/src/main/java/com/sporekart\\review\\domain\\ProductReview.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 16
+    },
+    "ProductReviewImage": {
+      "package": "com.sporekart.review.domain",
+      "table_name": "product_review_images",
+      "file": "backend/src/main/java/com/sporekart\\review\\domain\\ProductReviewImage.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 6
+    },
+    "ReviewInvitationState": {
+      "package": "com.sporekart.review.domain",
+      "table_name": "review_invitation_states",
+      "file": "backend/src/main/java/com/sporekart\\review\\domain\\ReviewInvitationState.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "Shipment": {
+      "package": "com.sporekart.shipping.domain",
+      "table_name": "shipments",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\domain\\Shipment.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 13
+    },
+    "ShipmentTracking": {
+      "package": "com.sporekart.shipping.domain",
+      "table_name": "shipment_trackings",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\domain\\ShipmentTracking.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "SupportTicket": {
+      "package": "com.sporekart.support.domain",
+      "table_name": "support_tickets",
+      "file": "backend/src/main/java/com/sporekart\\support\\domain\\SupportTicket.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 20
+    },
+    "TicketMessage": {
+      "package": "com.sporekart.support.domain",
+      "table_name": "ticket_messages",
+      "file": "backend/src/main/java/com/sporekart\\support\\domain\\TicketMessage.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "Attendance": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "attendances",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Attendance.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 5
+    },
+    "Batch": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "batches",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Batch.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "BatchSchedule": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "batch_schedules",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\BatchSchedule.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 7
+    },
+    "Certificate": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "certificates",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Certificate.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 6
+    },
+    "Completion": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "completions",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Completion.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 6
+    },
+    "Course": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "courses",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Course.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "CourseCategory": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "course_categories",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\CourseCategory.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 5
+    },
+    "Enrollment": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "enrollments",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\Enrollment.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "TrainingGlimpse": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "training_glimpses",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\TrainingGlimpse.java",
+      "primary_key": {
+        "type": "String",
+        "field": "id"
+      },
+      "fields_count": 12
+    },
+    "TrainingReview": {
+      "package": "com.sporekart.training.domain",
+      "table_name": "training_reviews",
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\TrainingReview.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 16
+    },
+    "Wallet": {
+      "package": "com.sporekart.wallet.domain",
+      "table_name": "wallets",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\Wallet.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 9
+    },
+    "WalletTopupIntent": {
+      "package": "com.sporekart.wallet.domain",
+      "table_name": "wallet_topup_intents",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletTopupIntent.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 10
+    },
+    "WalletTransaction": {
+      "package": "com.sporekart.wallet.domain",
+      "table_name": "wallet_transactions",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletTransaction.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 29
+    },
+    "WalletWithdrawal": {
+      "package": "com.sporekart.wallet.domain",
+      "table_name": "wallet_withdrawals",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletWithdrawal.java",
+      "primary_key": {
+        "type": "UUID",
+        "field": "id"
+      },
+      "fields_count": 16
+    }
+  },
+  "jpa_repositories_count": 54,
+  "jpa_repositories": {
+    "AdminAuditLogRepository": {
+      "package": "com.sporekart.admin.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\admin\\infrastructure\\AdminAuditLogRepository.java",
+      "domain_entity": "AdminAuditLog",
+      "id_type": "UUID"
+    },
+    "AnalyticsEventRepository": {
+      "package": "com.sporekart.analytics.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\analytics\\infrastructure\\AnalyticsEventRepository.java",
+      "domain_entity": "AnalyticsEvent",
+      "id_type": "UUID"
+    },
+    "AnalyticsRepository": {
+      "package": "com.sporekart.analytics.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\analytics\\infrastructure\\AnalyticsRepository.java",
+      "domain_entity": "AnalyticsMetric",
+      "id_type": "UUID"
+    },
+    "CartItemRepository": {
+      "package": "com.sporekart.cart.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\cart\\infrastructure\\CartItemRepository.java",
+      "domain_entity": "CartItem",
+      "id_type": "UUID"
+    },
+    "CartRepository": {
+      "package": "com.sporekart.cart.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\cart\\infrastructure\\CartRepository.java",
+      "domain_entity": "Cart",
+      "id_type": "UUID"
+    },
+    "CategoryRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\CategoryRepository.java",
+      "domain_entity": "Category",
+      "id_type": "UUID"
+    },
+    "InventoryAuditRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\InventoryAuditRepository.java",
+      "domain_entity": "InventoryAuditEvent",
+      "id_type": "UUID"
+    },
+    "InventoryRecordRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\InventoryRecordRepository.java",
+      "domain_entity": "InventoryRecord",
+      "id_type": "UUID"
+    },
+    "ProductInformationRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\ProductInformationRepository.java",
+      "domain_entity": "ProductInformation",
+      "id_type": "UUID"
+    },
+    "ProductMediaRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\ProductMediaRepository.java",
+      "domain_entity": "ProductMedia",
+      "id_type": "UUID"
+    },
+    "ProductOfferRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\ProductOfferRepository.java",
+      "domain_entity": "ProductOffer",
+      "id_type": "UUID"
+    },
+    "ProductRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\ProductRepository.java",
+      "domain_entity": "Product",
+      "id_type": "UUID"
+    },
+    "ProductVariantRepository": {
+      "package": "com.sporekart.catalog.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\infrastructure\\ProductVariantRepository.java",
+      "domain_entity": "ProductVariant",
+      "id_type": "UUID"
+    },
+    "BlogAuthorRepository": {
+      "package": "com.sporekart.content.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\content\\infrastructure\\BlogAuthorRepository.java",
+      "domain_entity": "BlogAuthor",
+      "id_type": "UUID"
+    },
+    "BlogCategoryRepository": {
+      "package": "com.sporekart.content.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\content\\infrastructure\\BlogCategoryRepository.java",
+      "domain_entity": "BlogCategory",
+      "id_type": "UUID"
+    },
+    "BlogPostRepository": {
+      "package": "com.sporekart.content.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\content\\infrastructure\\BlogPostRepository.java",
+      "domain_entity": "BlogPost",
+      "id_type": "UUID"
+    },
+    "BlogTagRepository": {
+      "package": "com.sporekart.content.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\content\\infrastructure\\BlogTagRepository.java",
+      "domain_entity": "BlogTag",
+      "id_type": "UUID"
+    },
+    "ContentRepository": {
+      "package": "com.sporekart.content.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\content\\infrastructure\\ContentRepository.java",
+      "domain_entity": "Article",
+      "id_type": "UUID"
+    },
+    "CustomerAddressRepository": {
+      "package": "com.sporekart.customer.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\customer\\infrastructure\\CustomerAddressRepository.java",
+      "domain_entity": "CustomerAddress",
+      "id_type": "UUID"
+    },
+    "CustomerRepository": {
+      "package": "com.sporekart.customer.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\customer\\infrastructure\\CustomerRepository.java",
+      "domain_entity": "CustomerProfile",
+      "id_type": "UUID"
+    },
+    "CustomerIdentityRepository": {
+      "package": "com.sporekart.identity.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\identity\\infrastructure\\CustomerIdentityRepository.java",
+      "domain_entity": "CustomerIdentity",
+      "id_type": "UUID"
+    },
+    "OtpRepository": {
+      "package": "com.sporekart.identity.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\identity\\infrastructure\\OtpRepository.java",
+      "domain_entity": "Otp",
+      "id_type": "UUID"
+    },
+    "UserRepository": {
+      "package": "com.sporekart.identity.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\identity\\infrastructure\\UserRepository.java",
+      "domain_entity": "User",
+      "id_type": "UUID"
+    },
+    "MediaAssetRepository": {
+      "package": "com.sporekart.media.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\media\\infrastructure\\MediaAssetRepository.java",
+      "domain_entity": "MediaAsset",
+      "id_type": "UUID"
+    },
+    "MediaCourseLinkRepository": {
+      "package": "com.sporekart.media.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\media\\infrastructure\\MediaCourseLinkRepository.java",
+      "domain_entity": "MediaCourseLink",
+      "id_type": "UUID"
+    },
+    "MediaProductLinkRepository": {
+      "package": "com.sporekart.media.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\media\\infrastructure\\MediaProductLinkRepository.java",
+      "domain_entity": "MediaProductLink",
+      "id_type": "UUID"
+    },
+    "NotificationEventRepository": {
+      "package": "com.sporekart.notification.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\notification\\infrastructure\\NotificationEventRepository.java",
+      "domain_entity": "NotificationEvent",
+      "id_type": "UUID"
+    },
+    "OrderEventRepository": {
+      "package": "com.sporekart.order.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\order\\infrastructure\\OrderEventRepository.java",
+      "domain_entity": "OrderEvent",
+      "id_type": "UUID"
+    },
+    "OrderRepository": {
+      "package": "com.sporekart.order.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\order\\infrastructure\\OrderRepository.java",
+      "domain_entity": "Order",
+      "id_type": "UUID"
+    },
+    "PaymentEventRepository": {
+      "package": "com.sporekart.payment.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\payment\\infrastructure\\PaymentEventRepository.java",
+      "domain_entity": "PaymentEvent",
+      "id_type": "UUID"
+    },
+    "PaymentRepository": {
+      "package": "com.sporekart.payment.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\payment\\infrastructure\\PaymentRepository.java",
+      "domain_entity": "Payment",
+      "id_type": "UUID"
+    },
+    "PromotionRepository": {
+      "package": "com.sporekart.promotion.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\infrastructure\\PromotionRepository.java",
+      "domain_entity": "Promotion",
+      "id_type": "UUID"
+    },
+    "PromotionUsageRepository": {
+      "package": "com.sporekart.promotion.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\infrastructure\\PromotionUsageRepository.java",
+      "domain_entity": "PromotionUsage",
+      "id_type": "UUID"
+    },
+    "ProductReviewImageRepository": {
+      "package": "com.sporekart.review.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\review\\infrastructure\\ProductReviewImageRepository.java",
+      "domain_entity": "ProductReviewImage",
+      "id_type": "UUID"
+    },
+    "ProductReviewRepository": {
+      "package": "com.sporekart.review.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\review\\infrastructure\\ProductReviewRepository.java",
+      "domain_entity": "ProductReview",
+      "id_type": "UUID"
+    },
+    "ReviewInvitationStateRepository": {
+      "package": "com.sporekart.review.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\review\\infrastructure\\ReviewInvitationStateRepository.java",
+      "domain_entity": "ReviewInvitationState",
+      "id_type": "UUID"
+    },
+    "ShipmentRepository": {
+      "package": "com.sporekart.shipping.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\ShipmentRepository.java",
+      "domain_entity": "Shipment",
+      "id_type": "UUID"
+    },
+    "ShipmentTrackingRepository": {
+      "package": "com.sporekart.shipping.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\ShipmentTrackingRepository.java",
+      "domain_entity": "ShipmentTracking",
+      "id_type": "UUID"
+    },
+    "SupportTicketRepository": {
+      "package": "com.sporekart.support.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\support\\infrastructure\\SupportTicketRepository.java",
+      "domain_entity": "SupportTicket",
+      "id_type": "UUID"
+    },
+    "TicketMessageRepository": {
+      "package": "com.sporekart.support.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\support\\infrastructure\\TicketMessageRepository.java",
+      "domain_entity": "TicketMessage",
+      "id_type": "UUID"
+    },
+    "AttendanceRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\AttendanceRepository.java",
+      "domain_entity": "Attendance",
+      "id_type": "UUID"
+    },
+    "BatchRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\BatchRepository.java",
+      "domain_entity": "Batch",
+      "id_type": "UUID"
+    },
+    "BatchScheduleRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\BatchScheduleRepository.java",
+      "domain_entity": "BatchSchedule",
+      "id_type": "UUID"
+    },
+    "CertificateRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\CertificateRepository.java",
+      "domain_entity": "Certificate",
+      "id_type": "UUID"
+    },
+    "CompletionRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\CompletionRepository.java",
+      "domain_entity": "Completion",
+      "id_type": "UUID"
+    },
+    "CourseCategoryRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\CourseCategoryRepository.java",
+      "domain_entity": "CourseCategory",
+      "id_type": "UUID"
+    },
+    "CourseRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\CourseRepository.java",
+      "domain_entity": "Course",
+      "id_type": "UUID"
+    },
+    "EnrollmentRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\EnrollmentRepository.java",
+      "domain_entity": "Enrollment",
+      "id_type": "UUID"
+    },
+    "TrainingGlimpseRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\TrainingGlimpseRepository.java",
+      "domain_entity": "TrainingGlimpse",
+      "id_type": "String"
+    },
+    "TrainingReviewRepository": {
+      "package": "com.sporekart.training.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\training\\infrastructure\\TrainingReviewRepository.java",
+      "domain_entity": "TrainingReview",
+      "id_type": "UUID"
+    },
+    "WalletRepository": {
+      "package": "com.sporekart.wallet.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\infrastructure\\WalletRepository.java",
+      "domain_entity": "Wallet",
+      "id_type": "UUID"
+    },
+    "WalletTopupIntentRepository": {
+      "package": "com.sporekart.wallet.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\infrastructure\\WalletTopupIntentRepository.java",
+      "domain_entity": "WalletTopupIntent",
+      "id_type": "UUID"
+    },
+    "WalletTransactionRepository": {
+      "package": "com.sporekart.wallet.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\infrastructure\\WalletTransactionRepository.java",
+      "domain_entity": "WalletTransaction",
+      "id_type": "UUID"
+    },
+    "WalletWithdrawalRepository": {
+      "package": "com.sporekart.wallet.infrastructure",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\infrastructure\\WalletWithdrawalRepository.java",
+      "domain_entity": "WalletWithdrawal",
+      "id_type": "UUID"
+    }
+  },
+  "domain_enums_count": 33,
+  "domain_enums": {
+    "CartStatus": {
+      "package": "com.sporekart.cart.domain",
+      "values": [
+        "ACTIVE",
+        "CONVERTED",
+        "ABANDONED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\cart\\domain\\CartStatus.java"
+    },
+    "InventoryEventType": {
+      "package": "com.sporekart.catalog.domain",
+      "values": [
+        "INITIALIZED",
+        "RESERVED",
+        "RELEASED",
+        "CONFIRMED_SOLD",
+        "CANCELLED_RESTOCKED",
+        "ADJUSTED",
+        "REPLENISHED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\InventoryEventType.java"
+    },
+    "MediaType": {
+      "package": "com.sporekart.media.domain",
+      "values": [
+        "IMAGE",
+        "VIDEO",
+        "DOCUMENT",
+        "PDF",
+        "CERTIFICATE\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\media\\domain\\MediaType.java"
+    },
+    "ProductMediaRole": {
+      "package": "com.sporekart.catalog.domain",
+      "values": [
+        "PRIMARY",
+        "GALLERY",
+        "PACKAGING",
+        "LIFESTYLE",
+        "INSTRUCTION\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductMediaRole.java"
+    },
+    "ProductStatus": {
+      "package": "com.sporekart.catalog.domain",
+      "values": [
+        "DRAFT",
+        "ACTIVE",
+        "ARCHIVED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductStatus.java"
+    },
+    "ProductType": {
+      "package": "com.sporekart.catalog.domain",
+      "values": [
+        "FRESH_MUSHROOM",
+        "DRY_MUSHROOM",
+        "SPAWN_SEED",
+        "GROWING_KIT",
+        "EQUIPMENT_SUPPLIES\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\ProductType.java"
+    },
+    "StockAvailability": {
+      "package": "com.sporekart.catalog.domain",
+      "values": [
+        "AVAILABLE",
+        "LIMITED_STOCK",
+        "LOW_STOCK",
+        "OUT_OF_STOCK"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\catalog\\domain\\StockAvailability.java"
+    },
+    "BlogPostStatus": {
+      "package": "com.sporekart.content.domain",
+      "values": [
+        "DRAFT",
+        "PUBLISHED",
+        "SCHEDULED",
+        "ARCHIVED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\content\\domain\\BlogPostStatus.java"
+    },
+    "CustomerCapability": {
+      "package": "com.sporekart.customer.domain",
+      "values": [
+        "SHOP",
+        "ORDER",
+        "TRAINING",
+        "SUPPORT\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\customer\\domain\\CustomerCapability.java"
+    },
+    "IdentityProvider": {
+      "package": "com.sporekart.identity.domain",
+      "values": [
+        "GOOGLE",
+        "PHONE_OTP",
+        "EMAIL_OTP\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\IdentityProvider.java"
+    },
+    "OtpType": {
+      "package": "com.sporekart.identity.domain",
+      "values": [
+        "CUSTOMER_AUTH",
+        "ADMIN_AUTH",
+        "EMAIL_CHANGE\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\OtpType.java"
+    },
+    "UserRole": {
+      "package": "com.sporekart.identity.domain",
+      "values": [
+        "ROLE_CUSTOMER",
+        "ROLE_TRAINEE",
+        "ROLE_ADMIN\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\identity\\domain\\UserRole.java"
+    },
+    "MediaStatus": {
+      "package": "com.sporekart.media.domain",
+      "values": [
+        "UPLOADING",
+        "PROCESSING",
+        "READY",
+        "ACTIVE",
+        "FAILED",
+        "ARCHIVED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\media\\domain\\MediaStatus.java"
+    },
+    "NotificationEventType": {
+      "package": "com.sporekart.notification.domain",
+      "values": [
+        "// Product Commerce Events\n    ORDER_CONFIRMED",
+        "ORDER_CANCELLED",
+        "ORDER_PACKED",
+        "SHIPMENT_HANDOVER",
+        "SHIPMENT_SHIPPED",
+        "SHIPMENT_IN_TRANSIT",
+        "SHIPMENT_OUT_FOR_DELIVERY",
+        "ORDER_DELIVERED",
+        "// Refunds\n    REFUND_INITIATED",
+        "REFUND_PROCESSING",
+        "REFUND_COMPLETED",
+        "REFUND_FAILED",
+        "// Training Commerce\n    ENROLLMENT_CONFIRMED",
+        "ENROLLMENT_CANCELLED",
+        "// Wallet Financial Events\n    WALLET_TOPUP_SUCCESS",
+        "WALLET_REFUND_CREDIT",
+        "WALLET_PAYMENT_SUCCESS",
+        "WALLET_WITHDRAWAL_REQUESTED",
+        "WALLET_WITHDRAWAL_PROCESSING",
+        "WALLET_WITHDRAWAL_COMPLETED",
+        "WALLET_WITHDRAWAL_FAILED",
+        "WALLET_WITHDRAWAL_REVERSED",
+        "// Abandoned Commerce\n    CART_ABANDONED",
+        "ENROLLMENT_CHECKOUT_ABANDONED",
+        "// Support Ticket Events\n    SUPPORT_TICKET_CREATED",
+        "SUPPORT_TICKET_REPLY",
+        "SUPPORT_TICKET_CLOSED",
+        "// Training Announcements & Batches\n    TRAINING_BATCH_PUBLISHED",
+        "TRAINING_ANNOUNCEMENT",
+        "// Content & Promotions\n    BLOG_PUBLISHED",
+        "PROMOTION_PUBLISHED",
+        "// Admin Operational Alerts\n    ADMIN_NEW_ORDER",
+        "ADMIN_ORDER_CANCELLED",
+        "ADMIN_WITHDRAWAL_REQUESTED",
+        "ADMIN_PAYMENT_FAILURE\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\notification\\domain\\NotificationEventType.java"
+    },
+    "NotificationStatus": {
+      "package": "com.sporekart.notification.domain",
+      "values": [
+        "PENDING",
+        "PROCESSING",
+        "SENT",
+        "FAILED",
+        "RETRY_SCHEDULED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\notification\\domain\\NotificationStatus.java"
+    },
+    "OrderStatus": {
+      "package": "com.sporekart.order.domain",
+      "values": [
+        "PENDING_PAYMENT",
+        "PAID",
+        "CONFIRMED",
+        "PROCESSING",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+        "REFUND_PENDING",
+        "REFUNDED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\order\\domain\\OrderStatus.java"
+    },
+    "PaymentStatus": {
+      "package": "com.sporekart.payment.domain",
+      "values": [
+        "CREATED",
+        "INITIATED",
+        "AUTHORIZED",
+        "CAPTURED",
+        "FAILED",
+        "REFUNDED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\payment\\domain\\PaymentStatus.java"
+    },
+    "PromotionStatus": {
+      "package": "com.sporekart.promotion.domain",
+      "values": [
+        "DRAFT",
+        "ACTIVE",
+        "PAUSED",
+        "EXPIRED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\promotion\\domain\\PromotionStatus.java"
+    },
+    "PromotionTargetAudience": {
+      "package": "com.sporekart.promotion.domain",
+      "values": [
+        "CUSTOMER",
+        "// Valid only for product store purchases / cart checkout\n    TRAINEE",
+        "// Valid only for training course & batch enrollments\n    BOTH       // Universal promo valid for both product purchases and training enrollments\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\promotion\\domain\\PromotionTargetAudience.java"
+    },
+    "PromotionType": {
+      "package": "com.sporekart.promotion.domain",
+      "values": [
+        "PERCENTAGE",
+        "FIXED_AMOUNT",
+        "FREE_SHIPPING\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\promotion\\domain\\PromotionType.java"
+    },
+    "InvitationStatus": {
+      "package": "com.sporekart.review.domain",
+      "values": [
+        "PENDING",
+        "SKIPPED",
+        "COMPLETED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\review\\domain\\InvitationStatus.java"
+    },
+    "ReviewStatus": {
+      "package": "com.sporekart.review.domain",
+      "values": [
+        "PENDING",
+        "PUBLISHED",
+        "HIDDEN",
+        "REJECTED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\review\\domain\\ReviewStatus.java"
+    },
+    "ShipmentStatus": {
+      "package": "com.sporekart.shipping.domain",
+      "values": [
+        "CREATED",
+        "AWB_ASSIGNED",
+        "PICKUP_SCHEDULED",
+        "IN_TRANSIT",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "CANCELLED",
+        "RETURNED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\shipping\\domain\\ShipmentStatus.java"
+    },
+    "TicketCategory": {
+      "package": "com.sporekart.support.domain",
+      "values": [
+        "ORDER_ISSUE",
+        "PAYMENT_ISSUE",
+        "SHIPPING_ISSUE",
+        "TRAINING_ISSUE",
+        "PRODUCT_INQUIRY",
+        "GENERAL_SUPPORT"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\support\\domain\\TicketCategory.java"
+    },
+    "TicketPriority": {
+      "package": "com.sporekart.support.domain",
+      "values": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "URGENT\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\support\\domain\\TicketPriority.java"
+    },
+    "TicketStatus": {
+      "package": "com.sporekart.support.domain",
+      "values": [
+        "OPEN",
+        "IN_PROGRESS",
+        "WAITING_ON_CUSTOMER",
+        "RESOLVED",
+        "CLOSED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\support\\domain\\TicketStatus.java"
+    },
+    "BatchStatus": {
+      "package": "com.sporekart.training.domain",
+      "values": [
+        "UPCOMING",
+        "ONGOING",
+        "COMPLETED",
+        "CANCELLED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\BatchStatus.java"
+    },
+    "EnrollmentStatus": {
+      "package": "com.sporekart.training.domain",
+      "values": [
+        "PENDING_PAYMENT",
+        "CONFIRMED",
+        "COMPLETED",
+        "CANCELLED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\training\\domain\\EnrollmentStatus.java"
+    },
+    "WalletSourceType": {
+      "package": "com.sporekart.wallet.domain",
+      "values": [
+        "ORDER",
+        "TRAINING_ENROLLMENT",
+        "REFUND",
+        "WITHDRAWAL",
+        "TOPUP",
+        "ADMIN_ADJUSTMENT\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletSourceType.java"
+    },
+    "WalletTransactionDirection": {
+      "package": "com.sporekart.wallet.domain",
+      "values": [
+        "CREDIT",
+        "DEBIT\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletTransactionDirection.java"
+    },
+    "WalletTransactionStatus": {
+      "package": "com.sporekart.wallet.domain",
+      "values": [
+        "PENDING",
+        "SUCCESS",
+        "FAILED",
+        "REVERSED",
+        "CANCELLED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletTransactionStatus.java"
+    },
+    "WalletTransactionType": {
+      "package": "com.sporekart.wallet.domain",
+      "values": [
+        "CREDIT",
+        "DEBIT",
+        "REFUND",
+        "ORDER_PAYMENT",
+        "TRAINING_PAYMENT",
+        "WALLET_PAYMENT",
+        "PARTIAL_PAYMENT",
+        "WITHDRAWAL",
+        "REVERSAL",
+        "ADJUSTMENT",
+        "HOLD",
+        "RELEASE",
+        "SETTLEMENT",
+        "CANCELLATION",
+        "FAILED",
+        "TOPUP\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WalletTransactionType.java"
+    },
+    "WithdrawalStatus": {
+      "package": "com.sporekart.wallet.domain",
+      "values": [
+        "REQUESTED",
+        "PROCESSING",
+        "SUCCESS",
+        "FAILED",
+        "REVERSED\n}"
+      ],
+      "file": "backend/src/main/java/com/sporekart\\wallet\\domain\\WithdrawalStatus.java"
+    }
+  }
+}

@@ -70,8 +70,17 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.success(cart));
     }
 
-    @DeleteMapping
+    @DeleteMapping({"", "/clear"})
     public ResponseEntity<ApiResponse<CartResponse>> clearCart(
+            Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId) {
+        UUID userId = extractUserId(authentication);
+        CartResponse cart = cartService.clearCart(userId, sessionId);
+        return ResponseEntity.ok(ApiResponse.success(cart));
+    }
+
+    @PostMapping("/clear")
+    public ResponseEntity<ApiResponse<CartResponse>> clearCartPost(
             Authentication authentication,
             @RequestHeader(value = "X-Session-ID", required = false) String sessionId) {
         UUID userId = extractUserId(authentication);

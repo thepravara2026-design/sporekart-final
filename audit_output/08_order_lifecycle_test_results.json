@@ -1,0 +1,417 @@
+{
+  "timestamp": "2026-10-17T19:08:58Z",
+  "summary": {
+    "total": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0,
+    "passRate": "100.0%"
+  },
+  "results": [
+    {
+      "category": "Cart",
+      "test_id": "ORD-01",
+      "description": "Catalog product browsing and variant discovery",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Cart",
+      "test_id": "ORD-02",
+      "description": "Add product variant to cart within stock limits",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Cart",
+      "test_id": "ORD-03",
+      "description": "Cart rejects quantity exceeding variant stock limits",
+      "status": "PASS",
+      "expected": "400/409/422/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "Cart",
+      "test_id": "ORD-04",
+      "description": "Validate cart for checkout (stock, active products)",
+      "status": "PASS",
+      "expected": "Valid/200",
+      "actual": "Valid=True (HTTP 200)",
+      "details": ""
+    },
+    {
+      "category": "OrderCreation",
+      "test_id": "ORD-05",
+      "description": "Order creation creates order with PENDING_PAYMENT status",
+      "status": "PASS",
+      "expected": "PENDING_PAYMENT / 200",
+      "actual": "PENDING_PAYMENT (HTTP 200)",
+      "details": ""
+    },
+    {
+      "category": "Inventory",
+      "test_id": "ORD-06",
+      "description": "Atomic stock reservation: availableQuantity decremented, reservedQuantity incremented",
+      "status": "PASS",
+      "expected": "Avail: 63, Res: 10",
+      "actual": "Avail: 63, Res: 10",
+      "details": ""
+    },
+    {
+      "category": "Cart",
+      "test_id": "ORD-07",
+      "description": "Cart items cleared automatically after order creation",
+      "status": "PASS",
+      "expected": "0 items / 200",
+      "actual": "0",
+      "details": ""
+    },
+    {
+      "category": "OrderCreation",
+      "test_id": "ORD-08",
+      "description": "Initial order state event logged (newState=PENDING_PAYMENT)",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Idempotency",
+      "test_id": "ORD-09",
+      "description": "Duplicate order submission returns existing order idempotently",
+      "status": "PASS",
+      "expected": "Order c1018abf-e755-46e1-8283-b04c78bcf812 / 200",
+      "actual": "Order c1018abf-e755-46e1-8283-b04c78bcf812 / 200",
+      "details": ""
+    },
+    {
+      "category": "Idempotency",
+      "test_id": "ORD-10",
+      "description": "Duplicate order submission does not double-reserve inventory",
+      "status": "PASS",
+      "expected": "10",
+      "actual": "10",
+      "details": ""
+    },
+    {
+      "category": "Payment",
+      "test_id": "ORD-11",
+      "description": "Payment initiation creates Razorpay order reference",
+      "status": "PASS",
+      "expected": "Order ID / 200",
+      "actual": "order_mock_8c01c888 / 200",
+      "details": ""
+    },
+    {
+      "category": "Payment",
+      "test_id": "ORD-12",
+      "description": "Payment verification with invalid signature is rejected",
+      "status": "PASS",
+      "expected": "Rejected/False",
+      "actual": "isSuccess=False",
+      "details": ""
+    },
+    {
+      "category": "Payment",
+      "test_id": "ORD-13",
+      "description": "Order remains in PENDING_PAYMENT after failed payment to permit retry",
+      "status": "PASS",
+      "expected": "PENDING_PAYMENT",
+      "actual": "PENDING_PAYMENT",
+      "details": ""
+    },
+    {
+      "category": "Payment",
+      "test_id": "ORD-14",
+      "description": "Inventory reservation preserved across payment retry window",
+      "status": "PASS",
+      "expected": "> 0",
+      "actual": "10",
+      "details": ""
+    },
+    {
+      "category": "Payment",
+      "test_id": "ORD-15",
+      "description": "Payment retry/capture succeeds and transitions order to PAID",
+      "status": "PASS",
+      "expected": "PAID",
+      "actual": "PAID",
+      "details": ""
+    },
+    {
+      "category": "Inventory",
+      "test_id": "ORD-16",
+      "description": "Inventory confirmed: stock moved from reserved to soldQuantity",
+      "status": "PASS",
+      "expected": "> 0",
+      "actual": "9",
+      "details": ""
+    },
+    {
+      "category": "OrderProcessing",
+      "test_id": "ORD-17",
+      "description": "Admin transitions order from PAID to PROCESSING",
+      "status": "PASS",
+      "expected": "PROCESSING",
+      "actual": "PROCESSING",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-18",
+      "description": "Shipment creation automatically transitions order to SHIPPED",
+      "status": "PASS",
+      "expected": "AWB Created / 200",
+      "actual": "AWB-1792264036592 (HTTP 200)",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-19",
+      "description": "Order tracking metadata populated (courierPartner, trackingNumber, trackingUrl)",
+      "status": "PASS",
+      "expected": "Populated",
+      "actual": "Courier: Delhivery Express, Tracking: AWB-1792264036592",
+      "details": ""
+    },
+    {
+      "category": "Notifications",
+      "test_id": "ORD-20",
+      "description": "Shipment notification event recorded in transactional outbox",
+      "status": "PASS",
+      "expected": "> 0 Events",
+      "actual": "8",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-21",
+      "description": "Carrier tracking scan advances shipment to IN_TRANSIT",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-22",
+      "description": "Duplicate carrier scan is ignored idempotently without redundant tracking rows",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "BusinessRules",
+      "test_id": "ORD-26",
+      "description": "Arbitrary admin manual override of delivery without carrier scan is restricted",
+      "status": "PASS",
+      "expected": "400/409/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-23",
+      "description": "Carrier DELIVERED scan cascades order status to DELIVERED",
+      "status": "PASS",
+      "expected": "DELIVERED",
+      "actual": "DELIVERED",
+      "details": ""
+    },
+    {
+      "category": "Invoice",
+      "test_id": "ORD-24",
+      "description": "GST Tax Invoice PDF is generated and downloadable once order is DELIVERED",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Shipment",
+      "test_id": "ORD-25",
+      "description": "Out-of-order tracking scan cannot regress terminal DELIVERED status",
+      "status": "PASS",
+      "expected": "DELIVERED",
+      "actual": "DELIVERED",
+      "details": ""
+    },
+    {
+      "category": "Cancellation",
+      "test_id": "ORD-27",
+      "description": "Create new unpaid order for cancellation testing",
+      "status": "PASS",
+      "expected": "Created",
+      "actual": "00422955-3fa6-4b97-9c45-233d1b175e53",
+      "details": ""
+    },
+    {
+      "category": "Cancellation",
+      "test_id": "ORD-28",
+      "description": "Customer cancels unpaid order (status transitions to CANCELLED)",
+      "status": "PASS",
+      "expected": "CANCELLED",
+      "actual": "CANCELLED",
+      "details": ""
+    },
+    {
+      "category": "Inventory",
+      "test_id": "ORD-29",
+      "description": "Unpaid cancellation restores reservedQuantity back to availableQuantity",
+      "status": "PASS",
+      "expected": "Avail: 63, Res: 8",
+      "actual": "Avail: 63, Res: 8",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "ORD-30",
+      "description": "No wallet refund credited for cancellation of unpaid order",
+      "status": "PASS",
+      "expected": "2083.2",
+      "actual": "2083.2",
+      "details": ""
+    },
+    {
+      "category": "Cancellation",
+      "test_id": "ORD-31",
+      "description": "Create and pay for order prior to cancellation test",
+      "status": "PASS",
+      "expected": "PAID",
+      "actual": "PAID",
+      "details": ""
+    },
+    {
+      "category": "Cancellation",
+      "test_id": "ORD-32",
+      "description": "Cancelling a paid order transitions status to REFUNDED",
+      "status": "PASS",
+      "expected": "REFUNDED",
+      "actual": "REFUNDED",
+      "details": ""
+    },
+    {
+      "category": "Inventory",
+      "test_id": "ORD-33",
+      "description": "Paid order cancellation restores soldQuantity back to availableQuantity",
+      "status": "PASS",
+      "expected": "Avail: 63, Sold: 9",
+      "actual": "Avail: 63, Sold: 9",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "ORD-34",
+      "description": "Paid order cancellation automatically credits refund to customer wallet",
+      "status": "PASS",
+      "expected": "2923.2",
+      "actual": "2923.2",
+      "details": ""
+    },
+    {
+      "category": "Notifications",
+      "test_id": "ORD-35",
+      "description": "Customer in-app notification center records cancellation & refund credit",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "BusinessRules",
+      "test_id": "ORD-36",
+      "description": "Order cancellation strictly prohibited once order is DELIVERED",
+      "status": "PASS",
+      "expected": "400/409/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "BusinessRules",
+      "test_id": "ORD-37",
+      "description": "Order cancellation strictly prohibited once order is SHIPPED",
+      "status": "PASS",
+      "expected": "400/409/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "BusinessRules",
+      "test_id": "ORD-38",
+      "description": "State machine rejects invalid transition backwards from DELIVERED",
+      "status": "PASS",
+      "expected": "400/409/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "BusinessRules",
+      "test_id": "ORD-39",
+      "description": "State machine rejects duplicate cancellation on already CANCELLED order",
+      "status": "PASS",
+      "expected": "400/409/500",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "Concurrency",
+      "test_id": "ORD-40",
+      "description": "Concurrent checkouts compete without deadlock or race condition",
+      "status": "PASS",
+      "expected": "2 completions",
+      "actual": "Statuses: [200, 400]",
+      "details": ""
+    },
+    {
+      "category": "Concurrency",
+      "test_id": "ORD-41",
+      "description": "Pessimistic row locking prevents overselling: available stock cannot go negative",
+      "status": "PASS",
+      "expected": "1 Success, 1 Rejected, Avail >= 0",
+      "actual": "Success=1, Rej=1, Avail=0",
+      "details": ""
+    },
+    {
+      "category": "Consistency",
+      "test_id": "ORD-42",
+      "description": "Order items, GST, shipping, and discounts reconcile to grand total",
+      "status": "PASS",
+      "expected": "1680.0",
+      "actual": "1680.0",
+      "details": ""
+    },
+    {
+      "category": "Consistency",
+      "test_id": "ORD-43",
+      "description": "Inventory audit trail accurately logs every stock movement event",
+      "status": "PASS",
+      "expected": "> 0 Events",
+      "actual": "47 events logged",
+      "details": ""
+    },
+    {
+      "category": "Consistency",
+      "test_id": "ORD-44",
+      "description": "Financial audit ledger records all platform wallet credits and refunds",
+      "status": "PASS",
+      "expected": "> 0 Records",
+      "actual": "44",
+      "details": ""
+    },
+    {
+      "category": "Consistency",
+      "test_id": "ORD-45",
+      "description": "Customer profile and capability bindings remain consistent post-orders",
+      "status": "PASS",
+      "expected": "Consistent",
+      "actual": "User: 3caeb6e6-7bfb-4ef6-a527-f08a1a2061bc",
+      "details": ""
+    }
+  ]
+}

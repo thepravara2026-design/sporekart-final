@@ -6,6 +6,7 @@ import com.sporekart.customer.domain.CustomerCapability;
 import com.sporekart.customer.domain.CustomerProfile;
 import com.sporekart.customer.infrastructure.CustomerAddressRepository;
 import com.sporekart.customer.infrastructure.CustomerRepository;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,7 +159,7 @@ public class CustomerService {
     @Transactional
     public CustomerDtos.AddressDto updateAddress(UUID userId, UUID addressId, CustomerDtos.AddressRequest request) {
         CustomerAddress address = customerAddressRepository.findByIdAndUserId(addressId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Address not found or unauthorized"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found: " + addressId));
 
         if (request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank()) {
             authService.validatePhoneUniqueness(null, request.getAlternatePhone().trim());
@@ -189,7 +190,7 @@ public class CustomerService {
     @Transactional
     public void deleteAddress(UUID userId, UUID addressId) {
         CustomerAddress address = customerAddressRepository.findByIdAndUserId(addressId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Address not found or unauthorized"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found: " + addressId));
         customerAddressRepository.delete(address);
     }
 

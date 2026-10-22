@@ -1,0 +1,42 @@
+[
+  {
+    "test": "Wallet Non-Negative Check Constraint",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23514', 'M': 'new row for relation \"wallets\" violates check constraint \"check_wallet_available_balance_non_negative\"', 'D': 'Failing row contains (dc34e205-55b7-4737-9586-aa369da55578, 92b62296-fea6-4ee4-a405-b7ae82be071c, CUSTOMER, -50.00, 0.00, 0.00, INR, 2026-10-17 14:03:26.91379+00, 2026-10-17 14:03:26.91379+00).', 's': 'public', 't': 'wallets', 'n': 'check_wallet_available_balance_non_negative', 'F': 'execMain.c', 'L': '2033', 'R': 'ExecConstraints'}"
+  },
+  {
+    "test": "User Email Unique Constraint",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23505', 'M': 'duplicate key value violates unique constraint \"users_email_key\"', 'D': 'Key (email)=(admin@sporekart.in) already exists.', 's': 'public', 't': 'users', 'n': 'users_email_key', 'F': 'nbtinsert.c', 'L': '666', 'R': '_bt_check_unique'}"
+  },
+  {
+    "test": "Cart Active User Partial Unique Constraint (V37)",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23505', 'M': 'duplicate key value violates unique constraint \"uq_carts_user_active\"', 'D': 'Key (user_id)=(74fb30f1-bded-4893-9cec-e2ba860cf03b) already exists.', 's': 'public', 't': 'carts', 'n': 'uq_carts_user_active', 'F': 'nbtinsert.c', 'L': '666', 'R': '_bt_check_unique'}"
+  },
+  {
+    "test": "Foreign Key Constraint: order_items -> orders",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23503', 'M': 'insert or update on table \"order_items\" violates foreign key constraint \"order_items_order_id_fkey\"', 'D': 'Key (order_id)=(b9f56573-b3ee-4647-a929-4da36ce3a366) is not present in table \"orders\".', 's': 'public', 't': 'order_items', 'n': 'order_items_order_id_fkey', 'F': 'ri_triggers.c', 'L': '2599', 'R': 'ri_ReportViolation'}"
+  },
+  {
+    "test": "Foreign Key Constraint: enrollments -> batches",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23503', 'M': 'insert or update on table \"enrollments\" violates foreign key constraint \"fk_enrollments_batch_id\"', 'D': 'Key (batch_id)=(4922b71d-0c68-45ed-ada6-a47a1da065a6) is not present in table \"batches\".', 's': 'public', 't': 'enrollments', 'n': 'fk_enrollments_batch_id', 'F': 'ri_triggers.c', 'L': '2599', 'R': 'ri_ReportViolation'}"
+  },
+  {
+    "test": "NOT NULL Constraint on Critical Financial Fields (orders.total_amount_inr)",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23502', 'M': 'null value in column \"total_amount_inr\" of relation \"orders\" violates not-null constraint', 'D': 'Failing row contains (c6c8563c-59de-439e-b6cc-46c6ee395cb4, 529a5ab9-9def-405b-965b-21bdfa98cf7e, ORD-NULL-TEST, null, 0.00, PENDING, null, null, null, 2026-10-17 14:03:29.791798+00, 2026-10-17 14:03:29.791798+00, 100.00, 0.00, 0.00, null, null, null, null, null, null, null).', 's': 'public', 't': 'orders', 'c': 'total_amount_inr', 'F': 'execMain.c', 'L': '1981', 'R': 'ExecConstraints'}"
+  },
+  {
+    "test": "Product Variant SKU Unique Constraint",
+    "passed": true,
+    "detail": "{'S': 'ERROR', 'V': 'ERROR', 'C': '23505', 'M': 'duplicate key value violates unique constraint \"product_variants_sku_key\"', 'D': 'Key (sku)=(FBM-200G) already exists.', 's': 'public', 't': 'product_variants', 'n': 'product_variants_sku_key', 'F': 'nbtinsert.c', 'L': '666', 'R': '_bt_check_unique'}"
+  },
+  {
+    "test": "Transaction Atomicity & Rollback Guarantee",
+    "passed": true,
+    "detail": "Row cleanly rolled back with zero footprint"
+  }
+]

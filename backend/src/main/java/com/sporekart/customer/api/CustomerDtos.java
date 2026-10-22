@@ -14,15 +14,26 @@ public class CustomerDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateProfileRequest {
+        @jakarta.validation.constraints.Pattern(regexp = "^$|^[a-zA-Z0-9\\s\\.\\-]{2,60}$", message = "Full name must contain only letters, numbers, spaces, dots, or hyphens (min 2 characters)")
         private String fullName;
+
+        @jakarta.validation.constraints.Pattern(regexp = "^$|^(?:\\+91[\\-\\s]?|0)?[6-9]\\d{9}$", message = "Phone number must be a valid 10-digit Indian mobile number")
         private String phone;
+
+        @jakarta.validation.constraints.Pattern(regexp = "^$|^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$", message = "Email must be a valid email address")
         private String email;
+
         private String gstin;
+
+        @jakarta.validation.constraints.Min(value = 0, message = "Farm size cannot be negative")
         private Integer farmSizeSqft;
+
         private String line1;
         private String line2;
         private String city;
         private String state;
+
+        @jakarta.validation.constraints.Pattern(regexp = "^$|^[1-9][0-9]{5}$", message = "PIN code must be a valid 6-digit Indian postal code")
         private String pincode;
     }
 

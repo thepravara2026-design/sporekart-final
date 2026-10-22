@@ -1,0 +1,317 @@
+{
+  "timestamp": "2026-10-18T02:32:59.437338+00:00",
+  "total": 44,
+  "passed": 44,
+  "failed": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "id": "TRN-01",
+      "name": "Admin Creates Course Category",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': '6536fe38-a736-4a24-ab17-046e7ff7514a', 'name': 'Specialty Fungi Cultivation 1792290654', 'slug': 'specialty-fungi-1792290654', 'description': \"High-yield commercial cultivation techniques for Lion's Mane and Reishi\", 'createdAt': '2026-10-18T08:00:55.2042597+05:30'}, 'requestId': '13b7cec1-36b5-4c5e-8903-21cf1c8088ed'}"
+    },
+    {
+      "id": "TRN-02",
+      "name": "Admin Creates Paid Training Course (Fee: \u20b91500.00)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': '56dd842f-eb0d-4e12-abb4-716007a64933', 'title': \"Lion's Mane Commercial Masterclass 1792290654\", 'slug': 'lions-mane-masterclass-1792290654', 'description': 'End-to-end substrate preparation, humidity control, and sterile inoculations', 'durationDays': 14, 'feeInr': 1500.0, 'category': None, 'mode': None, 'syllabusJson': None, 'slots': None, 'active': True, 'priceInr': 1500.0, 'durationHours': 56}, 'requestId': 'baca93d3-28f5-4b0d-9452-3095f54dce7e'}"
+    },
+    {
+      "id": "TRN-03",
+      "name": "Batch Creation Validates Bounds (Capacity > 0, Start <= End Date)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 400, Body: {'success': False, 'message': 'Batch capacity must be at least 1', 'error': {'code': 'BAD_REQUEST', 'message': 'Batch capacity must be at least 1', 'requestId': '687052d6-16ed-490b-bff4-3ab8f13bcda2'}}"
+    },
+    {
+      "id": "TRN-04",
+      "name": "Admin Creates Batch with Capacity 10 and Future Start Date",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': 'cee79440-fd57-4345-9648-aab4e036ab02', 'courseId': '56dd842f-eb0d-4e12-abb4-716007a64933', 'courseTitle': \"Lion's Mane Commercial Masterclass 1792290654\", 'batchCode': 'BATCH-LM-1792290654', 'startDate': '2026-11-07', 'endDate': '2026-11-21', 'capacity': 10, 'enrolledCount': 0, 'status': 'UPCOMING', 'schedules': None}, 'requestId': 'df87b7ab-a352-495b-89c9-218861c2150b'}"
+    },
+    {
+      "id": "TRN-05",
+      "name": "Admin Adds Batch Schedule with Meeting Link",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': 'ed2593fe-d154-4f8d-a7a0-69bc06b4d542', 'topic': 'Cleanroom Inoculation & HEPA Filtration Protocols', 'scheduledAt': '2026-11-07T12:30:56.994329Z', 'durationMinutes': 90, 'meetingLink': 'https://meet.sporekart.com/training/batch-lm'}, 'requestId': '845af0be-f7d8-4c5d-8d10-527388254386'}"
+    },
+    {
+      "id": "TRN-06",
+      "name": "Public Course Catalog Retrieval and Slug Lookup",
+      "passed": true,
+      "status": "PASS",
+      "details": "st1: 200, st2: 200"
+    },
+    {
+      "id": "TRN-07",
+      "name": "Batch Slot Available Seats Computation (Capacity 10 - Enrolled 0 = Available 10)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Matched Slot: {'id': 'cee79440-fd57-4345-9648-aab4e036ab02', 'batchCode': 'BATCH-LM-1792290654', 'startDate': '2026-11-07', 'endDate': '2026-11-21', 'startTime': '2026-11-07T12:30:56.994329Z', 'capacity': 10, 'enrolledCount': 0, 'availableSeats': 10, 'status': 'UPCOMING', 'available': True}"
+    },
+    {
+      "id": "TRN-08",
+      "name": "Public Training Gallery Glimpses Retrieval",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Count: 4"
+    },
+    {
+      "id": "TRN-09",
+      "name": "Admin Blocked from Enrolling as Trainee (ROLE_ADMIN Trainee Barrier)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': 'The admin account (thepravara2026@gmail.com) is purely dedicated for admin operations and cannot enroll as a trainee.', 'error': {'code': 'CONFLICT', 'message': 'The admin account (thepravara2026@gmail.com) is purely dedicated for admin operations and cannot enroll as a trainee.', 'requestId': 'b7a399dc-9365-4ac3-8832-18da2fd9c0f6'}}"
+    },
+    {
+      "id": "TRN-10",
+      "name": "Enrollment with Non-Existent Batch ID Rejected (HTTP 404/400)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 404, Body: {'success': False, 'message': 'Batch not found: efa3aa26-ce1f-4255-b3fb-c2442fb5f2e7', 'error': {'code': 'NOT_FOUND', 'message': 'Batch not found: efa3aa26-ce1f-4255-b3fb-c2442fb5f2e7', 'requestId': '3ed09d6b-7ff8-482b-bbe4-0d8feec7007e'}}"
+    },
+    {
+      "id": "TRN-11",
+      "name": "Customer Enrollment Creates PENDING_PAYMENT Without Incrementing Enrolled Seats",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Slot Enrolled: 0"
+    },
+    {
+      "id": "TRN-12",
+      "name": "Duplicate Enrollment Attempt Returns Existing Enrollment Idempotently",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, ID: 086c5248-6573-4391-85a5-1657641e5048"
+    },
+    {
+      "id": "TRN-13",
+      "name": "Customer Views Personal Bookings (/training/my-bookings)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Matched: True"
+    },
+    {
+      "id": "TRN-14",
+      "name": "Cross-User Enrollment Authorization Boundary (User B Access Denied: HTTP 403)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 403, Body: {'success': False, 'message': 'Access denied to training enrollment details', 'error': {'code': 'FORBIDDEN', 'message': 'Access denied to training enrollment details', 'requestId': '82a47a5d-f44a-49b1-8580-00443d89b75c'}}"
+    },
+    {
+      "id": "TRN-15",
+      "name": "Owner Trainee and Administrator Can Access Enrollment Details",
+      "passed": true,
+      "status": "PASS",
+      "details": "st_owner: 200, st_admin: 200"
+    },
+    {
+      "id": "TRN-16",
+      "name": "Free Course Enrollment Confirmed Directly (\u20b90.00 Bypass)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'message': 'Free training enrollment confirmed', 'enrollmentId': '185b8fac-ce5f-44d2-8427-f5d202b17542', 'paymentReference': 'FREE_BYPASS', 'success': True}, 'requestId': 'b7fd0193-6df6-48af-b208-d5f440fe5d2e'}"
+    },
+    {
+      "id": "TRN-17",
+      "name": "Initiate Enrollment Payment Generates Razorpay Order (Receipt ENROLL-...)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'razorpayOrderId': 'order_mock_15cf1a5b', 'amountInr': 1500.0, 'currency': 'INR', 'razorpayKeyId': 'rzp_test_mockkey123', 'orderId': None}, 'requestId': '110d3b2c-8ae7-4ae6-8692-dfed20d34def'}"
+    },
+    {
+      "id": "TRN-18",
+      "name": "Cross-User Payment Initiation Blocked (User B -> User A's Enrollment)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 403, Body: {'success': False, 'message': 'Access denied: You are not authorized to initiate payment for this enrollment', 'error': {'code': 'FORBIDDEN', 'message': 'Access denied: You are not authorized to initiate payment for this enrollment', 'requestId': 'f827889d-0850-417f-8f83-9c08c2668f2c'}}"
+    },
+    {
+      "id": "TRN-19",
+      "name": "Payment Verification Forgery Blocked (Owner Verification)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 403, Body: {'success': False, 'message': 'Access denied: You are not authorized to process payment for this training enrollment', 'error': {'code': 'FORBIDDEN', 'message': 'Access denied: You are not authorized to process payment for this training enrollment', 'requestId': '6772aa29-c753-4eda-ae11-119860ff0f08'}}"
+    },
+    {
+      "id": "TRN-20",
+      "name": "Payment Failure / Invalid Payload Rejection (Status Remains PENDING_PAYMENT)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 400, Current Status: PENDING_PAYMENT"
+    },
+    {
+      "id": "TRN-21",
+      "name": "Valid Payment Confirmation Transitions to CONFIRMED & Atomically Increments Seat Count (0 -> 1)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Slot Enrolled: 1"
+    },
+    {
+      "id": "TRN-22",
+      "name": "Replay of Payment Confirmation is Idempotent (Zero Duplicate Seat Increment)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Slot Enrolled: 1"
+    },
+    {
+      "id": "TRN-23",
+      "name": "High-Concurrency Race Condition: Exactly 2 Confirmed, 3 Rejected, Zero Overbooking",
+      "passed": true,
+      "status": "PASS",
+      "details": "Successes: 2, Failures: 3, Final Enrolled: 2 / Capacity: 2"
+    },
+    {
+      "id": "TRN-24",
+      "name": "Enrollment on Full Batch Strictly Rejected (BatchCapacityExceededException)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': \"Batch 'BATCH-RACE-1792290678' is full. Cannot enroll.\", 'error': {'code': 'BATCH_CAPACITY_EXCEEDED', 'message': \"Batch 'BATCH-RACE-1792290678' is full. Cannot enroll.\", 'requestId': '7f000e8c-c7fb-4a74-9df0-6636a3e9858a'}}"
+    },
+    {
+      "id": "TRN-25",
+      "name": "Cancellation Within 7 Days of Batch Start Date Strictly Rejected",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': 'Enrollment cancellation is only permitted at least 7 days before the batch start date.', 'error': {'code': 'CONFLICT', 'message': 'Enrollment cancellation is only permitted at least 7 days before the batch start date.', 'requestId': 'b57b650c-c84b-4e2f-aa3d-ef5c4e31b03b'}}"
+    },
+    {
+      "id": "TRN-26",
+      "name": "Cross-User Cancellation Blocked (User B -> User A's Enrollment: HTTP 403)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 403, Body: {'success': False, 'message': 'Access denied to cancel enrollment', 'error': {'code': 'FORBIDDEN', 'message': 'Access denied to cancel enrollment', 'requestId': '626806ab-0cf7-4283-8757-9a74c7e2f520'}}"
+    },
+    {
+      "id": "TRN-27",
+      "name": "Valid Cancellation of Paid Enrollment Decrements Seat (1 -> 0) & Refunds to Wallet (+\u20b91500.00)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Cancel Status: 200, Enrolled Count: 0, Bal Pre: 0, Bal Post: 1500.0"
+    },
+    {
+      "id": "TRN-28",
+      "name": "Replay of Cancellation is Idempotent (No Double-Refund, No Negative Seat Count)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Bal Post2: 1500.0 == 1500.0"
+    },
+    {
+      "id": "TRN-29",
+      "name": "Payment Confirmation on Cancelled Enrollment Strictly Rejected (Cannot Resurrect)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Confirm Status: 409, Current Enrollment Status: CANCELLED"
+    },
+    {
+      "id": "TRN-30",
+      "name": "Unpaid PENDING_PAYMENT Enrollment Cancellation Does NOT Issue Unearned Wallet Refund",
+      "passed": true,
+      "status": "PASS",
+      "details": "Bal Pre: 0, Bal Post: 0 (Delta: 0)"
+    },
+    {
+      "id": "TRN-31",
+      "name": "Customer Capability TRAINING Successfully Granted Upon Enrollment Confirmation",
+      "passed": true,
+      "status": "PASS",
+      "details": "Profile: {'success': True, 'data': {'id': '8f92c329-9a31-4294-bcf4-cd14ecffeece', 'userId': '5124ec9a-ebf7-4a92-819e-5b1fb0102535', 'gstin': None, 'farmSizeSqft': None, 'hasTrainingCapability': True, 'trainingCapabilityGrantedAt': '2026-10-18T02:31:13.166161Z', 'capabilities': ['TRAINING', 'ORDER', 'SHOP', 'SUPPORT'], 'createdAt': '2026-10-18T08:01:13.167162'}, 'requestId': 'e2c8047d-9b35-458e-a964-6dd69df65cb1'}"
+    },
+    {
+      "id": "TRN-32",
+      "name": "ENROLLMENT_CONFIRMED Event Successfully Recorded in Notification Audit Trail",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Found: True"
+    },
+    {
+      "id": "TRN-33",
+      "name": "ENROLLMENT_CANCELLED Event Successfully Recorded in Notification Audit Trail",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Found: True"
+    },
+    {
+      "id": "TRN-34",
+      "name": "Admin Marks Trainee Attendance for Batch Schedule",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': 'Attendance marked successfully', 'requestId': '469adeb6-6a30-47a6-afb2-6c05f33ebf31'}"
+    },
+    {
+      "id": "TRN-35",
+      "name": "Course Completion on Cancelled Enrollment Strictly Rejected",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': 'Only confirmed course enrollments can be completed and issued a certificate. Current status: CANCELLED', 'error': {'code': 'CONFLICT', 'message': 'Only confirmed course enrollments can be completed and issued a certificate. Current status: CANCELLED', 'requestId': 'f59d8416-a592-4658-9391-d85a38eb0d6f'}}"
+    },
+    {
+      "id": "TRN-36",
+      "name": "Admin Completes Course & Issues Certificate (Code starts with CERT-...)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Cert Code: CERT-20261018-1A09"
+    },
+    {
+      "id": "TRN-37",
+      "name": "Trainee Retrieves Certificate Successfully (/training/certificate/{id})",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': '5a7afd6b-0d11-4588-9919-ff389eef438c', 'enrollmentId': '77052d1c-fded-410a-a22d-948e2d1c681c', 'certificateCode': 'CERT-20261018-1A09', 'issueDate': '2026-10-18', 'certificateUrl': 'https://sporekart.com/certificates/CERT-20261018-1A09.pdf'}, 'requestId': '9a2c8d10-2975-4cdd-9436-d83c2f178be3'}"
+    },
+    {
+      "id": "TRN-38",
+      "name": "Unauthorized Trainee Blocked from Accessing Another Trainee's Certificate (HTTP 403)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 403"
+    },
+    {
+      "id": "TRN-39",
+      "name": "Completed Course Cancellation & Post-Certification Refund Strictly Blocked",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': 'Completed course enrollments cannot be cancelled or refunded.', 'error': {'code': 'CONFLICT', 'message': 'Completed course enrollments cannot be cancelled or refunded.', 'requestId': '04614a2b-1dbc-42a3-b24f-6f3dbb2c14b9'}}"
+    },
+    {
+      "id": "TRN-40",
+      "name": "Verified Trainee Submits 5-Star Course Review (isVerifiedTrainee = True)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Body: {'success': True, 'data': {'id': '3c8cbd13-cf7d-423f-8233-00ca8e725f0a', 'courseId': '56dd842f-eb0d-4e12-abb4-716007a64933', 'courseTitle': \"Lion's Mane Commercial Masterclass 1792290654\", 'batchId': 'cee79440-fd57-4345-9648-aab4e036ab02', 'batchCode': 'BATCH-LM-1792290654', 'enrollmentId': '77052d1c-fded-410a-a22d-948e2d1c681c', 'userId': '5124ec9a-ebf7-4a92-819e-5b1fb0102535', 'reviewerName': 'Priya Sharma', 'rating': 5, 'instructorRating': 5, 'reviewTitle': \"Outstanding Commercial Lion's Mane Training!\", 'reviewText': 'Detailed protocols on humidity buffering and sterile inoculation were top tier.', 'status': 'PUBLISHED', 'createdAt': '2026-10-18T08:02:55.8146651+05:30', 'verifiedTrainee': True}, 'requestId': '755f86e4-de87-4d14-87de-631beff1bfa6'}"
+    },
+    {
+      "id": "TRN-41",
+      "name": "Duplicate Course Review Submission Strictly Rejected",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 409, Body: {'success': False, 'message': 'You have already reviewed this course enrollment', 'error': {'code': 'CONFLICT', 'message': 'You have already reviewed this course enrollment', 'requestId': 'ddd77661-1b63-400b-b55b-b690c4208520'}}"
+    },
+    {
+      "id": "TRN-42",
+      "name": "Public Course Review Summary Reflects Verified Trainee Ratings",
+      "passed": true,
+      "status": "PASS",
+      "details": "Status: 200, Summary: {'success': True, 'data': {'averageRating': 5.0, 'averageInstructorRating': 5.0, 'totalReviews': 1, 'fiveStarCount': 1, 'fourStarCount': 0, 'threeStarCount': 0, 'twoStarCount': 0, 'oneStarCount': 0}, 'requestId': 'e1f2e2c4-f1da-43fa-b271-d1e8d02449c3'}"
+    },
+    {
+      "id": "TRN-43",
+      "name": "Batch Seat Invariant: enrolledCount == Count(CONFIRMED + COMPLETED Enrollments)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Slot Enrolled: 1, Expected Active: 1"
+    },
+    {
+      "id": "TRN-44",
+      "name": "Platform Financial Reconciliation: Net Drift Matches Valid Training Refunds Exactly (\u20b91,500.00)",
+      "passed": true,
+      "status": "PASS",
+      "details": "Pre-Audit: \u20b927954.64, Post-Audit: \u20b929454.64, Net Drift: \u20b91500.00 == Expected: \u20b91500.00"
+    }
+  ]
+}

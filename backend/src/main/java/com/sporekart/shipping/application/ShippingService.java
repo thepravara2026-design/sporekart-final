@@ -11,6 +11,7 @@ import com.sporekart.shipping.domain.ShipmentStatus;
 import com.sporekart.shipping.domain.ShipmentTracking;
 import com.sporekart.shipping.infrastructure.ShipmentRepository;
 import com.sporekart.shipping.infrastructure.ShipmentTrackingRepository;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -150,7 +151,9 @@ public class ShippingService {
         String addrJson = "";
         try {
             addrJson = objectMapper.writeValueAsString(addr);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Failed to serialize shipping address for order {}: {}", orderId, e.getMessage());
+        }
 
         Shipment shipment = Shipment.builder()
                 .orderId(orderId)
@@ -194,10 +197,13 @@ public class ShippingService {
     @Transactional
     public Shipment simulateCourierEvent(UUID shipmentId, ShipmentStatus targetStatus, String location, String activity) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
 
         if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
             throw new IllegalStateException("Cannot update tracking for a cancelled shipment.");
+        }
+        if (shipment.getStatus() == ShipmentStatus.DELIVERED && targetStatus != ShipmentStatus.DELIVERED) {
+            throw new IllegalStateException("Cannot regress status of a DELIVERED shipment.");
         }
 
         String loc = (location != null && !location.isBlank()) ? location : "Central Logistics Hub";
@@ -244,7 +250,14 @@ public class ShippingService {
     @Transactional
     public ShipmentTracking updateTrackingStatus(UUID shipmentId) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
+
+        if (shipment.getStatus() == ShipmentStatus.DELIVERED || shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            log.info("Shipment {} is already in terminal {} status; returning latest tracking event", shipmentId, shipment.getStatus());
+            if (shipment.getTrackingEvents() != null && !shipment.getTrackingEvents().isEmpty()) {
+                return shipment.getTrackingEvents().get(shipment.getTrackingEvents().size() - 1);
+            }
+        }
 
         ShippingProvider.TrackingResult trackingResult = shippingProvider.trackShipment(shipment.getAwbCode(), shipment.getProviderShipmentId());
 
@@ -263,7 +276,7 @@ public class ShippingService {
             shipment.setDeliveredAt(ZonedDateTime.now());
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Order delivered", "SHIPPING_SERVICE");
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
-        } else if ("IN_TRANSIT".equalsIgnoreCase(trackingResult.getCurrentStatus())) {
+        } else if ("IN_TRANSIT".equalsIgnoreCase(trackingResult.getCurrentStatus()) && shipment.getStatus() != ShipmentStatus.DELIVERED) {
             shipment.setStatus(ShipmentStatus.IN_TRANSIT);
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
         }
@@ -283,6 +296,11 @@ public class ShippingService {
         }
 
         Shipment shipment = shipmentOpt.get();
+
+        if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            log.info("Shipment for AWB {} is already in terminal CANCELLED status; ignoring webhook transition to {}", awbCode, currentStatus);
+            return;
+        }
 
         if (shipment.getStatus() == ShipmentStatus.DELIVERED) {
             log.info("Shipment for AWB {} is already in terminal DELIVERED status; ignoring webhook transition to {}", awbCode, currentStatus);
@@ -324,7 +342,15 @@ public class ShippingService {
     @Transactional
     public void cancelShipment(UUID shipmentId, String reason) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
+
+        if (shipment.getStatus() == ShipmentStatus.DELIVERED) {
+            throw new IllegalStateException("Cannot cancel an already delivered shipment");
+        }
+        if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            log.info("Shipment {} is already in CANCELLED status; no-op", shipmentId);
+            return;
+        }
 
         shippingProvider.cancelShipment(shipment.getProviderShipmentId(), shipment.getAwbCode());
 
@@ -357,19 +383,16 @@ public class ShippingService {
             }
 
             if (order.getUserId() != null) {
-                userRepository.findById(order.getUserId()).ifPresent(user -> {
+                var userOpt = userRepository.findById(order.getUserId());
+                if (userOpt.isPresent()) {
+                    var user = userOpt.get();
                     if (user.getEmail() != null && user.getEmail().contains("@")) {
-                        // Keep primary email if resolved
+                        recipientEmail = user.getEmail();
                     }
-                    if (user.getPhone() != null && !user.getPhone().isBlank()) {
-                        // Use user phone
+                    if ((recipientPhone == null || recipientPhone.isBlank()) && user.getPhone() != null && !user.getPhone().isBlank()) {
+                        recipientPhone = user.getPhone();
                     }
-                });
-
-                recipientEmail = userRepository.findById(order.getUserId())
-                        .map(com.sporekart.identity.domain.User::getEmail)
-                        .filter(e -> e != null && e.contains("@"))
-                        .orElse(null);
+                }
             }
 
             if ((recipientEmail == null || recipientEmail.isBlank()) && order.getShippingAddress() != null) {

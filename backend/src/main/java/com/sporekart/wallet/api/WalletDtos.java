@@ -1,6 +1,7 @@
 package com.sporekart.wallet.api;
 
 import com.sporekart.wallet.domain.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -61,10 +62,21 @@ public class WalletDtos {
     @AllArgsConstructor
     @Builder
     public static class WithdrawRequest {
+        @NotNull(message = "Withdrawal amount is required")
+        @DecimalMin(value = "1.00", message = "Withdrawal amount must be at least ₹1.00")
         private BigDecimal amount;
+
+        @NotBlank(message = "Bank name is required")
         private String bankName;
+
+        @NotBlank(message = "Account number is required")
         private String accountNumber;
+
+        @NotBlank(message = "IFSC code is required")
+        @Pattern(regexp = "^[A-Z]{4}0[A-Z0-9]{6}$", message = "Invalid IFSC code format")
         private String ifscCode;
+
+        @NotBlank(message = "Account holder name is required")
         private String accountHolderName;
     }
 
@@ -96,6 +108,8 @@ public class WalletDtos {
     @AllArgsConstructor
     @Builder
     public static class AddMoneyRequest {
+        @NotNull(message = "Top-up amount is required")
+        @DecimalMin(value = "1.00", message = "Top-up amount must be at least ₹1.00")
         private BigDecimal amount;
     }
 
@@ -118,8 +132,13 @@ public class WalletDtos {
     @AllArgsConstructor
     @Builder
     public static class VerifyAddMoneyRequest {
+        @NotBlank(message = "Razorpay order ID is required")
         private String razorpayOrderId;
+
+        @NotBlank(message = "Razorpay payment ID is required")
         private String razorpayPaymentId;
+
+        @NotBlank(message = "Razorpay signature is required")
         private String razorpaySignature;
     }
 
@@ -131,8 +150,14 @@ public class WalletDtos {
     public static class WalletCheckoutPayRequest {
         private UUID orderId;
         private UUID enrollmentId;
+
+        @NotBlank(message = "Payment target type is required (ORDER or ENROLLMENT)")
         private String type; // "ORDER" or "ENROLLMENT"
+
+        @NotNull(message = "Wallet deduction amount is required")
+        @DecimalMin(value = "0.00", message = "Wallet amount cannot be negative")
         private BigDecimal amountFromWallet;
+
         private BigDecimal amountFromGateway;
     }
 
@@ -176,9 +201,18 @@ public class WalletDtos {
     @AllArgsConstructor
     @Builder
     public static class AdminManualAdjustmentRequest {
+        @NotNull(message = "User ID is required")
         private UUID userId;
+
+        @NotNull(message = "Adjustment amount is required")
+        @DecimalMin(value = "0.01", message = "Adjustment amount must be at least ₹0.01")
         private BigDecimal amount;
+
+        @NotBlank(message = "Direction is required (CREDIT or DEBIT)")
+        @Pattern(regexp = "^(CREDIT|DEBIT)$", message = "Direction must be CREDIT or DEBIT")
         private String direction; // "CREDIT" or "DEBIT"
+
+        @NotBlank(message = "Adjustment reason is required")
         private String reason;
     }
 

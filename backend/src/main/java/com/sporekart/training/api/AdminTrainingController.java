@@ -125,4 +125,22 @@ public class AdminTrainingController {
                 .certificateUrl(cert.getCertificateUrl())
                 .build();
     }
+
+    // --- Training Gallery Glimpses Management ---
+    @GetMapping("/glimpses")
+    public ResponseEntity<ApiResponse<List<TrainingGlimpse>>> getAdminGlimpses() {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.getAllGlimpsesForAdmin()));
+    }
+
+    @PostMapping("/glimpses")
+    public ResponseEntity<ApiResponse<TrainingGlimpse>> saveGlimpse(@Valid @RequestBody TrainingDtos.SaveTrainingGlimpseRequest req) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.saveGlimpse(req)));
+    }
+
+    @DeleteMapping("/glimpses/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteGlimpse(@PathVariable String id) {
+        trainingService.deleteGlimpse(id);
+        return ResponseEntity.ok(ApiResponse.success("Training glimpse deleted successfully."));
+    }
 }
+

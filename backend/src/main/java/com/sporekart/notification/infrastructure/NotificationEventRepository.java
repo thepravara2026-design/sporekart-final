@@ -43,10 +43,17 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
     @Query("UPDATE NotificationEvent n SET n.isRead = true, n.readAt = :readAt WHERE n.isAdminNotification = true AND n.isRead = false")
     int markAllAsReadForAdmin(@Param("readAt") java.time.ZonedDateTime readAt);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM NotificationEvent n WHERE n.status = :status AND n.sentAt < :cutoff")
+    int deleteByStatusAndSentAtBefore(@Param("status") NotificationStatus status, @Param("cutoff") java.time.ZonedDateTime cutoff);
+
     @Query("SELECT n FROM NotificationEvent n WHERE " +
            "(:eventType IS NULL OR n.eventType = :eventType) AND " +
            "(:status IS NULL OR n.status = :status) AND " +
-           "(:search IS NULL OR LOWER(n.recipientEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(n.subject) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(n.deduplicationKey) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "(:search IS NULL OR :search = '' OR " +
+           "LOWER(n.recipientEmail) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') OR " +
+           "LOWER(n.subject) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') OR " +
+           "LOWER(n.deduplicationKey) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%'))")
     Page<NotificationEvent> findAllFiltered(
             @Param("eventType") NotificationEventType eventType,
             @Param("status") NotificationStatus status,

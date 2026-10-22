@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, Search, Copy, Check, ArrowUpRight, ExternalLink, Filter, 
   Sparkles, Layers, ChevronRight, BarChart3, Clock, CheckCircle2, 
-  AlertCircle, ShieldCheck
+  AlertCircle, ShieldCheck, ArrowUpDown, SlidersHorizontal, Tag
 } from 'lucide-react';
 
 /**
@@ -12,6 +12,8 @@ import {
  */
 export default function AdminAnalyticsDetailModal({ isOpen, onClose, config, onApplyFilter }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const [activeSort, setActiveSort] = useState('DEFAULT');
   const [copiedId, setCopiedId] = useState(null);
 
   // Close on Escape key press
@@ -31,9 +33,11 @@ export default function AdminAnalyticsDetailModal({ isOpen, onClose, config, onA
     };
   }, [isOpen, onClose]);
 
-  // Reset search on modal reopen/config change
+  // Reset search and filters on modal reopen/config change
   useEffect(() => {
     setSearchQuery('');
+    setActiveFilter(config?.defaultFilter || 'ALL');
+    setActiveSort(config?.defaultSort || 'DEFAULT');
     setCopiedId(null);
   }, [isOpen, config?.title]);
 
@@ -44,20 +48,201 @@ export default function AdminAnalyticsDetailModal({ isOpen, onClose, config, onA
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Compute filter pills with prior live item counts
+  const resolvedFilterPills = useMemo(() => {
+    const rawItems = Array.isArray(config?.items) ? config.items : [];
+    
+    if (config?.filterPills && Array.isArray(config.filterPills) && config.filterPills.length > 0) {
+      return config.filterPills.map(pill => {
+        let count = pill.count;
+        if (count === undefined) {
+          if (pill.id === 'ALL') {
+            count = rawItems.length;
+          } else if (typeof pill.filterFn === 'function') {
+            count = rawItems.filter(pill.filterFn).length;
+          } else {
+            count = rawItems.filter(item => 
+              item.status === pill.id || 
+              item.category === pill.id || 
+              item.metadata?.Category === pill.id ||
+              item.rawCategory === pill.id
+            ).length;
+          }
+        }
+        return { ...pill, count };
+      });
+    }
+
+    // Auto-derive smart filter pills if not explicitly provided
+    const totalCount = rawItems.length;
+    const pills = [
+      { id: 'ALL', label: 'All Items', count: totalCount, isHighlighted: true }
+    ];
+
+    // From config.breakdown if available
+    if (config?.breakdown && Array.isArray(config.breakdown)) {
+      config.breakdown.forEach((b) => {
+        const labelLower = b.label.toLowerCase();
+        const count = rawItems.filter(item => {
+          const str = `${item.title || ''} ${item.subtitle || ''} ${item.status || ''} ${JSON.stringify(item.metadata || {})}`.toLowerCase();
+          return str.includes(labelLower);
+        }).length;
+
+        if (count > 0 && !pills.some(p => p.label.toLowerCase() === labelLower)) {
+          pills.push({
+            id: b.label,
+            label: b.label,
+            count: typeof b.value === 'number' ? b.value : count,
+            filterFn: (item) => {
+              const str = `${item.title || ''} ${item.subtitle || ''} ${item.status || ''} ${JSON.stringify(item.metadata || {})}`.toLowerCase();
+              return str.includes(labelLower);
+            }
+          });
+        }
+      });
+    }
+
+    // From item statuses if breakdown didn't yield extra pills
+    if (pills.length === 1) {
+      const distinctStatuses = Array.from(new Set(rawItems.map(i => i.status).filter(Boolean)));
+      if (distinctStatuses.length > 1 && distinctStatuses.length <= 8) {
+        distinctStatuses.forEach(st => {
+          const count = rawItems.filter(i => i.status === st).length;
+          pills.push({
+            id: st,
+            label: st,
+            count,
+            filterFn: i => i.status === st
+          });
+        });
+      }
+    }
+
+    return pills;
+  }, [config?.filterPills, config?.breakdown, config?.items]);
+
+  // Compute sorting pills
+  const resolvedSortingPills = useMemo(() => {
+    if (config?.sortingPills && Array.isArray(config.sortingPills) && config.sortingPills.length > 0) {
+      return config.sortingPills;
+    }
+
+    const rawItems = Array.isArray(config?.items) ? config.items : [];
+    const hasAmount = rawItems.some(i => i.amount !== undefined && i.amount !== null);
+    const hasDate = rawItems.some(i => i.date);
+
+    const defaultPills = [
+      { id: 'DEFAULT', label: 'Default' },
+      { id: 'NAME_ASC', label: 'Name (A → Z)' },
+      { id: 'NAME_DESC', label: 'Name (Z → A)' },
+    ];
+
+    if (hasAmount) {
+      defaultPills.push({ id: 'AMOUNT_DESC', label: 'Price/Amount: High → Low' });
+      defaultPills.push({ id: 'AMOUNT_ASC', label: 'Price/Amount: Low → High' });
+    }
+
+    if (hasDate) {
+      defaultPills.push({ id: 'DATE_DESC', label: 'Newest First' });
+      defaultPills.push({ id: 'DATE_ASC', label: 'Oldest First' });
+    }
+
+    defaultPills.push({ id: 'STATUS', label: 'Status' });
+
+    return defaultPills;
+  }, [config?.sortingPills, config?.items]);
+
+  // Filter and sort items based on activeFilter, searchQuery, and activeSort
   const filteredItems = useMemo(() => {
     if (!config?.items || !Array.isArray(config.items)) return [];
-    if (!searchQuery.trim()) return config.items;
-    const q = searchQuery.toLowerCase();
-    return config.items.filter((item) => {
-      const matchTitle = item.title?.toLowerCase().includes(q);
-      const matchSubtitle = item.subtitle?.toLowerCase().includes(q);
-      const matchId = item.id?.toLowerCase().includes(q);
-      const matchStatus = item.status?.toLowerCase().includes(q);
-      const matchAmount = item.amount?.toString().toLowerCase().includes(q);
-      const matchMeta = item.metadata ? Object.values(item.metadata).join(' ').toLowerCase().includes(q) : false;
-      return matchTitle || matchSubtitle || matchId || matchStatus || matchAmount || matchMeta;
-    });
-  }, [config?.items, searchQuery]);
+    let items = [...config.items];
+
+    // 1. Filter by active filter pill
+    if (activeFilter && activeFilter !== 'ALL') {
+      const activePillObj = resolvedFilterPills.find(p => p.id === activeFilter);
+      if (activePillObj?.filterFn) {
+        items = items.filter(activePillObj.filterFn);
+      } else {
+        const f = activeFilter.toLowerCase();
+        items = items.filter(item => {
+          const statusMatch = item.status?.toLowerCase() === f;
+          const catMatch = item.category?.toLowerCase() === f || item.metadata?.Category?.toLowerCase() === f;
+          const titleMatch = item.title?.toLowerCase().includes(f);
+          const subMatch = item.subtitle?.toLowerCase().includes(f);
+          return statusMatch || catMatch || titleMatch || subMatch;
+        });
+      }
+    }
+
+    // 2. Filter by search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((item) => {
+        const matchTitle = item.title?.toLowerCase().includes(q);
+        const matchSubtitle = item.subtitle?.toLowerCase().includes(q);
+        const matchId = item.id?.toLowerCase().includes(q);
+        const matchStatus = item.status?.toLowerCase().includes(q);
+        const matchAmount = item.amount?.toString().toLowerCase().includes(q);
+        const matchMeta = item.metadata ? Object.values(item.metadata).join(' ').toLowerCase().includes(q) : false;
+        return matchTitle || matchSubtitle || matchId || matchStatus || matchAmount || matchMeta;
+      });
+    }
+
+    // 3. Apply active sorting pill
+    const activeSortPillObj = resolvedSortingPills.find(s => s.id === activeSort);
+    if (activeSortPillObj?.sortFn) {
+      items.sort(activeSortPillObj.sortFn);
+    } else {
+      switch (activeSort) {
+        case 'NAME_ASC':
+          items.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+          break;
+        case 'NAME_DESC':
+          items.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+          break;
+        case 'AMOUNT_DESC':
+        case 'PRICE_DESC':
+          items.sort((a, b) => {
+            const valA = typeof a.amount === 'number' ? a.amount : parseFloat(String(a.amount).replace(/[^0-9.-]+/g, '')) || 0;
+            const valB = typeof b.amount === 'number' ? b.amount : parseFloat(String(b.amount).replace(/[^0-9.-]+/g, '')) || 0;
+            return valB - valA;
+          });
+          break;
+        case 'AMOUNT_ASC':
+        case 'PRICE_ASC':
+          items.sort((a, b) => {
+            const valA = typeof a.amount === 'number' ? a.amount : parseFloat(String(a.amount).replace(/[^0-9.-]+/g, '')) || 0;
+            const valB = typeof b.amount === 'number' ? b.amount : parseFloat(String(b.amount).replace(/[^0-9.-]+/g, '')) || 0;
+            return valA - valB;
+          });
+          break;
+        case 'DATE_DESC':
+          items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+          break;
+        case 'DATE_ASC':
+          items.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+          break;
+        case 'STATUS':
+          items.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+          break;
+        case 'STOCK_DESC':
+          items.sort((a, b) => {
+            const stockA = a.metadata?.Variants || a.stock || 0;
+            const stockB = b.metadata?.Variants || b.stock || 0;
+            return stockB - stockA;
+          });
+          break;
+        case 'ORDER_NUM':
+          items.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+          break;
+        case 'DEFAULT':
+        default:
+          break;
+      }
+    }
+
+    return items;
+  }, [config?.items, activeFilter, searchQuery, activeSort, resolvedFilterPills, resolvedSortingPills]);
 
   if (!isOpen || !config) return null;
 
@@ -156,44 +341,145 @@ export default function AdminAnalyticsDetailModal({ isOpen, onClose, config, onA
 
           {config.breakdown && config.breakdown.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 w-full sm:w-auto">
-              {config.breakdown.map((b, idx) => (
-                <div key={idx} className="bg-surface-white px-3 py-2 rounded-xl border border-surface-border shadow-2xs">
-                  <span className="text-[10px] font-bold uppercase text-typography-muted block truncate">
-                    {b.label}
-                  </span>
-                  <span className="text-sm font-extrabold text-typography-primary font-display block mt-0.5">
-                    {b.value}
-                  </span>
-                </div>
-              ))}
+              {config.breakdown.map((b, idx) => {
+                const matchPill = resolvedFilterPills.find(p => 
+                  p.label.toLowerCase() === b.label.toLowerCase() || 
+                  p.id.toLowerCase() === b.label.toLowerCase()
+                );
+                return (
+                  <div
+                    key={idx}
+                    role={matchPill ? 'button' : undefined}
+                    tabIndex={matchPill ? 0 : undefined}
+                    onClick={() => {
+                      if (matchPill) {
+                        setActiveFilter(activeFilter === matchPill.id ? 'ALL' : matchPill.id);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (matchPill && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        setActiveFilter(activeFilter === matchPill.id ? 'ALL' : matchPill.id);
+                      }
+                    }}
+                    className={`bg-surface-white px-3 py-2 rounded-xl border border-surface-border shadow-2xs transition-all select-none ${
+                      matchPill ? 'cursor-pointer hover:border-forest-700/60 hover:shadow-level-1 group' : ''
+                    } ${matchPill && activeFilter === matchPill.id ? 'ring-2 ring-forest-700/50 bg-forest-900/5 border-forest-700' : ''}`}
+                    title={matchPill ? `Filter items by ${b.label}` : undefined}
+                  >
+                    <span className="text-[10px] font-bold uppercase text-typography-muted block truncate group-hover:text-forest-700">
+                      {b.label}
+                    </span>
+                    <span className="text-sm font-extrabold text-typography-primary font-display block mt-0.5">
+                      {b.value}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Instant Search Bar */}
-        <div className="px-5 sm:px-6 py-3 border-b border-surface-border bg-surface-white flex items-center justify-between gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-typography-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={`Search ${filteredItems.length} items (name, ref ID, amount, status)...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-cream/50 border border-surface-border rounded-xl pl-9 pr-3.5 py-2 text-xs text-typography-primary focus:outline-none focus:border-forest-700 focus:bg-surface-white transition-all"
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-typography-muted hover:text-typography-primary text-xs font-bold"
-              >
-                ×
-              </button>
-            )}
+        {/* Dynamic Category/Filter Pills Ribbon with Live Prior Counts */}
+        {resolvedFilterPills.length > 0 && (
+          <div className="px-5 sm:px-6 py-2.5 bg-surface-cream/50 border-b border-surface-border flex items-center gap-2 overflow-x-auto scrollbar-thin">
+            <span className="text-[10px] font-black uppercase tracking-wider text-typography-muted flex items-center gap-1 shrink-0 font-mono">
+              <Filter className="w-3 h-3 text-forest-700" /> Filter:
+            </span>
+            <div className="flex items-center gap-1.5 flex-nowrap shrink-0">
+              {resolvedFilterPills.map((pill) => {
+                const isActive = activeFilter === pill.id;
+                const isHighlighted = pill.isHighlighted || pill.id === 'ALL';
+                return (
+                  <button
+                    key={pill.id}
+                    type="button"
+                    onClick={() => setActiveFilter(pill.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border select-none ${
+                      isActive
+                        ? 'bg-forest-900 text-white border-forest-900 shadow-level-1 ring-2 ring-forest-700/20'
+                        : isHighlighted
+                          ? 'bg-forest-900/10 text-forest-900 border-forest-900/30 hover:bg-forest-900/15'
+                          : 'bg-surface-white text-typography-secondary hover:text-typography-primary hover:bg-surface-cream border-surface-border'
+                    }`}
+                    data-testid={`filter-pill-${pill.id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                  >
+                    <span>{pill.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-extrabold ${
+                        isActive
+                          ? 'bg-white/25 text-white'
+                          : isHighlighted
+                            ? 'bg-forest-900 text-white'
+                            : 'bg-forest-900/10 text-forest-800'
+                      }`}
+                    >
+                      {pill.count ?? 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <span className="text-xs text-typography-muted font-mono shrink-0">
-            {filteredItems.length} record{filteredItems.length === 1 ? '' : 's'}
-          </span>
+        )}
+
+        {/* Instant Search Bar & Sorting Pills Bar */}
+        <div className="px-5 sm:px-6 py-3 border-b border-surface-border bg-surface-white space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-typography-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={`Search ${filteredItems.length} items (name, ref ID, amount, status)...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-surface-cream/50 border border-surface-border rounded-xl pl-9 pr-8 py-2 text-xs text-typography-primary focus:outline-none focus:border-forest-700 focus:bg-surface-white transition-all"
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-typography-muted hover:text-typography-primary text-xs font-bold"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <span className="text-xs text-typography-muted font-mono shrink-0">
+              {filteredItems.length} of {config.items?.length || 0} record{config.items?.length === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {/* Interactive Sorting Pills Ribbon */}
+          {resolvedSortingPills.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pt-0.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-typography-muted flex items-center gap-1 shrink-0 font-mono">
+                <ArrowUpDown className="w-3 h-3 text-gold" /> Sort:
+              </span>
+              <div className="flex items-center gap-1.5 flex-nowrap shrink-0">
+                {resolvedSortingPills.map((sortPill) => {
+                  const isSortActive = activeSort === sortPill.id;
+                  return (
+                    <button
+                      key={sortPill.id}
+                      type="button"
+                      onClick={() => setActiveSort(sortPill.id)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 border select-none ${
+                        isSortActive
+                          ? 'bg-gold/25 text-forest-900 border-gold/50 shadow-2xs font-extrabold ring-1 ring-gold/40'
+                          : 'bg-surface-cream/60 text-typography-muted hover:text-typography-primary border-surface-border hover:bg-surface-cream'
+                      }`}
+                      data-testid={`sort-pill-${sortPill.id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    >
+                      {sortPill.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Items List */}

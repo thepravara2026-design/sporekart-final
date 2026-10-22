@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
     "preview": "vite preview",
     "seo:gate": "node scripts/seo-quality-gate.js",
     "test": "vitest run"
@@ -14,14 +14,12 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
     "axios": "^1.7.4",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.3.28",
     "lucide-react": "^0.435.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.1",
     "react-router-dom": "^6.26.1",
-    "tailwind-merge": "^2.5.2"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

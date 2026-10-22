@@ -1,0 +1,407 @@
+{
+  "summary": {
+    "total": 40,
+    "passed": 40,
+    "warned": 0,
+    "failed": 0,
+    "durationSeconds": 77.75,
+    "timestamp": "2026-10-18T04:05:01Z"
+  },
+  "results": [
+    {
+      "testId": "TEST-1.1",
+      "name": "Courier Pincode Serviceability Check (Valid PIN 411001)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "data": {
+          "pincode": "411001",
+          "estimatedDeliveryDays": 4,
+          "shippingFeeInr": 70,
+          "courierName": "Shiprocket Express / BlueDart",
+          "message": "Delivery available to pincode 411001",
+          "serviceable": true
+        }
+      }
+    },
+    {
+      "testId": "TEST-1.2",
+      "name": "Courier Pincode Serviceability Check (Invalid PIN 000000)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "data": {
+          "pincode": "000000",
+          "estimatedDeliveryDays": null,
+          "shippingFeeInr": null,
+          "courierName": null,
+          "message": "Invalid Indian Pincode format. Must be 6 digits.",
+          "serviceable": false
+        }
+      }
+    },
+    {
+      "testId": "TEST-1.4",
+      "name": "Courier Shipment Creation for Paid Order",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "shipmentId": "8090a359-8f7c-4088-b4f2-dbf51426e1b4",
+        "awbCode": "AWB-1792296242186",
+        "courier": "Delhivery Express"
+      }
+    },
+    {
+      "testId": "TEST-1.5",
+      "name": "Order Status Synchronization (Auto-Update to SHIPPED)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "orderStatus": "SHIPPED"
+      }
+    },
+    {
+      "testId": "TEST-1.6",
+      "name": "Shipment Creation Idempotency (Duplicate Suppression)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "originalId": "8090a359-8f7c-4088-b4f2-dbf51426e1b4",
+        "returnedId": "8090a359-8f7c-4088-b4f2-dbf51426e1b4"
+      }
+    },
+    {
+      "testId": "TEST-1.7",
+      "name": "Shipment Creation Rejection on Unpaid Order",
+      "status": "PASS",
+      "details": {
+        "status": 409,
+        "message": "Cannot create courier shipment for order #SK-20261018-331750 with status PENDING_PAYMENT. Order must be PAID or CONFIRMED."
+      }
+    },
+    {
+      "testId": "TEST-1.8",
+      "name": "Customer Shipment Retrieval by Order ID",
+      "status": "PASS",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "testId": "TEST-1.9",
+      "name": "Cross-User Isolation on Shipment Access (403 Forbidden)",
+      "status": "PASS",
+      "details": {
+        "status": 403,
+        "body": {
+          "success": false,
+          "message": "Access Denied: You do not have permission to view shipment details for this order",
+          "error": {
+            "code": "ACCESS_DENIED",
+            "message": "Access Denied: You do not have permission to view shipment details for this order",
+            "requestId": "25dc11e4-e6ba-4a5a-a82d-976f8ced0a41"
+          }
+        }
+      }
+    },
+    {
+      "testId": "TEST-1.10",
+      "name": "Carrier Tracking Lookup & Event Activity Retrieval",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "eventsCount": 2
+      }
+    },
+    {
+      "testId": "TEST-1.11",
+      "name": "Cross-User Isolation on Tracking Lookup (403 Forbidden)",
+      "status": "PASS",
+      "details": {
+        "status": 403
+      }
+    },
+    {
+      "testId": "TEST-1.12",
+      "name": "Carrier Event Simulation (Transition to IN_TRANSIT)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "shipmentStatus": "IN_TRANSIT"
+      }
+    },
+    {
+      "testId": "TEST-1.13",
+      "name": "Carrier Event Simulation (Transition to DELIVERED)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "shipmentStatus": "DELIVERED",
+        "deliveredAt": "2026-10-18T09:34:16.486144+05:30"
+      }
+    },
+    {
+      "testId": "TEST-1.14",
+      "name": "Order Status Auto-Sync on Courier Delivery (Order DELIVERED)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "orderStatus": "DELIVERED"
+      }
+    },
+    {
+      "testId": "TEST-1.15",
+      "name": "Terminal State Protection (Reject Regression on DELIVERED)",
+      "status": "PASS",
+      "details": {
+        "status": 409,
+        "message": "Cannot regress status of a DELIVERED shipment."
+      }
+    },
+    {
+      "testId": "TEST-1.16",
+      "name": "Shiprocket Webhook Authentication (401 on Invalid Token)",
+      "status": "PASS",
+      "details": {
+        "status": 401
+      }
+    },
+    {
+      "testId": "TEST-1.17",
+      "name": "Shiprocket Webhook Authentication (200 OK on Valid Token)",
+      "status": "PASS",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "testId": "TEST-1.18",
+      "name": "Shiprocket Webhook Duplicate Scan Suppression",
+      "status": "PASS",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "testId": "TEST-1.19",
+      "name": "Shipment Cancellation Flow and Audit Activity",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "shipmentStatus": "CANCELLED"
+      }
+    },
+    {
+      "testId": "TEST-1.20",
+      "name": "Post-Cancellation Tracking Lockout (Reject Updates on CANCELLED)",
+      "status": "PASS",
+      "details": {
+        "status": 409,
+        "message": "Cannot update tracking for a cancelled shipment."
+      }
+    },
+    {
+      "testId": "TEST-2.1",
+      "name": "In-App Customer Notification Listing (GET /notifications)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "count": 8
+      }
+    },
+    {
+      "testId": "TEST-2.2",
+      "name": "In-App Customer Unread Count Computation",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "unreadCount": 8
+      }
+    },
+    {
+      "testId": "TEST-2.3",
+      "name": "Mark Single Customer Notification as Read",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "isRead": true,
+        "readAt": "2026-10-18T09:34:32.4156437+05:30"
+      }
+    },
+    {
+      "testId": "TEST-2.4",
+      "name": "Cross-User Isolation on Customer Notifications (403 Forbidden)",
+      "status": "PASS",
+      "details": {
+        "status": 403
+      }
+    },
+    {
+      "testId": "TEST-2.5",
+      "name": "Mark All Customer Notifications as Read (Zero Unread Verification)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "markedCount": 7,
+        "newUnreadCount": 0
+      }
+    },
+    {
+      "testId": "TEST-2.6",
+      "name": "Admin Operational In-App Alerts (GET /admin/notifications/in-app)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "alertsCount": 20
+      }
+    },
+    {
+      "testId": "TEST-2.7",
+      "name": "Admin Operational Alerts Unread Count Computation",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "unreadCount": 178
+      }
+    },
+    {
+      "testId": "TEST-2.8",
+      "name": "Mark Admin Operational Alert as Read",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "isRead": true
+      }
+    },
+    {
+      "testId": "TEST-2.9",
+      "name": "Admin Outbox Monitoring Queue Listing (GET /admin/notifications)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "totalElements": 698
+      }
+    },
+    {
+      "testId": "TEST-2.10",
+      "name": "Admin Outbox Filtering by EventType (ORDER_CONFIRMED)",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "count": 20
+      }
+    },
+    {
+      "testId": "TEST-2.11",
+      "name": "Admin Manual Outbox Notification Retry Trigger",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "retryStatus": "SENT",
+        "attemptCount": 1
+      }
+    },
+    {
+      "testId": "TEST-2.12",
+      "name": "Notification Safe Content & HTML Injection Immunity",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "xssOrderId": "ab73597d-316a-45a6-aeac-c9092dd29619"
+      }
+    },
+    {
+      "testId": "TEST-3.1",
+      "name": "Transaction Insulation (Committed Business State Intact Despite Notification Lifecycle)",
+      "status": "PASS",
+      "details": {
+        "topupStatus": 200,
+        "walletBalance": 500.0,
+        "txRef": "TOPUP-1792296286612-FAAB"
+      }
+    },
+    {
+      "testId": "TEST-4.1",
+      "name": "Supabase Storage Presigned Upload URL & Key Partitioning",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "storageKey": "image/2026/10/364c2282fdf74784.png",
+        "uploadUrl": "https://irwiiyowpppdynbmwwuz.supabase.co/storage/v1/object/sporetest-bucket/image/2026/10/364c2282fdf74784.png"
+      }
+    },
+    {
+      "testId": "TEST-4.2",
+      "name": "Supabase Storage Asset Registration & Public CDN URL",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "mediaId": "40bbae9f-de33-4243-9547-983bccc92e39",
+        "publicUrl": "https://irwiiyowpppdynbmwwuz.supabase.co/storage/v1/object/public/sporetest-bucket/image/2026/10/364c2282fdf74784.png"
+      }
+    },
+    {
+      "testId": "TEST-4.3",
+      "name": "Supabase Storage Time-Bound Signed Download URL Generation",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "signedUrl": "https://irwiiyowpppdynbmwwuz.supabase.co/storage/v1/object/sign/sporetest-bucket/image/2026/10/364c2282fdf74784.png?token=3b99128a4c6c447a878695d8c7de5e48&expiresIn=1800"
+      }
+    },
+    {
+      "testId": "TEST-4.4",
+      "name": "Media Asset Entity Association (Product Catalog Linking)",
+      "status": "PASS",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "testId": "TEST-4.5",
+      "name": "Media Asset Administrative Soft-Delete Lifecycle",
+      "status": "PASS",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "testId": "TEST-5.1",
+      "name": "Razorpay Payment Gateway Order Initiation",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "gatewayOrderId": "order_mock_f3d7a20f",
+        "keyId": "rzp_test_mockkey123"
+      }
+    },
+    {
+      "testId": "TEST-5.2",
+      "name": "Razorpay HMAC-SHA256 Signature Tamper Rejection",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "isSuccess": false
+      }
+    },
+    {
+      "testId": "TEST-5.3",
+      "name": "Payment Webhook Idempotency & Replay Resilience",
+      "status": "PASS",
+      "details": {
+        "firstAttempt": 200,
+        "secondAttempt": 200,
+        "firstBody": {
+          "success": true,
+          "data": "Webhook processed successfully: payment.captured",
+          "requestId": "b366b981-1b3e-4c15-841e-f51a3c7ec6f8"
+        },
+        "secondBody": {
+          "success": true,
+          "data": "Webhook event already processed (idempotent ignore)",
+          "requestId": "cefd76dc-7e5e-4d39-9124-97c0a3a1d7b1"
+        }
+      }
+    }
+  ]
+}

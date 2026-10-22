@@ -6,7 +6,7 @@ export default function SeoHead({
   description = "Buy fresh & dry mushrooms, lab-certified spawn seeds, and DIY growing kits in India. Join certified mushroom cultivation and spawn production training courses.",
   canonicalUrl = "https://sporekart.in",
   ogType = "website",
-  ogImage = "https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1200&q=80",
+  ogImage = "",
   noindex = false,
   prevUrl = null,
   nextUrl = null,

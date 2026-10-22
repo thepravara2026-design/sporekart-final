@@ -1,0 +1,6472 @@
+{
+  "total_dtos": 154,
+  "body_endpoints_count": 74,
+  "has_valid_count": 68,
+  "missing_valid_endpoints": [
+    {
+      "controller": "AdminAuthController",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AdminAuthController.java",
+      "method": "POST",
+      "path": "/admin/auth/otp/request",
+      "handler": "requestAdminOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<String>>",
+      "params": "@RequestBody(required = false) AuthDtos.OtpRequest request",
+      "has_request_body": true,
+      "has_valid": false
+    },
+    {
+      "controller": "AdminAuthController",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AdminAuthController.java",
+      "method": "POST",
+      "path": "/admin/auth/otp/verify",
+      "handler": "verifyAdminOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<AuthDtos.AuthResponse>>",
+      "params": "@RequestBody(required = false) AuthDtos.VerifyOtpRequest request",
+      "has_request_body": true,
+      "has_valid": false
+    },
+    {
+      "controller": "AuthController",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+      "method": "POST",
+      "path": "/auth/otp/request",
+      "handler": "requestOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<String>>",
+      "params": "@RequestBody(required = false) AuthDtos.OtpRequest request",
+      "has_request_body": true,
+      "has_valid": false
+    },
+    {
+      "controller": "AuthController",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+      "method": "POST",
+      "path": "/auth/otp/verify",
+      "handler": "verifyOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<AuthDtos.AuthResponse>>",
+      "params": "@RequestBody(required = false) AuthDtos.VerifyOtpRequest request",
+      "has_request_body": true,
+      "has_valid": false
+    },
+    {
+      "controller": "PaymentWebhookController",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentWebhookController.java",
+      "method": "POST",
+      "path": "/payment/webhook",
+      "handler": "handleWebhook",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<String>>",
+      "params": "@RequestBody String rawBody, @RequestHeader(value = \"X-Razorpay-Signature\", required = false) String signature",
+      "has_request_body": true,
+      "has_valid": false
+    },
+    {
+      "controller": "ShippingWebhookController",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingWebhookController.java",
+      "method": "POST",
+      "path": "/shipping/webhook",
+      "handler": "handleShiprocketWebhook",
+      "auth": "PERMIT_ALL_OR_CONFIG",
+      "ret": "ResponseEntity<ApiResponse<String>>",
+      "params": "@RequestBody ShippingDtos.ShiprocketWebhookPayload payload, @RequestHeader(value = \"X-Shiprocket-Signature\", required = false) String signature, @RequestHeader(value = \"X-Shiprocket-Token\", required = false) String token",
+      "has_request_body": true,
+      "has_valid": false
+    }
+  ],
+  "unvalidated_request_dtos": [
+    {
+      "dto": "CreateOrderRequest",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\CreateOrderRequest.java",
+      "field_count": 3,
+      "fields": [
+        "addressId",
+        "shippingAddress",
+        "notes"
+      ]
+    },
+    {
+      "dto": "UpdateCategoryRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 5,
+      "fields": [
+        "name",
+        "slug",
+        "description",
+        "imageUrl",
+        "isActive"
+      ]
+    },
+    {
+      "dto": "UpdateProductRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 12,
+      "fields": [
+        "categoryId",
+        "title",
+        "slug",
+        "description",
+        "productType",
+        "status",
+        "hsnCode",
+        "gstRatePercent",
+        "metaTitle",
+        "metaDescription",
+        "canonicalUrl",
+        "isActive"
+      ]
+    },
+    {
+      "dto": "UpdateProductStatusRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 2,
+      "fields": [
+        "status",
+        "isActive"
+      ]
+    },
+    {
+      "dto": "CreateProductInformationRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 27,
+      "fields": [
+        "brandName",
+        "countryOfOrigin",
+        "manufacturerDetails",
+        "packerDetails",
+        "marketerDetails",
+        "customerCareDetails",
+        "netQuantity",
+        "unitOfMeasure",
+        "fssaiLicenseNumber",
+        "foodCategory",
+        "ingredients",
+        "allergenInfo",
+        "nutritionalInfoJson",
+        "servingSize",
+        "mushroomSpecies",
+        "cultivationMethod",
+        "strainVariety",
+        "recommendedSubstrate",
+        "inoculationGuidance",
+        "kitContents",
+        "cultivationCycleDays",
+        "environmentRequirements",
+        "storageInstructions",
+        "storageTemperatureGuidance",
+        "shelfLifeGuidance",
+        "handlingInstructions",
+        "safetyWarnings"
+      ]
+    },
+    {
+      "dto": "UpdateMediaOrderRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 1,
+      "fields": [
+        "items"
+      ]
+    },
+    {
+      "dto": "SyncMediaRequest",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "field_count": 1,
+      "fields": [
+        "items"
+      ]
+    },
+    {
+      "dto": "UpdatePostRequest",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "field_count": 12,
+      "fields": [
+        "title",
+        "slug",
+        "summary",
+        "content",
+        "authorId",
+        "categoryId",
+        "tagIds",
+        "featuredMediaUrl",
+        "featuredMediaAltText",
+        "metaTitle",
+        "metaDescription",
+        "canonicalUrl"
+      ]
+    },
+    {
+      "dto": "SchedulePostRequest",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "field_count": 1,
+      "fields": [
+        "scheduledPublishAt"
+      ]
+    },
+    {
+      "dto": "UpdateProfileRequest",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "field_count": 10,
+      "fields": [
+        "fullName",
+        "phone",
+        "email",
+        "gstin",
+        "farmSizeSqft",
+        "line1",
+        "line2",
+        "city",
+        "state",
+        "pincode"
+      ]
+    },
+    {
+      "dto": "ShiprocketWebhookPayload",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "field_count": 4,
+      "fields": [
+        "awb",
+        "current_status",
+        "current_location",
+        "scans"
+      ]
+    },
+    {
+      "dto": "LoginRequest",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "field_count": 2,
+      "fields": [
+        "email",
+        "password"
+      ]
+    },
+    {
+      "dto": "CreateAdhocOrderRequest",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "field_count": 19,
+      "fields": [
+        "orderId",
+        "orderDate",
+        "pickupLocation",
+        "billingCustomerName",
+        "billingLastName",
+        "billingAddress",
+        "billingAddress2",
+        "billingCity",
+        "billingPincode",
+        "billingState",
+        "billingCountry",
+        "billingEmail",
+        "billingPhone",
+        "orderItems",
+        "subTotal",
+        "length",
+        "breadth",
+        "height",
+        "weight"
+      ]
+    },
+    {
+      "dto": "AssignAwbRequest",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "field_count": 2,
+      "fields": [
+        "shipmentId",
+        "courierId"
+      ]
+    },
+    {
+      "dto": "GeneratePickupRequest",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "field_count": 1,
+      "fields": [
+        "shipmentId"
+      ]
+    },
+    {
+      "dto": "CancelOrderRequest",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "field_count": 1,
+      "fields": [
+        "ids"
+      ]
+    },
+    {
+      "dto": "EnrollRequest",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "field_count": 3,
+      "fields": [
+        "batchId",
+        "slotId",
+        "promoCode"
+      ]
+    },
+    {
+      "dto": "AdminWithdrawalActionRequest",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "field_count": 3,
+      "fields": [
+        "action",
+        "notes",
+        "rejectionReason"
+      ]
+    }
+  ],
+  "dtos": {
+    "AddToCartRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\cart\\api\\dto\\AddToCartRequest.java",
+      "fields": [
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Variant ID is required\")"
+          ]
+        },
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Quantity is required\")",
+            "@Min(value = 1, message = \"Quantity must be at least 1\")"
+          ]
+        }
+      ]
+    },
+    "CartItemResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\cart\\api\\dto\\CartItemResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productSlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "unitPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "lineTotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "availableStock",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "inStock",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "CartResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\cart\\api\\dto\\CartResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "sessionId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "subtotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "gstTotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "estimatedTotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "itemCount",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "valid",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "shippingFeeInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "discountTotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "appliedPromoCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "promoDiscountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "isFreeShipping",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "promoMessage",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CartValidationResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\cart\\api\\dto\\CartValidationResponse.java",
+      "fields": [
+        {
+          "name": "valid",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateCartItemRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\cart\\api\\dto\\UpdateCartItemRequest.java",
+      "fields": [
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Quantity is required\")",
+            "@Min(value = 0, message = \"Quantity cannot be negative\")"
+          ]
+        }
+      ]
+    },
+    "GlobalSearchResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\dto\\GlobalSearchResponse.java",
+      "fields": [
+        {
+          "name": "products",
+          "type": "List<SearchResultItem>",
+          "annotations": []
+        },
+        {
+          "name": "categories",
+          "type": "List<SearchResultItem>",
+          "annotations": []
+        },
+        {
+          "name": "training",
+          "type": "List<SearchResultItem>",
+          "annotations": []
+        },
+        {
+          "name": "blogs",
+          "type": "List<SearchResultItem>",
+          "annotations": []
+        }
+      ]
+    },
+    "SearchResultItem": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\dto\\GlobalSearchResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "subtitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "url",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "priceInr",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "NotificationDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\notification\\api\\dto\\NotificationDto.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "eventType",
+          "type": "NotificationEventType",
+          "annotations": []
+        },
+        {
+          "name": "entityType",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "entityId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isRead",
+          "type": "boolean",
+          "annotations": [
+            "@com"
+          ]
+        },
+        {
+          "name": "readAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "actionUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateOrderRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\CreateOrderRequest.java",
+      "fields": [
+        {
+          "name": "addressId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "shippingAddress",
+          "type": "OrderAddressSnapshot",
+          "annotations": []
+        },
+        {
+          "name": "notes",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "OrderEventResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\OrderEventResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "previousState",
+          "type": "OrderStatus",
+          "annotations": []
+        },
+        {
+          "name": "newState",
+          "type": "OrderStatus",
+          "annotations": []
+        },
+        {
+          "name": "reason",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdBy",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "OrderItemResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\OrderItemResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "priceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "gstRatePercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "gstAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "lineTotalInr",
+          "type": "BigDecimal",
+          "annotations": []
+        }
+      ]
+    },
+    "OrderResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\OrderResponse.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "sessionId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "subtotalAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "gstTotalAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "discountTotalAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "shippingFeeInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "OrderStatus",
+          "annotations": []
+        },
+        {
+          "name": "idempotencyKey",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "cancellationReason",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpayPaymentId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courierPartner",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "trackingNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "trackingUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "shippedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "shippingAddress",
+          "type": "OrderAddressSnapshot",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateOrderStatusRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\order\\api\\dto\\UpdateOrderStatusRequest.java",
+      "fields": [
+        {
+          "name": "newStatus",
+          "type": "OrderStatus",
+          "annotations": [
+            "@NotNull(message = \"New order status is required\")"
+          ]
+        },
+        {
+          "name": "reason",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CatalogDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": []
+    },
+    "CategoryDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "AvailabilityDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "status",
+          "type": "StockAvailability",
+          "annotations": []
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ReplenishStockRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Quantity to add is required\")",
+            "@Min(value = 1, message = \"Replenishment quantity must be at least 1\")"
+          ]
+        },
+        {
+          "name": "reason",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "MediaDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "mediaUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mediaType",
+          "type": "MediaType",
+          "annotations": []
+        },
+        {
+          "name": "role",
+          "type": "ProductMediaRole",
+          "annotations": []
+        },
+        {
+          "name": "isPrimary",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "displayOrder",
+          "type": "int",
+          "annotations": []
+        }
+      ]
+    },
+    "OfferDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "offerName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "discountPercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "discountAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "validFrom",
+          "type": "LocalDateTime",
+          "annotations": []
+        },
+        {
+          "name": "validTo",
+          "type": "LocalDateTime",
+          "annotations": []
+        },
+        {
+          "name": "isCurrentlyValid",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "VariantDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "priceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "compareAtPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "calculatedFinalPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "calculatedGstAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "appliedOfferName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "stockQuantity",
+          "type": "int",
+          "annotations": []
+        },
+        {
+          "name": "availability",
+          "type": "AvailabilityDto",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminVariantDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "priceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "compareAtPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "calculatedFinalPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "calculatedGstAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "appliedOfferName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "stockQuantity",
+          "type": "int",
+          "annotations": []
+        },
+        {
+          "name": "availability",
+          "type": "AvailabilityDto",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "ProductInformationDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "brandName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "countryOfOrigin",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "manufacturerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "packerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "marketerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerCareDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "netQuantity",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "unitOfMeasure",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fssaiLicenseNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "foodCategory",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isVegetarian",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "ingredients",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "allergenInfo",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "nutritionalInfoJson",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "servingSize",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mushroomSpecies",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "cultivationMethod",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "strainVariety",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "recommendedSubstrate",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "inoculationGuidance",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "kitContents",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "cultivationCycleDays",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "environmentRequirements",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "storageInstructions",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "storageTemperatureGuidance",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "shelfLifeGuidance",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "handlingInstructions",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "safetyWarnings",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ProductDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productType",
+          "type": "ProductType",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "ProductStatus",
+          "annotations": []
+        },
+        {
+          "name": "categoryName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "categorySlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "hsnCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "gstRatePercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variants",
+          "type": "List<VariantDto>",
+          "annotations": []
+        },
+        {
+          "name": "media",
+          "type": "List<MediaDto>",
+          "annotations": []
+        },
+        {
+          "name": "imageUrls",
+          "type": "List<String>",
+          "annotations": []
+        },
+        {
+          "name": "activeOffers",
+          "type": "List<OfferDto>",
+          "annotations": []
+        },
+        {
+          "name": "productInformation",
+          "type": "ProductInformationDto",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "isPopular",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "isBestSeller",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "averageRating",
+          "type": "Double",
+          "annotations": []
+        },
+        {
+          "name": "reviewCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "totalUnitsSold",
+          "type": "Long",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminProductDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productType",
+          "type": "ProductType",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "ProductStatus",
+          "annotations": []
+        },
+        {
+          "name": "categoryName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "categorySlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "hsnCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "gstRatePercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variants",
+          "type": "List<AdminVariantDto>",
+          "annotations": []
+        },
+        {
+          "name": "media",
+          "type": "List<MediaDto>",
+          "annotations": []
+        },
+        {
+          "name": "imageUrls",
+          "type": "List<String>",
+          "annotations": []
+        },
+        {
+          "name": "activeOffers",
+          "type": "List<OfferDto>",
+          "annotations": []
+        },
+        {
+          "name": "productInformation",
+          "type": "ProductInformationDto",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "isPopular",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "isBestSeller",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "averageRating",
+          "type": "Double",
+          "annotations": []
+        },
+        {
+          "name": "reviewCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "totalUnitsSold",
+          "type": "Long",
+          "annotations": []
+        }
+      ]
+    },
+    "StockValidationResult": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "unitPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "isAvailable",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateCategoryRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Category name is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Slug is required\")"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateCategoryRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": [
+            "@JsonAlias({\"imageUrl\", \"image_url\", \"mediaUrl\", \"url\"})"
+          ]
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateProductRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "categoryId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Product title is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Product slug is required\")"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productType",
+          "type": "ProductType",
+          "annotations": [
+            "@NotNull(message = \"Product type is required\")"
+          ]
+        },
+        {
+          "name": "hsnCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productInformation",
+          "type": "CreateProductInformationRequest",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateProductRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "categoryId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productType",
+          "type": "ProductType",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "ProductStatus",
+          "annotations": []
+        },
+        {
+          "name": "hsnCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "gstRatePercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateProductStatusRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "status",
+          "type": "ProductStatus",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateProductInformationRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "brandName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "countryOfOrigin",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "manufacturerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "packerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "marketerDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerCareDetails",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "netQuantity",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "unitOfMeasure",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fssaiLicenseNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "foodCategory",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "ingredients",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "allergenInfo",
+          "type": "String",
+          "annotations": [
+            "@JsonAlias({\"allergenInformation\", \"allergen_info\"})"
+          ]
+        },
+        {
+          "name": "nutritionalInfoJson",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "servingSize",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mushroomSpecies",
+          "type": "String",
+          "annotations": [
+            "@JsonAlias({\"scientificName\", \"species\", \"mushroom_species\"})"
+          ]
+        },
+        {
+          "name": "cultivationMethod",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "strainVariety",
+          "type": "String",
+          "annotations": [
+            "@JsonAlias({\"strainName\", \"strain\", \"strain_variety\"})"
+          ]
+        },
+        {
+          "name": "recommendedSubstrate",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "inoculationGuidance",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "kitContents",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "cultivationCycleDays",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "environmentRequirements",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "storageInstructions",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "storageTemperatureGuidance",
+          "type": "String",
+          "annotations": [
+            "@JsonAlias({\"temperatureGuidance\", \"storage_temperature_guidance\"})"
+          ]
+        },
+        {
+          "name": "shelfLifeGuidance",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "handlingInstructions",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "safetyWarnings",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateVariantRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Variant name is required\")"
+          ]
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"SKU is required\")"
+          ]
+        },
+        {
+          "name": "priceInr",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Price is required\")",
+            "@Min(value = 0, message = \"Price cannot be negative\")"
+          ]
+        },
+        {
+          "name": "compareAtPriceInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "stockQuantity",
+          "type": "int",
+          "annotations": [
+            "@Min(value = 0, message = \"Stock quantity cannot be negative\")"
+          ]
+        },
+        {
+          "name": "weightKg",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "lengthCm",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "breadthCm",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "heightCm",
+          "type": "BigDecimal",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateOfferRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Product ID is required\")"
+          ]
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "offerName",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Offer name is required\")"
+          ]
+        },
+        {
+          "name": "discountPercent",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "discountAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "validFrom",
+          "type": "LocalDateTime",
+          "annotations": [
+            "@NotNull(message = \"Valid from date is required\")"
+          ]
+        },
+        {
+          "name": "validTo",
+          "type": "LocalDateTime",
+          "annotations": [
+            "@NotNull(message = \"Valid to date is required\")"
+          ]
+        }
+      ]
+    },
+    "CreateMediaRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Product ID is required\")"
+          ]
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "mediaUrl",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Media URL is required\")",
+            "@JsonAlias({\"mediaUrl\", \"url\", \"imageUrl\", \"image_url\"})"
+          ]
+        },
+        {
+          "name": "isPrimary",
+          "type": "boolean",
+          "annotations": [
+            "@JsonAlias({\"role\", \"mediaRole\", \"productMediaRole\"})"
+          ]
+        },
+        {
+          "name": "displayOrder",
+          "type": "int",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateMediaOrderRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "items",
+          "type": "List<MediaOrderItem>",
+          "annotations": []
+        }
+      ]
+    },
+    "MediaOrderItem": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "mediaId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "displayOrder",
+          "type": "int",
+          "annotations": []
+        },
+        {
+          "name": "isPrimary",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "role",
+          "type": "ProductMediaRole",
+          "annotations": []
+        }
+      ]
+    },
+    "SyncMediaRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\catalog\\api\\CatalogDtos.java",
+      "fields": [
+        {
+          "name": "items",
+          "type": "List<CreateMediaRequest>",
+          "annotations": []
+        }
+      ]
+    },
+    "BlogDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": []
+    },
+    "CreateAuthorRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Author name is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Author slug is required\")"
+          ]
+        },
+        {
+          "name": "bio",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "avatarUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateTagRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Tag name is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Tag slug is required\")"
+          ]
+        }
+      ]
+    },
+    "CreatePostRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Title is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Slug is required\")"
+          ]
+        },
+        {
+          "name": "summary",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Content is required\")"
+          ]
+        },
+        {
+          "name": "authorId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "categoryId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "tagIds",
+          "type": "Set<UUID>",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaAltText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdatePostRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "summary",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "authorId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "categoryId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "tagIds",
+          "type": "Set<UUID>",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaAltText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "SchedulePostRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "scheduledPublishAt",
+          "type": "ZonedDateTime",
+          "annotations": [
+            "@jakarta"
+          ]
+        }
+      ]
+    },
+    "BlogCategoryResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "LocalDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "BlogAuthorResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "bio",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "avatarUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "LocalDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "BlogTagResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "BlogPostSummaryResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "summary",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "BlogPostStatus",
+          "annotations": []
+        },
+        {
+          "name": "author",
+          "type": "BlogAuthorResponse",
+          "annotations": []
+        },
+        {
+          "name": "category",
+          "type": "BlogCategoryResponse",
+          "annotations": []
+        },
+        {
+          "name": "tags",
+          "type": "Set<BlogTagResponse>",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaAltText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isIndexable",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "readingTimeMinutes",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "publishedAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "scheduledPublishAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "LocalDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "BlogPostDetailResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\content\\api\\BlogDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "summary",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "content",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "BlogPostStatus",
+          "annotations": []
+        },
+        {
+          "name": "author",
+          "type": "BlogAuthorResponse",
+          "annotations": []
+        },
+        {
+          "name": "category",
+          "type": "BlogCategoryResponse",
+          "annotations": []
+        },
+        {
+          "name": "tags",
+          "type": "Set<BlogTagResponse>",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "featuredMediaAltText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "metaDescription",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isIndexable",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "readingTimeMinutes",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "publishedAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "scheduledPublishAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "LocalDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "LocalDateTime",
+          "annotations": []
+        },
+        {
+          "name": "articleJsonLd",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "breadcrumbJsonLd",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CustomerDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "fields": []
+    },
+    "UpdateProfileRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "fields": [
+        {
+          "name": "fullName",
+          "type": "String",
+          "annotations": [
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": [
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": [
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "gstin",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "farmSizeSqft",
+          "type": "Integer",
+          "annotations": [
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "line1",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "line2",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "city",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "state",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "pincode",
+          "type": "String",
+          "annotations": [
+            "@jakarta"
+          ]
+        }
+      ]
+    },
+    "AddressRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "fields": [
+        {
+          "name": "recipientName",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Recipient name is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Phone number is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "alternatePhone",
+          "type": "String",
+          "annotations": [
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "line1",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Address line 1 is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "line2",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "city",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"City is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "state",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"State is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "pincode",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"PIN code is required\")",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "isDefault",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "AddressDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "recipientName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "alternatePhone",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "line1",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "line2",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "city",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "state",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "pincode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isDefault",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "CapabilityResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerDtos.java",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        }
+      ]
+    },
+    "AuthDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": []
+    },
+    "OtpRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "identifier",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Phone or email identifier is required\")"
+          ]
+        }
+      ]
+    },
+    "VerifyOtpRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "identifier",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Identifier is required\")"
+          ]
+        },
+        {
+          "name": "otpCode",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"OTP code is required\")"
+          ]
+        },
+        {
+          "name": "firstName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "GoogleOAuthRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "googleSub",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Google ID token or subject is required\")"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Email is required\")"
+          ]
+        },
+        {
+          "name": "firstName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "idToken",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "EmailChangeRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "newEmail",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"New email is required\")"
+          ]
+        }
+      ]
+    },
+    "VerifyEmailChangeRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "newEmail",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"New email is required\")"
+          ]
+        },
+        {
+          "name": "otpCode",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"OTP code is required\")"
+          ]
+        }
+      ]
+    },
+    "AuthResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "token",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "firstName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "linkedProviders",
+          "type": "List<String>",
+          "annotations": []
+        }
+      ]
+    },
+    "UserDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "firstName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isEmailVerified",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "isPhoneVerified",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "linkedProviders",
+          "type": "List<String>",
+          "annotations": []
+        }
+      ]
+    },
+    "MediaDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": []
+    },
+    "InitiateUploadRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": [
+        {
+          "name": "originalFilename",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Original filename is required\")"
+          ]
+        },
+        {
+          "name": "mimeType",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"MIME type is required\")"
+          ]
+        },
+        {
+          "name": "sizeBytes",
+          "type": "long",
+          "annotations": [
+            "@Min(value = 1, message = \"File size must be greater than zero\")"
+          ]
+        },
+        {
+          "name": "altText",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "InitiateUploadResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": [
+        {
+          "name": "mediaId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "storageKey",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "presignedUploadUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mimeType",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CompleteUploadRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": [
+        {
+          "name": "mediaId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Media ID is required\")"
+          ]
+        },
+        {
+          "name": "width",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "height",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "checksum",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "LinkMediaRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": [
+        {
+          "name": "mediaId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Media ID is required\")"
+          ]
+        },
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "blogSlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isPrimary",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "displayOrder",
+          "type": "int",
+          "annotations": []
+        }
+      ]
+    },
+    "MediaAssetDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "storageProvider",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "bucket",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "storageKey",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "originalFilename",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mimeType",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sizeBytes",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "width",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "height",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "mediaType",
+          "type": "MediaType",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "MediaStatus",
+          "annotations": []
+        },
+        {
+          "name": "altText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isPublic",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "publicUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "thumbnailUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "optimizedWebpUrl",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "PaymentDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": []
+    },
+    "InitiatePaymentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Order ID is required\")"
+          ]
+        }
+      ]
+    },
+    "InitiatePaymentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "amountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpayKeyId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        }
+      ]
+    },
+    "VerifyPaymentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Order ID is required\")"
+          ]
+        },
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay Order ID is required\")"
+          ]
+        },
+        {
+          "name": "razorpayPaymentId",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay Payment ID is required\")"
+          ]
+        },
+        {
+          "name": "razorpaySignature",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay Signature is required\")"
+          ]
+        }
+      ]
+    },
+    "VerifyPaymentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "isSuccess",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        }
+      ]
+    },
+    "PaymentSummaryResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "type",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "subtitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "amountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerEmail",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerPhone",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "InitiateEnrollmentPaymentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Enrollment ID is required\")"
+          ]
+        }
+      ]
+    },
+    "VerifyEnrollmentPaymentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Enrollment ID is required\")"
+          ]
+        },
+        {
+          "name": "paymentMethod",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Payment method is required\")"
+          ]
+        },
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpayPaymentId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpaySignature",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "transactionReference",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "VerifyEnrollmentPaymentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentDtos.java",
+      "fields": [
+        {
+          "name": "isSuccess",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "paymentReference",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "PromotionDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\api\\PromotionDtos.java",
+      "fields": []
+    },
+    "CreatePromotionRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\api\\PromotionDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Promotion name is required\")"
+          ]
+        },
+        {
+          "name": "code",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Promo code is required\")"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "type",
+          "type": "PromotionType",
+          "annotations": [
+            "@NotNull(message = \"Promotion type is required\")"
+          ]
+        },
+        {
+          "name": "discountValue",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "maximumDiscount",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "minimumOrderValue",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "startAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "endAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "PromotionStatus",
+          "annotations": []
+        },
+        {
+          "name": "usageLimit",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "perCustomerLimit",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "stackable",
+          "type": "Boolean",
+          "annotations": []
+        },
+        {
+          "name": "priority",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "targetAudience",
+          "type": "PromotionTargetAudience",
+          "annotations": []
+        },
+        {
+          "name": "targetCategorySlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "targetProductId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "targetType",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "targetBatchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "targetCourseId",
+          "type": "UUID",
+          "annotations": []
+        }
+      ]
+    },
+    "ApplyPromotionRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\api\\PromotionDtos.java",
+      "fields": [
+        {
+          "name": "code",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Promo code is required\")"
+          ]
+        }
+      ]
+    },
+    "BatchPromotionValidationRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\api\\PromotionDtos.java",
+      "fields": [
+        {
+          "name": "code",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Promo code is required\")"
+          ]
+        },
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        }
+      ]
+    },
+    "PromotionValidationResult": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\promotion\\api\\PromotionDtos.java",
+      "fields": [
+        {
+          "name": "valid",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "code",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "type",
+          "type": "PromotionType",
+          "annotations": []
+        },
+        {
+          "name": "targetAudience",
+          "type": "PromotionTargetAudience",
+          "annotations": []
+        },
+        {
+          "name": "discountAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "finalAmountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "isFreeShipping",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ReviewDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": []
+    },
+    "CreateReviewRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Order ID is required\")"
+          ]
+        },
+        {
+          "name": "orderItemId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Order Item ID is required\")"
+          ]
+        },
+        {
+          "name": "rating",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Rating is required\")",
+            "@Min(value = 1, message = \"Rating must be at least 1\")",
+            "@Max(value = 5, message = \"Rating cannot exceed 5\")"
+          ]
+        },
+        {
+          "name": "reviewTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "reviewText",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Review text is required\")",
+            "@Size(min = 10, max = 2000, message = \"Review text must be between 10 and 2000 characters\")"
+          ]
+        },
+        {
+          "name": "imageUrls",
+          "type": "List<String>",
+          "annotations": []
+        }
+      ]
+    },
+    "UpdateReviewRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "rating",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Rating is required\")",
+            "@Min(value = 1, message = \"Rating must be at least 1\")",
+            "@Max(value = 5, message = \"Rating cannot exceed 5\")"
+          ]
+        },
+        {
+          "name": "reviewTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "reviewText",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Review text is required\")",
+            "@Size(min = 10, max = 2000, message = \"Review text must be between 10 and 2000 characters\")"
+          ]
+        },
+        {
+          "name": "imageUrls",
+          "type": "List<String>",
+          "annotations": []
+        }
+      ]
+    },
+    "ReviewImageDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "displayOrder",
+          "type": "Integer",
+          "annotations": []
+        }
+      ]
+    },
+    "ReviewResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productSlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productImageFallback",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productVariantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "customerId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "customerName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "orderNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderItemId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "rating",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "reviewTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "reviewText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "ReviewStatus",
+          "annotations": []
+        },
+        {
+          "name": "isVerifiedPurchase",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "primaryImageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "hasCustomerImages",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "customerImages",
+          "type": "List<ReviewImageDto>",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "moderatedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "moderationReason",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ProductReviewSummary": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "averageRating",
+          "type": "Double",
+          "annotations": []
+        },
+        {
+          "name": "totalReviews",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "ratingDistribution",
+          "type": "Map<Integer, Long>",
+          "annotations": []
+        }
+      ]
+    },
+    "PendingReviewDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "orderNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderDate",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "deliveryDate",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "orderItemId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "productTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productSlug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "variantId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "variantName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "productImage",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "quantity",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "invitationStatus",
+          "type": "InvitationStatus",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminModerationRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "status",
+          "type": "ReviewStatus",
+          "annotations": [
+            "@NotNull(message = \"Moderation status is required\")"
+          ]
+        },
+        {
+          "name": "moderationReason",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminReviewSummary": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\review\\api\\ReviewDtos.java",
+      "fields": [
+        {
+          "name": "totalReviews",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "pendingCount",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "publishedCount",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "hiddenCount",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "rejectedCount",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "averageRating",
+          "type": "Double",
+          "annotations": []
+        }
+      ]
+    },
+    "ShippingDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": []
+    },
+    "CreateShipmentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Order ID is required\")"
+          ]
+        }
+      ]
+    },
+    "SimulateCourierEventRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "status",
+          "type": "ShipmentStatus",
+          "annotations": [
+            "@NotNull(message = \"Shipment Status is required\")"
+          ]
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "activity",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ShipmentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "orderNumber",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "providerShipmentId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "awbCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courierName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courierId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "ShipmentStatus",
+          "annotations": []
+        },
+        {
+          "name": "pickupScheduledAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "deliveredAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "trackingEvents",
+          "type": "List<TrackingEventResponse>",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "TrackingEventResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "awbCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "currentStatus",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "activity",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "timestamp",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "ShiprocketWebhookPayload": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "awb",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "current_status",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "current_location",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "scans",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "PincodeServiceabilityResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingDtos.java",
+      "fields": [
+        {
+          "name": "pincode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isServiceable",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "estimatedDeliveryDays",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "courierName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ShiprocketDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": []
+    },
+    "LoginRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "LoginResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "firstName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"first_name\")"
+          ]
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"last_name\")"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "companyId",
+          "type": "Long",
+          "annotations": [
+            "@JsonProperty(\"company_id\")"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"created_at\")"
+          ]
+        },
+        {
+          "name": "token",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateAdhocOrderRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"order_id\")"
+          ]
+        },
+        {
+          "name": "orderDate",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"order_date\")"
+          ]
+        },
+        {
+          "name": "pickupLocation",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"pickup_location\")"
+          ]
+        },
+        {
+          "name": "billingCustomerName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_customer_name\")"
+          ]
+        },
+        {
+          "name": "billingLastName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_last_name\")"
+          ]
+        },
+        {
+          "name": "billingAddress",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_address\")"
+          ]
+        },
+        {
+          "name": "billingAddress2",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_address_2\")"
+          ]
+        },
+        {
+          "name": "billingCity",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_city\")"
+          ]
+        },
+        {
+          "name": "billingPincode",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_pincode\")"
+          ]
+        },
+        {
+          "name": "billingState",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_state\")"
+          ]
+        },
+        {
+          "name": "billingCountry",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_country\")"
+          ]
+        },
+        {
+          "name": "billingEmail",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_email\")"
+          ]
+        },
+        {
+          "name": "billingPhone",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"billing_phone\")"
+          ]
+        },
+        {
+          "name": "orderItems",
+          "type": "List<ShiprocketOrderItemDto>",
+          "annotations": [
+            "@JsonProperty(\"shipping_is_billing\")",
+            "@Builder",
+            "@JsonProperty(\"order_items\")"
+          ]
+        },
+        {
+          "name": "subTotal",
+          "type": "BigDecimal",
+          "annotations": [
+            "@JsonProperty(\"payment_method\")",
+            "@Builder",
+            "@JsonProperty(\"sub_total\")"
+          ]
+        },
+        {
+          "name": "length",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "breadth",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "height",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "weight",
+          "type": "BigDecimal",
+          "annotations": []
+        }
+      ]
+    },
+    "ShiprocketOrderItemDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "sku",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "units",
+          "type": "int",
+          "annotations": []
+        },
+        {
+          "name": "sellingPrice",
+          "type": "BigDecimal",
+          "annotations": [
+            "@JsonProperty(\"selling_price\")"
+          ]
+        }
+      ]
+    },
+    "CreateOrderResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "Long",
+          "annotations": [
+            "@JsonProperty(\"order_id\")"
+          ]
+        },
+        {
+          "name": "shipmentId",
+          "type": "Long",
+          "annotations": [
+            "@JsonProperty(\"shipment_id\")"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "statusCode",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"status_code\")"
+          ]
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"message\")"
+          ]
+        }
+      ]
+    },
+    "AssignAwbRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "shipmentId",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"shipment_id\")"
+          ]
+        },
+        {
+          "name": "courierId",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"courier_id\")"
+          ]
+        }
+      ]
+    },
+    "AssignAwbResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "response",
+          "type": "ResponseData",
+          "annotations": []
+        }
+      ]
+    },
+    "ResponseData": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "data",
+          "type": "AwbData",
+          "annotations": []
+        }
+      ]
+    },
+    "AwbData": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "awbCode",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"awb_code\")"
+          ]
+        },
+        {
+          "name": "courierName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"courier_name\")"
+          ]
+        },
+        {
+          "name": "courierCompanyId",
+          "type": "Long",
+          "annotations": [
+            "@JsonProperty(\"courier_company_id\")"
+          ]
+        },
+        {
+          "name": "assignedDateTime",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"assigned_date_time\")"
+          ]
+        }
+      ]
+    },
+    "GeneratePickupRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "shipmentId",
+          "type": "List<String>",
+          "annotations": [
+            "@JsonProperty(\"shipment_id\")"
+          ]
+        }
+      ]
+    },
+    "GeneratePickupResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "response",
+          "type": "PickupData",
+          "annotations": []
+        }
+      ]
+    },
+    "PickupData": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "pickupStatus",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"pickup_status\")"
+          ]
+        },
+        {
+          "name": "data",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "pickupTokenNumber",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"pickup_token_number\")"
+          ]
+        }
+      ]
+    },
+    "TrackAwbResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "trackingData",
+          "type": "TrackingData",
+          "annotations": [
+            "@JsonProperty(\"tracking_data\")"
+          ]
+        }
+      ]
+    },
+    "TrackingData": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "trackStatus",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"track_status\")"
+          ]
+        },
+        {
+          "name": "shipmentStatus",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"shipment_status\")"
+          ]
+        },
+        {
+          "name": "shipmentTrack",
+          "type": "List<ShipmentTrack>",
+          "annotations": [
+            "@JsonProperty(\"shipment_track\")"
+          ]
+        },
+        {
+          "name": "shipmentTrackActivities",
+          "type": "List<TrackingActivity>",
+          "annotations": [
+            "@JsonProperty(\"shipment_track_activities\")"
+          ]
+        }
+      ]
+    },
+    "ShipmentTrack": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "currentStatus",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"current_status\")"
+          ]
+        },
+        {
+          "name": "origin",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "destination",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "TrackingActivity": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "date",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "activity",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CancelOrderRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "List<String>",
+          "annotations": []
+        }
+      ]
+    },
+    "CancelOrderResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "statusCode",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"status_code\")"
+          ]
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ServiceabilityResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "status",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "data",
+          "type": "ServiceabilityData",
+          "annotations": []
+        }
+      ]
+    },
+    "ServiceabilityData": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "availableCourierCompanies",
+          "type": "List<AvailableCourierCompany>",
+          "annotations": [
+            "@JsonProperty(\"available_courier_companies\")"
+          ]
+        }
+      ]
+    },
+    "AvailableCourierCompany": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "courierCompanyId",
+          "type": "Long",
+          "annotations": [
+            "@JsonProperty(\"courier_company_id\")"
+          ]
+        },
+        {
+          "name": "courierName",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"courier_name\")"
+          ]
+        },
+        {
+          "name": "rate",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "etd",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "estimatedDeliveryDays",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"estimated_delivery_days\")"
+          ]
+        }
+      ]
+    },
+    "GenerateLabelResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\shipping\\infrastructure\\shiprocket\\ShiprocketDtos.java",
+      "fields": [
+        {
+          "name": "labelCreated",
+          "type": "Integer",
+          "annotations": [
+            "@JsonProperty(\"label_created\")"
+          ]
+        },
+        {
+          "name": "labelUrl",
+          "type": "String",
+          "annotations": [
+            "@JsonProperty(\"label_url\")"
+          ]
+        }
+      ]
+    },
+    "TrainingDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": []
+    },
+    "CreateCourseRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "categoryId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Title is required\")"
+          ]
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Slug is required\")"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "durationDays",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Duration in days is required\")"
+          ]
+        },
+        {
+          "name": "feeInr",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Fee is required\")"
+          ]
+        }
+      ]
+    },
+    "CreateBatchRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Course ID is required\")"
+          ]
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Batch code is required\")"
+          ]
+        },
+        {
+          "name": "startDate",
+          "type": "LocalDate",
+          "annotations": [
+            "@NotNull(message = \"Start date is required\")"
+          ]
+        },
+        {
+          "name": "endDate",
+          "type": "LocalDate",
+          "annotations": [
+            "@NotNull(message = \"End date is required\")"
+          ]
+        },
+        {
+          "name": "capacity",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Capacity is required\")"
+          ]
+        }
+      ]
+    },
+    "AddScheduleRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Batch ID is required\")"
+          ]
+        },
+        {
+          "name": "topic",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Topic is required\")"
+          ]
+        },
+        {
+          "name": "scheduledAt",
+          "type": "ZonedDateTime",
+          "annotations": [
+            "@NotNull(message = \"Scheduled time is required\")"
+          ]
+        },
+        {
+          "name": "durationMinutes",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Duration in minutes is required\")"
+          ]
+        },
+        {
+          "name": "meetingLink",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "EnrollRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "slotId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "promoCode",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "ConfirmPaymentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "paymentReference",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Payment reference is required\")"
+          ]
+        }
+      ]
+    },
+    "MarkAttendanceRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Enrollment ID is required\")"
+          ]
+        },
+        {
+          "name": "scheduleId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Schedule ID is required\")"
+          ]
+        },
+        {
+          "name": "isPresent",
+          "type": "boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "CompleteCourseRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Enrollment ID is required\")"
+          ]
+        },
+        {
+          "name": "grade",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "CourseResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "slug",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "durationDays",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "feeInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "mode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "syllabusJson",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "slots",
+          "type": "List<BatchSlotResponse>",
+          "annotations": []
+        }
+      ]
+    },
+    "BatchSlotResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "startDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "endDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "startTime",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "capacity",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "enrolledCount",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "availableSeats",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "isAvailable",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "BatchResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "startDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "endDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "capacity",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "enrolledCount",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "BatchStatus",
+          "annotations": []
+        },
+        {
+          "name": "schedules",
+          "type": "List<ScheduleResponse>",
+          "annotations": []
+        }
+      ]
+    },
+    "ScheduleResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "topic",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "scheduledAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "durationMinutes",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "meetingLink",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "EnrollmentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "startDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "endDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "startTime",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "locationOrLink",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "EnrollmentStatus",
+          "annotations": []
+        },
+        {
+          "name": "feePaidInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "amountPaidInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "paymentReference",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrolledAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "CertificateResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "certificateCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "issueDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "certificateUrl",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminEnrollmentResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "studentName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "phone",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "startDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "endDate",
+          "type": "LocalDate",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "EnrollmentStatus",
+          "annotations": []
+        },
+        {
+          "name": "feePaid",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "feePaidInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "paymentReference",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "refundStatus",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "refundId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrolledAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "CreateTrainingReviewRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"Enrollment ID is required\")"
+          ]
+        },
+        {
+          "name": "rating",
+          "type": "Integer",
+          "annotations": [
+            "@NotNull(message = \"Rating is required\")",
+            "@jakarta",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "instructorRating",
+          "type": "Integer",
+          "annotations": [
+            "@jakarta",
+            "@jakarta"
+          ]
+        },
+        {
+          "name": "reviewTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "reviewText",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Review text is required\")"
+          ]
+        }
+      ]
+    },
+    "TrainingReviewResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "reviewerName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "rating",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "instructorRating",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "reviewTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "reviewText",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "isVerifiedTrainee",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "CourseReviewSummary": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "averageRating",
+          "type": "Double",
+          "annotations": []
+        },
+        {
+          "name": "averageInstructorRating",
+          "type": "Double",
+          "annotations": []
+        },
+        {
+          "name": "totalReviews",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "fiveStarCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "fourStarCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "threeStarCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "twoStarCount",
+          "type": "Long",
+          "annotations": []
+        },
+        {
+          "name": "oneStarCount",
+          "type": "Long",
+          "annotations": []
+        }
+      ]
+    },
+    "PendingTrainingReviewResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "batchId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "batchCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrolledAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "EnrollmentStatus",
+          "annotations": []
+        }
+      ]
+    },
+    "SaveTrainingGlimpseRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Title is required\")"
+          ]
+        },
+        {
+          "name": "caption",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "eventDate",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "attendeeCount",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Image URL is required\")"
+          ]
+        },
+        {
+          "name": "displayOrder",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "annotations": []
+        }
+      ]
+    },
+    "TrainingGlimpseDto": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "caption",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "courseTitle",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "eventDate",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "attendeeCount",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "imageUrl",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "displayOrder",
+          "type": "Integer",
+          "annotations": []
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "ZonedDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "WalletDtos": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": []
+    },
+    "WalletResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "walletId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userType",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "availableBalance",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "pendingBalance",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "withdrawableBalance",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "updatedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "WalletTransactionResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "transactionReference",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "walletId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "transactionType",
+          "type": "WalletTransactionType",
+          "annotations": []
+        },
+        {
+          "name": "transactionDirection",
+          "type": "WalletTransactionDirection",
+          "annotations": []
+        },
+        {
+          "name": "amount",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "balanceBefore",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "balanceAfter",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "WalletTransactionStatus",
+          "annotations": []
+        },
+        {
+          "name": "sourceType",
+          "type": "WalletSourceType",
+          "annotations": []
+        },
+        {
+          "name": "sourceId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "paymentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "refundId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "withdrawalId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "createdBy",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "WithdrawRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Withdrawal amount is required\")",
+            "@DecimalMin(value = \"1.00\", message = \"Withdrawal amount must be at least \u20b91.00\")"
+          ]
+        },
+        {
+          "name": "bankName",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Bank name is required\")"
+          ]
+        },
+        {
+          "name": "accountNumber",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Account number is required\")"
+          ]
+        },
+        {
+          "name": "ifscCode",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"IFSC code is required\")",
+            "@Pattern(regexp = \"^[A-Z]{4}0[A-Z0-9]{6}$\", message = \"Invalid IFSC code format\")"
+          ]
+        },
+        {
+          "name": "accountHolderName",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Account holder name is required\")"
+          ]
+        }
+      ]
+    },
+    "WithdrawalResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "withdrawalReference",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "walletId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "amount",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "status",
+          "type": "WithdrawalStatus",
+          "annotations": []
+        },
+        {
+          "name": "bankName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "accountNumberMasked",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "ifscCode",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "accountHolderName",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "adminNotes",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "rejectionReason",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "createdAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        },
+        {
+          "name": "processedAt",
+          "type": "OffsetDateTime",
+          "annotations": []
+        }
+      ]
+    },
+    "AddMoneyRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Top-up amount is required\")",
+            "@DecimalMin(value = \"1.00\", message = \"Top-up amount must be at least \u20b91.00\")"
+          ]
+        }
+      ]
+    },
+    "AddMoneyResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "amountInr",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "razorpayKeyId",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "transactionReference",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "VerifyAddMoneyRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay order ID is required\")"
+          ]
+        },
+        {
+          "name": "razorpayPaymentId",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay payment ID is required\")"
+          ]
+        },
+        {
+          "name": "razorpaySignature",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Razorpay signature is required\")"
+          ]
+        }
+      ]
+    },
+    "WalletCheckoutPayRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Payment target type is required (ORDER or ENROLLMENT)"
+          ]
+        },
+        {
+          "name": "amountFromWallet",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Wallet deduction amount is required\")",
+            "@DecimalMin(value = \"0.00\", message = \"Wallet amount cannot be negative\")"
+          ]
+        },
+        {
+          "name": "amountFromGateway",
+          "type": "BigDecimal",
+          "annotations": []
+        }
+      ]
+    },
+    "WalletCheckoutPayResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "isSuccess",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "orderId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "enrollmentId",
+          "type": "UUID",
+          "annotations": []
+        },
+        {
+          "name": "walletAmountDeducted",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "remainingAmountPayable",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "isFullyPaid",
+          "type": "boolean",
+          "annotations": []
+        },
+        {
+          "name": "razorpayOrderId",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminFinanceSummaryResponse": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "totalPaymentsReceived",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "walletLiabilityBalance",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalPendingRefunds",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalCompletedRefunds",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalPendingWithdrawals",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalCompletedWithdrawals",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalProductSales",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalTrainingSales",
+          "type": "BigDecimal",
+          "annotations": []
+        },
+        {
+          "name": "totalWalletTransactionsCount",
+          "type": "long",
+          "annotations": []
+        },
+        {
+          "name": "pendingWithdrawalsCount",
+          "type": "long",
+          "annotations": []
+        }
+      ]
+    },
+    "AdminManualAdjustmentRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "UUID",
+          "annotations": [
+            "@NotNull(message = \"User ID is required\")"
+          ]
+        },
+        {
+          "name": "amount",
+          "type": "BigDecimal",
+          "annotations": [
+            "@NotNull(message = \"Adjustment amount is required\")",
+            "@DecimalMin(value = \"0.01\", message = \"Adjustment amount must be at least \u20b90.01\")"
+          ]
+        },
+        {
+          "name": "direction",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Direction is required (CREDIT or DEBIT)",
+            "@Pattern(regexp = \"^(CREDIT|DEBIT)"
+          ]
+        },
+        {
+          "name": "reason",
+          "type": "String",
+          "annotations": [
+            "@NotBlank(message = \"Adjustment reason is required\")"
+          ]
+        }
+      ]
+    },
+    "AdminWithdrawalActionRequest": {
+      "kind": "class",
+      "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletDtos.java",
+      "fields": [
+        {
+          "name": "action",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "notes",
+          "type": "String",
+          "annotations": []
+        },
+        {
+          "name": "rejectionReason",
+          "type": "String",
+          "annotations": []
+        }
+      ]
+    }
+  }
+}

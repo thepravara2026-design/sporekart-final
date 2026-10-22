@@ -282,6 +282,7 @@ public class CatalogDtos {
         private String metaDescription;
         private String canonicalUrl;
         private boolean isActive = true;
+        @JsonAlias({"information", "productInformation", "product_information"})
         private CreateProductInformationRequest productInformation;
 
         public CreateProductRequest(UUID categoryId, String title, String slug, String description, ProductType productType, ProductStatus status, String hsnCode, BigDecimal gstRatePercent, String metaTitle, String metaDescription, String canonicalUrl, boolean isActive) {
@@ -305,6 +306,8 @@ public class CatalogDtos {
         private String metaDescription;
         private String canonicalUrl;
         private Boolean isActive;
+        @JsonAlias({"information", "productInformation", "product_information"})
+        private CreateProductInformationRequest productInformation;
     }
 
     @Data
@@ -408,7 +411,6 @@ public class CatalogDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateMediaRequest {
-        @NotNull(message = "Product ID is required")
         private UUID productId;
         private UUID variantId;
         @NotBlank(message = "Media URL is required")

@@ -22,7 +22,7 @@ export default function LatestCustomerReviews() {
       .then((res) => {
         setLatestReviews(res.data?.data || []);
       })
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load latest customer reviews:', err))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -39,7 +39,7 @@ export default function LatestCustomerReviews() {
           setModalPage(data.number || 0);
         }
       })
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load published customer reviews:', err))
       .finally(() => setIsModalLoading(false));
   };
 

@@ -73,7 +73,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if (counter.count > maxAllowed) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
-            response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"Rate limit exceeded. Please slow down your requests.\"}}");
+            String json = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(com.sporekart.shared.api.ApiResponse.error("TOO_MANY_REQUESTS", "Rate limit exceeded. Please slow down your requests."));
+            response.getWriter().write(json);
             return;
         }
 

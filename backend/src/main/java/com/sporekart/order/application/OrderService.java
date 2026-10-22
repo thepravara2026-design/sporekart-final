@@ -18,6 +18,8 @@ import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -265,7 +267,36 @@ public class OrderService {
         return mapToResponse(order);
     }
 
+    private boolean isCallerAdmin(UUID userId) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getAuthorities() != null) {
+                boolean hasAdminRole = auth.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+                if (hasAdminRole) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+            // Security context unavailable (e.g. non-web background job)
+        }
+        if (userId != null && userRepository != null) {
+            try {
+                return userRepository.findById(userId)
+                        .map(u -> u.getRole() == com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                        .orElse(false);
+            } catch (Exception ignored) {
+                // Ignore if repository mock or query fails
+            }
+        }
+        return false;
+    }
+
     private void validateOrderAccess(Order order, UUID userId, String sessionId) {
+        if (isCallerAdmin(userId)) {
+            return;
+        }
+
         if (order.getUserId() != null) {
             if (userId == null || !userId.equals(order.getUserId())) {
                 throw new ForbiddenOperationException("Access denied: You are not authorized to access this order");
@@ -387,8 +418,8 @@ public class OrderService {
             return mapToResponse(order);
         }
 
-        // RULE 1: Cancelled or Refunded orders are immutable terminal states and cannot be re-opened or modified
-        if (previousStatus == OrderStatus.CANCELLED || previousStatus == OrderStatus.REFUNDED) {
+        // RULE 1: Delivered, Cancelled or Refunded orders are immutable terminal states and cannot be re-opened or modified
+        if (previousStatus == OrderStatus.DELIVERED || previousStatus == OrderStatus.CANCELLED || previousStatus == OrderStatus.REFUNDED) {
             throw new IllegalStateException("Order #" + order.getOrderNumber() + " is already " + previousStatus + " and cannot be modified or re-opened.");
         }
 
@@ -409,17 +440,20 @@ public class OrderService {
             if (!alreadyRefundedByPaymentService && order.getUserId() != null && order.getTotalAmountInr() != null && order.getTotalAmountInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 String walletReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Order Cancellation Refund";
                 try {
-                    walletService.processRefundToWallet(
-                            order.getUserId(),
-                            order.getTotalAmountInr(),
-                            order.getId(),
-                            null,
-                            "REF-" + order.getOrderNumber(),
-                            "Order #" + order.getOrderNumber() + " cancellation refund credited to Sporekart Wallet (" + walletReason + ")",
-                            updatedBy != null ? updatedBy : "SYSTEM"
-                    );
+                    if (walletService != null) {
+                        walletService.processRefundToWallet(
+                                order.getUserId(),
+                                order.getTotalAmountInr(),
+                                order.getId(),
+                                null,
+                                "REF-" + order.getOrderNumber(),
+                                "Order #" + order.getOrderNumber() + " cancellation refund credited to Sporekart Wallet (" + walletReason + ")",
+                                updatedBy != null ? updatedBy : "SYSTEM"
+                        );
+                    }
                 } catch (Exception e) {
                     org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error crediting wallet for cancelled order {}: {}", order.getId(), e.getMessage(), e);
+                    throw new IllegalStateException("Failed to credit refund to customer wallet: " + e.getMessage(), e);
                 }
             }
         }
@@ -444,15 +478,17 @@ public class OrderService {
 
         Order saved = orderRepository.save(order);
         if (newStatus == OrderStatus.DELIVERED) {
-            eventPublisher.publishEvent(com.sporekart.analytics.domain.events.OrderDeliveredEvent.builder()
-                    .orderId(saved.getId())
-                    .orderNumber(saved.getOrderNumber())
-                    .build());
+            if (eventPublisher != null) {
+                eventPublisher.publishEvent(com.sporekart.analytics.domain.events.OrderDeliveredEvent.builder()
+                        .orderId(saved.getId())
+                        .orderNumber(saved.getOrderNumber())
+                        .build());
+            }
         } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
             try {
                 String recipientEmail = null;
                 String recipientName = "Valued Customer";
-                if (saved.getUserId() != null) {
+                if (saved.getUserId() != null && userRepository != null) {
                     var userOpt = userRepository.findById(saved.getUserId());
                     if (userOpt.isPresent()) {
                         recipientEmail = userOpt.get().getEmail();
@@ -467,33 +503,35 @@ public class OrderService {
                     }
                 }
 
-                notificationEventService.recordEvent(
-                        com.sporekart.notification.domain.NotificationEventType.ORDER_CANCELLED,
-                        "ORDER",
-                        saved.getId(),
-                        saved.getUserId(),
-                        recipientEmail,
-                        recipientName,
-                        "Sporekart Order Cancellation #" + saved.getOrderNumber(),
-                        java.util.Map.of(
-                                "orderId", saved.getId().toString(),
-                                "orderNumber", saved.getOrderNumber(),
-                                "customerName", recipientName != null ? recipientName : "Grower",
-                                "reason", reason != null ? reason : "Cancelled",
-                                "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00"
-                        ),
-                        "ORDER_CANCELLED:" + saved.getId()
-                );
+                if (notificationEventService != null) {
+                    notificationEventService.recordEvent(
+                            com.sporekart.notification.domain.NotificationEventType.ORDER_CANCELLED,
+                            "ORDER",
+                            saved.getId(),
+                            saved.getUserId(),
+                            recipientEmail,
+                            recipientName,
+                            "Sporekart Order Cancellation #" + saved.getOrderNumber(),
+                            java.util.Map.of(
+                                    "orderId", saved.getId().toString(),
+                                    "orderNumber", saved.getOrderNumber(),
+                                    "customerName", recipientName != null ? recipientName : "Grower",
+                                    "reason", reason != null ? reason : "Cancelled",
+                                    "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00"
+                            ),
+                            "ORDER_CANCELLED:" + saved.getId()
+                    );
 
-                notificationEventService.recordAdminNotification(
-                        com.sporekart.notification.domain.NotificationEventType.ADMIN_ORDER_CANCELLED,
-                        "ORDER",
-                        saved.getId(),
-                        "Order #" + saved.getOrderNumber() + " Cancelled",
-                        "Customer cancelled order #" + saved.getOrderNumber() + ". Reason: " + (reason != null ? reason : "Cancelled"),
-                        "/admin?tab=orders&id=" + saved.getId(),
-                        "ADMIN_ORDER_CANCELLED:" + saved.getId()
-                );
+                    notificationEventService.recordAdminNotification(
+                            com.sporekart.notification.domain.NotificationEventType.ADMIN_ORDER_CANCELLED,
+                            "ORDER",
+                            saved.getId(),
+                            "Order #" + saved.getOrderNumber() + " Cancelled",
+                            "Customer cancelled order #" + saved.getOrderNumber() + ". Reason: " + (reason != null ? reason : "Cancelled"),
+                            "/admin?tab=orders&id=" + saved.getId(),
+                            "ADMIN_ORDER_CANCELLED:" + saved.getId()
+                    );
+                }
             } catch (Exception e) {
                 org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_CANCELLED notification: {}", e.getMessage());
             }
@@ -501,7 +539,7 @@ public class OrderService {
             try {
                 String recipientEmail = null;
                 String recipientName = "Valued Customer";
-                if (saved.getUserId() != null) {
+                if (saved.getUserId() != null && userRepository != null) {
                     var userOpt = userRepository.findById(saved.getUserId());
                     if (userOpt.isPresent()) {
                         recipientEmail = userOpt.get().getEmail();
@@ -516,21 +554,23 @@ public class OrderService {
                     }
                 }
 
-                notificationEventService.recordEvent(
-                        com.sporekart.notification.domain.NotificationEventType.ORDER_PACKED,
-                        "ORDER",
-                        saved.getId(),
-                        saved.getUserId(),
-                        recipientEmail,
-                        recipientName,
-                        "Your Sporekart Order #" + saved.getOrderNumber() + " Has Been Packed 📦",
-                        java.util.Map.of(
-                                "orderId", saved.getId().toString(),
-                                "orderNumber", saved.getOrderNumber(),
-                                "customerName", recipientName != null ? recipientName : "Grower"
-                        ),
-                        "ORDER_PACKED:" + saved.getId()
-                );
+                if (notificationEventService != null) {
+                    notificationEventService.recordEvent(
+                            com.sporekart.notification.domain.NotificationEventType.ORDER_PACKED,
+                            "ORDER",
+                            saved.getId(),
+                            saved.getUserId(),
+                            recipientEmail,
+                            recipientName,
+                            "Your Sporekart Order #" + saved.getOrderNumber() + " Has Been Packed 📦",
+                            java.util.Map.of(
+                                    "orderId", saved.getId().toString(),
+                                    "orderNumber", saved.getOrderNumber(),
+                                    "customerName", recipientName != null ? recipientName : "Grower"
+                            ),
+                            "ORDER_PACKED:" + saved.getId()
+                    );
+                }
             } catch (Exception e) {
                 org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_PACKED notification: {}", e.getMessage());
             }
@@ -539,16 +579,33 @@ public class OrderService {
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public OrderResponse cancelOrder(UUID orderId, UUID userId, String sessionId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        validateOrderAccess(order, userId, sessionId);
+        return performOrderCancellation(order, userId, reason);
+    }
+
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse cancelOrder(UUID orderId, UUID userId, String reason) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
+        boolean isAdmin = isCallerAdmin(userId);
         if (userId == null && order.getUserId() != null) {
             throw new ForbiddenOperationException("Access denied: User must be authenticated to cancel order");
         }
-        if (order.getUserId() != null && !userId.equals(order.getUserId())) {
+        if (order.getUserId() != null && !userId.equals(order.getUserId()) && !isAdmin) {
             throw new ForbiddenOperationException("Access denied: You are not authorized to cancel this order");
         }
+
+        return performOrderCancellation(order, userId, reason);
+    }
+
+    private OrderResponse performOrderCancellation(Order order, UUID userId, String reason) {
+        UUID orderId = order.getId();
+        boolean isAdmin = isCallerAdmin(userId);
 
         OrderStatus currentStatus = order.getStatus();
         if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED) {
@@ -581,14 +638,14 @@ public class OrderService {
             org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: Shipment cancel notification skipped: {}", e.getMessage());
         }
 
-        return updateOrderStatus(orderId, nextStatus, formattedReason, userId != null ? "CUSTOMER:" + userId : "GUEST");
+        return updateOrderStatus(orderId, nextStatus, formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
     }
 
     private OrderAddressSnapshot resolveAddressSnapshot(UUID userId, CreateOrderRequest request) {
         if (request.getAddressId() != null) {
             CustomerAddress a = customerService.findAddressById(request.getAddressId())
                     .orElseThrow(() -> new ResourceNotFoundException("Address not found: " + request.getAddressId()));
-            if (userId != null && a.getUserId() != null && !userId.equals(a.getUserId())) {
+            if (a.getUserId() != null && (userId == null || !userId.equals(a.getUserId()))) {
                 throw new ForbiddenOperationException("Access denied: Address does not belong to the current user");
             }
             String deliveryContactPhone = (a.getAlternatePhone() != null && !a.getAlternatePhone().isBlank()) 

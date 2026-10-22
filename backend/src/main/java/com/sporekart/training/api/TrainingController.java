@@ -80,17 +80,35 @@ public class TrainingController {
 
     @PostMapping("/enrollments/{enrollmentId}/confirm-payment")
     public ResponseEntity<ApiResponse<TrainingDtos.EnrollmentResponse>> confirmPayment(
+            org.springframework.security.core.Authentication authentication,
             @PathVariable UUID enrollmentId,
             @Valid @RequestBody TrainingDtos.ConfirmPaymentRequest request) {
 
-        Enrollment enrollment = trainingService.confirmEnrollmentPayment(enrollmentId, request.getPaymentReference());
-        return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
+        UUID authUserId = extractUserId(authentication);
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
+        if (enrollment.getUserId() != null && (authUserId == null || (!authUserId.equals(enrollment.getUserId()) && !isAdmin))) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to confirm payment for this enrollment"));
+        }
+
+        Enrollment updated = trainingService.confirmEnrollmentPayment(enrollmentId, request.getPaymentReference());
+        return ResponseEntity.ok(ApiResponse.success(mapEnrollment(updated)));
     }
 
     @GetMapping("/enrollments/{enrollmentId}")
     public ResponseEntity<ApiResponse<TrainingDtos.EnrollmentResponse>> getEnrollmentById(
+            org.springframework.security.core.Authentication authentication,
             @PathVariable UUID enrollmentId) {
+        UUID authUserId = extractUserId(authentication);
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
+        if (enrollment.getUserId() != null && (authUserId == null || (!authUserId.equals(enrollment.getUserId()) && !isAdmin))) {
+            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to training enrollment details"));
+        }
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
     }
 
@@ -135,14 +153,15 @@ public class TrainingController {
             org.springframework.security.core.Authentication authentication,
             @PathVariable UUID enrollmentId) {
         UUID authUserId = extractUserId(authentication);
-        if (authUserId != null && !capabilityService.hasCapability(authUserId, com.sporekart.customer.domain.CustomerCapability.TRAINING)) {
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && authUserId != null && !capabilityService.hasCapability(authUserId, com.sporekart.customer.domain.CustomerCapability.TRAINING)) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "TRAINING capability required to access certificates"));
         }
         Certificate cert = trainingService.getCertificateByEnrollmentId(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Certificate not found for enrollment: " + enrollmentId));
 
-        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         if (authUserId == null || (cert.getEnrollment() != null && cert.getEnrollment().getUserId() != null && !cert.getEnrollment().getUserId().equals(authUserId) && !isAdmin)) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to certificate"));
         }
@@ -369,22 +388,6 @@ public class TrainingController {
     @GetMapping("/glimpses")
     public ResponseEntity<ApiResponse<List<TrainingGlimpse>>> getPublicGlimpses() {
         return ResponseEntity.ok(ApiResponse.success(trainingService.getActiveGlimpses()));
-    }
-
-    @GetMapping("/admin/glimpses")
-    public ResponseEntity<ApiResponse<List<TrainingGlimpse>>> getAdminGlimpses() {
-        return ResponseEntity.ok(ApiResponse.success(trainingService.getAllGlimpsesForAdmin()));
-    }
-
-    @PostMapping("/admin/glimpses")
-    public ResponseEntity<ApiResponse<TrainingGlimpse>> saveGlimpse(@Valid @RequestBody TrainingDtos.SaveTrainingGlimpseRequest req) {
-        return ResponseEntity.ok(ApiResponse.success(trainingService.saveGlimpse(req)));
-    }
-
-    @DeleteMapping("/admin/glimpses/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteGlimpse(@PathVariable String id) {
-        trainingService.deleteGlimpse(id);
-        return ResponseEntity.ok(ApiResponse.success("Training glimpse deleted successfully."));
     }
 }
 

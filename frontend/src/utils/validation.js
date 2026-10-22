@@ -9,7 +9,14 @@ export const validateIndianPhone = (phone) => {
     return 'Mobile phone number is required';
   }
   const cleaned = phone.trim().replace(/[\s\-()]/g, '');
-  const mobile10 = cleaned.replace(/^(?:\+91|91|0)/, '');
+  let mobile10 = cleaned;
+  if (mobile10.startsWith('+91')) {
+    mobile10 = mobile10.slice(3);
+  } else if (mobile10.startsWith('0') && mobile10.length === 11) {
+    mobile10 = mobile10.slice(1);
+  } else if (mobile10.startsWith('91') && mobile10.length === 12) {
+    mobile10 = mobile10.slice(2);
+  }
   if (!/^[6-9]\d{9}$/.test(mobile10)) {
     return 'Enter a valid 10-digit Indian mobile number (must start with 6, 7, 8, or 9)';
   }

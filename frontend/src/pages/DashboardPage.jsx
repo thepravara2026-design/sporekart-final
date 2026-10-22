@@ -477,7 +477,7 @@ export default function DashboardPage({ user, setUser }) {
 
         if (window.Razorpay) {
           const options = {
-            key: topupData.razorpayKeyId || 'rzp_test_sporekart',
+            key: topupData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Tqs0MmdXUl8FRk',
             amount: Math.round(amt * 100),
             currency: topupData.currency || 'INR',
             name: 'Sporekart Agritech',
@@ -691,7 +691,7 @@ export default function DashboardPage({ user, setUser }) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-typography-primary">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-16 space-y-6 sm:space-y-8 animate-fade-in text-typography-primary">
       <SeoHead
         title="Customer & Trainee Portal — Sporekart India"
         description="MNC Grade Portal to track active mushroom & spawn shipments, view order history, download GST PDF invoices, manage training masterclasses, and raise support queries."

@@ -14,6 +14,7 @@ import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.review.api.ReviewDtos;
 import com.sporekart.review.domain.*;
 import com.sporekart.review.infrastructure.*;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -45,7 +46,7 @@ public class ProductReviewService {
 
         // 1. Verify Order Ownership & Existence
         Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + request.getOrderId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + request.getOrderId()));
 
         if (!customerId.equals(order.getUserId())) {
             throw new IllegalStateException("You can only review products from your own orders.");
@@ -60,7 +61,7 @@ public class ProductReviewService {
         OrderItem orderItem = order.getItems().stream()
                 .filter(item -> item.getId().equals(request.getOrderItemId()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Order item not found in specified order."));
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found in specified order."));
 
         // 4. Determine Product & Variant
         UUID variantId = orderItem.getVariantId();
@@ -263,7 +264,7 @@ public class ProductReviewService {
                 .flatMap(o -> o.getItems().stream())
                 .filter(i -> i.getId().equals(orderItemId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Order item not found: " + orderItemId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + orderItemId));
 
         Order order = item.getOrder();
         if (!customerId.equals(order.getUserId())) {
@@ -286,7 +287,7 @@ public class ProductReviewService {
     @Transactional
     public ReviewDtos.ReviewResponse updateCustomerReview(UUID customerId, UUID reviewId, ReviewDtos.UpdateReviewRequest request) {
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("Review not found with ID: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with ID: " + reviewId));
 
         if (!customerId.equals(review.getCustomerId())) {
             throw new IllegalStateException("You can only edit your own reviews.");
@@ -388,7 +389,7 @@ public class ProductReviewService {
     @Transactional
     public ReviewDtos.ReviewResponse moderateReview(UUID adminId, UUID reviewId, ReviewDtos.AdminModerationRequest request) {
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("Review not found with ID: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with ID: " + reviewId));
 
         review.setStatus(request.getStatus());
         review.setModeratedAt(OffsetDateTime.now());
@@ -402,7 +403,7 @@ public class ProductReviewService {
     @Transactional(readOnly = true)
     public ReviewDtos.ReviewResponse getReviewById(UUID reviewId) {
         ProductReview review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("Review not found with ID: " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with ID: " + reviewId));
         return mapToReviewResponse(review);
     }
 

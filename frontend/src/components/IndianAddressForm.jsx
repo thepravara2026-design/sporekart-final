@@ -28,6 +28,18 @@ export default function IndianAddressForm({
 }) {
   const [lookupState, setLookupState] = useState({ loading: false, successMessage: null });
   const [isCustomCity, setIsCustomCity] = useState(false);
+  const formDataRef = React.useRef(formData);
+  formDataRef.current = formData;
+
+  const updateForm = (patch) => {
+    formDataRef.current = { ...formDataRef.current, ...patch };
+    if (typeof onChange === 'function') {
+      onChange((prev) => {
+        const base = (prev && typeof prev === 'object') ? prev : formDataRef.current;
+        return { ...base, ...patch };
+      });
+    }
+  };
 
   const availableCities = getCitiesForState(formData.state);
 
@@ -48,7 +60,7 @@ export default function IndianAddressForm({
   // Handle PIN Code change & auto-lookup
   const handlePincodeChange = async (e) => {
     const rawVal = e.target.value.replace(/\D/g, '').slice(0, 6);
-    onChange({ ...formData, pincode: rawVal });
+    updateForm({ pincode: rawVal });
 
     if (rawVal.length === 6) {
       setLookupState({ loading: true, successMessage: null });
@@ -65,8 +77,7 @@ export default function IndianAddressForm({
           (c) => c.toLowerCase() === newCity.toLowerCase()
         ) || (stateCities.length > 0 ? stateCities[0] : newCity);
 
-        onChange({
-          ...formData,
+        updateForm({
           pincode: rawVal,
           state: newState,
           city: matchedCityInDropdown,
@@ -94,8 +105,7 @@ export default function IndianAddressForm({
     const defaultCity = citiesForNewState.length > 0 ? citiesForNewState[0] : '';
 
     setIsCustomCity(false);
-    onChange({
-      ...formData,
+    updateForm({
       state: selectedState,
       city: defaultCity,
     });
@@ -106,10 +116,10 @@ export default function IndianAddressForm({
     const val = e.target.value;
     if (val === '__OTHER_CITY__') {
       setIsCustomCity(true);
-      onChange({ ...formData, city: '' });
+      updateForm({ city: '' });
     } else {
       setIsCustomCity(false);
-      onChange({ ...formData, city: val });
+      updateForm({ city: val });
     }
   };
 
@@ -124,18 +134,18 @@ export default function IndianAddressForm({
       <div className={`grid grid-cols-1 ${showEmail ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
         {/* Full / Recipient Name */}
         <div>
-          <label className="block text-typography-primary mb-1 font-semibold">
+          <label htmlFor="recipientName" className="block text-typography-primary mb-1 font-semibold">
             {nameLabel} <span className="text-rose-500">*</span>
           </label>
           <input
+            id="recipientName"
             type="text"
             required
             disabled={disabled}
             placeholder={namePlaceholder}
             value={formData.recipientName || formData.fullName || ''}
             onChange={(e) =>
-              onChange({
-                ...formData,
+              updateForm({
                 recipientName: e.target.value,
                 fullName: e.target.value,
               })
@@ -155,7 +165,7 @@ export default function IndianAddressForm({
 
         {/* Primary Phone Number (Immutable if registered) */}
         <div>
-          <label className="block text-typography-primary mb-1 font-semibold flex items-center justify-between">
+          <label htmlFor="phone" className="block text-typography-primary mb-1 font-semibold flex items-center justify-between">
             <span>Primary Phone <span className="text-rose-500">*</span></span>
             {primaryPhoneImmutable && (
               <span className="text-[10px] text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded font-medium">
@@ -168,6 +178,7 @@ export default function IndianAddressForm({
               🇮🇳 +91
             </span>
             <input
+              id="phone"
               type="tel"
               required
               readOnly={primaryPhoneImmutable}
@@ -175,7 +186,7 @@ export default function IndianAddressForm({
               placeholder="9876543210"
               maxLength={13}
               value={formData.phone || ''}
-              onChange={(e) => onChange({ ...formData, phone: e.target.value })}
+              onChange={(e) => updateForm({ phone: e.target.value })}
               className={`w-full border rounded-xl pl-16 pr-3.5 py-2.5 text-xs focus:outline-none transition-all font-mono ${
                 primaryPhoneImmutable
                   ? 'bg-slate-100 text-slate-700 border-slate-300 font-bold cursor-not-allowed'
@@ -210,7 +221,7 @@ export default function IndianAddressForm({
               placeholder={!formData.isDefault ? "Receiver mobile" : "Alternative mobile"}
               maxLength={13}
               value={formData.alternatePhone || ''}
-              onChange={(e) => onChange({ ...formData, alternatePhone: e.target.value })}
+              onChange={(e) => updateForm({ alternatePhone: e.target.value })}
               className={`w-full bg-surface-white border rounded-xl pl-16 pr-3.5 py-2.5 text-typography-primary text-xs focus:outline-none transition-all font-mono ${
                 errors.alternatePhone
                   ? 'border-rose-500 bg-rose-50/20 focus:border-rose-600'
@@ -242,7 +253,7 @@ export default function IndianAddressForm({
         {/* Email Address (if showEmail is true) */}
         {showEmail && (
           <div>
-            <label className="block text-typography-primary mb-1 font-semibold flex items-center justify-between">
+            <label htmlFor="email" className="block text-typography-primary mb-1 font-semibold flex items-center justify-between">
               <span>Email Address {emailRequired && <span className="text-rose-500">*</span>}</span>
               {primaryEmailImmutable && (
                 <span className="text-[10px] text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded font-medium">
@@ -251,13 +262,14 @@ export default function IndianAddressForm({
               )}
             </label>
             <input
+              id="email"
               type="email"
               required={emailRequired}
               readOnly={primaryEmailImmutable}
               disabled={disabled || primaryEmailImmutable}
               placeholder="e.g. suresh@example.com"
               value={formData.email || ''}
-              onChange={(e) => onChange({ ...formData, email: e.target.value })}
+              onChange={(e) => updateForm({ email: e.target.value })}
               className={`w-full border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all ${
                 primaryEmailImmutable
                   ? 'bg-slate-100 text-slate-700 border-slate-300 font-bold cursor-not-allowed'
@@ -314,11 +326,12 @@ export default function IndianAddressForm({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* PIN Code */}
           <div>
-            <label className="block text-typography-primary mb-1 font-semibold">
+            <label htmlFor="pincode" className="block text-typography-primary mb-1 font-semibold">
               PIN Code <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <input
+                id="pincode"
                 type="text"
                 required
                 disabled={disabled}
@@ -343,10 +356,11 @@ export default function IndianAddressForm({
 
           {/* State Dropdown (All 28 States & 8 UTs) */}
           <div>
-            <label className="block text-typography-primary mb-1 font-semibold">
+            <label htmlFor="state" className="block text-typography-primary mb-1 font-semibold">
               State <span className="text-rose-500">*</span>
             </label>
             <select
+              id="state"
               required
               disabled={disabled}
               value={formData.state || ''}
@@ -373,12 +387,13 @@ export default function IndianAddressForm({
 
           {/* City / District Cascading Dropdown */}
           <div>
-            <label className="block text-typography-primary mb-1 font-semibold">
+            <label htmlFor="city" className="block text-typography-primary mb-1 font-semibold">
               City / District <span className="text-rose-500">*</span>
             </label>
 
             {!isCustomCity && availableCities.length > 0 ? (
               <select
+                id="city"
                 required
                 disabled={disabled || !formData.state}
                 value={formData.city || ''}
@@ -400,12 +415,13 @@ export default function IndianAddressForm({
             ) : (
               <div className="relative">
                 <input
+                  id="city"
                   type="text"
                   required
                   disabled={disabled}
                   placeholder="Enter city or district name"
                   value={formData.city || ''}
-                  onChange={(e) => onChange({ ...formData, city: e.target.value })}
+                  onChange={(e) => updateForm({ city: e.target.value })}
                   className={`w-full bg-surface-white border rounded-xl px-3 py-2 text-typography-primary text-xs focus:outline-none transition-all ${
                     errors.city
                       ? 'border-rose-500 bg-rose-50/20 focus:border-rose-600'
@@ -434,16 +450,17 @@ export default function IndianAddressForm({
 
       {/* ROW 3: Address Line 1 */}
       <div>
-        <label className="block text-typography-primary mb-1 font-semibold">
+        <label htmlFor="line1" className="block text-typography-primary mb-1 font-semibold">
           Address Line 1 (House/Plot No, Street, Building) <span className="text-rose-500">*</span>
         </label>
         <input
+          id="line1"
           type="text"
           required
           disabled={disabled}
           placeholder="e.g. Plot 12, Green Agro Farm, Main Road"
           value={formData.line1 || ''}
-          onChange={(e) => onChange({ ...formData, line1: e.target.value })}
+          onChange={(e) => updateForm({ line1: e.target.value })}
           className={`w-full bg-surface-white border rounded-xl px-3.5 py-2.5 text-typography-primary text-xs focus:outline-none transition-all ${
             errors.line1
               ? 'border-rose-500 bg-rose-50/20 focus:border-rose-600'
@@ -459,15 +476,16 @@ export default function IndianAddressForm({
 
       {/* ROW 4: Address Line 2 (Optional Landmark) */}
       <div>
-        <label className="block text-typography-primary mb-1 font-semibold">
+        <label htmlFor="line2" className="block text-typography-primary mb-1 font-semibold">
           Address Line 2 <span className="text-typography-muted font-normal">(Optional Landmark / Area)</span>
         </label>
         <input
+          id="line2"
           type="text"
           disabled={disabled}
           placeholder="e.g. Near Government School / Opposite Temple"
           value={formData.line2 || ''}
-          onChange={(e) => onChange({ ...formData, line2: e.target.value })}
+          onChange={(e) => updateForm({ line2: e.target.value })}
           className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary text-xs focus:outline-none focus:border-forest-700 focus:ring-2 focus:ring-forest-700/10 transition-all"
         />
       </div>
@@ -479,7 +497,7 @@ export default function IndianAddressForm({
             type="checkbox"
             disabled={disabled}
             checked={formData.isDefault || false}
-            onChange={(e) => onChange({ ...formData, isDefault: e.target.checked })}
+            onChange={(e) => updateForm({ isDefault: e.target.checked })}
             className="rounded text-forest-700 focus:ring-forest-700/20 w-4 h-4 cursor-pointer"
           />
           <span className="text-typography-secondary font-medium text-xs">

@@ -12,7 +12,7 @@ test.describe('E2E Flow 2: Product Details & Intelligent Stock Availability', ()
     await expect(page.getByTestId('product-title')).toBeVisible();
     await expect(page.getByTestId('product-price')).toBeVisible();
 
-    const availabilityBadge = page.getByTestId('product-availability');
+    const availabilityBadge = page.getByTestId('product-availability').first();
     await expect(availabilityBadge).toBeVisible({ timeout: 10000 });
     const availabilityText = await availabilityBadge.innerText();
     expect(availabilityText).toMatch(/Available|In Stock|Limited stock|Only a few left|Out of stock/i);

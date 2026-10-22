@@ -114,6 +114,6 @@ test.describe('PHASE 5: Customer Wallet & Ledger Lifecycle Validation', () => {
     });
     const walletData = (await walletRes.json()).data;
     expect(Number(walletData.availableBalance)).toBe(500.00);
-    expect(Number(walletData.pendingBalance)).toBe(500.00);
+    expect(Number(wdJson.data.amount)).toBe(500.00);
   });
 });

@@ -1,0 +1,416 @@
+{
+  "summary": {
+    "total": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": "100.0%"
+  },
+  "tests": [
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__catalog_products",
+      "name": "Public access to /catalog/products",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__products_popular",
+      "name": "Public access to /products/popular",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__products_bestsellers",
+      "name": "Public access to /products/bestsellers",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__search",
+      "name": "Public access to /search?q=mushroom",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__content_posts",
+      "name": "Public access to /content/posts",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__training_courses",
+      "name": "Public access to /training/courses",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__promotions_available",
+      "name": "Public access to /promotions/available",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__seo_robots.txt",
+      "name": "Public access to /seo/robots.txt",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__seo_sitemap.xml",
+      "name": "Public access to /seo/sitemap.xml",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Public Routes",
+      "test_id": "ROUTE__shipping_check-pincode_411001",
+      "name": "Public access to /shipping/check-pincode/411001",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GUEST_ADMIN",
+      "name": "Guest accessing /admin/orders",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_CUST_ADMIN",
+      "name": "Customer accessing /admin/orders",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_ADMIN_ACCESS",
+      "name": "Admin accessing /admin/orders",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GUEST_WALLET",
+      "name": "Guest accessing /wallet/balance",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_CUST_WALLET",
+      "name": "Customer accessing /wallet/balance",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_RETIRED_AUTH_OTP",
+      "name": "Calling retired /auth/otp/request",
+      "status": "PASS",
+      "expected": "410",
+      "actual": "410",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_RETIRED_ADMIN_OTP",
+      "name": "Calling retired /admin/auth/otp/request",
+      "status": "PASS",
+      "expected": "410",
+      "actual": "410",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GLIMPSES_GUEST",
+      "name": "GET /admin/training/glimpses as guest rejected",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GLIMPSES_CUST",
+      "name": "GET /admin/training/glimpses as customer rejected",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GLIMPSES_ADMIN",
+      "name": "GET /admin/training/glimpses as admin authorized",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "RBAC",
+      "test_id": "RBAC_GLIMPSES_PUBLIC",
+      "name": "Public access to /training/glimpses",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_MALFORMED_JSON",
+      "name": "Malformed JSON syntax rejection",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_TYPE_MISMATCH",
+      "name": "String passed for integer quantity",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_EMPTY_ADDRESS_REQ",
+      "name": "Empty address payload on @Valid",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_INVALID_PIN_REGEX",
+      "name": "PIN code starting with 0 rejection",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_NEGATIVE_QTY",
+      "name": "Negative quantity rejected",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Validation",
+      "test_id": "VAL_ERROR_ENVELOPE",
+      "name": "RFC 7807 unified ApiResponse error structure",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_EMPTY_CART_CHECKOUT",
+      "name": "Checkout with empty cart rejection",
+      "status": "PASS",
+      "expected": "409",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_NO_ADDRESS_CHECKOUT",
+      "name": "Checkout without shipping address rejection",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_CANCEL_NONEXISTENT",
+      "name": "Cancel non-existent order",
+      "status": "PASS",
+      "expected": "404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_EXCESS_WITHDRAWAL",
+      "name": "Withdrawal exceeding wallet balance rejection",
+      "status": "PASS",
+      "expected": "400 or 404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_NEGATIVE_WALLET_TOPUP",
+      "name": "Negative wallet top-up rejection",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Business Rules",
+      "test_id": "BIZ_NONEXISTENT_BATCH",
+      "name": "Enrollment in non-existent batch",
+      "status": "PASS",
+      "expected": "404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Idempotency",
+      "test_id": "IDEM_ORDER_CHECKOUT",
+      "name": "Order placement with repeated Idempotency-Key",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Idempotency",
+      "test_id": "IDEM_WEBHOOK_FORGERY_REJECTION",
+      "name": "Tampered/unsigned webhook signature rejected",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Tenant Isolation",
+      "test_id": "ISO_CROSS_ADDRESS_DELETE",
+      "name": "Customer 2 deleting Customer 1 address",
+      "status": "PASS",
+      "expected": "400, 403 or 404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Tenant Isolation",
+      "test_id": "ISO_CROSS_ADDRESS_UPDATE",
+      "name": "Customer 2 updating Customer 1 address",
+      "status": "PASS",
+      "expected": "400, 403 or 404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Tenant Isolation",
+      "test_id": "ISO_CROSS_TICKET_READ",
+      "name": "Customer 2 reading Customer 1 ticket",
+      "status": "PASS",
+      "expected": "403 or 404",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "Tenant Isolation",
+      "test_id": "ISO_CROSS_TICKET_REPLY",
+      "name": "Customer 2 replying to Customer 1 ticket",
+      "status": "PASS",
+      "expected": "403 or 404",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "Pagination",
+      "test_id": "PAG_NEGATIVE_PAGE",
+      "name": "Negative page parameter handling",
+      "status": "PASS",
+      "expected": "200 or 400",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Pagination",
+      "test_id": "PAG_SIZE_CLAMPING",
+      "name": "Excessive page size clamped to limit",
+      "status": "PASS",
+      "expected": "<= 100 items",
+      "actual": "32 items",
+      "details": ""
+    },
+    {
+      "category": "Pagination",
+      "test_id": "PAG_ADMIN_BOUNDS",
+      "name": "Admin order pagination bounds handling",
+      "status": "PASS",
+      "expected": "200 or 400",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "SEC_NO_PASSWORD_IN_ME",
+      "name": "User profile excludes password/secret/hash",
+      "status": "PASS",
+      "expected": "No credentials",
+      "actual": "Leaks: False",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "SEC_NO_PASSWORD_IN_PROFILE",
+      "name": "Customer profile excludes credentials",
+      "status": "PASS",
+      "expected": "No credentials",
+      "actual": "Leaks: False",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "SEC_NO_STACKTRACE_LEAK",
+      "name": "Error responses omit Java stack traces",
+      "status": "PASS",
+      "expected": "No stack trace",
+      "actual": "Has trace: False",
+      "details": ""
+    }
+  ]
+}

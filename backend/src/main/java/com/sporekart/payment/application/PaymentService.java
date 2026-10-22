@@ -36,6 +36,7 @@ public class PaymentService {
     private final com.sporekart.training.application.TrainingService trainingService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final com.sporekart.wallet.application.WalletService walletService;
+    private final PaymentEventIdempotencyService paymentEventIdempotencyService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -101,16 +102,6 @@ public class PaymentService {
             throw new IllegalArgumentException("Payment verification failed: Mismatched order reference");
         }
 
-        // Idempotency check: if already captured, return success immediately without duplicate inventory processing
-        if (payment.getStatus() == PaymentStatus.CAPTURED) {
-            log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(), targetOrderId);
-            return PaymentDtos.VerifyPaymentResponse.builder()
-                    .isSuccess(true)
-                    .message("Payment already verified")
-                    .orderId(targetOrderId)
-                    .build();
-        }
-
         // Caller ownership verification (if caller context provided)
         if (callerUserId != null || callerSessionId != null) {
             OrderResponse order = orderService.getOrderById(targetOrderId);
@@ -125,6 +116,16 @@ public class PaymentService {
                     throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
                 }
             }
+        }
+
+        // Idempotency check: if already captured, return success immediately without duplicate inventory processing
+        if (payment.getStatus() == PaymentStatus.CAPTURED) {
+            log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(), targetOrderId);
+            return PaymentDtos.VerifyPaymentResponse.builder()
+                    .isSuccess(true)
+                    .message("Payment already verified")
+                    .orderId(targetOrderId)
+                    .build();
         }
 
         boolean validSignature = paymentGateway.verifySignature(
@@ -264,17 +265,16 @@ public class PaymentService {
                     payment.setStatus(PaymentStatus.CAPTURED);
                 }
 
-                try {
-                    PaymentEvent event = PaymentEvent.builder()
-                            .payment(payment)
-                            .eventType(eventType)
-                            .eventId(eventId)
-                            .eventDataJson(rawBody)
-                            .createdBy("RAZORPAY_WEBHOOK")
-                            .build();
-                    paymentEventRepository.save(event);
-                } catch (org.springframework.dao.DataIntegrityViolationException dive) {
-                    log.warn("Concurrent duplicate webhook event ID caught by database constraint: {}", eventId);
+                PaymentEvent event = PaymentEvent.builder()
+                        .payment(payment)
+                        .eventType(eventType)
+                        .eventId(eventId)
+                        .eventDataJson(rawBody)
+                        .createdBy("RAZORPAY_WEBHOOK")
+                        .build();
+                boolean recorded = paymentEventIdempotencyService.recordEventIfUnique(event);
+                if (!recorded) {
+                    log.warn("Concurrent duplicate webhook event ID caught by idempotency service: {}", eventId);
                     return "Webhook event already processed (idempotent ignore)";
                 }
 
@@ -317,17 +317,16 @@ public class PaymentService {
             } else if ("payment.failed".equalsIgnoreCase(eventType)) {
                 if (payment != null && payment.getStatus() != PaymentStatus.FAILED) {
                     payment.setStatus(PaymentStatus.FAILED);
-                    try {
-                        PaymentEvent event = PaymentEvent.builder()
-                                .payment(payment)
-                                .eventType(eventType)
-                                .eventId(eventId)
-                                .eventDataJson(rawBody)
-                                .createdBy("RAZORPAY_WEBHOOK")
-                                .build();
-                        payment.addEvent(event);
-                    } catch (org.springframework.dao.DataIntegrityViolationException dive) {
-                        log.warn("Concurrent duplicate failed webhook event ID: {}", eventId);
+                    PaymentEvent event = PaymentEvent.builder()
+                            .payment(payment)
+                            .eventType(eventType)
+                            .eventId(eventId)
+                            .eventDataJson(rawBody)
+                            .createdBy("RAZORPAY_WEBHOOK")
+                            .build();
+                    boolean recorded = paymentEventIdempotencyService.recordEventIfUnique(event);
+                    if (!recorded) {
+                        log.warn("Concurrent duplicate failed webhook event ID caught by idempotency service: {}", eventId);
                         return "Webhook event already processed (idempotent ignore)";
                     }
                     paymentRepository.save(payment);
@@ -347,17 +346,16 @@ public class PaymentService {
                     paymentRepository.save(refPayment);
                 }
 
-                try {
-                    PaymentEvent event = PaymentEvent.builder()
-                            .payment(refPayment)
-                            .eventType(eventType)
-                            .eventId(eventId)
-                            .eventDataJson(rawBody)
-                            .createdBy("RAZORPAY_WEBHOOK")
-                            .build();
-                    paymentEventRepository.save(event);
-                } catch (org.springframework.dao.DataIntegrityViolationException dive) {
-                    log.warn("Concurrent duplicate refund webhook event ID: {}", eventId);
+                PaymentEvent event = PaymentEvent.builder()
+                        .payment(refPayment)
+                        .eventType(eventType)
+                        .eventId(eventId)
+                        .eventDataJson(rawBody)
+                        .createdBy("RAZORPAY_WEBHOOK")
+                        .build();
+                boolean recorded = paymentEventIdempotencyService.recordEventIfUnique(event);
+                if (!recorded) {
+                    log.warn("Concurrent duplicate refund webhook event ID caught by idempotency service: {}", eventId);
                     return "Webhook event already processed (idempotent ignore)";
                 }
 
@@ -582,6 +580,10 @@ public class PaymentService {
                     .enrollmentId(enrollment.getId())
                     .paymentReference(enrollment.getPaymentReference())
                     .build();
+        }
+
+        if (enrollment.getStatus() == com.sporekart.training.domain.EnrollmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot verify payment for a cancelled enrollment");
         }
 
         BigDecimal feeInr = enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO;

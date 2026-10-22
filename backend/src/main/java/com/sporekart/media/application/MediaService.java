@@ -3,6 +3,7 @@ package com.sporekart.media.application;
 import com.sporekart.media.api.MediaDtos;
 import com.sporekart.media.domain.*;
 import com.sporekart.media.infrastructure.*;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class MediaService {
     @Transactional
     public MediaDtos.MediaAssetDto completeUpload(MediaDtos.CompleteUploadRequest request) {
         MediaAsset asset = mediaAssetRepository.findById(request.getMediaId())
-                .orElseThrow(() -> new IllegalArgumentException("Media asset not found: " + request.getMediaId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + request.getMediaId()));
 
         if (request.getWidth() != null) asset.setWidth(request.getWidth());
         if (request.getHeight() != null) asset.setHeight(request.getHeight());
@@ -91,14 +92,14 @@ public class MediaService {
     @Transactional(readOnly = true)
     public MediaDtos.MediaAssetDto getMediaAsset(UUID mediaId) {
         MediaAsset asset = mediaAssetRepository.findByIdAndIsDeletedFalse(mediaId)
-                .orElseThrow(() -> new IllegalArgumentException("Media asset not found or deleted: " + mediaId));
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found or deleted: " + mediaId));
         return mapToDto(asset);
     }
 
     @Transactional(readOnly = true)
     public String getSignedUrl(UUID mediaId, int expirationSeconds) {
         MediaAsset asset = mediaAssetRepository.findByIdAndIsDeletedFalse(mediaId)
-                .orElseThrow(() -> new IllegalArgumentException("Media asset not found or deleted: " + mediaId));
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found or deleted: " + mediaId));
 
         int exp = expirationSeconds > 0 ? expirationSeconds : 3600; // default 1 hour
         return supabaseStorageService.generateSignedDownloadUrl(asset.getBucket(), asset.getStorageKey(), exp);
@@ -107,7 +108,7 @@ public class MediaService {
     @Transactional
     public void softDeleteMediaAsset(UUID mediaId) {
         MediaAsset asset = mediaAssetRepository.findById(mediaId)
-                .orElseThrow(() -> new IllegalArgumentException("Media asset not found: " + mediaId));
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + mediaId));
 
         asset.setDeleted(true);
         asset.setDeletedAt(LocalDateTime.now());
@@ -118,7 +119,7 @@ public class MediaService {
     @Transactional
     public void linkMediaToEntity(MediaDtos.LinkMediaRequest request) {
         MediaAsset asset = mediaAssetRepository.findByIdAndIsDeletedFalse(request.getMediaId())
-                .orElseThrow(() -> new IllegalArgumentException("Media asset not found: " + request.getMediaId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + request.getMediaId()));
 
         if (request.getProductId() != null) {
             MediaProductLink productLink = MediaProductLink.builder()

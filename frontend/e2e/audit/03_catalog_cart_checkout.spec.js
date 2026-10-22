@@ -67,6 +67,7 @@ test.describe('PHASE 3B & 3C: Product Discovery, Cart Operations & End-to-End Or
   });
 
   test('ORDER-04: Full Checkout, Simulated Payment & Order Confirmation Lifecycle', async ({ page, context }) => {
+    test.setTimeout(60000);
     const testUser = generateTestUser('order_flow');
     await authenticateInBrowser(page, testUser, false);
 
@@ -92,22 +93,19 @@ test.describe('PHASE 3B & 3C: Product Discovery, Cart Operations & End-to-End Or
 
     await expect(page).toHaveURL(/\/checkout/, { timeout: 15000 });
 
-    // 3. Fill Shipping Address Form if needed
-    const recipientInput = page.locator('#recipientName, input[name="recipientName"]').first();
-    if (await recipientInput.isVisible()) {
-      await recipientInput.fill(testUser.fullName);
-      await page.locator('#phone, input[name="phone"]').first().fill(testUser.phone);
-      await page.locator('#line1, input[name="line1"]').first().fill('101 Green Valley');
-      await page.locator('#city, input[name="city"]').first().fill('Pune');
-      await page.locator('#state, select[name="state"]').first().selectOption('Maharashtra');
-      await page.locator('#pincode, input[name="pincode"]').first().fill('411001');
+    // 3. Fill Shipping Address Form
+    const nameInput = page.getByPlaceholder('e.g. Suresh Kumar').first();
+    await nameInput.waitFor({ state: 'visible', timeout: 15000 });
+    await nameInput.fill(testUser.fullName);
 
-      const saveAddressBtn = page.getByRole('button', { name: /Save Address|Use this address/i }).first();
-      if (await saveAddressBtn.isVisible()) {
-        await saveAddressBtn.click();
-        await page.waitForTimeout(500);
-      }
+    const phoneInput = page.getByPlaceholder('9876543210').first();
+    if (await phoneInput.isEditable()) {
+      await phoneInput.fill(testUser.phone);
     }
+
+    await page.getByPlaceholder('e.g. 560001').fill('411001');
+    await expect(page.getByText(/Auto-filled/i)).toBeVisible({ timeout: 10000 });
+    await page.getByPlaceholder('e.g. Plot 12, Green Agro Farm, Main Road').fill('101 Green Valley');
 
     // 4. Place Order / Proceed to Payment
     const placeOrderBtn = page.getByTestId('checkout-button');
@@ -120,7 +118,7 @@ test.describe('PHASE 3B & 3C: Product Discovery, Cart Operations & End-to-End Or
     await expect(page.getByText(/Total Amount|Payment/i).first()).toBeVisible({ timeout: 10000 });
 
     // 6. Complete Simulated Payment
-    const payBtn = page.getByRole('button', { name: /Pay ₹.*Securely|Pay Securely/i });
+    const payBtn = page.getByRole('button', { name: /Pay ₹.*via Razorpay|Pay .*via Razorpay|Pay Securely|Pay ₹.*with Wallet Balance/i });
     await expect(payBtn).toBeVisible({ timeout: 10000 });
     await payBtn.click();
 

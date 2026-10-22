@@ -31,7 +31,7 @@ export default function Breadcrumbs({ items }) {
         </script>
       </Helmet>
 
-      <nav aria-label="Breadcrumb" className="py-3">
+      <nav aria-label="Breadcrumb" className="py-1.5 sm:py-2">
         <ol className="flex items-center gap-1.5 text-xs text-typography-muted font-medium">
           <li>
             <Link to="/" className="hover:text-forest-700 transition-colors flex items-center gap-1">

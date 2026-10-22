@@ -47,7 +47,7 @@ public class CustomerController {
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<CustomerProfile>> updateProfile(
             Authentication authentication,
-            @RequestBody CustomerDtos.UpdateProfileRequest request) {
+            @Valid @RequestBody CustomerDtos.UpdateProfileRequest request) {
         if (authentication == null) {
             return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Unauthenticated"));
         }

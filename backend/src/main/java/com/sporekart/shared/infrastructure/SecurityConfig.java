@@ -43,12 +43,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         boolean isDevOrTest = environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
         http
-            .csrf(AbstractHttpConfigurer::disable);
-        if (isDevOrTest) {
-            http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-        } else {
-            http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
-        }
+            .csrf(AbstractHttpConfigurer::disable)
+            .headers(headers -> {
+                headers.frameOptions(frame -> frame.sameOrigin());
+                headers.contentTypeOptions(org.springframework.security.config.Customizer.withDefaults());
+                headers.referrerPolicy(referrer -> referrer.policy(
+                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+                headers.permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"));
+                headers.contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'self'; object-src 'none';"));
+                if (!isDevOrTest) {
+                    headers.httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000));
+                }
+            });
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -56,17 +62,21 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required or token expired\"}}");
+                    String json = new com.fasterxml.jackson.databind.ObjectMapper()
+                            .writeValueAsString(com.sporekart.shared.api.ApiResponse.error("UNAUTHORIZED", "Authentication required or token expired"));
+                    response.getWriter().write(json);
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"FORBIDDEN\",\"message\":\"Access denied\"}}");
+                    String json = new com.fasterxml.jackson.databind.ObjectMapper()
+                            .writeValueAsString(com.sporekart.shared.api.ApiResponse.error("FORBIDDEN", "Access denied"));
+                    response.getWriter().write(json);
                 })
             )
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll();
+                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                 if (isDevOrTest) {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
@@ -74,7 +84,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**", "/categories/**", "/categories", "/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/search", "/search/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/training/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/training/courses/**", "/training/courses", "/training/glimpses").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/training/enroll", "/training/bookings").permitAll()
                     .requestMatchers(HttpMethod.GET, "/shipping/check-pincode/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/seo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
@@ -82,13 +93,19 @@ public class SecurityConfig {
                     .requestMatchers("/cart/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
+                    .requestMatchers(HttpMethod.POST,
+                        "/create-order", "/api/create-order",
+                        "/verify-payment", "/api/verify-payment",
+                        "/payment/create-order", "/payment/verify-payment",
+                        "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
                     .requestMatchers(HttpMethod.POST, "/shipping/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()
                     .requestMatchers("/admin/auth/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/shipping/create", "/shipping/cancel/**", "/shipping/simulate-event/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/media/link").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/media/**").hasRole("ADMIN")
                     .anyRequest().authenticated();
 
             })

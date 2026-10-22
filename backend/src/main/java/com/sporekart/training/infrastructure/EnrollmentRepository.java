@@ -26,4 +26,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     List<Enrollment> findByBatchId(UUID batchId);
     List<Enrollment> findByBatchIdAndStatus(UUID batchId, EnrollmentStatus status);
+
+    @EntityGraph(attributePaths = {"course", "batch"})
+    List<Enrollment> findByStatusAndEnrolledAtBefore(EnrollmentStatus status, java.time.ZonedDateTime cutoff);
 }

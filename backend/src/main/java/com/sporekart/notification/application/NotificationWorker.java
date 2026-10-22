@@ -44,8 +44,8 @@ public class NotificationWorker {
     public void processOutboxQueue() {
         List<NotificationEvent> pendingEvents = notificationRepository
                 .findTop20ByStatusInAndAttemptCountLessThanOrderByCreatedAtAsc(
-                        List.of(NotificationStatus.PENDING, NotificationStatus.RETRY_SCHEDULED, NotificationStatus.FAILED),
-                        MAX_ATTEMPTS + 5
+                        List.of(NotificationStatus.PENDING, NotificationStatus.RETRY_SCHEDULED),
+                        MAX_ATTEMPTS
                 );
 
         if (pendingEvents.isEmpty()) {
@@ -57,6 +57,25 @@ public class NotificationWorker {
         for (NotificationEvent event : pendingEvents) {
             dispatchNotification(event);
         }
+    }
+
+    @Scheduled(cron = "${sporekart.notification.retention.cron:0 0 3 * * ?}")
+    @org.springframework.transaction.annotation.Transactional
+    public void cleanupOldArchivedNotifications() {
+        try {
+            ZonedDateTime cutoff = ZonedDateTime.now().minusDays(90);
+            int deleted = notificationRepository.deleteByStatusAndSentAtBefore(NotificationStatus.SENT, cutoff);
+            if (deleted > 0) {
+                log.info("Purged {} archived SENT notifications older than 90 days (cutoff: {})", deleted, cutoff);
+            }
+        } catch (Exception e) {
+            log.error("Failed to run scheduled notification outbox cleanup: {}", e.getMessage());
+        }
+    }
+
+    @org.springframework.scheduling.annotation.Async
+    public void dispatchNotificationAsync(NotificationEvent event) {
+        dispatchNotification(event);
     }
 
     public void dispatchNotification(NotificationEvent event) {

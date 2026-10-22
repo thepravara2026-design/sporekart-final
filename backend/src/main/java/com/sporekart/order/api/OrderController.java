@@ -75,21 +75,11 @@ public class OrderController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(
             Authentication authentication,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
             @PathVariable("id") UUID orderId,
             @RequestParam(value = "reason", required = false, defaultValue = "Cancelled by customer") String reason) {
         UUID userId = extractUserId(authentication);
-        OrderResponse response = orderService.cancelOrder(orderId, userId, reason);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @PutMapping("/admin/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
-            Authentication authentication,
-            @PathVariable("id") UUID orderId,
-            @Valid @RequestBody UpdateOrderStatusRequest request) {
-        String adminName = authentication != null ? authentication.getName() : "ADMIN";
-        OrderResponse response = orderService.updateOrderStatus(orderId, request.getNewStatus(), request.getReason(), "ADMIN:" + adminName);
+        OrderResponse response = orderService.cancelOrder(orderId, userId, sessionId, reason);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

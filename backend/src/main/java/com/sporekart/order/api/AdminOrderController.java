@@ -98,6 +98,23 @@ public class AdminOrderController {
         return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
     }
 
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(@PathVariable("id") UUID id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + id));
+        if (order.getStatus() != OrderStatus.DELIVERED) {
+            throw new IllegalStateException("GST tax invoice is available only after order is DELIVERED. Current status: " + order.getStatus());
+        }
+        byte[] pdfBytes = com.sporekart.order.application.InvoicePdfGenerator.generateInvoicePdf(order);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Sporekart_Invoice_" + order.getOrderNumber() + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+    }
+
     private UUID getAdminId(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) {
             return UUID.fromString("00000000-0000-0000-0000-000000000000");

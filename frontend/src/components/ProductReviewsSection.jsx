@@ -24,7 +24,7 @@ export default function ProductReviewsSection({ productId, productTitle, user, o
       .then((res) => {
         setSummary(res.data?.data);
       })
-      .catch(() => {});
+      .catch((err) => console.warn('Failed to load review summary:', err));
 
     // Fetch Reviews
     fetchReviews(0);
@@ -42,7 +42,7 @@ export default function ProductReviewsSection({ productId, productTitle, user, o
           setPage(data.number || 0);
         }
       })
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load product reviews:', err))
       .finally(() => setIsLoading(false));
   };
 

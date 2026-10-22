@@ -3,6 +3,7 @@ package com.sporekart.catalog.application;
 import com.sporekart.catalog.api.CatalogDtos;
 import com.sporekart.catalog.domain.*;
 import com.sporekart.catalog.infrastructure.*;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +45,7 @@ public class AdminCatalogService {
     @Transactional
     public Category updateCategory(UUID categoryId, CatalogDtos.UpdateCategoryRequest request) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + categoryId));
 
         if (request.getName() != null && !request.getName().isBlank()) {
             category.setName(request.getName().trim());
@@ -86,7 +87,7 @@ public class AdminCatalogService {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Category not found: " + request.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + request.getCategoryId()));
         }
 
         Product product = Product.builder()
@@ -108,9 +109,9 @@ public class AdminCatalogService {
 
         if (request.getProductInformation() != null) {
             saveOrUpdateProductInformation(savedProduct, request.getProductInformation());
-            if (savedProduct.getStatus() == ProductStatus.ACTIVE) {
-                validateProductForPublication(savedProduct);
-            }
+        }
+        if (savedProduct.getStatus() == ProductStatus.ACTIVE) {
+            validateProductForPublication(savedProduct);
         }
 
         return savedProduct;
@@ -119,11 +120,11 @@ public class AdminCatalogService {
     @Transactional
     public Product updateProduct(UUID productId, CatalogDtos.UpdateProductRequest request) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Category not found: " + request.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + request.getCategoryId()));
             product.setCategory(category);
         }
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
@@ -163,6 +164,12 @@ public class AdminCatalogService {
         if (request.getIsActive() != null) {
             product.setActive(request.getIsActive());
         }
+        if (request.getProductInformation() != null) {
+            saveOrUpdateProductInformation(product, request.getProductInformation());
+        }
+        if (product.getStatus() == ProductStatus.ACTIVE) {
+            validateProductForPublication(product);
+        }
 
         return productRepository.save(product);
     }
@@ -170,7 +177,7 @@ public class AdminCatalogService {
     @Transactional
     public Product updateProductStatus(UUID productId, ProductStatus status, Boolean isActive) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
         if (status != null) {
             product.setStatus(status);
         }
@@ -219,13 +226,20 @@ public class AdminCatalogService {
 
         ProductInformation savedInfo = informationRepository.save(info);
         product.setProductInformation(savedInfo);
+        productRepository.save(product);
         return savedInfo;
+    }
+
+    @Transactional(readOnly = true)
+    public Product getProduct(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
     }
 
     @Transactional
     public Product publishProduct(UUID productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         validateProductForPublication(product);
 
@@ -236,6 +250,12 @@ public class AdminCatalogService {
 
     public void validateProductForPublication(Product product) {
         ProductInformation info = product.getProductInformation();
+        if (info == null && product.getId() != null) {
+            info = informationRepository.findByProductId(product.getId()).orElse(null);
+            if (info != null) {
+                product.setProductInformation(info);
+            }
+        }
 
         // Food products require FSSAI License Number
         if (product.getProductType() == ProductType.FRESH_MUSHROOM || product.getProductType() == ProductType.DRY_MUSHROOM) {
@@ -264,7 +284,7 @@ public class AdminCatalogService {
     @Transactional
     public ProductVariant addVariant(UUID productId, CatalogDtos.CreateVariantRequest request) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         if (variantRepository.findBySku(request.getSku()).isPresent()) {
             throw new IllegalArgumentException("Duplicate SKU: " + request.getSku());
@@ -294,7 +314,7 @@ public class AdminCatalogService {
     @Transactional
     public ProductOffer createOffer(CatalogDtos.CreateOfferRequest request) {
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + request.getProductId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + request.getProductId()));
 
         if (request.getValidFrom() != null && request.getValidTo() != null && request.getValidTo().isBefore(request.getValidFrom())) {
             throw new IllegalArgumentException("Offer validTo date cannot be before validFrom date");
@@ -319,7 +339,7 @@ public class AdminCatalogService {
     @Transactional
     public ProductMedia addMedia(CatalogDtos.CreateMediaRequest request) {
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + request.getProductId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + request.getProductId()));
 
         if (request.isPrimary()) {
             // Unset previous primary image
@@ -349,7 +369,7 @@ public class AdminCatalogService {
     @Transactional
     public List<ProductMedia> updateMediaOrder(UUID productId, CatalogDtos.UpdateMediaOrderRequest request) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         if (request.getItems() != null) {
             for (CatalogDtos.UpdateMediaOrderRequest.MediaOrderItem item : request.getItems()) {
@@ -372,7 +392,7 @@ public class AdminCatalogService {
     @Transactional
     public List<ProductMedia> syncProductMedia(UUID productId, List<CatalogDtos.CreateMediaRequest> items) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         List<ProductMedia> existingMedia = mediaRepository.findByProductIdOrderByDisplayOrderAsc(productId);
         if (!existingMedia.isEmpty()) {

@@ -26,7 +26,10 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
 
     @Query("SELECT wt FROM WalletTransaction wt WHERE wt.walletId = :walletId " +
            "AND (:type IS NULL OR wt.transactionType = :type) " +
-           "AND (:search IS NULL OR :search = '' OR wt.transactionReference LIKE %:search% OR wt.description LIKE %:search% OR CAST(wt.orderId AS string) LIKE %:search%) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           "LOWER(wt.transactionReference) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(wt.description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(CAST(wt.orderId AS string)) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY wt.createdAt DESC")
     Page<WalletTransaction> filterTransactions(
             @Param("walletId") UUID walletId,
@@ -36,7 +39,10 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
     );
 
     @Query("SELECT wt FROM WalletTransaction wt WHERE " +
-           "(:search IS NULL OR :search = '' OR wt.transactionReference LIKE %:search% OR wt.description LIKE %:search% OR wt.createdBy LIKE %:search%) " +
+           "(:search IS NULL OR :search = '' OR " +
+           "LOWER(wt.transactionReference) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(wt.description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(wt.createdBy) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY wt.createdAt DESC")
     Page<WalletTransaction> findAllFiltered(@Param("search") String search, Pageable pageable);
 

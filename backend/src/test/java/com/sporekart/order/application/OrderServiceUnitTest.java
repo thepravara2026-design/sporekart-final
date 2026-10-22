@@ -66,6 +66,18 @@ public class OrderServiceUnitTest {
     @Mock
     private com.sporekart.identity.infrastructure.UserRepository userRepository;
 
+    @Mock
+    private com.sporekart.promotion.application.PromotionService promotionService;
+
+    @Mock
+    private com.sporekart.wallet.application.WalletService walletService;
+
+    @Mock
+    private com.sporekart.notification.application.NotificationEventService notificationEventService;
+
+    @Mock
+    private com.sporekart.shipping.application.ShippingService shippingService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -276,6 +288,29 @@ public class OrderServiceUnitTest {
     }
 
     @Test
+    @DisplayName("ORD-10B: getOrderDetails allows admin access even if order belongs to another customer")
+    void ORD_10B_get_order_details_admin_access_granted() {
+        UUID orderId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        Order order = Order.builder().id(orderId).userId(customerId).shippingAddressJson("{}").build();
+
+        com.sporekart.identity.domain.User adminUser = com.sporekart.identity.domain.User.builder()
+                .id(adminId)
+                .fullName("Admin User")
+                .role(com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                .email("admin@sporekart.in")
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
+
+        OrderResponse response = orderService.getOrderDetails(orderId, adminId);
+        assertNotNull(response);
+        assertEquals(orderId, response.getId());
+    }
+
+    @Test
     @DisplayName("ORD-11: getOrderDetails for another user's order throws ForbiddenOperationException")
     void ORD_11_get_order_details_wrong_user_throws_forbidden() {
         UUID orderId = UUID.randomUUID();
@@ -331,6 +366,38 @@ public class OrderServiceUnitTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         byte[] pdf = orderService.generateInvoicePdf(orderId, userId);
+        assertNotNull(pdf);
+        assertTrue(pdf.length > 0);
+    }
+
+    @Test
+    @DisplayName("ORD-14B: generateInvoicePdf allows admin access for DELIVERED order belonging to another customer")
+    void ORD_14B_generate_invoice_pdf_admin_access_granted() {
+        UUID orderId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        Order order = Order.builder()
+                .id(orderId)
+                .userId(customerId)
+                .status(OrderStatus.DELIVERED)
+                .orderNumber("SK-INV-101")
+                .subtotalAmountInr(new BigDecimal("100.00"))
+                .gstTotalAmountInr(new BigDecimal("5.00"))
+                .totalAmountInr(new BigDecimal("105.00"))
+                .shippingAddressJson("{\"recipientName\":\"Customer\",\"line1\":\"Line1\",\"city\":\"City\",\"state\":\"State\",\"pincode\":\"411001\"}")
+                .build();
+
+        com.sporekart.identity.domain.User adminUser = com.sporekart.identity.domain.User.builder()
+                .id(adminId)
+                .fullName("Admin User")
+                .role(com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                .email("admin@sporekart.in")
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
+
+        byte[] pdf = orderService.generateInvoicePdf(orderId, adminId);
         assertNotNull(pdf);
         assertTrue(pdf.length > 0);
     }

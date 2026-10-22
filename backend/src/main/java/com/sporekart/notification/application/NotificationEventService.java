@@ -135,19 +135,40 @@ public class NotificationEventService {
                 .isAdminNotification(eventType.name().startsWith("ADMIN"))
                 .build();
 
-        NotificationEvent saved = notificationRepository.save(event);
+        NotificationEvent saved;
+        try {
+            saved = notificationRepository.save(event);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            log.info("Duplicate key race condition caught for deduplicationKey {}: returning existing event", deduplicationKey);
+            return notificationRepository.findByDeduplicationKey(deduplicationKey);
+        }
         log.info("Recorded notification event ID {} [{}] for Email: {}, Phone: {}, isAppNotification: true", saved.getId(), eventType, recipientEmail, recipientPhone);
 
-        // Immediate dispatch for external channels (skip email dispatch for internal admin operational events without recipient)
+        // Asynchronous post-commit dispatch for external channels (avoids holding DB locks during SMTP I/O)
         if (!event.isAdminNotification() || (event.getRecipientEmail() != null && event.getRecipientEmail().contains("@"))) {
-            try {
-                notificationWorkerProvider.ifAvailable(worker -> worker.dispatchNotification(saved));
-            } catch (Exception e) {
-                log.warn("Immediate notification dispatch deferred to background worker for ID {}: {}", saved.getId(), e.getMessage());
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                triggerAsyncDispatch(saved);
+                            }
+                        }
+                );
+            } else {
+                triggerAsyncDispatch(saved);
             }
         }
 
         return Optional.of(saved);
+    }
+
+    private void triggerAsyncDispatch(NotificationEvent event) {
+        try {
+            notificationWorkerProvider.ifAvailable(worker -> worker.dispatchNotificationAsync(event));
+        } catch (Exception e) {
+            log.warn("Asynchronous notification dispatch deferred to background outbox scheduler for ID {}: {}", event.getId(), e.getMessage());
+        }
     }
 
     private String resolveCategory(NotificationEventType eventType, String entityType) {

@@ -1,0 +1,308 @@
+{
+  "timestamp": "2026-10-17T19:36:22Z",
+  "summary": {
+    "total": 33,
+    "passed": 33,
+    "failed": 0,
+    "passRate": "100.0%"
+  },
+  "results": [
+    {
+      "category": "Architecture",
+      "test_id": "PAY-01",
+      "description": "Payment provider architecture is active and responsive",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Architecture",
+      "test_id": "PAY-02",
+      "description": "Live financial transactions strictly avoided; Mock/Sandbox mode safely active",
+      "status": "PASS",
+      "expected": "MOCK_MODE_ACTIVE",
+      "actual": "MOCK_MODE_ACTIVE",
+      "details": ""
+    },
+    {
+      "category": "Initiation",
+      "test_id": "PAY-03",
+      "description": "Payment initiation creates Razorpay order reference in mock mode",
+      "status": "PASS",
+      "expected": "order_mock_*",
+      "actual": "order_mock_983dafdd",
+      "details": ""
+    },
+    {
+      "category": "Initiation",
+      "test_id": "PAY-04",
+      "description": "Payment amount and currency strictly match order total in INR",
+      "status": "PASS",
+      "expected": "INR 222.88",
+      "actual": "INR 222.88",
+      "details": ""
+    },
+    {
+      "category": "Initiation",
+      "test_id": "PAY-05",
+      "description": "Payment summary endpoint returns verified order details",
+      "status": "PASS",
+      "expected": "ORDER / 222.88",
+      "actual": "ORDER / 222.88",
+      "details": ""
+    },
+    {
+      "category": "Initiation",
+      "test_id": "PAY-06",
+      "description": "Payment initiation rejects non-existent order with 404/400",
+      "status": "PASS",
+      "expected": "400/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "Verification",
+      "test_id": "PAY-07",
+      "description": "Payment verification with authentic signature succeeds (isSuccess=true)",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Verification",
+      "test_id": "PAY-08",
+      "description": "Order transitions to PAID upon successful payment verification",
+      "status": "PASS",
+      "expected": "PAID",
+      "actual": "PAID",
+      "details": ""
+    },
+    {
+      "category": "Verification",
+      "test_id": "PAY-09",
+      "description": "Duplicate verification returns idempotent success without duplicate processing",
+      "status": "PASS",
+      "expected": "Payment already verified",
+      "actual": "Payment already verified",
+      "details": ""
+    },
+    {
+      "category": "FailureAndRetry",
+      "test_id": "PAY-10",
+      "description": "Payment verification rejects tampered signature (isSuccess=false)",
+      "status": "PASS",
+      "expected": "False",
+      "actual": "False",
+      "details": ""
+    },
+    {
+      "category": "FailureAndRetry",
+      "test_id": "PAY-11",
+      "description": "Order remains in PENDING_PAYMENT upon failed payment to permit customer retry",
+      "status": "PASS",
+      "expected": "PENDING_PAYMENT",
+      "actual": "PENDING_PAYMENT",
+      "details": ""
+    },
+    {
+      "category": "FailureAndRetry",
+      "test_id": "PAY-12",
+      "description": "Payment retry succeeds and transitions order to PAID",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Webhooks",
+      "test_id": "PAY-13",
+      "description": "Webhook endpoint rejects forged/invalid X-Razorpay-Signature with HTTP 400",
+      "status": "PASS",
+      "expected": "400/409",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Webhooks",
+      "test_id": "PAY-14",
+      "description": "Webhook payment.captured successfully processed and updates order state",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Webhooks",
+      "test_id": "PAY-15",
+      "description": "Order status confirmed as PAID via server-to-server webhook",
+      "status": "PASS",
+      "expected": "PAID",
+      "actual": "PAID",
+      "details": ""
+    },
+    {
+      "category": "Webhooks",
+      "test_id": "PAY-16",
+      "description": "Replayed webhook with identical event_id is safely ignored (idempotent ignore)",
+      "status": "PASS",
+      "expected": "idempotent ignore",
+      "actual": "Webhook event already processed (idempotent ignore)",
+      "details": ""
+    },
+    {
+      "category": "Webhooks",
+      "test_id": "PAY-17",
+      "description": "Webhook payment.failed event is handled and recorded in event ledger",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "PAY-18",
+      "description": "Payment verification rejects mismatched order reference (Potential Fraud)",
+      "status": "PASS",
+      "expected": "400/404/409",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "PAY-19",
+      "description": "Caller ownership verification prevents payment hijacking (HTTP 403 Forbidden)",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "Security",
+      "test_id": "PAY-20",
+      "description": "Non-owner customer blocked from viewing payment summary (HTTP 403)",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "Refunds",
+      "test_id": "PAY-21",
+      "description": "Cancelling paid order transitions status to REFUNDED and triggers wallet credit",
+      "status": "PASS",
+      "expected": "REFUNDED",
+      "actual": "REFUNDED",
+      "details": ""
+    },
+    {
+      "category": "Refunds",
+      "test_id": "PAY-22",
+      "description": "Customer wallet balance incremented by exact refund amount",
+      "status": "PASS",
+      "expected": "3012.88",
+      "actual": "3012.88",
+      "details": ""
+    },
+    {
+      "category": "Refunds",
+      "test_id": "PAY-23",
+      "description": "Duplicate cancellation/refund attempt on refunded order rejected (HTTP 409)",
+      "status": "PASS",
+      "expected": "400/409",
+      "actual": "409",
+      "details": ""
+    },
+    {
+      "category": "Refunds",
+      "test_id": "PAY-24",
+      "description": "Webhook refund.processed successfully recorded in payment event audit trail",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "PAY-25",
+      "description": "Wallet top-up intent successfully created via payment gateway",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "PAY-26",
+      "description": "Wallet top-up signature verification credits customer wallet balance",
+      "status": "PASS",
+      "expected": "SUCCESS",
+      "actual": "SUCCESS",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "PAY-27",
+      "description": "Full wallet checkout payment successfully settles order without gateway redirect",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Wallet",
+      "test_id": "PAY-28",
+      "description": "Hybrid payment split deducts partial wallet balance and generates gateway order for remainder",
+      "status": "PASS",
+      "expected": "Split: remaining via gateway",
+      "actual": "fullyPaid=False, rzpOrder=order_mock_3ec20a07",
+      "details": ""
+    },
+    {
+      "category": "Enrollment",
+      "test_id": "PAY-29",
+      "description": "Training enrollment payment initiation creates gateway reference",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Enrollment",
+      "test_id": "PAY-30",
+      "description": "Training enrollment payment verification confirms student enrollment",
+      "status": "PASS",
+      "expected": "True",
+      "actual": "True",
+      "details": ""
+    },
+    {
+      "category": "Audit",
+      "test_id": "PAY-31",
+      "description": "Customer wallet transaction ledger records credits, debits and refund entries",
+      "status": "PASS",
+      "expected": "> 0 Entries",
+      "actual": "10 records",
+      "details": ""
+    },
+    {
+      "category": "Audit",
+      "test_id": "PAY-32",
+      "description": "Administrative platform finance overview reflects aggregated platform liability",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "Audit",
+      "test_id": "PAY-33",
+      "description": "Platform-wide master transaction ledger logs immutable audit trail",
+      "status": "PASS",
+      "expected": "> 0 Total Elements",
+      "actual": "58",
+      "details": ""
+    }
+  ]
+}

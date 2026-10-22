@@ -16,13 +16,15 @@ test.describe('PHASE 7: Customer Support Ticket & Helpdesk Lifecycle', () => {
     await raiseBtn.click();
 
     // Fill Ticket Modal Form
-    await page.getByPlaceholder(/Describe your issue|placeholder/i).first().fill('My fruiting block is day 5 and humidity is low. Please advise watering schedule.');
-    const subjectInput = page.locator('input[placeholder*="Subject"], input[type="text"]').first();
-    if (await subjectInput.isVisible()) {
-      await subjectInput.fill('Need cultivation assistance for oyster kit');
-    }
+    const subjectInput = page.getByPlaceholder(/Brief summary of your query/i);
+    await expect(subjectInput).toBeVisible({ timeout: 10000 });
+    await subjectInput.fill('Need cultivation assistance for oyster kit');
 
-    const submitBtn = page.getByRole('button', { name: /Submit Support Ticket|Submit/i }).first();
+    const messageInput = page.getByPlaceholder(/Describe your issue or question/i);
+    await expect(messageInput).toBeVisible({ timeout: 10000 });
+    await messageInput.fill('My fruiting block is day 5 and humidity is low. Please advise watering schedule.');
+
+    const submitBtn = page.getByRole('button', { name: /Submit Support Ticket/i }).first();
     await submitBtn.click();
 
     // Verify ticket appears in list

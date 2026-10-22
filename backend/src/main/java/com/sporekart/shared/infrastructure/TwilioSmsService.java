@@ -31,6 +31,9 @@ public class TwilioSmsService {
     @Value("${sporekart.twilio.messaging-service-sid:}")
     private String messagingServiceSid;
 
+    @Value("${sporekart.twilio.api-base-url:https://api.twilio.com/2010-04-01}")
+    private String apiBaseUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String sendSms(String recipientPhone, String messageText) {
@@ -43,7 +46,7 @@ public class TwilioSmsService {
 
         if (useRealTwilio && accountSid != null && !accountSid.isBlank() && authToken != null && !authToken.isBlank()) {
             try {
-                String twilioUrl = "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json";
+                String twilioUrl = apiBaseUrl + "/Accounts/" + accountSid + "/Messages.json";
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

@@ -1,0 +1,651 @@
+{
+  "timestamp": "2026-10-17T15:42:52Z",
+  "summary": {
+    "total": 71,
+    "passed": 71,
+    "failed": 0,
+    "skipped": 0,
+    "passRate": "100.0%"
+  },
+  "results": [
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-01",
+      "description": "Public product catalog browsing",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-02",
+      "description": "Public popular products browsing",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-03",
+      "description": "Customer adds item to cart",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-04",
+      "description": "Customer creates shipping address",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-05",
+      "description": "Customer lists saved addresses",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-06",
+      "description": "Customer updates own address",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-07",
+      "description": "Customer creates order from cart",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-08",
+      "description": "Customer views my orders",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-09",
+      "description": "Customer views own order details",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-10",
+      "description": "Customer cancels own unpaid order",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-11",
+      "description": "Customer initiates order payment",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-12",
+      "description": "Customer views payment summary",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-13",
+      "description": "Customer views wallet summary",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-14",
+      "description": "Customer views wallet balance",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-15",
+      "description": "Customer views wallet transaction ledger",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-16",
+      "description": "Customer enrolls in training batch",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-17",
+      "description": "Customer views my training bookings",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-18",
+      "description": "Customer views own enrollment details",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-19",
+      "description": "Cancellation policy blocked within 7 days of batch start (409 Conflict)",
+      "status": "PASS",
+      "expected": "409",
+      "actual": "409",
+      "details": "{'success': False, 'message': 'Enrollment cancellation is only permitted at least 7 days before the batch start date.', 'error': {'code': 'CONFLICT', 'message': 'Enrollment cancellation is only permitted at least 7 days before the batch start date.', 'requestId': '4863da3d-edb7-4964-a5af-fa1e23dba11c'}}"
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-20",
+      "description": "Customer checks pincode serviceability",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-21",
+      "description": "Customer creates support ticket",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-22",
+      "description": "Customer views my tickets",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-23",
+      "description": "Customer adds message to own ticket",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-24",
+      "description": "Customer closes own ticket with CSAT",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-25",
+      "description": "Customer views in-app notifications",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-26",
+      "description": "Customer views unread notification count",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-27",
+      "description": "Customer views own profile",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-28",
+      "description": "Customer views own capabilities",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Customer",
+      "test_id": "CUST-29",
+      "description": "Customer updates own profile details",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-01",
+      "description": "Admin views dashboard overview statistics",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-02",
+      "description": "Admin views platform finance summary",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-03",
+      "description": "Admin views product catalog for management",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-04",
+      "description": "Admin views full platform order queue",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-05",
+      "description": "Admin views financial transaction audit ledger",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-06",
+      "description": "Admin views customer withdrawal requests",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-07",
+      "description": "Admin performs manual wallet credit adjustment",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-08",
+      "description": "Admin views master enrollment registry",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-09",
+      "description": "Admin checks logistics serviceability",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-10",
+      "description": "Admin views customer support ticket queue",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-11",
+      "description": "Admin views outbox notification event stream",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-12",
+      "description": "Admin views customer accounts and capabilities",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Admin",
+      "test_id": "ADM-13",
+      "description": "Admin grants TRAINING capability to user",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-01",
+      "description": "Trainee browses masterclass courses",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-02",
+      "description": "Trainee browses batch schedules for course",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-03",
+      "description": "Trainee creates batch enrollment",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-04",
+      "description": "Duplicate enrollment prevention / idempotency",
+      "status": "PASS",
+      "expected": "Idempotent/200",
+      "actual": "200 (ID: 7419f44f-11fd-4586-8616-3fd574284bfd)",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-05",
+      "description": "Trainee initiates enrollment payment",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-06",
+      "description": "Trainee views registered training bookings",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Trainee",
+      "test_id": "TRN-07",
+      "description": "Trainee cancels future batch enrollment with capacity restoration",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-01",
+      "description": "Customer denied shipment creation (Admin-only)",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-02",
+      "description": "Trainee denied shipment creation (Admin-only)",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-03",
+      "description": "Anonymous denied shipment creation (Admin-only)",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-04",
+      "description": "Courier webhook rejects missing signature/token",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-05",
+      "description": "Courier webhook rejects forged token",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "workflow": "Courier",
+      "test_id": "COUR-06",
+      "description": "Courier webhook processes valid token with unknown AWB safely",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-01",
+      "description": "User B cannot view User A's order details",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-02",
+      "description": "User B cannot cancel User A's order",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-03",
+      "description": "User B cannot download User A's order invoice",
+      "status": "PASS",
+      "expected": "403/Forbidden",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-04",
+      "description": "User B cannot update User A's address",
+      "status": "PASS",
+      "expected": "403/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-05",
+      "description": "User B cannot delete User A's address",
+      "status": "PASS",
+      "expected": "403/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-06",
+      "description": "User B cannot view User A's support ticket",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-07",
+      "description": "User B cannot post messages to User A's support ticket",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-08",
+      "description": "User B cannot close User A's support ticket",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-09",
+      "description": "User B cannot view User A's training enrollment details",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-10",
+      "description": "User B cannot cancel User A's training enrollment",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "IDOR",
+      "test_id": "IDOR-11",
+      "description": "Anonymous cannot view User A's training enrollment details",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "workflow": "Elevation",
+      "test_id": "ELEV-01",
+      "description": "Customer cannot access /admin/orders",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Elevation",
+      "test_id": "ELEV-02",
+      "description": "Customer cannot access /admin/finance/overview",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Elevation",
+      "test_id": "ELEV-03",
+      "description": "Customer cannot access /admin/notifications",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Elevation",
+      "test_id": "ELEV-04",
+      "description": "Customer cannot link media (/media/link)",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "workflow": "Elevation",
+      "test_id": "ELEV-05",
+      "description": "Customer cannot delete media assets (/media/{id})",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    }
+  ]
+}

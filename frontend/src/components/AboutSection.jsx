@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Building2, Award, ArrowRight } from 'lucide-react';
 import { WhatsAppIcon, InstagramIcon } from './ContactSection';
 
-export default function AboutSection({ showLearnMore = false, isCompact = false }) {
+export default function AboutSection({ showLearnMore = false, isCompact = false, isH1 = false }) {
+  const HeadingTag = isH1 ? 'h1' : 'h2';
   return (
     <div className="bg-surface-white rounded-hero p-6 sm:p-12 border border-surface-border shadow-level-1 space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -11,10 +12,10 @@ export default function AboutSection({ showLearnMore = false, isCompact = false 
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-forest-900/10 border border-forest-900/20 text-forest-800 text-xs font-bold">
             <Building2 className="w-4 h-4 text-forest-700" /> Shriyap Enterprise • Davangere, KA
           </span>
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-typography-primary leading-tight">
+          <HeadingTag className="font-display font-extrabold text-3xl sm:text-4xl text-typography-primary leading-tight">
             Pioneering Organic Mushroom Supply & <br />
             <span className="text-forest-700">Grower Incubation in India</span>
-          </h2>
+          </HeadingTag>
           <p className="text-typography-secondary text-sm sm:text-base leading-relaxed">
             Managed by <strong>Shriyap Enterprise</strong>, Sporekart bridges the gap between laboratory mycology and commercial mushroom farming. We equip agricultural entrepreneurs and home growers with lab-certified mother spawn, climate-controlled farm blueprints, and direct market buyback linkages across India.
           </p>

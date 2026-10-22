@@ -56,7 +56,7 @@ test.describe('Verification of 4 Bug Fixes', () => {
     await authenticateInBrowser(page, null, true);
 
     // 2. Verify admin console is loaded
-    await expect(page.getByText(/Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
 
     // 3. Perform hard page reload on /admin to test hydration race condition
     await page.reload();
@@ -65,13 +65,13 @@ test.describe('Verification of 4 Bug Fixes', () => {
     await expect(page.getByText(/403 — Unauthorized Administrative Access/i)).toHaveCount(0);
 
     // 5. Assert that admin console loaded successfully after hydration
-    await expect(page.getByText(/Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/ROLE_ADMIN/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/SUPER ADMINISTRATOR|ROLE_ADMIN/i).first()).toBeVisible({ timeout: 10000 });
 
     // 6. Navigate directly via URL bar to /admin/inventory without prior tab clicking
     await page.goto('/admin/inventory');
     await expect(page.getByText(/403 — Unauthorized Administrative Access/i)).toHaveCount(0);
-    await expect(page.getByText(/Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('BUG 3 (VALIDATION-ADDR-01): Address Recipient Name Alphanumeric Acceptance', async ({ request }) => {

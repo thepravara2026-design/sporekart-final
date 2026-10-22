@@ -1,0 +1,773 @@
+{
+  "timestamp": "2026-10-17T19:26:37.450808",
+  "orphaned_records": {
+    "order_items_without_orders": {
+      "name": "order_items_without_orders",
+      "sql": "SELECT id, order_id FROM order_items WHERE order_id NOT IN (SELECT id FROM orders);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "order_items_without_variants": {
+      "name": "order_items_without_variants",
+      "sql": "SELECT id, product_variant_id FROM order_items WHERE product_variant_id NOT IN (SELECT id FROM product_variants);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"product_variant_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "orders_without_users": {
+      "name": "orders_without_users",
+      "sql": "SELECT id, user_id FROM orders WHERE user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "payments_with_invalid_order_id": {
+      "name": "payments_with_invalid_order_id",
+      "sql": "SELECT id, order_id FROM payments WHERE order_id IS NOT NULL AND order_id NOT IN (SELECT id FROM orders);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "payments_without_users": {
+      "name": "payments_without_users",
+      "sql": "SELECT id, user_id FROM payments WHERE user_id NOT IN (SELECT id FROM users);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"user_id\" does not exist', 'H': 'Perhaps you meant to reference the column \"payments.order_id\".', 'P': '12', 'F': 'parse_relation.c', 'L': '3723', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "payment_transactions_without_payments": {
+      "name": "payment_transactions_without_payments",
+      "sql": "SELECT id, payment_id FROM payment_transactions WHERE payment_id NOT IN (SELECT id FROM payments);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"payment_transactions\" does not exist', 'P': '28', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    },
+    "cart_items_without_carts": {
+      "name": "cart_items_without_carts",
+      "sql": "SELECT id, cart_id FROM cart_items WHERE cart_id NOT IN (SELECT id FROM carts);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "cart_items_without_variants": {
+      "name": "cart_items_without_variants",
+      "sql": "SELECT id, product_variant_id FROM cart_items WHERE product_variant_id NOT IN (SELECT id FROM product_variants);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"product_variant_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "cart_promotions_without_carts": {
+      "name": "cart_promotions_without_carts",
+      "sql": "SELECT id, cart_id FROM cart_promotions WHERE cart_id NOT IN (SELECT id FROM carts);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"cart_promotions\" does not exist', 'P': '25', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    },
+    "cart_promotions_without_promotions": {
+      "name": "cart_promotions_without_promotions",
+      "sql": "SELECT id, promotion_id FROM cart_promotions WHERE promotion_id NOT IN (SELECT id FROM promotions);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"cart_promotions\" does not exist', 'P': '30', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    },
+    "inventory_records_without_variants": {
+      "name": "inventory_records_without_variants",
+      "sql": "SELECT id, product_variant_id FROM inventory_records WHERE product_variant_id NOT IN (SELECT id FROM product_variants);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"product_variant_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "inventory_transactions_without_records": {
+      "name": "inventory_transactions_without_records",
+      "sql": "SELECT id, inventory_record_id FROM inventory_transactions WHERE inventory_record_id IS NOT NULL AND inventory_record_id NOT IN (SELECT id FROM inventory_records);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"inventory_transactions\" does not exist', 'P': '37', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    },
+    "shipments_without_orders": {
+      "name": "shipments_without_orders",
+      "sql": "SELECT id, order_id FROM shipments WHERE order_id NOT IN (SELECT id FROM orders);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "shipping_events_without_shipments": {
+      "name": "shipping_events_without_shipments",
+      "sql": "SELECT id, shipment_id FROM shipping_events WHERE shipment_id NOT IN (SELECT id FROM shipments);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"shipping_events\" does not exist', 'P': '29', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    },
+    "wallets_without_users": {
+      "name": "wallets_without_users",
+      "sql": "SELECT id, user_id FROM wallets WHERE user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "wallet_transactions_without_wallets": {
+      "name": "wallet_transactions_without_wallets",
+      "sql": "SELECT id, wallet_id FROM wallet_transactions WHERE wallet_id NOT IN (SELECT id FROM wallets);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "wallet_withdrawals_without_wallets": {
+      "name": "wallet_withdrawals_without_wallets",
+      "sql": "SELECT id, wallet_id FROM wallet_withdrawals WHERE wallet_id NOT IN (SELECT id FROM wallets);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "wallet_topup_intents_without_wallets": {
+      "name": "wallet_topup_intents_without_wallets",
+      "sql": "SELECT id, wallet_id FROM wallet_topup_intents WHERE wallet_id NOT IN (SELECT id FROM wallets);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"wallet_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "batches_without_courses": {
+      "name": "batches_without_courses",
+      "sql": "SELECT id, course_id FROM batches WHERE course_id NOT IN (SELECT id FROM courses);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "batch_schedules_without_batches": {
+      "name": "batch_schedules_without_batches",
+      "sql": "SELECT id, batch_id FROM batch_schedules WHERE batch_id NOT IN (SELECT id FROM batches);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "enrollments_without_batches": {
+      "name": "enrollments_without_batches",
+      "sql": "SELECT id, batch_id FROM enrollments WHERE batch_id NOT IN (SELECT id FROM batches);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "enrollments_without_users": {
+      "name": "enrollments_without_users",
+      "sql": "SELECT id, user_id FROM enrollments WHERE user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "certificates_without_enrollments": {
+      "name": "certificates_without_enrollments",
+      "sql": "SELECT id, enrollment_id FROM certificates WHERE enrollment_id NOT IN (SELECT id FROM enrollments);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "training_glimpses_without_batches": {
+      "name": "training_glimpses_without_batches",
+      "sql": "SELECT id, batch_id FROM training_glimpses WHERE batch_id IS NOT NULL AND batch_id NOT IN (SELECT id FROM batches);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"batch_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "product_variants_without_products": {
+      "name": "product_variants_without_products",
+      "sql": "SELECT id, product_id FROM product_variants WHERE product_id NOT IN (SELECT id FROM products);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_media_without_products": {
+      "name": "product_media_without_products",
+      "sql": "SELECT id, product_id FROM product_media WHERE product_id NOT IN (SELECT id FROM products);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_information_without_products": {
+      "name": "product_information_without_products",
+      "sql": "SELECT id, product_id FROM product_information WHERE product_id NOT IN (SELECT id FROM products);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_offers_without_products": {
+      "name": "product_offers_without_products",
+      "sql": "SELECT id, product_id FROM product_offers WHERE product_id NOT IN (SELECT id FROM products);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_reviews_without_products": {
+      "name": "product_reviews_without_products",
+      "sql": "SELECT id, product_id FROM product_reviews WHERE product_id NOT IN (SELECT id FROM products);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_reviews_without_users": {
+      "name": "product_reviews_without_users",
+      "sql": "SELECT id, user_id FROM product_reviews WHERE user_id NOT IN (SELECT id FROM users);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"user_id\" does not exist', 'H': 'Perhaps you meant to reference the column \"product_reviews.order_id\".', 'P': '12', 'F': 'parse_relation.c', 'L': '3723', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "training_reviews_without_courses": {
+      "name": "training_reviews_without_courses",
+      "sql": "SELECT id, course_id FROM training_reviews WHERE course_id NOT IN (SELECT id FROM courses);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "training_reviews_without_users": {
+      "name": "training_reviews_without_users",
+      "sql": "SELECT id, user_id FROM training_reviews WHERE user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "support_tickets_without_users": {
+      "name": "support_tickets_without_users",
+      "sql": "SELECT id, user_id FROM support_tickets WHERE user_id IS NOT NULL AND user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "ticket_messages_without_tickets": {
+      "name": "ticket_messages_without_tickets",
+      "sql": "SELECT id, ticket_id FROM ticket_messages WHERE ticket_id NOT IN (SELECT id FROM support_tickets);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "customer_profiles_without_users": {
+      "name": "customer_profiles_without_users",
+      "sql": "SELECT id, user_id FROM customer_profiles WHERE user_id NOT IN (SELECT id FROM users);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "customer_addresses_without_profiles": {
+      "name": "customer_addresses_without_profiles",
+      "sql": "SELECT id, customer_profile_id FROM customer_addresses WHERE customer_profile_id NOT IN (SELECT id FROM customer_profiles);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"customer_profile_id\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "customer_capabilities_without_users": {
+      "name": "customer_capabilities_without_users",
+      "sql": "SELECT id, user_id FROM customer_capabilities WHERE user_id NOT IN (SELECT id FROM users);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"id\" does not exist', 'P': '8', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "blog_posts_without_categories": {
+      "name": "blog_posts_without_categories",
+      "sql": "SELECT id, category_id FROM blog_posts WHERE category_id IS NOT NULL AND category_id NOT IN (SELECT id FROM blog_categories);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "blog_posts_without_authors": {
+      "name": "blog_posts_without_authors",
+      "sql": "SELECT id, author_id FROM blog_posts WHERE author_id IS NOT NULL AND author_id NOT IN (SELECT id FROM blog_authors);",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "promotion_redemptions_without_promotions": {
+      "name": "promotion_redemptions_without_promotions",
+      "sql": "SELECT id, promotion_id FROM promotion_redemptions WHERE promotion_id NOT IN (SELECT id FROM promotions);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42P01', 'M': 'relation \"promotion_redemptions\" does not exist', 'P': '30', 'F': 'parse_relation.c', 'L': '1449', 'R': 'parserOpenTable'}",
+      "status": "ERROR"
+    }
+  },
+  "duplicate_records": {
+    "duplicate_user_emails": {
+      "name": "duplicate_user_emails",
+      "sql": "SELECT email, COUNT(*) as cnt FROM users GROUP BY lower(email) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"users.email\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_user_phones": {
+      "name": "duplicate_user_phones",
+      "sql": "SELECT phone, COUNT(*) as cnt FROM users WHERE phone IS NOT NULL AND phone != '' GROUP BY phone HAVING COUNT(*) > 1;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "duplicate_active_carts_per_user": {
+      "name": "duplicate_active_carts_per_user",
+      "sql": "SELECT user_id, COUNT(*) as cnt FROM carts WHERE is_active = true GROUP BY user_id HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"is_active\" does not exist', 'P': '50', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "duplicate_product_slugs": {
+      "name": "duplicate_product_slugs",
+      "sql": "SELECT slug, COUNT(*) as cnt FROM products GROUP BY lower(slug) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"products.slug\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_category_slugs": {
+      "name": "duplicate_category_slugs",
+      "sql": "SELECT slug, COUNT(*) as cnt FROM categories GROUP BY lower(slug) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"categories.slug\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_course_slugs": {
+      "name": "duplicate_course_slugs",
+      "sql": "SELECT slug, COUNT(*) as cnt FROM courses GROUP BY lower(slug) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"courses.slug\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_variant_skus": {
+      "name": "duplicate_variant_skus",
+      "sql": "SELECT sku, COUNT(*) as cnt FROM product_variants GROUP BY upper(sku) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"product_variants.sku\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_batch_codes": {
+      "name": "duplicate_batch_codes",
+      "sql": "SELECT batch_code, COUNT(*) as cnt FROM batches GROUP BY upper(batch_code) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"batches.batch_code\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_active_enrollments": {
+      "name": "duplicate_active_enrollments",
+      "sql": "SELECT user_id, batch_id, COUNT(*) as cnt FROM enrollments WHERE status NOT IN ('CANCELLED', 'REFUNDED') GROUP BY user_id, batch_id HAVING COUNT(*) > 1;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "duplicate_product_reviews": {
+      "name": "duplicate_product_reviews",
+      "sql": "SELECT user_id, product_id, COUNT(*) as cnt FROM product_reviews GROUP BY user_id, product_id HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"user_id\" does not exist', 'H': 'Perhaps you meant to reference the column \"product_reviews.order_id\".', 'P': '8', 'F': 'parse_relation.c', 'L': '3723', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "duplicate_training_reviews": {
+      "name": "duplicate_training_reviews",
+      "sql": "SELECT user_id, course_id, COUNT(*) as cnt FROM training_reviews GROUP BY user_id, course_id HAVING COUNT(*) > 1;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "duplicate_promotion_codes": {
+      "name": "duplicate_promotion_codes",
+      "sql": "SELECT code, COUNT(*) as cnt FROM promotions GROUP BY upper(code) HAVING COUNT(*) > 1;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42803', 'M': 'column \"promotions.code\" must appear in the GROUP BY clause or be used in an aggregate function', 'P': '8', 'F': 'parse_agg.c', 'L': '1439', 'R': 'check_ungrouped_columns_walker'}",
+      "status": "ERROR"
+    },
+    "duplicate_wallets_per_user": {
+      "name": "duplicate_wallets_per_user",
+      "sql": "SELECT user_id, COUNT(*) as cnt FROM wallets GROUP BY user_id HAVING COUNT(*) > 1;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    }
+  },
+  "unexpected_nulls": {
+    "orders_null_amounts": {
+      "name": "orders_null_amounts",
+      "sql": "SELECT id FROM orders WHERE subtotal IS NULL OR total_amount IS NULL OR order_status IS NULL OR user_id IS NULL;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"subtotal\" does not exist', 'P': '29', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "order_items_null_fields": {
+      "name": "order_items_null_fields",
+      "sql": "SELECT id FROM order_items WHERE order_id IS NULL OR product_variant_id IS NULL OR quantity IS NULL OR unit_price IS NULL OR total_price IS NULL;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"product_variant_id\" does not exist', 'P': '54', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "payments_null_fields": {
+      "name": "payments_null_fields",
+      "sql": "SELECT id FROM payments WHERE amount IS NULL OR payment_status IS NULL OR payment_method IS NULL OR user_id IS NULL;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"amount\" does not exist', 'P': '31', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "wallets_null_fields": {
+      "name": "wallets_null_fields",
+      "sql": "SELECT id FROM wallets WHERE user_id IS NULL OR available_balance IS NULL OR held_balance IS NULL;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"held_balance\" does not exist', 'P': '78', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "wallet_transactions_null_fields": {
+      "name": "wallet_transactions_null_fields",
+      "sql": "SELECT id FROM wallet_transactions WHERE wallet_id IS NULL OR amount IS NULL OR transaction_type IS NULL OR balance_before IS NULL OR balance_after IS NULL;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "product_variants_null_fields": {
+      "name": "product_variants_null_fields",
+      "sql": "SELECT id FROM product_variants WHERE product_id IS NULL OR sku IS NULL OR price IS NULL OR stock_quantity IS NULL;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"price\" does not exist', 'P': '76', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "batches_null_fields": {
+      "name": "batches_null_fields",
+      "sql": "SELECT id FROM batches WHERE course_id IS NULL OR batch_code IS NULL OR capacity IS NULL OR enrolled_count IS NULL OR start_date IS NULL OR status IS NULL;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "enrollments_null_fields": {
+      "name": "enrollments_null_fields",
+      "sql": "SELECT id FROM enrollments WHERE user_id IS NULL OR batch_id IS NULL OR status IS NULL;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    }
+  },
+  "decimal_precision_and_math": {
+    "negative_wallet_balances": {
+      "name": "negative_wallet_balances",
+      "sql": "SELECT id, user_id, available_balance, held_balance FROM wallets WHERE available_balance < 0 OR held_balance < 0;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"held_balance\" does not exist', 'P': '40', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "negative_order_amounts": {
+      "name": "negative_order_amounts",
+      "sql": "SELECT id, subtotal, total_amount, discount_amount, tax_amount, shipping_fee FROM orders WHERE subtotal < 0 OR total_amount < 0;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"subtotal\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "negative_order_item_prices": {
+      "name": "negative_order_item_prices",
+      "sql": "SELECT id, quantity, unit_price, total_price FROM order_items WHERE quantity <= 0 OR unit_price < 0 OR total_price < 0;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"unit_price\" does not exist', 'P': '22', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "negative_product_prices": {
+      "name": "negative_product_prices",
+      "sql": "SELECT id, sku, price, compare_at_price FROM product_variants WHERE price < 0 OR (compare_at_price IS NOT NULL AND compare_at_price < 0);",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"price\" does not exist', 'P': '17', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "negative_payment_amounts": {
+      "name": "negative_payment_amounts",
+      "sql": "SELECT id, amount FROM payments WHERE amount < 0;",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"amount\" does not exist', 'P': '12', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "negative_wallet_transaction_amounts": {
+      "name": "negative_wallet_transaction_amounts",
+      "sql": "SELECT id, amount FROM wallet_transactions WHERE amount < 0;",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "order_item_line_total_mismatch": {
+      "name": "order_item_line_total_mismatch",
+      "sql": "\n            SELECT id, order_id, quantity, unit_price, total_price, \n                   round((quantity * unit_price)::numeric, 2) as calculated_total,\n                   abs(total_price - round((quantity * unit_price)::numeric, 2)) as diff\n            FROM order_items\n            WHERE abs(total_price - round((quantity * unit_price)::numeric, 2)) > 0.01;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"unit_price\" does not exist', 'P': '45', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "order_subtotal_vs_items_mismatch": {
+      "name": "order_subtotal_vs_items_mismatch",
+      "sql": "\n            SELECT o.id, o.order_number, o.subtotal, \n                   COALESCE(SUM(oi.total_price), 0) as items_sum,\n                   abs(o.subtotal - COALESCE(SUM(oi.total_price), 0)) as diff\n            FROM orders o\n            LEFT JOIN order_items oi ON o.id = oi.order_id\n            GROUP BY o.id, o.order_number, o.subtotal\n            HAVING abs(o.subtotal - COALESCE(SUM(oi.total_price), 0)) > 0.01;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column o.subtotal does not exist', 'P': '43', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "order_total_formula_mismatch": {
+      "name": "order_total_formula_mismatch",
+      "sql": "\n            SELECT id, order_number, subtotal, discount_amount, tax_amount, shipping_fee, total_amount,\n                   round((subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0) + COALESCE(shipping_fee, 0))::numeric, 2) as calculated_total,\n                   abs(total_amount - round((subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0) + COALESCE(shipping_fee, 0))::numeric, 2)) as diff\n            FROM orders\n            WHERE abs(total_amount - round((subtotal - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0) + COALESCE(shipping_fee, 0))::numeric, 2)) > 0.01;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"subtotal\" does not exist', 'P': '39', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    }
+  },
+  "status_enum_values": {
+    "invalid_order_status": {
+      "name": "invalid_order_status",
+      "sql": "\n            SELECT DISTINCT order_status FROM orders \n            WHERE order_status NOT IN ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED', 'RETURNED');\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"order_status\" does not exist', 'P': '30', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "invalid_payment_status": {
+      "name": "invalid_payment_status",
+      "sql": "\n            SELECT DISTINCT payment_status FROM payments \n            WHERE payment_status NOT IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED');\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column \"payment_status\" does not exist', 'P': '30', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "invalid_wallet_tx_type": {
+      "name": "invalid_wallet_tx_type",
+      "sql": "\n            SELECT DISTINCT transaction_type FROM wallet_transactions \n            WHERE transaction_type NOT IN ('CREDIT', 'DEBIT', 'HOLD', 'RELEASE', 'REFUND', 'TOPUP', 'WITHDRAWAL', 'CASHBACK');\n        ",
+      "rows": [
+        [
+          "WALLET_PAYMENT"
+        ]
+      ],
+      "count": 1,
+      "status": "SUCCESS"
+    },
+    "invalid_batch_status": {
+      "name": "invalid_batch_status",
+      "sql": "\n            SELECT DISTINCT status FROM batches \n            WHERE status NOT IN ('UPCOMING', 'ENROLLING', 'ONGOING', 'COMPLETED', 'CANCELLED');\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "invalid_enrollment_status": {
+      "name": "invalid_enrollment_status",
+      "sql": "\n            SELECT DISTINCT status FROM enrollments \n            WHERE status NOT IN ('PENDING', 'CONFIRMED', 'ACTIVE', 'COMPLETED', 'CANCELLED');\n        ",
+      "rows": [
+        [
+          "PENDING_PAYMENT"
+        ]
+      ],
+      "count": 1,
+      "status": "SUCCESS"
+    },
+    "invalid_ticket_status": {
+      "name": "invalid_ticket_status",
+      "sql": "\n            SELECT DISTINCT status FROM support_tickets \n            WHERE status NOT IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'ON_HOLD');\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "invalid_ticket_priority": {
+      "name": "invalid_ticket_priority",
+      "sql": "\n            SELECT DISTINCT priority FROM support_tickets \n            WHERE priority NOT IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT');\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "invalid_user_role": {
+      "name": "invalid_user_role",
+      "sql": "\n            SELECT DISTINCT role FROM users \n            WHERE role NOT IN ('ROLE_USER', 'ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_VENDOR', 'ROLE_INSTRUCTOR');\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    }
+  },
+  "reconciliation_checks": {
+    "orders_without_order_items": {
+      "name": "orders_without_order_items",
+      "sql": "\n            SELECT o.id, o.order_number, o.created_at, o.order_status, o.total_amount\n            FROM orders o\n            LEFT JOIN order_items oi ON o.id = oi.order_id\n            WHERE oi.id IS NULL;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column o.order_status does not exist', 'P': '57', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "active_carts_without_cart_items": {
+      "name": "active_carts_without_cart_items",
+      "sql": "\n            SELECT c.id, c.user_id, c.created_at, c.updated_at\n            FROM carts c\n            LEFT JOIN cart_items ci ON c.id = ci.cart_id\n            WHERE c.is_active = true AND ci.id IS NULL;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column c.is_active does not exist', 'P': '165', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "paid_orders_without_successful_payment": {
+      "name": "paid_orders_without_successful_payment",
+      "sql": "\n            SELECT o.id, o.order_number, o.order_status, o.total_amount\n            FROM orders o\n            WHERE o.order_status IN ('PAID', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'COMPLETED')\n              AND NOT EXISTS (\n                  SELECT 1 FROM payments p \n                  WHERE p.order_id = o.id AND p.payment_status = 'COMPLETED'\n              );\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column o.order_status does not exist', 'P': '43', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "paid_orders_amount_mismatch": {
+      "name": "paid_orders_amount_mismatch",
+      "sql": "\n            SELECT o.id, o.order_number, o.order_status, o.total_amount, \n                   COALESCE(SUM(p.amount), 0) as total_paid,\n                   abs(o.total_amount - COALESCE(SUM(p.amount), 0)) as diff\n            FROM orders o\n            JOIN payments p ON p.order_id = o.id AND p.payment_status = 'COMPLETED'\n            WHERE o.order_status IN ('PAID', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'COMPLETED')\n            GROUP BY o.id, o.order_number, o.order_status, o.total_amount\n            HAVING abs(o.total_amount - COALESCE(SUM(p.amount), 0)) > 0.01;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column p.payment_status does not exist', 'P': '292', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "inventory_variant_stock_vs_inventory_records": {
+      "name": "inventory_variant_stock_vs_inventory_records",
+      "sql": "\n            SELECT pv.id as variant_id, pv.sku, pv.stock_quantity as variant_stock, \n                   ir.quantity as inventory_record_stock,\n                   (pv.stock_quantity - ir.quantity) as diff\n            FROM product_variants pv\n            JOIN inventory_records ir ON ir.product_variant_id = pv.id\n            WHERE pv.stock_quantity != ir.quantity;\n        ",
+      "error": "{'S': 'ERROR', 'V': 'ERROR', 'C': '42703', 'M': 'column ir.product_variant_id does not exist', 'P': '284', 'F': 'parse_relation.c', 'L': '3716', 'R': 'errorMissingColumn'}",
+      "status": "ERROR"
+    },
+    "wallet_transaction_running_balance_mismatch": {
+      "name": "wallet_transaction_running_balance_mismatch",
+      "sql": "\n            SELECT id, wallet_id, amount, transaction_type, balance_before, balance_after,\n                   CASE \n                     WHEN transaction_type IN ('CREDIT', 'TOPUP', 'REFUND', 'CASHBACK', 'RELEASE') \n                          THEN round((balance_before + amount)::numeric, 2)\n                     WHEN transaction_type IN ('DEBIT', 'WITHDRAWAL', 'HOLD') \n                          THEN round((balance_before - amount)::numeric, 2)\n                     ELSE balance_before\n                   END as expected_after,\n                   abs(balance_after - (\n                     CASE \n                       WHEN transaction_type IN ('CREDIT', 'TOPUP', 'REFUND', 'CASHBACK', 'RELEASE') \n                            THEN round((balance_before + amount)::numeric, 2)\n                       WHEN transaction_type IN ('DEBIT', 'WITHDRAWAL', 'HOLD') \n                            THEN round((balance_before - amount)::numeric, 2)\n                       ELSE balance_before\n                     END\n                   )) as diff\n            FROM wallet_transactions\n            WHERE abs(balance_after - (\n                     CASE \n                       WHEN transaction_type IN ('CREDIT', 'TOPUP', 'REFUND', 'CASHBACK', 'RELEASE') \n                            THEN round((balance_before + amount)::numeric, 2)\n                       WHEN transaction_type IN ('DEBIT', 'WITHDRAWAL', 'HOLD') \n                            THEN round((balance_before - amount)::numeric, 2)\n                       ELSE balance_before\n                     END\n                   )) > 0.01;\n        ",
+      "rows": [
+        [
+          "f5074e67-8c99-4f17-8ab5-023c41aa4375",
+          "43e83ba1-609e-4178-a455-6782ab89be9e",
+          "1062.00",
+          "WALLET_PAYMENT",
+          "1361.40",
+          "299.40",
+          "1361.40",
+          "1062.00"
+        ]
+      ],
+      "count": 1,
+      "status": "SUCCESS"
+    },
+    "wallet_balance_vs_latest_transaction": {
+      "name": "wallet_balance_vs_latest_transaction",
+      "sql": "\n            WITH latest_tx AS (\n                SELECT DISTINCT ON (wallet_id) wallet_id, balance_after\n                FROM wallet_transactions\n                ORDER BY wallet_id, created_at DESC, id DESC\n            )\n            SELECT w.id, w.user_id, w.available_balance, lt.balance_after,\n                   abs(w.available_balance - lt.balance_after) as diff\n            FROM wallets w\n            JOIN latest_tx lt ON w.id = lt.wallet_id\n            WHERE abs(w.available_balance - lt.balance_after) > 0.01;\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    },
+    "batch_enrolled_count_discrepancy": {
+      "name": "batch_enrolled_count_discrepancy",
+      "sql": "\n            SELECT b.id, b.batch_code, b.enrolled_count, b.capacity,\n                   COALESCE(e_cnt.actual_enrolled, 0) as actual_enrolled,\n                   abs(b.enrolled_count - COALESCE(e_cnt.actual_enrolled, 0)) as diff\n            FROM batches b\n            LEFT JOIN (\n                SELECT batch_id, COUNT(*) as actual_enrolled\n                FROM enrollments\n                WHERE status NOT IN ('CANCELLED', 'REFUNDED')\n                GROUP BY batch_id\n            ) e_cnt ON b.id = e_cnt.batch_id\n            WHERE abs(b.enrolled_count - COALESCE(e_cnt.actual_enrolled, 0)) != 0;\n        ",
+      "rows": [
+        [
+          "c9de5649-0485-443f-87d5-c396c6c4aed7",
+          "BATCH-COMM-2026-01",
+          5,
+          50,
+          10,
+          5
+        ]
+      ],
+      "count": 1,
+      "status": "SUCCESS"
+    },
+    "batch_overcapacity": {
+      "name": "batch_overcapacity",
+      "sql": "\n            SELECT id, batch_code, capacity, enrolled_count\n            FROM batches\n            WHERE enrolled_count > capacity;\n        ",
+      "rows": [],
+      "count": 0,
+      "status": "SUCCESS"
+    }
+  },
+  "missing_foreign_key_indexes": {
+    "name": "unindexed_foreign_keys",
+    "sql": "\n    SELECT\n        c.conrelid::regclass AS table_name,\n        c.conname AS foreign_key_name,\n        string_agg(a.attname, ', ') AS fk_columns\n    FROM pg_constraint c\n    JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)\n    WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace\n    GROUP BY c.conrelid, c.conname, c.conkey\n    HAVING NOT EXISTS (\n        SELECT 1\n        FROM pg_index i\n        WHERE i.indrelid = c.conrelid\n          AND c.conkey::smallint[] <@ i.indkey::smallint[]\n    )\n    ORDER BY table_name, foreign_key_name;\n    ",
+    "rows": [
+      [
+        "product_images",
+        "product_images_product_id_fkey",
+        "product_id"
+      ],
+      [
+        "training_slots",
+        "training_slots_course_id_fkey",
+        "course_id"
+      ],
+      [
+        "training_bookings",
+        "training_bookings_slot_id_fkey",
+        "slot_id"
+      ],
+      [
+        "training_bookings",
+        "training_bookings_user_id_fkey",
+        "user_id"
+      ],
+      [
+        "order_items",
+        "order_items_order_id_fkey",
+        "order_id"
+      ],
+      [
+        "order_items",
+        "order_items_variant_id_fkey",
+        "variant_id"
+      ],
+      [
+        "product_offers",
+        "product_offers_variant_id_fkey",
+        "variant_id"
+      ],
+      [
+        "product_media",
+        "product_media_variant_id_fkey",
+        "variant_id"
+      ],
+      [
+        "media_product_links",
+        "media_product_links_media_id_fkey",
+        "media_id"
+      ],
+      [
+        "media_product_links",
+        "media_product_links_variant_id_fkey",
+        "variant_id"
+      ],
+      [
+        "media_course_links",
+        "media_course_links_media_id_fkey",
+        "media_id"
+      ],
+      [
+        "enrollments",
+        "fk_enrollments_course_id",
+        "course_id"
+      ],
+      [
+        "attendances",
+        "fk_attendances_enrollment_id",
+        "enrollment_id"
+      ],
+      [
+        "attendances",
+        "fk_attendances_schedule_id",
+        "schedule_id"
+      ],
+      [
+        "ticket_messages",
+        "ticket_messages_ticket_id_fkey",
+        "ticket_id"
+      ],
+      [
+        "promotion_usages",
+        "promotion_usages_order_id_fkey",
+        "order_id"
+      ],
+      [
+        "product_reviews",
+        "product_reviews_moderated_by_fkey",
+        "moderated_by"
+      ],
+      [
+        "product_reviews",
+        "product_reviews_order_id_fkey",
+        "order_id"
+      ],
+      [
+        "product_reviews",
+        "product_reviews_product_variant_id_fkey",
+        "product_variant_id"
+      ],
+      [
+        "review_invitation_states",
+        "review_invitation_states_order_id_fkey",
+        "order_id"
+      ],
+      [
+        "training_reviews",
+        "training_reviews_batch_id_fkey",
+        "batch_id"
+      ],
+      [
+        "training_reviews",
+        "training_reviews_moderated_by_fkey",
+        "moderated_by"
+      ]
+    ],
+    "count": 22,
+    "status": "SUCCESS"
+  },
+  "api_vs_db_counts": [
+    {
+      "entity": "Products",
+      "api_url": "http://localhost:8080/api/v1/catalog/products",
+      "status_code": null,
+      "api_count": null,
+      "db_count": 32,
+      "match": false,
+      "notes": "API Error: timed out"
+    },
+    {
+      "entity": "Categories",
+      "api_url": "http://localhost:8080/api/v1/catalog/categories",
+      "status_code": 200,
+      "api_count": 5,
+      "db_count": 5,
+      "match": true,
+      "notes": ""
+    },
+    {
+      "entity": "Courses",
+      "api_url": "http://localhost:8080/api/v1/training/courses",
+      "status_code": 200,
+      "api_count": 4,
+      "db_count": 4,
+      "match": true,
+      "notes": ""
+    },
+    {
+      "entity": "Batches",
+      "api_url": "http://localhost:8080/api/v1/training/batches",
+      "status_code": 404,
+      "api_count": null,
+      "db_count": 4,
+      "match": false,
+      "notes": "HTTP 404"
+    },
+    {
+      "entity": "Blog Posts",
+      "api_url": "http://localhost:8080/api/v1/content/posts",
+      "status_code": 200,
+      "api_count": 3,
+      "db_count": 1,
+      "match": false,
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "entity": "Categories",
+    "api_endpoint": "GET /catalog/categories",
+    "db_count": 5,
+    "api_count": 5,
+    "match": true
+  },
+  {
+    "entity": "Products",
+    "api_endpoint": "GET /catalog/products?size=100",
+    "db_count": 32,
+    "api_count": 32,
+    "match": true
+  },
+  {
+    "entity": "Courses",
+    "api_endpoint": "GET /training/courses",
+    "db_count": 4,
+    "api_count": 4,
+    "match": true
+  },
+  {
+    "entity": "Batches",
+    "api_endpoint": "GET /training/courses/{id}/batches (aggregate)",
+    "db_count": 4,
+    "api_count": 4,
+    "match": true
+  },
+  {
+    "entity": "Blog Posts (Published)",
+    "api_endpoint": "GET /content/posts",
+    "db_count": 1,
+    "api_count": 1,
+    "match": true,
+    "notes": "Total in DB including drafts: 1"
+  }
+]

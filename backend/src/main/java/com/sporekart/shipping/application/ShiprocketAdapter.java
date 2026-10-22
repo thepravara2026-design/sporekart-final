@@ -1,5 +1,6 @@
 package com.sporekart.shipping.application;
 
+import com.sporekart.shipping.infrastructure.shiprocket.ShiprocketApiException;
 import com.sporekart.shipping.infrastructure.shiprocket.ShiprocketDtos;
 import com.sporekart.shipping.infrastructure.shiprocket.ShiprocketRestClient;
 import lombok.extern.slf4j.Slf4j;
@@ -177,7 +178,7 @@ public class ShiprocketAdapter implements ShippingProvider {
 
         } catch (Exception e) {
             log.error("Failed to execute live Shiprocket shipment creation: {}", e.getMessage());
-            throw new RuntimeException("Shiprocket API call failed: " + e.getMessage(), e);
+            throw new ShiprocketApiException("Shiprocket API call failed: " + e.getMessage(), e);
         }
     }
 
@@ -280,7 +281,7 @@ public class ShiprocketAdapter implements ShippingProvider {
                     .build();
         } catch (Exception e) {
             log.error("Failed to cancel Shiprocket shipment {}: {}", sanitizeForLog(providerShipmentId), e.getMessage());
-            throw new RuntimeException("Failed to cancel Shiprocket shipment: " + e.getMessage(), e);
+            throw new ShiprocketApiException("Failed to cancel Shiprocket shipment: " + e.getMessage(), e);
         }
     }
 

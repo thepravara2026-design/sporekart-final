@@ -9,11 +9,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductRankingService {
@@ -63,7 +65,9 @@ public class ProductRankingService {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Failed to load top selling product aggregations for ranking: {}", e.getMessage());
+        }
 
         // 2. Fetch Published Review Aggregations
         try {
@@ -82,7 +86,9 @@ public class ProductRankingService {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Failed to load review stats aggregations for ranking: {}", e.getMessage());
+        }
 
         return metricsMap;
     }

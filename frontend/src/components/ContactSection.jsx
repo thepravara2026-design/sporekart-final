@@ -14,7 +14,12 @@ export const InstagramIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-export default function ContactSection({ title = "Get in Touch with Sporekart", subtitle = "Have questions regarding bulk spawn seeds, climate-controlled farm blueprints, or course enrollments? Our team of certified agronomists is here to assist you." }) {
+export default function ContactSection({ 
+  title = "Get in Touch with Sporekart", 
+  subtitle = "Have questions regarding bulk spawn seeds, climate-controlled farm blueprints, or course enrollments? Our team of certified agronomists is here to assist you.",
+  isH1 = false
+}) {
+  const HeadingTag = isH1 ? 'h1' : 'h2';
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -56,9 +61,9 @@ export default function ContactSection({ title = "Get in Touch with Sporekart", 
               <Building2 className="w-3.5 h-3.5 text-forest-700" />
               <span>Shriyap Enterprise • Davangere, KA</span>
             </span>
-            <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-forest-900 leading-tight">
+            <HeadingTag className="font-display font-extrabold text-2xl sm:text-3xl text-forest-900 leading-tight">
               {title}
-            </h2>
+            </HeadingTag>
             <p className="text-typography-secondary text-xs sm:text-sm leading-relaxed">
               {subtitle}
             </p>

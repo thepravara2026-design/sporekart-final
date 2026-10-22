@@ -1,0 +1,542 @@
+{
+  "summary": {
+    "total": 59,
+    "passed": 56,
+    "failed": 0,
+    "noted": 3,
+    "timestamp": "2026-10-18 12:38:55"
+  },
+  "results": [
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-01",
+      "description": "Access protected profile without Authorization header",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-02",
+      "description": "Access with malformed Authorization header",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-03",
+      "description": "Access with expired JWT token",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-04",
+      "description": "Access with cryptographically tampered JWT signature",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-05",
+      "description": "Access with 'none' algorithm bypass JWT attempt",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHENTICATION",
+      "test_id": "AUTH-06",
+      "description": "Access protected profile with valid signed JWT",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-orders",
+      "description": "Anonymous access to Admin Orders Listing",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-orders",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Orders Listing",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-orders",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Orders Listing",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-customers",
+      "description": "Anonymous access to Admin Customers Directory",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-customers",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Customers Directory",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-customers",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Customers Directory",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-promotions",
+      "description": "Anonymous access to Admin Promotions Engine",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-promotions",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Promotions Engine",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-promotions",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Promotions Engine",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-analytics-overview",
+      "description": "Anonymous access to Admin Analytics Overview",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-analytics-overview",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Analytics Overview",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-analytics-overview",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Analytics Overview",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-finance-overview",
+      "description": "Anonymous access to Admin Finance Overview",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-finance-overview",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Finance Overview",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-finance-overview",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Finance Overview",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-training-enrollments",
+      "description": "Anonymous access to Admin Training Enrollments",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-training-enrollments",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Training Enrollments",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-training-enrollments",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Training Enrollments",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ANON--admin-reviews",
+      "description": "Anonymous access to Admin Product Reviews Management",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-CUST--admin-reviews",
+      "description": "Customer (ROLE_CUSTOMER) access to Admin Product Reviews Management",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "AUTHORIZATION",
+      "test_id": "RBAC-ADMIN--admin-reviews",
+      "description": "Administrator (ROLE_ADMIN) access to Admin Product Reviews Management",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ORDER-01",
+      "description": "Customer B attempting to read Customer A's Order",
+      "status": "SKIPPED",
+      "expected": "403",
+      "actual": "No order fixture",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ORDER-02",
+      "description": "Customer B attempting to cancel Customer A's Order",
+      "status": "SKIPPED",
+      "expected": "403",
+      "actual": "No order fixture",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ORDER-03",
+      "description": "Customer B downloading Customer A's Order Invoice",
+      "status": "SKIPPED",
+      "expected": "403",
+      "actual": "No order fixture",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ADDR-01",
+      "description": "Customer B updating Customer A's Saved Address",
+      "status": "PASS",
+      "expected": "403/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ADDR-02",
+      "description": "Customer B deleting Customer A's Saved Address",
+      "status": "PASS",
+      "expected": "403/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ADDR-03",
+      "description": "Customer B referencing Customer A's Address during checkout",
+      "status": "PASS",
+      "expected": "400/403/404",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-WALLET-01",
+      "description": "Wallet state isolated per authenticated user principal",
+      "status": "PASS",
+      "expected": "Strict isolation",
+      "actual": "A: 200, B: 200",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-TICKET-01",
+      "description": "Customer B attempting to view Customer A's Support Ticket",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-TICKET-02",
+      "description": "Customer B posting message to Customer A's Support Ticket",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ENROLL-01",
+      "description": "Customer B viewing Customer A's Training Enrollment",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "IDOR_BOLA",
+      "test_id": "IDOR-ENROLL-02",
+      "description": "Customer B cancelling Customer A's Training Enrollment",
+      "status": "PASS",
+      "expected": "403",
+      "actual": "403",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "SQLI-01",
+      "description": "Product search query parameter with SQL meta-characters",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "SQLI-02",
+      "description": "Category query parameter with SQL UNION injection probe",
+      "status": "PASS",
+      "expected": "200/400",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "VALID-01",
+      "description": "Malformed UUID in path parameter (/products/not-a-valid-uuid)",
+      "status": "PASS",
+      "expected": "400/404",
+      "actual": "404",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "VALID-02",
+      "description": "Negative quantity validation in cart addition",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "VALID-03",
+      "description": "Invalid phone number validation in address creation",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "SQLI_INPUT",
+      "test_id": "VALID-04",
+      "description": "Invalid postal code validation in address creation",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "XSS_DOM",
+      "test_id": "XSS-01",
+      "description": "Stored XSS payload handling & JSON Content-Type enforcement",
+      "status": "PASS",
+      "expected": "application/json",
+      "actual": "application/json",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-SR-01",
+      "description": "Shiprocket webhook without authentication token",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-SR-02",
+      "description": "Shiprocket webhook with forged authentication token",
+      "status": "PASS",
+      "expected": "401",
+      "actual": "401",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-SR-03",
+      "description": "Shiprocket webhook with legitimate secret token",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-RZP-01",
+      "description": "Razorpay webhook missing X-Razorpay-Signature header",
+      "status": "PASS",
+      "expected": "400/401/403",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-RZP-02",
+      "description": "Razorpay webhook with arbitrary forged HMAC signature rejection",
+      "status": "PASS",
+      "expected": "400",
+      "actual": "400",
+      "details": ""
+    },
+    {
+      "category": "WEBHOOK",
+      "test_id": "WH-SR-04",
+      "description": "Shiprocket webhook with JSON array scans format",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "HEADERS",
+      "test_id": "HDR-01",
+      "description": "X-Content-Type-Options: nosniff presence",
+      "status": "PASS",
+      "expected": "nosniff",
+      "actual": "nosniff",
+      "details": ""
+    },
+    {
+      "category": "HEADERS",
+      "test_id": "HDR-02",
+      "description": "X-Frame-Options clickjacking protection",
+      "status": "PASS",
+      "expected": "SAMEORIGIN",
+      "actual": "SAMEORIGIN",
+      "details": ""
+    },
+    {
+      "category": "HEADERS",
+      "test_id": "HDR-03",
+      "description": "Content-Security-Policy (CSP) header enforcement",
+      "status": "PASS",
+      "expected": "CSP defined",
+      "actual": "default-src 'self'; frame-ancestors 'self'; object-src 'none';",
+      "details": ""
+    },
+    {
+      "category": "HEADERS",
+      "test_id": "HDR-04",
+      "description": "Referrer-Policy header enforcement",
+      "status": "PASS",
+      "expected": "strict-origin-when-cross-origin",
+      "actual": "strict-origin-when-cross-origin",
+      "details": ""
+    },
+    {
+      "category": "HEADERS",
+      "test_id": "HDR-05",
+      "description": "Permissions-Policy header enforcement",
+      "status": "PASS",
+      "expected": "Permissions policy defined",
+      "actual": "camera=(), microphone=(), geolocation=()",
+      "details": ""
+    },
+    {
+      "category": "CORS",
+      "test_id": "CORS-01",
+      "description": "CORS preflight handling for authorized frontend origin (localhost:5173)",
+      "status": "PASS",
+      "expected": "200/204",
+      "actual": "200",
+      "details": ""
+    },
+    {
+      "category": "SENSITIVE_DATA",
+      "test_id": "SENS-01",
+      "description": "Customer profile DTO excludes password hashes / secrets",
+      "status": "PASS",
+      "expected": "No sensitive keys",
+      "actual": "Keys: ['id', 'userId', 'gstin', 'farmSizeSqft', 'hasTrainingCapability', 'trainingCapabilityGrantedAt', 'capabilities', 'createdAt']",
+      "details": ""
+    },
+    {
+      "category": "SENSITIVE_DATA",
+      "test_id": "SENS-02",
+      "description": "Spring Actuator /actuator/env access restriction",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": "401",
+      "details": ""
+    }
+  ]
+}

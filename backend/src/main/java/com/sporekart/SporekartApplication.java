@@ -10,7 +10,9 @@ import java.util.List;
 
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
@@ -54,7 +56,7 @@ public class SporekartApplication {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Warning: Could not read .env file: " + e.getMessage());
+            log.warn("Could not read .env file: {}", e.getMessage());
         }
     }
 }

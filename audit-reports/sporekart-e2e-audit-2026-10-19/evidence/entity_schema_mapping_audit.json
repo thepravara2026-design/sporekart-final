@@ -1,0 +1,5249 @@
+{
+  "total_jpa_entities": 55,
+  "total_db_tables": 61,
+  "missing_tables_in_db": [],
+  "tables_without_entity": [
+    "blog_post_tags",
+    "customer_capabilities",
+    "flyway_schema_history",
+    "product_images",
+    "training_bookings",
+    "training_slots"
+  ],
+  "column_discrepancies_count": 37,
+  "column_discrepancies": [
+    {
+      "entity": "Cart",
+      "table": "carts",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Cart",
+      "table": "carts",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "CartItem",
+      "table": "cart_items",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "CartItem",
+      "table": "cart_items",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Product",
+      "table": "products",
+      "field": "productInformation",
+      "column": "product_information",
+      "issue": "Column NOT found in DB table!"
+    },
+    {
+      "entity": "NotificationEvent",
+      "table": "notification_events",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "NotificationEvent",
+      "table": "notification_events",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Order",
+      "table": "orders",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Order",
+      "table": "orders",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "OrderEvent",
+      "table": "order_events",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Payment",
+      "table": "payments",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Payment",
+      "table": "payments",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "PaymentEvent",
+      "table": "payment_events",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Promotion",
+      "table": "promotions",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Promotion",
+      "table": "promotions",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "PromotionUsage",
+      "table": "promotion_usages",
+      "field": "usedAt",
+      "column": "used_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "ProductReview",
+      "table": "product_reviews",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "ProductReview",
+      "table": "product_reviews",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "ProductReviewImage",
+      "table": "product_review_images",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "ReviewInvitationState",
+      "table": "review_invitation_states",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "ReviewInvitationState",
+      "table": "review_invitation_states",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Shipment",
+      "table": "shipments",
+      "field": "orderNumber",
+      "column": "order_number",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Shipment",
+      "table": "shipments",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Shipment",
+      "table": "shipments",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Course",
+      "table": "courses",
+      "field": "durationDays",
+      "column": "duration_days",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Course",
+      "table": "courses",
+      "field": "feeInr",
+      "column": "fee_inr",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Course",
+      "table": "courses",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Course",
+      "table": "courses",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "TrainingReview",
+      "table": "training_reviews",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "TrainingReview",
+      "table": "training_reviews",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Wallet",
+      "table": "wallets",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "Wallet",
+      "table": "wallets",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "WalletTransaction",
+      "table": "wallet_transactions",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "WalletTransaction",
+      "table": "wallet_transactions",
+      "field": "processedAt",
+      "column": "processed_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "WalletTransaction",
+      "table": "wallet_transactions",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "WalletWithdrawal",
+      "table": "wallet_withdrawals",
+      "field": "createdAt",
+      "column": "created_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    },
+    {
+      "entity": "WalletWithdrawal",
+      "table": "wallet_withdrawals",
+      "field": "updatedAt",
+      "column": "updated_at",
+      "issue": "JPA nullable=false but DB is nullable"
+    }
+  ],
+  "field_mappings": {
+    "AdminAuditLog": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "adminUserId",
+        "field_type": "UUID",
+        "column_name": "admin_user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "action",
+        "field_type": "String",
+        "column_name": "action",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "resourceType",
+        "field_type": "String",
+        "column_name": "resource_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "resourceId",
+        "field_type": "String",
+        "column_name": "resource_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "oldValue",
+        "field_type": "String",
+        "column_name": "old_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "newValue",
+        "field_type": "String",
+        "column_name": "new_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "details",
+        "field_type": "String",
+        "column_name": "details",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "ipAddress",
+        "field_type": "String",
+        "column_name": "ip_address",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "AnalyticsEvent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventName",
+        "field_type": "String",
+        "column_name": "event_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metricValue",
+        "field_type": "BigDecimal",
+        "column_name": "metric_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "referenceId",
+        "field_type": "String",
+        "column_name": "reference_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventDataJson",
+        "field_type": "String",
+        "column_name": "event_data_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "AnalyticsMetric": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventName",
+        "field_type": "String",
+        "column_name": "event_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metricValue",
+        "field_type": "Double",
+        "column_name": "metric_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Cart": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sessionId",
+        "field_type": "String",
+        "column_name": "session_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "appliedPromoCode",
+        "field_type": "String",
+        "column_name": "applied_promo_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "CartItem": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "cart",
+        "field_type": "Cart",
+        "column_name": "cart_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "quantity",
+        "field_type": "Integer",
+        "column_name": "quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "unitPriceInr",
+        "field_type": "BigDecimal",
+        "column_name": "unit_price_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "Category": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "imageUrl",
+        "field_type": "String",
+        "column_name": "image_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "InventoryAuditEvent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventType",
+        "field_type": "InventoryEventType",
+        "column_name": "event_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "quantityChanged",
+        "field_type": "int",
+        "column_name": "quantity_changed",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "availableQuantityAfter",
+        "field_type": "int",
+        "column_name": "available_quantity_after",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reservedQuantityAfter",
+        "field_type": "int",
+        "column_name": "reserved_quantity_after",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "soldQuantityAfter",
+        "field_type": "int",
+        "column_name": "sold_quantity_after",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "referenceId",
+        "field_type": "String",
+        "column_name": "reference_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reason",
+        "field_type": "String",
+        "column_name": "reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdBy",
+        "field_type": "String",
+        "column_name": "created_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "InventoryRecord": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "availableQuantity",
+        "field_type": "int",
+        "column_name": "available_quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reservedQuantity",
+        "field_type": "int",
+        "column_name": "reserved_quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "soldQuantity",
+        "field_type": "int",
+        "column_name": "sold_quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "version",
+        "field_type": "Long",
+        "column_name": "version",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Product": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "category",
+        "field_type": "Category",
+        "column_name": "category_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "title",
+        "field_type": "String",
+        "column_name": "title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productType",
+        "field_type": "ProductType",
+        "column_name": "product_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "hsnCode",
+        "field_type": "String",
+        "column_name": "hsn_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metaTitle",
+        "field_type": "String",
+        "column_name": "meta_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metaDescription",
+        "field_type": "String",
+        "column_name": "meta_description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "canonicalUrl",
+        "field_type": "String",
+        "column_name": "canonical_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productInformation",
+        "field_type": "ProductInformation",
+        "column_name": "product_information",
+        "exists_in_db": false,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": [
+          "Column NOT found in DB table!"
+        ]
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "ProductInformation": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "product",
+        "field_type": "Product",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "manufacturerDetails",
+        "field_type": "String",
+        "column_name": "manufacturer_details",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "packerDetails",
+        "field_type": "String",
+        "column_name": "packer_details",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "marketerDetails",
+        "field_type": "String",
+        "column_name": "marketer_details",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "customerCareDetails",
+        "field_type": "String",
+        "column_name": "customer_care_details",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "netQuantity",
+        "field_type": "String",
+        "column_name": "net_quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "unitOfMeasure",
+        "field_type": "String",
+        "column_name": "unit_of_measure",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "fssaiLicenseNumber",
+        "field_type": "String",
+        "column_name": "fssai_license_number",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "foodCategory",
+        "field_type": "String",
+        "column_name": "food_category",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "ingredients",
+        "field_type": "String",
+        "column_name": "ingredients",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "allergenInfo",
+        "field_type": "String",
+        "column_name": "allergen_info",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "nutritionalInfoJson",
+        "field_type": "String",
+        "column_name": "nutritional_info_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "servingSize",
+        "field_type": "String",
+        "column_name": "serving_size",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "mushroomSpecies",
+        "field_type": "String",
+        "column_name": "mushroom_species",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "cultivationMethod",
+        "field_type": "String",
+        "column_name": "cultivation_method",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "strainVariety",
+        "field_type": "String",
+        "column_name": "strain_variety",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "recommendedSubstrate",
+        "field_type": "String",
+        "column_name": "recommended_substrate",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "inoculationGuidance",
+        "field_type": "String",
+        "column_name": "inoculation_guidance",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "kitContents",
+        "field_type": "String",
+        "column_name": "kit_contents",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "cultivationCycleDays",
+        "field_type": "Integer",
+        "column_name": "cultivation_cycle_days",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "environmentRequirements",
+        "field_type": "String",
+        "column_name": "environment_requirements",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "storageInstructions",
+        "field_type": "String",
+        "column_name": "storage_instructions",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "storageTemperatureGuidance",
+        "field_type": "String",
+        "column_name": "storage_temperature_guidance",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shelfLifeGuidance",
+        "field_type": "String",
+        "column_name": "shelf_life_guidance",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "handlingInstructions",
+        "field_type": "String",
+        "column_name": "handling_instructions",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "safetyWarnings",
+        "field_type": "String",
+        "column_name": "safety_warnings",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "ProductMedia": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "product",
+        "field_type": "Product",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "mediaUrl",
+        "field_type": "String",
+        "column_name": "media_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isPrimary",
+        "field_type": "boolean",
+        "column_name": "is_primary",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "displayOrder",
+        "field_type": "int",
+        "column_name": "display_order",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "ProductOffer": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "product",
+        "field_type": "Product",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "offerName",
+        "field_type": "String",
+        "column_name": "offer_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "discountPercent",
+        "field_type": "BigDecimal",
+        "column_name": "discount_percent",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "discountAmountInr",
+        "field_type": "BigDecimal",
+        "column_name": "discount_amount_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "validFrom",
+        "field_type": "LocalDateTime",
+        "column_name": "valid_from",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "validTo",
+        "field_type": "LocalDateTime",
+        "column_name": "valid_to",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "ProductVariant": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "product",
+        "field_type": "Product",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantName",
+        "field_type": "String",
+        "column_name": "variant_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sku",
+        "field_type": "String",
+        "column_name": "sku",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "priceInr",
+        "field_type": "BigDecimal",
+        "column_name": "price_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "compareAtPriceInr",
+        "field_type": "BigDecimal",
+        "column_name": "compare_at_price_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "stockQuantity",
+        "field_type": "int",
+        "column_name": "stock_quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Article": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "title",
+        "field_type": "String",
+        "column_name": "title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "bodyMarkdown",
+        "field_type": "String",
+        "column_name": "body_markdown",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "BlogAuthor": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "bio",
+        "field_type": "String",
+        "column_name": "bio",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "avatarUrl",
+        "field_type": "String",
+        "column_name": "avatar_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "email",
+        "field_type": "String",
+        "column_name": "email",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "BlogCategory": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "BlogPost": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "title",
+        "field_type": "String",
+        "column_name": "title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "summary",
+        "field_type": "String",
+        "column_name": "summary",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "content",
+        "field_type": "String",
+        "column_name": "content",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "author",
+        "field_type": "BlogAuthor",
+        "column_name": "author_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "category",
+        "field_type": "BlogCategory",
+        "column_name": "category_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "featuredMediaUrl",
+        "field_type": "String",
+        "column_name": "featured_media_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "featuredMediaAltText",
+        "field_type": "String",
+        "column_name": "featured_media_alt_text",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metaTitle",
+        "field_type": "String",
+        "column_name": "meta_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metaDescription",
+        "field_type": "String",
+        "column_name": "meta_description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "canonicalUrl",
+        "field_type": "String",
+        "column_name": "canonical_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "publishedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "published_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "scheduledPublishAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "scheduled_publish_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "BlogTag": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "CustomerAddress": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "recipientName",
+        "field_type": "String",
+        "column_name": "recipient_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "phone",
+        "field_type": "String",
+        "column_name": "phone",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "alternatePhone",
+        "field_type": "String",
+        "column_name": "alternate_phone",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "line1",
+        "field_type": "String",
+        "column_name": "line1",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "line2",
+        "field_type": "String",
+        "column_name": "line2",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "city",
+        "field_type": "String",
+        "column_name": "city",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "state",
+        "field_type": "String",
+        "column_name": "state",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "pincode",
+        "field_type": "String",
+        "column_name": "pincode",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isDefault",
+        "field_type": "boolean",
+        "column_name": "is_default",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "CustomerProfile": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "gstin",
+        "field_type": "String",
+        "column_name": "gstin",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "farmSizeSqft",
+        "field_type": "Integer",
+        "column_name": "farm_size_sqft",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "CustomerIdentity": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "provider",
+        "field_type": "IdentityProvider",
+        "column_name": "provider",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "providerSubject",
+        "field_type": "String",
+        "column_name": "provider_subject",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Otp": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "identifier",
+        "field_type": "String",
+        "column_name": "identifier",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "otpCode",
+        "field_type": "String",
+        "column_name": "otp_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "expiresAt",
+        "field_type": "LocalDateTime",
+        "column_name": "expires_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isUsed",
+        "field_type": "boolean",
+        "column_name": "is_used",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "attemptCount",
+        "field_type": "int",
+        "column_name": "attempt_count",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "consumed",
+        "field_type": "boolean",
+        "column_name": "consumed",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "otpType",
+        "field_type": "OtpType",
+        "column_name": "otp_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "User": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "phone",
+        "field_type": "String",
+        "column_name": "phone",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "email",
+        "field_type": "String",
+        "column_name": "email",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "firstName",
+        "field_type": "String",
+        "column_name": "first_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "lastName",
+        "field_type": "String",
+        "column_name": "last_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "passwordHash",
+        "field_type": "String",
+        "column_name": "password_hash",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "fullName",
+        "field_type": "String",
+        "column_name": "full_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "role",
+        "field_type": "UserRole",
+        "column_name": "role",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isVerified",
+        "field_type": "boolean",
+        "column_name": "is_verified",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isEmailVerified",
+        "field_type": "boolean",
+        "column_name": "is_email_verified",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isPhoneVerified",
+        "field_type": "boolean",
+        "column_name": "is_phone_verified",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "MediaAsset": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "storageKey",
+        "field_type": "String",
+        "column_name": "storage_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "originalFilename",
+        "field_type": "String",
+        "column_name": "original_filename",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "mimeType",
+        "field_type": "String",
+        "column_name": "mime_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sizeBytes",
+        "field_type": "long",
+        "column_name": "size_bytes",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "width",
+        "field_type": "Integer",
+        "column_name": "width",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "height",
+        "field_type": "Integer",
+        "column_name": "height",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "checksum",
+        "field_type": "String",
+        "column_name": "checksum",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "altText",
+        "field_type": "String",
+        "column_name": "alt_text",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "deletedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "deleted_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdBy",
+        "field_type": "UUID",
+        "column_name": "created_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "MediaCourseLink": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "mediaId",
+        "field_type": "UUID",
+        "column_name": "media_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courseId",
+        "field_type": "UUID",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "MediaProductLink": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "mediaId",
+        "field_type": "UUID",
+        "column_name": "media_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productId",
+        "field_type": "UUID",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isPrimary",
+        "field_type": "boolean",
+        "column_name": "is_primary",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "displayOrder",
+        "field_type": "int",
+        "column_name": "display_order",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "NotificationEvent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventType",
+        "field_type": "NotificationEventType",
+        "column_name": "event_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "entityType",
+        "field_type": "String",
+        "column_name": "entity_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "entityId",
+        "field_type": "UUID",
+        "column_name": "entity_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "recipientEmail",
+        "field_type": "String",
+        "column_name": "recipient_email",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "recipientPhone",
+        "field_type": "String",
+        "column_name": "recipient_phone",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "recipientName",
+        "field_type": "String",
+        "column_name": "recipient_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "templateKey",
+        "field_type": "String",
+        "column_name": "template_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "subject",
+        "field_type": "String",
+        "column_name": "subject",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "payloadJson",
+        "field_type": "String",
+        "column_name": "payload_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "lastAttemptAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "last_attempt_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sentAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "sent_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "failedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "failed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "errorMessage",
+        "field_type": "String",
+        "column_name": "error_message",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "providerMessageId",
+        "field_type": "String",
+        "column_name": "provider_message_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "smsSentAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "sms_sent_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "smsFailedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "sms_failed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "smsErrorMessage",
+        "field_type": "String",
+        "column_name": "sms_error_message",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "smsProviderMessageId",
+        "field_type": "String",
+        "column_name": "sms_provider_message_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "deduplicationKey",
+        "field_type": "String",
+        "column_name": "deduplication_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "readAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "read_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "actionUrl",
+        "field_type": "String",
+        "column_name": "action_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "Order": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sessionId",
+        "field_type": "String",
+        "column_name": "session_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderNumber",
+        "field_type": "String",
+        "column_name": "order_number",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "totalAmountInr",
+        "field_type": "BigDecimal",
+        "column_name": "total_amount_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "idempotencyKey",
+        "field_type": "String",
+        "column_name": "idempotency_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "cancellationReason",
+        "field_type": "String",
+        "column_name": "cancellation_reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayOrderId",
+        "field_type": "String",
+        "column_name": "razorpay_order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayPaymentId",
+        "field_type": "String",
+        "column_name": "razorpay_payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shippingAddressJson",
+        "field_type": "String",
+        "column_name": "shipping_address_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courierPartner",
+        "field_type": "String",
+        "column_name": "courier_partner",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "trackingNumber",
+        "field_type": "String",
+        "column_name": "tracking_number",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "trackingUrl",
+        "field_type": "String",
+        "column_name": "tracking_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shippedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "shipped_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "OrderEvent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "order",
+        "field_type": "Order",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "previousState",
+        "field_type": "OrderStatus",
+        "column_name": "previous_state",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "newState",
+        "field_type": "OrderStatus",
+        "column_name": "new_state",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reason",
+        "field_type": "String",
+        "column_name": "reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "OrderItem": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "order",
+        "field_type": "Order",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantId",
+        "field_type": "UUID",
+        "column_name": "variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productTitle",
+        "field_type": "String",
+        "column_name": "product_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "variantName",
+        "field_type": "String",
+        "column_name": "variant_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sku",
+        "field_type": "String",
+        "column_name": "sku",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "priceInr",
+        "field_type": "BigDecimal",
+        "column_name": "price_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "quantity",
+        "field_type": "Integer",
+        "column_name": "quantity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Payment": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayPaymentId",
+        "field_type": "String",
+        "column_name": "razorpay_payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayOrderId",
+        "field_type": "String",
+        "column_name": "razorpay_order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpaySignature",
+        "field_type": "String",
+        "column_name": "razorpay_signature",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "amountInr",
+        "field_type": "BigDecimal",
+        "column_name": "amount_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "PaymentEvent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "payment",
+        "field_type": "Payment",
+        "column_name": "payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventType",
+        "field_type": "String",
+        "column_name": "event_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventId",
+        "field_type": "String",
+        "column_name": "event_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventDataJson",
+        "field_type": "String",
+        "column_name": "event_data_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "Promotion": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "code",
+        "field_type": "String",
+        "column_name": "code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "type",
+        "field_type": "PromotionType",
+        "column_name": "type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "discountValue",
+        "field_type": "BigDecimal",
+        "column_name": "discount_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "maximumDiscount",
+        "field_type": "BigDecimal",
+        "column_name": "maximum_discount",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "minimumOrderValue",
+        "field_type": "BigDecimal",
+        "column_name": "minimum_order_value",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "startAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "start_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "endAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "end_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "status",
+        "field_type": "PromotionStatus",
+        "column_name": "status",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "usageLimit",
+        "field_type": "Integer",
+        "column_name": "usage_limit",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "perCustomerLimit",
+        "field_type": "Integer",
+        "column_name": "per_customer_limit",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "targetCategorySlug",
+        "field_type": "String",
+        "column_name": "target_category_slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "targetProductId",
+        "field_type": "UUID",
+        "column_name": "target_product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "targetType",
+        "field_type": "String",
+        "column_name": "target_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "targetBatchId",
+        "field_type": "UUID",
+        "column_name": "target_batch_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "targetCourseId",
+        "field_type": "UUID",
+        "column_name": "target_course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "PromotionUsage": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "promotionId",
+        "field_type": "UUID",
+        "column_name": "promotion_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sessionId",
+        "field_type": "String",
+        "column_name": "session_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "discountAmountInr",
+        "field_type": "BigDecimal",
+        "column_name": "discount_amount_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "usedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "used_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "ProductReview": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productId",
+        "field_type": "UUID",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productVariantId",
+        "field_type": "UUID",
+        "column_name": "product_variant_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "customerId",
+        "field_type": "UUID",
+        "column_name": "customer_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderItemId",
+        "field_type": "UUID",
+        "column_name": "order_item_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "rating",
+        "field_type": "Integer",
+        "column_name": "rating",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reviewTitle",
+        "field_type": "String",
+        "column_name": "review_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reviewText",
+        "field_type": "String",
+        "column_name": "review_text",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "moderatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "moderated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "moderatedBy",
+        "field_type": "UUID",
+        "column_name": "moderated_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "moderationReason",
+        "field_type": "String",
+        "column_name": "moderation_reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "ProductReviewImage": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "review",
+        "field_type": "ProductReview",
+        "column_name": "review_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "imageUrl",
+        "field_type": "String",
+        "column_name": "image_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "storageKey",
+        "field_type": "String",
+        "column_name": "storage_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "ReviewInvitationState": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "customerId",
+        "field_type": "UUID",
+        "column_name": "customer_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderItemId",
+        "field_type": "UUID",
+        "column_name": "order_item_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "dismissedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "dismissed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reviewedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "reviewed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "Shipment": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderNumber",
+        "field_type": "String",
+        "column_name": "order_number",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "providerShipmentId",
+        "field_type": "String",
+        "column_name": "shipment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "awbCode",
+        "field_type": "String",
+        "column_name": "awb_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courierName",
+        "field_type": "String",
+        "column_name": "courier_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courierId",
+        "field_type": "String",
+        "column_name": "courier_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "status",
+        "field_type": "ShipmentStatus",
+        "column_name": "status",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "pickupScheduledAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "pickup_scheduled_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "deliveredAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "delivered_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shippingAddressJson",
+        "field_type": "String",
+        "column_name": "shipping_address_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "ShipmentTracking": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shipment",
+        "field_type": "Shipment",
+        "column_name": "shipment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "awbCode",
+        "field_type": "String",
+        "column_name": "awb_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "currentStatus",
+        "field_type": "String",
+        "column_name": "current_status",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "location",
+        "field_type": "String",
+        "column_name": "location",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "activity",
+        "field_type": "String",
+        "column_name": "activity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "timestamp",
+        "field_type": "ZonedDateTime",
+        "column_name": "timestamp",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventDataJson",
+        "field_type": "String",
+        "column_name": "event_data_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "SupportTicket": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "ticketNumber",
+        "field_type": "String",
+        "column_name": "ticket_number",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "subject",
+        "field_type": "String",
+        "column_name": "subject",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "message",
+        "field_type": "String",
+        "column_name": "message",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "paymentId",
+        "field_type": "UUID",
+        "column_name": "payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "shipmentId",
+        "field_type": "UUID",
+        "column_name": "shipment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courseId",
+        "field_type": "UUID",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "productId",
+        "field_type": "UUID",
+        "column_name": "product_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "satisfactionRating",
+        "field_type": "Integer",
+        "column_name": "satisfaction_rating",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "satisfactionFeedback",
+        "field_type": "String",
+        "column_name": "satisfaction_feedback",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "closedBy",
+        "field_type": "String",
+        "column_name": "closed_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "closedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "closed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "LocalDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "TicketMessage": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "ticket",
+        "field_type": "SupportTicket",
+        "column_name": "ticket_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "senderId",
+        "field_type": "UUID",
+        "column_name": "sender_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "senderType",
+        "field_type": "String",
+        "column_name": "sender_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "senderName",
+        "field_type": "String",
+        "column_name": "sender_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "message",
+        "field_type": "String",
+        "column_name": "message",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "LocalDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Attendance": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrollment",
+        "field_type": "Enrollment",
+        "column_name": "enrollment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "schedule",
+        "field_type": "BatchSchedule",
+        "column_name": "schedule_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "markedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "marked_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Batch": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "course",
+        "field_type": "Course",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "batchCode",
+        "field_type": "String",
+        "column_name": "batch_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "startDate",
+        "field_type": "LocalDate",
+        "column_name": "start_date",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "endDate",
+        "field_type": "LocalDate",
+        "column_name": "end_date",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "capacity",
+        "field_type": "Integer",
+        "column_name": "capacity",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "status",
+        "field_type": "BatchStatus",
+        "column_name": "status",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "BatchSchedule": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "batch",
+        "field_type": "Batch",
+        "column_name": "batch_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "topic",
+        "field_type": "String",
+        "column_name": "topic",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "scheduledAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "scheduled_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "durationMinutes",
+        "field_type": "Integer",
+        "column_name": "duration_minutes",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "meetingLink",
+        "field_type": "String",
+        "column_name": "meeting_link",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Certificate": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrollment",
+        "field_type": "Enrollment",
+        "column_name": "enrollment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "certificateCode",
+        "field_type": "String",
+        "column_name": "certificate_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "issueDate",
+        "field_type": "LocalDate",
+        "column_name": "issue_date",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "certificateUrl",
+        "field_type": "String",
+        "column_name": "certificate_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Completion": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrollment",
+        "field_type": "Enrollment",
+        "column_name": "enrollment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courseId",
+        "field_type": "UUID",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "completedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "completed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "grade",
+        "field_type": "String",
+        "column_name": "grade",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Course": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "category",
+        "field_type": "CourseCategory",
+        "column_name": "category_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "title",
+        "field_type": "String",
+        "column_name": "title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "durationDays",
+        "field_type": "Integer",
+        "column_name": "duration_days",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "feeInr",
+        "field_type": "BigDecimal",
+        "column_name": "fee_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "CourseCategory": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "name",
+        "field_type": "String",
+        "column_name": "name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "slug",
+        "field_type": "String",
+        "column_name": "slug",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Enrollment": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "course",
+        "field_type": "Course",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "batch",
+        "field_type": "Batch",
+        "column_name": "batch_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "status",
+        "field_type": "EnrollmentStatus",
+        "column_name": "status",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "feePaidInr",
+        "field_type": "BigDecimal",
+        "column_name": "fee_paid_inr",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "paymentReference",
+        "field_type": "String",
+        "column_name": "payment_reference",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrolledAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "enrolled_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "TrainingGlimpse": [
+      {
+        "field_name": "id",
+        "field_type": "String",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "title",
+        "field_type": "String",
+        "column_name": "title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "caption",
+        "field_type": "String",
+        "column_name": "caption",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "courseTitle",
+        "field_type": "String",
+        "column_name": "course_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "location",
+        "field_type": "String",
+        "column_name": "location",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "eventDate",
+        "field_type": "String",
+        "column_name": "event_date",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "attendeeCount",
+        "field_type": "Integer",
+        "column_name": "attendee_count",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "imageUrl",
+        "field_type": "String",
+        "column_name": "image_url",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "displayOrder",
+        "field_type": "Integer",
+        "column_name": "display_order",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "isActive",
+        "field_type": "Boolean",
+        "column_name": "is_active",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "TrainingReview": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "course",
+        "field_type": "Course",
+        "column_name": "course_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "batch",
+        "field_type": "Batch",
+        "column_name": "batch_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrollment",
+        "field_type": "Enrollment",
+        "column_name": "enrollment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "rating",
+        "field_type": "Integer",
+        "column_name": "rating",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "instructorRating",
+        "field_type": "Integer",
+        "column_name": "instructor_rating",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reviewTitle",
+        "field_type": "String",
+        "column_name": "review_title",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "reviewText",
+        "field_type": "String",
+        "column_name": "review_text",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "moderatedAt",
+        "field_type": "ZonedDateTime",
+        "column_name": "moderated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "moderatedBy",
+        "field_type": "UUID",
+        "column_name": "moderated_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "moderationReason",
+        "field_type": "String",
+        "column_name": "moderation_reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "Wallet": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "WalletTopupIntent": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "amount",
+        "field_type": "BigDecimal",
+        "column_name": "amount",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayOrderId",
+        "field_type": "String",
+        "column_name": "razorpay_order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "transactionReference",
+        "field_type": "String",
+        "column_name": "transaction_reference",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "razorpayPaymentId",
+        "field_type": "String",
+        "column_name": "razorpay_payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "completedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "completed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      }
+    ],
+    "WalletTransaction": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "transactionReference",
+        "field_type": "String",
+        "column_name": "transaction_reference",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "walletId",
+        "field_type": "UUID",
+        "column_name": "wallet_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "transactionType",
+        "field_type": "WalletTransactionType",
+        "column_name": "transaction_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "transactionDirection",
+        "field_type": "WalletTransactionDirection",
+        "column_name": "transaction_direction",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "amount",
+        "field_type": "BigDecimal",
+        "column_name": "amount",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "balanceBefore",
+        "field_type": "BigDecimal",
+        "column_name": "balance_before",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "balanceAfter",
+        "field_type": "BigDecimal",
+        "column_name": "balance_after",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sourceType",
+        "field_type": "WalletSourceType",
+        "column_name": "source_type",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "sourceId",
+        "field_type": "String",
+        "column_name": "source_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "orderId",
+        "field_type": "UUID",
+        "column_name": "order_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "paymentId",
+        "field_type": "UUID",
+        "column_name": "payment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "refundId",
+        "field_type": "String",
+        "column_name": "refund_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "enrollmentId",
+        "field_type": "UUID",
+        "column_name": "enrollment_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "trainingBatchId",
+        "field_type": "UUID",
+        "column_name": "training_batch_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "withdrawalId",
+        "field_type": "UUID",
+        "column_name": "withdrawal_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "parentTransactionId",
+        "field_type": "UUID",
+        "column_name": "parent_transaction_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "relatedTransactionId",
+        "field_type": "UUID",
+        "column_name": "related_transaction_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "description",
+        "field_type": "String",
+        "column_name": "description",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "metadataJson",
+        "field_type": "String",
+        "column_name": "metadata_json",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "idempotencyKey",
+        "field_type": "String",
+        "column_name": "idempotency_key",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "processedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "processed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ],
+    "WalletWithdrawal": [
+      {
+        "field_name": "id",
+        "field_type": "UUID",
+        "column_name": "id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "withdrawalReference",
+        "field_type": "String",
+        "column_name": "withdrawal_reference",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "walletId",
+        "field_type": "UUID",
+        "column_name": "wallet_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "userId",
+        "field_type": "UUID",
+        "column_name": "user_id",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "amount",
+        "field_type": "BigDecimal",
+        "column_name": "amount",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "bankName",
+        "field_type": "String",
+        "column_name": "bank_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "accountNumberMasked",
+        "field_type": "String",
+        "column_name": "account_number_masked",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "ifscCode",
+        "field_type": "String",
+        "column_name": "ifsc_code",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "accountHolderName",
+        "field_type": "String",
+        "column_name": "account_holder_name",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "adminNotes",
+        "field_type": "String",
+        "column_name": "admin_notes",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "rejectionReason",
+        "field_type": "String",
+        "column_name": "rejection_reason",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "processedBy",
+        "field_type": "String",
+        "column_name": "processed_by",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "createdAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "created_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      },
+      {
+        "field_name": "processedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "processed_at",
+        "exists_in_db": true,
+        "nullability_mismatch": false,
+        "type_mismatch": false,
+        "notes": []
+      },
+      {
+        "field_name": "updatedAt",
+        "field_type": "OffsetDateTime",
+        "column_name": "updated_at",
+        "exists_in_db": true,
+        "nullability_mismatch": true,
+        "type_mismatch": false,
+        "notes": [
+          "JPA nullable=false but DB is nullable"
+        ]
+      }
+    ]
+  }
+}

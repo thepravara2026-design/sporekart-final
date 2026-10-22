@@ -4,6 +4,8 @@ import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.support.application.SupportApplicationService;
 import com.sporekart.support.domain.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -99,7 +101,7 @@ public class SupportController {
     public ResponseEntity<ApiResponse<SupportTicket>> closeTicket(
             @PathVariable("id") UUID ticketId,
             Authentication authentication,
-            @RequestBody(required = false) CloseTicketRequest request
+            @Valid @RequestBody(required = false) CloseTicketRequest request
     ) {
         UUID userId = getUserId(authentication);
         SupportTicket ticket = supportService.getTicketDetails(ticketId);
@@ -150,6 +152,8 @@ public class SupportController {
 
     @Data
     public static class CloseTicketRequest {
+        @Min(value = 1, message = "Rating must be between 1 and 5")
+        @Max(value = 5, message = "Rating must be between 1 and 5")
         private Integer rating;
         private String feedback;
     }

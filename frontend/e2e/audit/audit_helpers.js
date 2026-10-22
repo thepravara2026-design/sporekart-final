@@ -32,6 +32,8 @@ export async function authenticateInBrowser(page, userPayload, isAdmin = false) 
     await expect(adminDevBtn).toBeVisible({ timeout: 15000 });
     await adminDevBtn.click();
     await page.waitForURL(/\/admin/, { timeout: 15000 });
+    // Wait for auth verification spinner to complete and admin control plane to render
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console/i).first()).toBeVisible({ timeout: 20000 });
     const token = await page.evaluate(() => localStorage.getItem('sporekart_token'));
     return { authData: { token, email: ADMIN_EMAIL, role: 'ROLE_ADMIN' }, payload: { email: ADMIN_EMAIL } };
   }

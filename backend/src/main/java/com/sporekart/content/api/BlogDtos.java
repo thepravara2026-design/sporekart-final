@@ -91,6 +91,7 @@ public class BlogDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SchedulePostRequest {
+        @jakarta.validation.constraints.NotNull(message = "Scheduled publish date/time is required")
         private ZonedDateTime scheduledPublishAt;
     }
 

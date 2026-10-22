@@ -165,8 +165,14 @@ public class TrainingDtos {
         private Integer capacity;
         private Integer enrolledCount;
         private Integer availableSeats;
+        @com.fasterxml.jackson.annotation.JsonProperty("isAvailable")
         private boolean isAvailable;
         private String status;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("isAvailable")
+        public boolean getIsAvailable() {
+            return isAvailable;
+        }
     }
 
     @Data

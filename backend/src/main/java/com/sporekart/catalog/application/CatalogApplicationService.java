@@ -5,6 +5,7 @@ import com.sporekart.catalog.domain.*;
 import com.sporekart.catalog.infrastructure.CategoryRepository;
 import com.sporekart.catalog.infrastructure.ProductRepository;
 import com.sporekart.catalog.infrastructure.ProductVariantRepository;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +42,9 @@ public class CatalogApplicationService {
                     return uuid;
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(CatalogApplicationService.class).warn("Could not determine most popular product: {}", e.getMessage());
+        }
         return null;
     }
 
@@ -179,7 +182,7 @@ public class CatalogApplicationService {
     @Transactional(readOnly = true)
     public CatalogDtos.ProductDto getProductBySlug(String slug) {
         Product product = productRepository.findBySlug(slug)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
 
         if (!product.isActive() || product.getStatus() != ProductStatus.ACTIVE) {
             throw new IllegalArgumentException("Product is inactive or unavailable");

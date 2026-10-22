@@ -1,0 +1,1081 @@
+{
+  "1_exact_and_near_duplicate_code": [
+    {
+      "format": "java",
+      "lines": 7,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\admin\\api\\AdminController.java",
+      "firstLines": "9-15",
+      "secondFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "secondLines": "8-14",
+      "fragment": "import com.sporekart.training.infrastructure.CourseRepository;\nimport lombok.RequiredArgsConstructor;\nimport org.springframework.data.domain.Page;\nimp"
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 77,
+      "firstFile": "com\\sporekart\\admin\\api\\AdminController.java",
+      "firstLines": "9-17",
+      "secondFile": "com\\sporekart\\order\\api\\AdminOrderController.java",
+      "secondLines": "11-19",
+      "fragment": "import com.sporekart.training.infrastructure.CourseRepository;\nimport lombok.RequiredArgsConstructor;\nimport org.springframework.data.domain.Page;\nimp"
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 66,
+      "firstFile": "com\\sporekart\\admin\\api\\AdminController.java",
+      "firstLines": "37-44",
+      "secondFile": "com\\sporekart\\customer\\api\\AdminCustomerController.java",
+      "secondLines": "42-47",
+      "fragment": "    public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(\n            @RequestParam(value = \"page\", defaultValue = \"0\") int page,\n    "
+    },
+    {
+      "format": "java",
+      "lines": 11,
+      "tokens": 90,
+      "firstFile": "com\\sporekart\\admin\\api\\AdminController.java",
+      "firstLines": "37-47",
+      "secondFile": "com\\sporekart\\support\\api\\AdminSupportController.java",
+      "secondLines": "34-44",
+      "fragment": "    public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(\n            @RequestParam(value = \"page\", defaultValue = \"0\") int page,\n    "
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 62,
+      "firstFile": "com\\sporekart\\admin\\api\\AdminController.java",
+      "firstLines": "40-47",
+      "secondFile": "com\\sporekart\\order\\api\\AdminOrderController.java",
+      "secondLines": "42-49",
+      "fragment": "    ) {\n        int cappedSize = Math.min(Math.max(1, size), 100);\n        Pageable pageable = PageRequest.of(\n                Math.max(0, page),\n    "
+    },
+    {
+      "format": "java",
+      "lines": 12,
+      "tokens": 63,
+      "firstFile": "com\\sporekart\\analytics\\api\\AnalyticsController.java",
+      "firstLines": "6-17",
+      "secondFile": "com\\sporekart\\support\\api\\SupportController.java",
+      "secondLines": "8-19",
+      "fragment": "import jakarta.validation.Valid;\nimport lombok.Data;\nimport lombok.RequiredArgsConstructor;\nimport org.springframework.http.ResponseEntity;\nimport org"
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 51,
+      "firstFile": "com\\sporekart\\analytics\\api\\AnalyticsController.java",
+      "firstLines": "7-14",
+      "secondFile": "com\\sporekart\\customer\\api\\CustomerController.java",
+      "secondLines": "6-13",
+      "fragment": "import lombok.Data;\nimport lombok.RequiredArgsConstructor;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.security.core.Au"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\analytics\\domain\\events\\AddToCartEvent.java",
+      "firstLines": "1-15",
+      "secondFile": "com\\sporekart\\analytics\\domain\\events\\CheckoutStartedEvent.java",
+      "secondLines": "1-15",
+      "fragment": "package com.sporekart.analytics.domain.events;\n\nimport lombok.AllArgsConstructor;\nimport lombok.Builder;\nimport lombok.Data;\nimport lombok.NoArgsConst"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\analytics\\domain\\events\\AddToCartEvent.java",
+      "firstLines": "1-15",
+      "secondFile": "com\\sporekart\\analytics\\domain\\events\\EnrollmentCreatedEvent.java",
+      "secondLines": "1-15",
+      "fragment": "package com.sporekart.analytics.domain.events;\n\nimport lombok.AllArgsConstructor;\nimport lombok.Builder;\nimport lombok.Data;\nimport lombok.NoArgsConst"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\analytics\\domain\\events\\AddToCartEvent.java",
+      "firstLines": "1-15",
+      "secondFile": "com\\sporekart\\analytics\\domain\\events\\OrderCreatedEvent.java",
+      "secondLines": "1-15",
+      "fragment": "package com.sporekart.analytics.domain.events;\n\nimport lombok.AllArgsConstructor;\nimport lombok.Builder;\nimport lombok.Data;\nimport lombok.NoArgsConst"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\analytics\\domain\\events\\AddToCartEvent.java",
+      "firstLines": "1-15",
+      "secondFile": "com\\sporekart\\analytics\\domain\\events\\PaymentCapturedEvent.java",
+      "secondLines": "1-15",
+      "fragment": "package com.sporekart.analytics.domain.events;\n\nimport lombok.AllArgsConstructor;\nimport lombok.Builder;\nimport lombok.Data;\nimport lombok.NoArgsConst"
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 62,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "4-12",
+      "secondFile": "com\\sporekart\\customer\\api\\CustomerController.java",
+      "secondLines": "4-12",
+      "fragment": "import com.sporekart.cart.application.CartService;\nimport com.sporekart.shared.api.ApiResponse;\nimport jakarta.validation.Valid;\nimport lombok.Require"
+    },
+    {
+      "format": "java",
+      "lines": 12,
+      "tokens": 69,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "4-15",
+      "secondFile": "com\\sporekart\\identity\\api\\AuthController.java",
+      "secondLines": "4-15",
+      "fragment": "import com.sporekart.cart.application.CartService;\nimport com.sporekart.shared.api.ApiResponse;\nimport jakarta.validation.Valid;\nimport lombok.Require"
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 56,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "74-82",
+      "secondFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "secondLines": "83-91",
+      "fragment": "    public ResponseEntity<ApiResponse<CartResponse>> clearCart(\n            Authentication authentication,\n            @RequestHeader(value = \"X-Sessi"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 71,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "116-130",
+      "secondFile": "com\\sporekart\\notification\\api\\CustomerNotificationController.java",
+      "secondLines": "77-90",
+      "fragment": "        return ResponseEntity.ok(ApiResponse.success(cart));\n    }\n\n\n    private UUID extractUserId(Authentication authentication) {\n        if (authe"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 71,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "116-130",
+      "secondFile": "com\\sporekart\\order\\api\\OrderController.java",
+      "secondLines": "83-96",
+      "fragment": "        return ResponseEntity.ok(ApiResponse.success(cart));\n    }\n\n\n    private UUID extractUserId(Authentication authentication) {\n        if (authe"
+    },
+    {
+      "format": "java",
+      "lines": 10,
+      "tokens": 62,
+      "firstFile": "com\\sporekart\\cart\\api\\CartController.java",
+      "firstLines": "120-129",
+      "secondFile": "com\\sporekart\\training\\api\\TrainingController.java",
+      "secondLines": "172-181",
+      "fragment": "    private UUID extractUserId(Authentication authentication) {\n        if (authentication != null && authentication.isAuthenticated() && !\"anonymousU"
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 52,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\AddToCartRequest.java",
+      "firstLines": "20-27",
+      "secondFile": "com\\sporekart\\cart\\domain\\CartItem.java",
+      "secondLines": "63-69",
+      "fragment": "        this.quantity = quantity;\n    }\n\n    public UUID getVariantId() { return variantId; }\n    public void setVariantId(UUID variantId) { this.vari"
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 55,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\CartItemResponse.java",
+      "firstLines": "22-30",
+      "secondFile": "com\\sporekart\\order\\api\\dto\\OrderItemResponse.java",
+      "secondLines": "19-27",
+      "fragment": "    public CartItemResponse() {}\n\n    public UUID getId() { return id; }\n    public void setId(UUID id) { this.id = id; }\n\n    public UUID getVariantI"
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 54,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\CartItemResponse.java",
+      "firstLines": "37-45",
+      "secondFile": "com\\sporekart\\order\\api\\dto\\OrderItemResponse.java",
+      "secondLines": "28-36",
+      "fragment": "    public void setProductSlug(String productSlug) { this.productSlug = productSlug; }\n\n    public String getVariantName() { return variantName; }\n   "
+    },
+    {
+      "format": "java",
+      "lines": 7,
+      "tokens": 52,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\CartItemResponse.java",
+      "firstLines": "46-52",
+      "secondFile": "com\\sporekart\\order\\api\\dto\\OrderItemResponse.java",
+      "secondLines": "43-49",
+      "fragment": "    public void setUnitPriceInr(BigDecimal unitPriceInr) { this.unitPriceInr = unitPriceInr; }\n\n    public Integer getQuantity() { return quantity; }\n"
+    },
+    {
+      "format": "java",
+      "lines": 12,
+      "tokens": 77,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\CartResponse.java",
+      "firstLines": "27-38",
+      "secondFile": "com\\sporekart\\cart\\domain\\Cart.java",
+      "secondLines": "72-83",
+      "fragment": "    public CartResponse() {}\n\n    public UUID getId() { return id; }\n    public void setId(UUID id) { this.id = id; }\n\n    public UUID getUserId() { r"
+    },
+    {
+      "format": "java",
+      "lines": 12,
+      "tokens": 80,
+      "firstFile": "com\\sporekart\\cart\\api\\dto\\CartResponse.java",
+      "firstLines": "27-38",
+      "secondFile": "com\\sporekart\\order\\api\\dto\\OrderResponse.java",
+      "secondLines": "49-60",
+      "fragment": "    public CartResponse() {}\n\n    public UUID getId() { return id; }\n    public void setId(UUID id) { this.id = id; }\n\n    public UUID getUserId() { r"
+    },
+    {
+      "format": "java",
+      "lines": 17,
+      "tokens": 151,
+      "firstFile": "com\\sporekart\\cart\\application\\CartService.java",
+      "firstLines": "103-119",
+      "secondFile": "com\\sporekart\\cart\\application\\CartService.java",
+      "secondLines": "136-152",
+      "fragment": "                userCart = cartRepository.save(new Cart(userId, null));\n            }\n\n            if (sessionId != null && !sessionId.trim().isEmpty("
+    },
+    {
+      "format": "java",
+      "lines": 7,
+      "tokens": 65,
+      "firstFile": "com\\sporekart\\cart\\application\\CartService.java",
+      "firstLines": "508-514",
+      "secondFile": "com\\sporekart\\order\\application\\OrderService.java",
+      "secondLines": "190-196",
+      "fragment": "                gstTotal = gstTotal.add(priceResult.getGstAmountInr().multiply(BigDecimal.valueOf(item.getQuantity())));\n\n                itemContexts"
+    },
+    {
+      "format": "java",
+      "lines": 17,
+      "tokens": 79,
+      "firstFile": "com\\sporekart\\cart\\domain\\Cart.java",
+      "firstLines": "44-60",
+      "secondFile": "com\\sporekart\\cart\\domain\\CartItem.java",
+      "secondLines": "43-59",
+      "fragment": "        this.status = CartStatus.ACTIVE;\n        this.createdAt = OffsetDateTime.now();\n        this.updatedAt = OffsetDateTime.now();\n    }\n\n    @Pre"
+    },
+    {
+      "format": "java",
+      "lines": 12,
+      "tokens": 60,
+      "firstFile": "com\\sporekart\\cart\\domain\\Cart.java",
+      "firstLines": "49-60",
+      "secondFile": "com\\sporekart\\order\\domain\\Order.java",
+      "secondLines": "98-109",
+      "fragment": "    @PrePersist\n    protected void onCreate() {\n        if (createdAt == null) createdAt = OffsetDateTime.now();\n        if (updatedAt == null) update"
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 57,
+      "firstFile": "com\\sporekart\\catalog\\api\\CatalogController.java",
+      "firstLines": "4-11",
+      "secondFile": "com\\sporekart\\review\\api\\PublicReviewController.java",
+      "secondLines": "3-10",
+      "fragment": "import com.sporekart.catalog.domain.ProductType;\nimport com.sporekart.shared.api.ApiResponse;\nimport lombok.RequiredArgsConstructor;\nimport org.spring"
+    },
+    {
+      "format": "java",
+      "lines": 10,
+      "tokens": 51,
+      "firstFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "firstLines": "8-17",
+      "secondFile": "com\\sporekart\\media\\api\\MediaDtos.java",
+      "secondLines": "4-13",
+      "fragment": "import com.sporekart.catalog.domain.StockAvailability;\nimport jakarta.validation.constraints.Min;\nimport jakarta.validation.constraints.NotBlank;\nimpo"
+    },
+    {
+      "format": "java",
+      "lines": 10,
+      "tokens": 51,
+      "firstFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "firstLines": "9-18",
+      "secondFile": "com\\sporekart\\training\\api\\TrainingDtos.java",
+      "secondLines": "4-13",
+      "fragment": "import jakarta.validation.constraints.Min;\nimport jakarta.validation.constraints.NotBlank;\nimport jakarta.validation.constraints.NotNull;\nimport lombo"
+    },
+    {
+      "format": "java",
+      "lines": 15,
+      "tokens": 56,
+      "firstFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "firstLines": "168-182",
+      "secondFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "secondLines": "199-213",
+      "fragment": "    public static class ProductDto {\n        private UUID id;\n        private String title;\n        private String slug;\n        private String descri"
+    },
+    {
+      "format": "java",
+      "lines": 18,
+      "tokens": 64,
+      "firstFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "firstLines": "182-199",
+      "secondFile": "com\\sporekart\\catalog\\api\\CatalogDtos.java",
+      "secondLines": "213-230",
+      "fragment": "        private List<VariantDto> variants;\n        private List<MediaDto> media;\n        private List<String> imageUrls;\n        private List<OfferDto"
+    },
+    {
+      "format": "java",
+      "lines": 8,
+      "tokens": 50,
+      "firstFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "firstLines": "217-224",
+      "secondFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "secondLines": "228-235",
+      "fragment": "        if (!product.isActive() || product.getStatus() != ProductStatus.ACTIVE || !variant.isActive()) {\n            return CatalogDtos.StockValidatio"
+    },
+    {
+      "format": "java",
+      "lines": 54,
+      "tokens": 475,
+      "firstFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "firstLines": "257-310",
+      "secondFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "secondLines": "341-394",
+      "fragment": "                    return CatalogDtos.VariantDto.builder()\n                            .id(v.getId())\n                            .variantName(v.getV"
+    },
+    {
+      "format": "java",
+      "lines": 21,
+      "tokens": 188,
+      "firstFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "firstLines": "312-332",
+      "secondFile": "com\\sporekart\\catalog\\application\\CatalogApplicationService.java",
+      "secondLines": "398-418",
+      "fragment": "        return CatalogDtos.ProductDto.builder()\n                .id(product.getId())\n                .title(product.getTitle())\n                .slug("
+    },
+    {
+      "format": "java",
+      "lines": 9,
+      "tokens": 68,
+      "firstFile": "com\\sporekart\\catalog\\application\\InventoryService.java",
+      "firstLines": "49-57",
+      "secondFile": "com\\sporekart\\catalog\\application\\InventoryService.java",
+      "secondLines": "117-125",
+      "fragment": "                    ProductVariant v = variantRepository.findById(variantId)\n                            .orElseThrow(() -> new IllegalArgumentExcepti"
+    },
+    {
+      "format": "java",
+      "lines": 14,
+      "tokens": 51,
+      "firstFile": "com\\sporekart\\catalog\\domain\\Category.java",
+      "firstLines": "15-28",
+      "secondFile": "com\\sporekart\\content\\domain\\BlogAuthor.java",
+      "secondLines": "15-28",
+      "fragment": "public class Category {\n\n    @Id\n    @GeneratedValue(strategy = GenerationType.UUID)\n    private UUID id;\n\n    @Column(nullable = false)\n    private S"
+    },
+    {
+      "format": "java",
+      "lines": 16,
+      "tokens": 58,
+      "firstFile": "com\\sporekart\\catalog\\domain\\Category.java",
+      "firstLines": "15-30",
+      "secondFile": "com\\sporekart\\content\\domain\\BlogCategory.java",
+      "secondLines": "15-30",
+      "fragment": "public class Category {\n\n    @Id\n    @GeneratedValue(strategy = GenerationType.UUID)\n    private UUID id;\n\n    @Column(nullable = false)\n    private S"
+    },
+    {
+      "format": "java",
+      "lines": 16,
+      "tokens": 58,
+      "firstFile": "com\\sporekart\\catalog\\domain\\Category.java",
+      "firstLines": "15-30",
+      "secondFile": "com\\sporekart\\training\\domain\\CourseCategory.java",
+      "secondLines": "16-31",
+      "fragment": "public class Category {\n\n    @Id\n    @GeneratedValue(strategy = GenerationType.UUID)\n    private UUID id;\n\n    @Column(nullable = false)\n    private S"
+    },
+    {
+      "format": "java",
+      "lines": 13,
+      "tokens": 50,
+      "firstFile": "com\\sporekart\\catalog\\domain\\Category.java",
+      "firstLines": "31-43",
+      "secondFile": "com\\sporekart\\catalog\\domain\\ProductOffer.java",
+      "secondLines": "42-54",
+      "fragment": "    private String imageUrl;\n\n    @Column(name = \"is_active\", nullable = false)\n    @Builder.Default\n    private boolean isActive = true;\n\n    @Column"
+    }
+  ],
+  "2_duplicate_business_rules": [
+    {
+      "rule": "GST Tax Rate Computation (18% / 5% hardcoded inline across modules)",
+      "occurrencesCount": 1,
+      "sampleOccurrences": [
+        {
+          "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\InvoicePdfGenerator.java",
+          "line": 25,
+          "code": "content.append(\"BT /F1 18 Tf 50 750 Td (SPOREKART INDIA - TAX INVOICE) Tj ET\\n\");"
+        }
+      ],
+      "impact": "Decentralized tax calculation causes accounting drift if statutory GST slabs change.",
+      "recommendation": "Encapsulate tax rules in a centralized TaxCalculationService / TaxPolicy enum."
+    },
+    {
+      "rule": "Flat Courier Shipping Fee (INR 70.00 hardcoded in multiple places)",
+      "occurrencesCount": 10,
+      "sampleOccurrences": [
+        {
+          "file": "frontend\\src\\components\\CartDrawer.jsx",
+          "line": 84,
+          "code": "<strong className=\"text-forest-700 font-bold\">Unlocked FREE Express Delivery!</strong>"
+        },
+        {
+          "file": "frontend\\src\\components\\CartDrawer.jsx",
+          "line": 89,
+          "code": "<span className=\"text-forest-700 font-bold\">{deliveryProgress}%</span>"
+        },
+        {
+          "file": "frontend\\src\\components\\LiveStoreSection.jsx",
+          "line": 242,
+          "code": "Order today for 24h cold-chain dispatch. <span className=\"text-emerald-700 font-bold\">FREE Shipping above \u20b9999.</span>"
+        },
+        {
+          "file": "frontend\\src\\components\\ProductAddedPopupDrawer.jsx",
+          "line": 204,
+          "code": "<strong className=\"text-emerald-700 font-bold\">Free Express Delivery Unlocked! \ud83c\udf89</strong>"
+        },
+        {
+          "file": "frontend\\src\\pages\\CheckoutPage.jsx",
+          "line": 336,
+          "code": "<MapPin className=\"w-5 h-5 text-forest-700\" /> 1. Shipping Address"
+        },
+        {
+          "file": "frontend\\src\\pages\\DashboardPage.jsx",
+          "line": 906,
+          "code": "<MapPin className=\"w-4 h-4 text-forest-700\" /> Delivery Addresses ({addresses.length})"
+        },
+        {
+          "file": "frontend\\src\\pages\\DashboardPage.jsx",
+          "line": 1147,
+          "code": "<MapPin className=\"w-3.5 h-3.5 text-forest-700\" /> Delivery Address:"
+        },
+        {
+          "file": "frontend\\src\\pages\\OrderConfirmationPage.jsx",
+          "line": 282,
+          "code": "<MapPin className=\"w-4 h-4 text-forest-700\" /> Delivery Address"
+        },
+        {
+          "file": "frontend\\src\\pages\\ProductDetailPage.jsx",
+          "line": 495,
+          "code": "<p className=\"flex items-center gap-1\"><CheckCircle2 className=\"w-3.5 h-3.5 text-forest-700\" /> {pincodeResult.message} ({pincodeResult.estimatedDeliveryDays} Days)</p>"
+        },
+        {
+          "file": "frontend\\src\\__tests__\\fe-12.test.jsx",
+          "line": 35,
+          "code": "shippingFeeInr: 70,"
+        }
+      ],
+      "impact": "Inconsistent shipping fee waivers or rate revisions across frontend cart, checkout, and backend order calculation.",
+      "recommendation": "Expose dynamic shipping rate from ShippingService/DeliveryConfig rather than hardcoding in OrderService and frontend."
+    }
+  ],
+  "3_duplicate_endpoints": {
+    "totalDiscoveredEndpoints": 212,
+    "duplicateOrOverlappingEndpoints": [],
+    "analysis": "Identified endpoints with identical HTTP method and path signatures or overlapping path variables."
+  },
+  "4_inconsistent_validation": {
+    "phoneValidationDiscrepancies": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\api\\CustomerDtos.java",
+        "line": 20,
+        "snippet": "@jakarta.validation.constraints.Pattern(regexp = \"^$|^(?:\\\\+91[\\\\-\\\\s]?|0)?[6-9]\\\\d{9}$\", message = \"Phone number must be a valid 10-digit Indian mobile number\")"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\api\\CustomerDtos.java",
+        "line": 50,
+        "snippet": "@jakarta.validation.constraints.Pattern(regexp = \"^(?:\\\\+91[\\\\-\\\\s]?|0)?[6-9]\\\\d{9}$\", message = \"Phone number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9\")"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\api\\CustomerDtos.java",
+        "line": 53,
+        "snippet": "@jakarta.validation.constraints.Pattern(regexp = \"^$|^(?:\\\\+91[\\\\-\\\\s]?|0)?[6-9]\\\\d{9}$\", message = \"Alternative phone number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9\")"
+      },
+      {
+        "file": "frontend\\src\\components\\IdentityConflictModal.jsx",
+        "line": 13,
+        "snippet": "const isPhone = conflictingField === 'phone' || (conflictingValue && /^\\+?[0-9\\s-]+$/.test(conflictingValue));"
+      },
+      {
+        "file": "frontend\\src\\utils\\validation.js",
+        "line": 13,
+        "snippet": "if (!/^[6-9]\\d{9}$/.test(mobile10)) {"
+      },
+      {
+        "file": "frontend\\src\\utils\\validation.js",
+        "line": 106,
+        "snippet": "if (!/^[6-9]\\d{9}$/.test(mobile10Alt)) {"
+      }
+    ],
+    "pincodeValidationDiscrepancies": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\api\\CustomerDtos.java",
+        "line": 36,
+        "snippet": "@jakarta.validation.constraints.Pattern(regexp = \"^$|^[1-9][0-9]{5}$\", message = \"PIN code must be a valid 6-digit Indian postal code\")"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\api\\CustomerDtos.java",
+        "line": 71,
+        "snippet": "@jakarta.validation.constraints.Pattern(regexp = \"^[1-9][0-9]{5}$\", message = \"PIN code must be a valid 6-digit Indian postal code (100000-999999)\")"
+      },
+      {
+        "file": "frontend\\src\\pages\\ProductDetailPage.jsx",
+        "line": 77,
+        "snippet": "if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {"
+      },
+      {
+        "file": "frontend\\src\\utils\\indianLocations.js",
+        "line": 305,
+        "snippet": "if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {"
+      },
+      {
+        "file": "frontend\\src\\utils\\validation.js",
+        "line": 37,
+        "snippet": "if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {"
+      }
+    ],
+    "impact": "Differing validation criteria in frontend vs backend causes false-positive client rejections or unexpected 400 Bad Requests."
+  },
+  "5_repeated_financial_calculations": {
+    "floatingPointInFinancialCode": [],
+    "totalFound": 0,
+    "recommendation": "Enforce BigDecimal everywhere for monetary transactions to prevent IEEE-754 precision loss."
+  },
+  "6_duplicate_state_transition_logic": {
+    "filesDirectlyMutatingStatus": 15,
+    "topFiles": [
+      {
+        "file": "PaymentService.java",
+        "mutationsCount": 7,
+        "samples": [
+          {
+            "line": 178,
+            "status": "PaymentStatus.CAPTURED",
+            "code": "payment.setStatus(PaymentStatus.CAPTURED);"
+          },
+          {
+            "line": 208,
+            "status": "PaymentStatus.FAILED",
+            "code": "payment.setStatus(PaymentStatus.FAILED);"
+          },
+          {
+            "line": 265,
+            "status": "PaymentStatus.CAPTURED",
+            "code": "payment.setStatus(PaymentStatus.CAPTURED);"
+          }
+        ]
+      },
+      {
+        "file": "ShippingService.java",
+        "mutationsCount": 6,
+        "samples": [
+          {
+            "line": 212,
+            "status": "targetStatus",
+            "code": "shipment.setStatus(targetStatus);"
+          },
+          {
+            "line": 275,
+            "status": "ShipmentStatus.DELIVERED",
+            "code": "shipment.setStatus(ShipmentStatus.DELIVERED);"
+          },
+          {
+            "line": 280,
+            "status": "ShipmentStatus.IN_TRANSIT",
+            "code": "shipment.setStatus(ShipmentStatus.IN_TRANSIT);"
+          }
+        ]
+      },
+      {
+        "file": "SupportApplicationService.java",
+        "mutationsCount": 6,
+        "samples": [
+          {
+            "line": 151,
+            "status": "TicketStatus.CLOSED",
+            "code": "ticket.setStatus(TicketStatus.CLOSED);"
+          },
+          {
+            "line": 169,
+            "status": "TicketStatus.IN_PROGRESS",
+            "code": "ticket.setStatus(TicketStatus.IN_PROGRESS);"
+          },
+          {
+            "line": 171,
+            "status": "TicketStatus.IN_PROGRESS",
+            "code": "ticket.setStatus(TicketStatus.IN_PROGRESS); // Re-open on customer message"
+          }
+        ]
+      },
+      {
+        "file": "NotificationWorker.java",
+        "mutationsCount": 5,
+        "samples": [
+          {
+            "line": 82,
+            "status": "NotificationStatus.PROCESSING",
+            "code": "event.setStatus(NotificationStatus.PROCESSING);"
+          },
+          {
+            "line": 132,
+            "status": "NotificationStatus.SENT",
+            "code": "event.setStatus(NotificationStatus.SENT);"
+          },
+          {
+            "line": 154,
+            "status": "NotificationStatus.SENT",
+            "code": "event.setStatus(NotificationStatus.SENT);"
+          }
+        ]
+      },
+      {
+        "file": "CartService.java",
+        "mutationsCount": 4,
+        "samples": [
+          {
+            "line": 97,
+            "status": "CartStatus.CONVERTED",
+            "code": "extra.setStatus(CartStatus.CONVERTED);"
+          },
+          {
+            "line": 125,
+            "status": "CartStatus.CONVERTED",
+            "code": "guestCart.setStatus(CartStatus.CONVERTED);"
+          },
+          {
+            "line": 160,
+            "status": "CartStatus.CONVERTED",
+            "code": "extra.setStatus(CartStatus.CONVERTED);"
+          }
+        ]
+      },
+      {
+        "file": "AdminCatalogService.java",
+        "mutationsCount": 3,
+        "samples": [
+          {
+            "line": 147,
+            "status": "request.getStatus(",
+            "code": "product.setStatus(request.getStatus());"
+          },
+          {
+            "line": 176,
+            "status": "status",
+            "code": "product.setStatus(status);"
+          },
+          {
+            "line": 233,
+            "status": "ProductStatus.ACTIVE",
+            "code": "product.setStatus(ProductStatus.ACTIVE);"
+          }
+        ]
+      },
+      {
+        "file": "TrainingService.java",
+        "mutationsCount": 3,
+        "samples": [
+          {
+            "line": 298,
+            "status": "EnrollmentStatus.CONFIRMED",
+            "code": "enrollment.setStatus(EnrollmentStatus.CONFIRMED);"
+          },
+          {
+            "line": 451,
+            "status": "EnrollmentStatus.CANCELLED",
+            "code": "enrollment.setStatus(EnrollmentStatus.CANCELLED);"
+          },
+          {
+            "line": 554,
+            "status": "EnrollmentStatus.COMPLETED",
+            "code": "enrollment.setStatus(EnrollmentStatus.COMPLETED);"
+          }
+        ]
+      },
+      {
+        "file": "WalletService.java",
+        "mutationsCount": 3,
+        "samples": [
+          {
+            "line": 359,
+            "status": "WithdrawalStatus.SUCCESS",
+            "code": "withdrawal.setStatus(WithdrawalStatus.SUCCESS);"
+          },
+          {
+            "line": 399,
+            "status": "WithdrawalStatus.REVERSED",
+            "code": "withdrawal.setStatus(WithdrawalStatus.REVERSED);"
+          },
+          {
+            "line": 692,
+            "status": "\"COMPLETED\"",
+            "code": "intent.setStatus(\"COMPLETED\");"
+          }
+        ]
+      },
+      {
+        "file": "MediaService.java",
+        "mutationsCount": 2,
+        "samples": [
+          {
+            "line": 86,
+            "status": "MediaStatus.ACTIVE",
+            "code": "asset.setStatus(MediaStatus.ACTIVE);"
+          },
+          {
+            "line": 115,
+            "status": "MediaStatus.ARCHIVED",
+            "code": "asset.setStatus(MediaStatus.ARCHIVED);"
+          }
+        ]
+      },
+      {
+        "file": "OrderService.java",
+        "mutationsCount": 2,
+        "samples": [
+          {
+            "line": 461,
+            "status": "newStatus",
+            "code": "order.setStatus(newStatus);"
+          },
+          {
+            "line": 719,
+            "status": "order.getStatus(",
+            "code": "response.setStatus(order.getStatus());"
+          }
+        ]
+      }
+    ],
+    "impact": "Uncentralized setStatus() invocations bypass state machine invariants and can cause invalid transitions if not guarded."
+  },
+  "7_dead_code_and_unused_functions": {
+    "totalRepositoryMethods": 24,
+    "unusedOrSingleReferenceMethodsCount": 6,
+    "samples": [
+      {
+        "repo": "AnalyticsEventRepository.java",
+        "method": "countByEventName"
+      },
+      {
+        "repo": "CustomerIdentityRepository.java",
+        "method": "existsByProviderAndProviderSubject"
+      },
+      {
+        "repo": "OtpRepository.java",
+        "method": "existsByIdentifierAndOtpTypeAndConsumedTrue"
+      },
+      {
+        "repo": "OtpRepository.java",
+        "method": "countByIdentifierAndOtpTypeAndCreatedAtAfter"
+      },
+      {
+        "repo": "PromotionUsageRepository.java",
+        "method": "countByPromotionId"
+      },
+      {
+        "repo": "ProductReviewImageRepository.java",
+        "method": "deleteByReviewId"
+      }
+    ]
+  },
+  "8_redundant_database_queries": {
+    "potentialNPlusOneQueriesCount": 24,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsApplicationService.java",
+        "loopLine": 39,
+        "queryLine": 56,
+        "code": "return analyticsEventRepository.findTop50ByOrderByCreatedAtDesc();"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\cart\\application\\CartService.java",
+        "loopLine": 271,
+        "queryLine": 272,
+        "code": "Optional<CartItem> userItemOpt = cartItemRepository.findByCartIdAndVariantId(userCart.getId(), guestItem.getVariantId());"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\cart\\application\\CartService.java",
+        "loopLine": 271,
+        "queryLine": 273,
+        "code": "ProductVariant variant = variantRepository.findById(guestItem.getVariantId()).orElse(null);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\cart\\application\\CartService.java",
+        "loopLine": 374,
+        "queryLine": 375,
+        "code": "Optional<ProductVariant> variantOpt = variantRepository.findById(item.getVariantId());"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\cart\\application\\CartService.java",
+        "loopLine": 409,
+        "queryLine": 417,
+        "code": "return inventoryRecordRepository.findByVariantId(variantId)"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\cart\\application\\CartService.java",
+        "loopLine": 462,
+        "queryLine": 472,
+        "code": "inventoryRecordRepository.findByVariantIdIn(variantIds)"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\catalog\\application\\AdminCatalogService.java",
+        "loopLine": 356,
+        "queryLine": 357,
+        "code": "mediaRepository.findById(item.getMediaId()).ifPresent(m -> {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\catalog\\application\\AdminCatalogService.java",
+        "loopLine": 356,
+        "queryLine": 370,
+        "code": "return mediaRepository.findByProductIdOrderByDisplayOrderAsc(productId);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\catalog\\application\\AdminCatalogService.java",
+        "loopLine": 356,
+        "queryLine": 375,
+        "code": "Product product = productRepository.findById(productId)"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\catalog\\application\\ProductRankingService.java",
+        "loopLine": 59,
+        "queryLine": 74,
+        "code": "List<Object[]> reviewData = reviewRepository.findReviewStatsGroupedByProduct(ReviewStatus.PUBLISHED);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\AbandonedCartScheduler.java",
+        "loopLine": 56,
+        "queryLine": 62,
+        "code": "Optional<User> userOpt = userRepository.findById(cart.getUserId());"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\AbandonedCartScheduler.java",
+        "loopLine": 107,
+        "queryLine": 113,
+        "code": "Optional<User> userOpt = userRepository.findById(enrollment.getUserId());"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\OrderService.java",
+        "loopLine": 353,
+        "queryLine": 360,
+        "code": "orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\OrderService.java",
+        "loopLine": 353,
+        "queryLine": 363,
+        "code": "orders = orderRepository.findBySessionIdAndUserIdIsNullOrderByCreatedAtDesc(sessionId);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\OrderService.java",
+        "loopLine": 403,
+        "queryLine": 413,
+        "code": "Order order = orderRepository.findById(orderId)"
+      }
+    ],
+    "recommendation": "Use batch queries (findAllById, WHERE IN (...)) or JPA entity graphs to eliminate query amplification."
+  },
+  "9_circular_dependencies": {
+    "lazyInjectionsFound": 0,
+    "locations": [],
+    "analysis": "@Lazy is often used as a workaround for tight circular coupling between domain services (e.g. OrderService <-> ShippingService, OrderService <-> PaymentService)."
+  },
+  "10_missing_error_handling": {
+    "emptyCatchBlocksCount": 3,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\api\\AdminNotificationController.java",
+        "line": 44,
+        "code": "try { typeEnum = NotificationEventType.valueOf(eventType.toUpperCase()); } catch (Exception ignored) {}"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\api\\AdminNotificationController.java",
+        "line": 49,
+        "code": "try { statusEnum = NotificationStatus.valueOf(status.toUpperCase()); } catch (Exception ignored) {}"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\api\\dto\\NotificationDto.java",
+        "line": 44,
+        "code": "} catch (Exception ignored) {}"
+      }
+    ],
+    "impact": "Swallowed exceptions prevent root cause diagnostic and cause silent partial failures."
+  },
+  "11_inconsistent_exception_mapping": {
+    "rawRuntimeExceptionThrowsCount": 11,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\InvoicePdfGenerator.java",
+        "line": 129,
+        "code": "throw new RuntimeException(\"Error assembling PDF\", e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\application\\PackingSlipPdfGenerator.java",
+        "line": 133,
+        "code": "throw new RuntimeException(\"Error generating packing slip PDF\", e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\order\\domain\\OrderAddressSnapshot.java",
+        "line": 33,
+        "code": "throw new RuntimeException(\"Failed to serialize OrderAddressSnapshot to JSON\", e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\payment\\application\\PaymentService.java",
+        "line": 368,
+        "code": "throw new RuntimeException(\"Error processing Razorpay webhook: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\payment\\application\\RazorpayPaymentGateway.java",
+        "line": 53,
+        "code": "throw new RuntimeException(\"Failed to create Razorpay payment order: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\payment\\application\\RazorpayPaymentGateway.java",
+        "line": 160,
+        "code": "throw new RuntimeException(\"Failed to process Razorpay refund: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\payment\\application\\RazorpayPaymentGateway.java",
+        "line": 215,
+        "code": "throw new RuntimeException(\"Failed to fetch Razorpay payment: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\TwilioSmsService.java",
+        "line": 76,
+        "code": "throw new RuntimeException(\"Twilio API returned status: \" + response.getStatusCode());"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\TwilioSmsService.java",
+        "line": 80,
+        "code": "throw new RuntimeException(\"Failed to send Twilio SMS: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shipping\\application\\ShiprocketAdapter.java",
+        "line": 180,
+        "code": "throw new RuntimeException(\"Shiprocket API call failed: \" + e.getMessage(), e);"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shipping\\application\\ShiprocketAdapter.java",
+        "line": 283,
+        "code": "throw new RuntimeException(\"Failed to cancel Shiprocket shipment: \" + e.getMessage(), e);"
+      }
+    ],
+    "recommendation": "Replace generic RuntimeException with specific domain exceptions (e.g., DomainValidationException, ResourceNotFoundException, PaymentGatewayException) for structured error mapping."
+  },
+  "12_unused_dependencies": {
+    "potentialUnusedNpmPackages": [
+      "clsx",
+      "framer-motion",
+      "tailwind-merge"
+    ]
+  },
+  "13_hardcoded_configuration": {
+    "hardcodedUrlsOrHostsCount": 4,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\SecurityConfig.java",
+        "line": 120,
+        "code": "\"http://localhost:*\","
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\SecurityConfig.java",
+        "line": 122,
+        "code": "\"http://localhost:5173\","
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\SecurityConfig.java",
+        "line": 123,
+        "code": "\"http://localhost:3000\""
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\shared\\infrastructure\\TwilioSmsService.java",
+        "line": 46,
+        "code": "String twilioUrl = \"https://api.twilio.com/2010-04-01/Accounts/\" + accountSid + \"/Messages.json\";"
+      }
+    ]
+  },
+  "14_inconsistent_logging_and_monitoring": {
+    "systemOutOrPrintStackTraceCount": 1,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\SporekartApplication.java",
+        "line": 57,
+        "code": "System.err.println(\"Warning: Could not read .env file: \" + e.getMessage());"
+      }
+    ]
+  },
+  "15_unhandled_asynchronous_failures": {
+    "asyncVoidMethodsCount": 13,
+    "samples": [
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 47,
+        "signature": "@EventListener public void handleProductViewed(ProductViewedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 65,
+        "signature": "@EventListener public void handleAddToCart(AddToCartEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 83,
+        "signature": "@EventListener public void handleCheckoutStarted(CheckoutStartedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 101,
+        "signature": "@EventListener public void handleOrderCreated(OrderCreatedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 119,
+        "signature": "@EventListener public void handlePaymentCaptured(PaymentCapturedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 136,
+        "signature": "@EventListener public void handleOrderDelivered(OrderDeliveredEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 153,
+        "signature": "@EventListener public void handleEnrollmentCreated(EnrollmentCreatedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\analytics\\application\\AnalyticsEventListener.java",
+        "line": 171,
+        "signature": "@EventListener public void handleEnrollmentConfirmed(EnrollmentConfirmedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\customer\\application\\TrainingCapabilityEventListener.java",
+        "line": 18,
+        "signature": "@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) public void onEnrollmentConfirmed(EnrollmentConfirmedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\NotificationEventListener.java",
+        "line": 35,
+        "signature": "@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) public void handleOrderCreated(com.sporekart.analytics.domain.events.OrderCreatedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\NotificationEventListener.java",
+        "line": 42,
+        "signature": "@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) public void handlePaymentCaptured(PaymentCapturedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\NotificationEventListener.java",
+        "line": 124,
+        "signature": "@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) public void handleEnrollmentConfirmed(EnrollmentConfirmedEvent event) {"
+      },
+      {
+        "file": "backend\\src\\main\\java\\com\\sporekart\\notification\\application\\NotificationEventListener.java",
+        "line": 172,
+        "signature": "@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) public void handleOrderDelivered(OrderDeliveredEvent event) {"
+      }
+    ],
+    "analysis": "@Async void methods bypass standard Spring ControllerAdvice exception handling. Any unhandled exception will only be logged if an AsyncUncaughtExceptionHandler is configured."
+  }
+}

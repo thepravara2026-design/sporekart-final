@@ -1,12 +1,18 @@
 package com.sporekart.order.api.dto;
 
 import com.sporekart.order.domain.OrderAddressSnapshot;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public class CreateOrderRequest {
 
     private UUID addressId;
+
+    @Valid
     private OrderAddressSnapshot shippingAddress;
+
+    @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;
 
     public CreateOrderRequest() {}

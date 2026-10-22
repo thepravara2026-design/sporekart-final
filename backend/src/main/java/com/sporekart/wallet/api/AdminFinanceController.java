@@ -3,6 +3,7 @@ package com.sporekart.wallet.api;
 import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.wallet.application.WalletService;
 import com.sporekart.wallet.domain.WalletTransaction;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/admin/finance")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminFinanceController {
 
@@ -52,7 +53,7 @@ public class AdminFinanceController {
     public ResponseEntity<ApiResponse<WalletDtos.WithdrawalResponse>> approveWithdrawal(
             Authentication authentication,
             @PathVariable UUID id,
-            @RequestBody(required = false) WalletDtos.AdminWithdrawalActionRequest request
+            @Valid @RequestBody(required = false) WalletDtos.AdminWithdrawalActionRequest request
     ) {
         String adminUser = authentication != null ? authentication.getName() : "ADMIN";
         String notes = request != null ? request.getNotes() : "Approved by Admin";
@@ -64,7 +65,7 @@ public class AdminFinanceController {
     public ResponseEntity<ApiResponse<WalletDtos.WithdrawalResponse>> rejectWithdrawal(
             Authentication authentication,
             @PathVariable UUID id,
-            @RequestBody WalletDtos.AdminWithdrawalActionRequest request
+            @Valid @RequestBody WalletDtos.AdminWithdrawalActionRequest request
     ) {
         String adminUser = authentication != null ? authentication.getName() : "ADMIN";
         String reason = request != null ? request.getRejectionReason() : "Rejected by Admin";
@@ -75,7 +76,7 @@ public class AdminFinanceController {
     @PostMapping("/manual-adjustment")
     public ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>> performManualAdjustment(
             Authentication authentication,
-            @RequestBody WalletDtos.AdminManualAdjustmentRequest request
+            @Valid @RequestBody WalletDtos.AdminManualAdjustmentRequest request
     ) {
         String adminUser = authentication != null ? authentication.getName() : "ADMIN";
         WalletTransaction txn = walletService.performAdminAdjustment(

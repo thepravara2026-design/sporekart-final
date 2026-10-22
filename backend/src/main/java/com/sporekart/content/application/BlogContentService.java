@@ -28,6 +28,9 @@ public class BlogContentService {
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     private final com.sporekart.identity.infrastructure.UserRepository userRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
     @org.springframework.beans.factory.annotation.Autowired
     public BlogContentService(
             BlogCategoryRepository categoryRepository,
@@ -247,14 +250,24 @@ public class BlogContentService {
 
     // Scheduled Publisher background runner
     @Scheduled(fixedRate = 60000)
-    @Transactional
     public void processScheduledPosts() {
         ZonedDateTime now = ZonedDateTime.now();
         List<BlogPost> duePosts = postRepository.findDueScheduledPosts(now);
         for (BlogPost post : duePosts) {
-            post.publish();
-            postRepository.save(post);
-            log.info("Automated Scheduled Publisher: Published due post ID: {}, Title: {}", post.getId(), post.getTitle());
+            try {
+                if (transactionTemplate != null) {
+                    transactionTemplate.executeWithoutResult(status -> {
+                        post.publish();
+                        postRepository.save(post);
+                    });
+                } else {
+                    post.publish();
+                    postRepository.save(post);
+                }
+                log.info("Automated Scheduled Publisher: Published due post ID: {}, Title: {}", post.getId(), post.getTitle());
+            } catch (Exception e) {
+                log.error("Automated Scheduled Publisher: Failed to publish post {} ({}): {}", post.getId(), post.getTitle(), e.getMessage(), e);
+            }
         }
     }
 

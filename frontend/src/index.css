@@ -291,3 +291,31 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #7FA66A;
 }
+
+/* Deep Forest Agritech Command Palette Fallbacks */
+.bg-forest-950 {
+  background-color: #0B1F14 !important;
+}
+.text-forest-950 {
+  color: #0B1F14 !important;
+}
+.border-forest-950 {
+  border-color: #0B1F14 !important;
+}
+.from-forest-950 {
+  --tw-gradient-from: #0B1F14 var(--tw-gradient-from-position, ) !important;
+  --tw-gradient-to: rgb(11 31 20 / 0) var(--tw-gradient-to-position, ) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.to-forest-950 {
+  --tw-gradient-to: #0B1F14 var(--tw-gradient-to-position, ) !important;
+}
+.via-forest-900 {
+  --tw-gradient-to: rgb(23 59 42 / 0) var(--tw-gradient-to-position, ) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #173B2A var(--tw-gradient-via-position, ), var(--tw-gradient-to) !important;
+}
+.via-forest-950 {
+  --tw-gradient-to: rgb(11 31 20 / 0) var(--tw-gradient-to-position, ) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #0B1F14 var(--tw-gradient-via-position, ), var(--tw-gradient-to) !important;
+}
+

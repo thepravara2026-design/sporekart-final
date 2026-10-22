@@ -34,7 +34,7 @@ public class AdminCatalogController {
     @PutMapping("/categories/{id}")
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable("id") UUID categoryId,
-            @RequestBody CatalogDtos.UpdateCategoryRequest request,
+            @Valid @RequestBody CatalogDtos.UpdateCategoryRequest request,
             org.springframework.security.core.Authentication authentication) {
         Category category = adminCatalogService.updateCategory(categoryId, request);
         adminService.logAction(getAdminUserId(authentication), "UPDATE_CATEGORY", "Category", category.getId().toString(), null, category.getName(), "Updated category: " + category.getName(), null);
@@ -53,7 +53,7 @@ public class AdminCatalogController {
     @PutMapping("/products/{id}")
     public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> updateProduct(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.UpdateProductRequest request,
+            @Valid @RequestBody CatalogDtos.UpdateProductRequest request,
             org.springframework.security.core.Authentication authentication) {
         Product product = adminCatalogService.updateProduct(productId, request);
         adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT", "Product", product.getId().toString(), null, product.getStatus().name(), "Updated product: " + product.getTitle(), null);
@@ -63,7 +63,7 @@ public class AdminCatalogController {
     @PatchMapping("/products/{id}/status")
     public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> updateProductStatus(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.UpdateProductStatusRequest request,
+            @Valid @RequestBody CatalogDtos.UpdateProductStatusRequest request,
             org.springframework.security.core.Authentication authentication) {
         Product product = adminCatalogService.updateProductStatus(productId, request.getStatus(), request.getIsActive());
         adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT_STATUS", "Product", product.getId().toString(), null, product.getStatus().name(), "Updated product status: " + product.getTitle(), null);
@@ -73,9 +73,9 @@ public class AdminCatalogController {
     @PostMapping("/products/{id}/information")
     public ResponseEntity<ApiResponse<ProductInformation>> updateProductInformation(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.CreateProductInformationRequest request,
+            @Valid @RequestBody CatalogDtos.CreateProductInformationRequest request,
             org.springframework.security.core.Authentication authentication) {
-        Product product = adminCatalogService.publishProduct(productId);
+        Product product = adminCatalogService.getProduct(productId);
         ProductInformation info = adminCatalogService.saveOrUpdateProductInformation(product, request);
         adminService.logAction(getAdminUserId(authentication), "UPDATE_PRODUCT_INFO", "Product", productId.toString(), null, product.getTitle(), "Updated technical specifications for: " + product.getTitle(), null);
         return ResponseEntity.ok(ApiResponse.success(info));
@@ -142,7 +142,7 @@ public class AdminCatalogController {
     @PutMapping("/products/{id}/media/reorder")
     public ResponseEntity<ApiResponse<List<ProductMedia>>> reorderMedia(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.UpdateMediaOrderRequest request) {
+            @Valid @RequestBody CatalogDtos.UpdateMediaOrderRequest request) {
         List<ProductMedia> mediaList = adminCatalogService.updateMediaOrder(productId, request);
         return ResponseEntity.ok(ApiResponse.success(mediaList));
     }
@@ -150,7 +150,7 @@ public class AdminCatalogController {
     @PutMapping("/products/{id}/media")
     public ResponseEntity<ApiResponse<List<ProductMedia>>> syncProductMedia(
             @PathVariable("id") UUID productId,
-            @RequestBody CatalogDtos.SyncMediaRequest request) {
+            @Valid @RequestBody CatalogDtos.SyncMediaRequest request) {
         List<CatalogDtos.CreateMediaRequest> items = request != null && request.getItems() != null ? request.getItems() : java.util.Collections.emptyList();
         List<ProductMedia> mediaList = adminCatalogService.syncProductMedia(productId, items);
         return ResponseEntity.ok(ApiResponse.success(mediaList));
@@ -170,6 +170,20 @@ public class AdminCatalogController {
         );
         adminService.logAction(null, "REPLENISH_STOCK", "ProductVariant", variantId.toString(), null, String.valueOf(request.getQuantity()), "Replenished inventory stock by +" + request.getQuantity() + " units", null);
         return ResponseEntity.ok(ApiResponse.success(record));
+    }
+
+    @GetMapping("/inventory/{variantId}")
+    public ResponseEntity<ApiResponse<InventoryRecord>> getInventoryRecord(
+            @PathVariable("variantId") UUID variantId) {
+        InventoryRecord record = inventoryService.getInventoryRecord(variantId);
+        return ResponseEntity.ok(ApiResponse.success(record));
+    }
+
+    @GetMapping("/inventory/{variantId}/audit")
+    public ResponseEntity<ApiResponse<List<InventoryAuditEvent>>> getInventoryAuditTrail(
+            @PathVariable("variantId") UUID variantId) {
+        List<InventoryAuditEvent> trail = inventoryService.getAuditTrail(variantId);
+        return ResponseEntity.ok(ApiResponse.success(trail));
     }
 }
 

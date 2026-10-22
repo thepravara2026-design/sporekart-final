@@ -1,0 +1,2780 @@
+[
+  {
+    "controller": "AdminController",
+    "file": "backend/src/main/java/com/sporekart\\admin\\api\\AdminController.java",
+    "method": "GET",
+    "path": "/admin/audit-logs",
+    "handler": "getAuditLogs",
+    "return_type": "ResponseEntity<ApiResponse<Page<AdminAuditLog>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(value = \"page\", defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"size\", defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminController",
+    "file": "backend/src/main/java/com/sporekart\\admin\\api\\AdminController.java",
+    "method": "GET",
+    "path": "/admin/analytics/overview",
+    "handler": "getAnalyticsOverview",
+    "return_type": "ResponseEntity<ApiResponse<AdminAnalyticsOverview>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "AnalyticsController",
+    "file": "backend/src/main/java/com/sporekart\\analytics\\api\\AnalyticsController.java",
+    "method": "POST",
+    "path": "/analytics/track-product-view",
+    "handler": "trackProductView",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "TrackProductViewRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrackProductViewRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AnalyticsController",
+    "file": "backend/src/main/java/com/sporekart\\analytics\\api\\AnalyticsController.java",
+    "method": "GET",
+    "path": "/analytics/funnel",
+    "handler": "getFunnelSummary",
+    "return_type": "ResponseEntity<ApiResponse<AnalyticsApplicationService.AnalyticsSummaryResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "AnalyticsController",
+    "file": "backend/src/main/java/com/sporekart\\analytics\\api\\AnalyticsController.java",
+    "method": "GET",
+    "path": "/analytics/events",
+    "handler": "getRecentEvents",
+    "return_type": "ResponseEntity<ApiResponse<List<AnalyticsEvent>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "GET",
+    "path": "/cart",
+    "handler": "getCart",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "POST",
+    "path": "/cart/items",
+    "handler": "addItem",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AddToCartRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@Valid @RequestBody AddToCartRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "POST",
+    "path": "/cart/merge",
+    "handler": "mergeGuestCart",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "DELETE",
+    "path": "/cart",
+    "handler": "clearCart",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "POST",
+    "path": "/cart/validate",
+    "handler": "validateCart",
+    "return_type": "ResponseEntity<ApiResponse<CartValidationResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "POST",
+    "path": "/cart/apply-promotion",
+    "handler": "applyPromotion",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "com.sporekart.promotion.api.PromotionDtos.ApplyPromotionRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@Valid @RequestBody com.sporekart.promotion.api.PromotionDtos.ApplyPromotionRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CartController",
+    "file": "backend/src/main/java/com/sporekart\\cart\\api\\CartController.java",
+    "method": "DELETE",
+    "path": "/cart/remove-promotion",
+    "handler": "removePromotion",
+    "return_type": "ResponseEntity<ApiResponse<CartResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminCatalogController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\AdminCatalogController.java",
+    "method": "POST",
+    "path": "/admin/catalog/categories",
+    "handler": "createCategory",
+    "return_type": "ResponseEntity<ApiResponse<Category>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CatalogDtos.CreateCategoryRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody CatalogDtos.CreateCategoryRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AdminCatalogController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\AdminCatalogController.java",
+    "method": "POST",
+    "path": "/admin/catalog/products",
+    "handler": "createProduct",
+    "return_type": "ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CatalogDtos.CreateProductRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody CatalogDtos.CreateProductRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AdminCatalogController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\AdminCatalogController.java",
+    "method": "POST",
+    "path": "/admin/catalog/offers",
+    "handler": "createOffer",
+    "return_type": "ResponseEntity<ApiResponse<ProductOffer>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CatalogDtos.CreateOfferRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody CatalogDtos.CreateOfferRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AdminCatalogController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\AdminCatalogController.java",
+    "method": "POST",
+    "path": "/admin/catalog/media",
+    "handler": "addMedia",
+    "return_type": "ResponseEntity<ApiResponse<ProductMedia>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CatalogDtos.CreateMediaRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody CatalogDtos.CreateMediaRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminCatalogController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\AdminCatalogController.java",
+    "method": "GET",
+    "path": "/admin/catalog/products",
+    "handler": "getAdminProducts",
+    "return_type": "ResponseEntity<ApiResponse<org.springframework.data.domain.Page<CatalogDtos.AdminProductDto>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) String category",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) ProductStatus status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"10\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"createdAt_desc\") String sortBy",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "GlobalSearchController",
+    "file": "backend/src/main/java/com/sporekart\\catalog\\api\\GlobalSearchController.java",
+    "method": "GET",
+    "path": "/search",
+    "handler": "search",
+    "return_type": "ResponseEntity<ApiResponse<GlobalSearchResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(value = \"q\", required = false) String query",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\AdminContentController.java",
+    "method": "GET",
+    "path": "/admin/content/posts",
+    "handler": "getAllPosts",
+    "return_type": "ResponseEntity<ApiResponse<Page<BlogDtos.BlogPostSummaryResponse>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) BlogPostStatus status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"10\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"createdAt\") String sortBy",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"DESC\") String sortDir",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\AdminContentController.java",
+    "method": "POST",
+    "path": "/admin/content/posts",
+    "handler": "createPostDraft",
+    "return_type": "ResponseEntity<ApiResponse<BlogDtos.BlogPostDetailResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "BlogDtos.CreatePostRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody BlogDtos.CreatePostRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\AdminContentController.java",
+    "method": "POST",
+    "path": "/admin/content/categories",
+    "handler": "createCategory",
+    "return_type": "ResponseEntity<ApiResponse<BlogDtos.BlogCategoryResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "BlogDtos.CreateCategoryRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody BlogDtos.CreateCategoryRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\AdminContentController.java",
+    "method": "POST",
+    "path": "/admin/content/authors",
+    "handler": "createAuthor",
+    "return_type": "ResponseEntity<ApiResponse<BlogDtos.BlogAuthorResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "BlogDtos.CreateAuthorRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody BlogDtos.CreateAuthorRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\AdminContentController.java",
+    "method": "POST",
+    "path": "/admin/content/tags",
+    "handler": "createTag",
+    "return_type": "ResponseEntity<ApiResponse<BlogDtos.BlogTagResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "BlogDtos.CreateTagRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody BlogDtos.CreateTagRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "ContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\ContentController.java",
+    "method": "GET",
+    "path": "/content/posts",
+    "handler": "getPublishedPosts",
+    "return_type": "ResponseEntity<ApiResponse<Page<BlogDtos.BlogPostSummaryResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) String category",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String tag",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String query",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"10\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"publishedAt\") String sortBy",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"DESC\") String sortDir",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "ContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\ContentController.java",
+    "method": "GET",
+    "path": "/content/categories",
+    "handler": "getCategories",
+    "return_type": "ResponseEntity<ApiResponse<List<BlogDtos.BlogCategoryResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "ContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\ContentController.java",
+    "method": "GET",
+    "path": "/content/tags",
+    "handler": "getTags",
+    "return_type": "ResponseEntity<ApiResponse<List<BlogDtos.BlogTagResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "ContentController",
+    "file": "backend/src/main/java/com/sporekart\\content\\api\\ContentController.java",
+    "method": "GET",
+    "path": "/content/authors",
+    "handler": "getAuthors",
+    "return_type": "ResponseEntity<ApiResponse<List<BlogDtos.BlogAuthorResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "AdminCustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\AdminCustomerController.java",
+    "method": "GET",
+    "path": "/admin/customers",
+    "handler": "getAllCustomers",
+    "return_type": "ResponseEntity<ApiResponse<Page<AdminCustomerResponse>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(value = \"page\", defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"size\", defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerController.java",
+    "method": "GET",
+    "path": "/customer/capabilities",
+    "handler": "getCapabilities",
+    "return_type": "ResponseEntity<ApiResponse<CustomerDtos.CapabilityResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "CustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerController.java",
+    "method": "GET",
+    "path": "/customer/profile",
+    "handler": "getProfile",
+    "return_type": "ResponseEntity<ApiResponse<CustomerProfile>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "CustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerController.java",
+    "method": "PUT",
+    "path": "/customer/profile",
+    "handler": "updateProfile",
+    "return_type": "ResponseEntity<ApiResponse<CustomerProfile>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CustomerDtos.UpdateProfileRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody CustomerDtos.UpdateProfileRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerController.java",
+    "method": "GET",
+    "path": "/customer/addresses",
+    "handler": "getAddresses",
+    "return_type": "ResponseEntity<ApiResponse<List<CustomerDtos.AddressDto>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "CustomerController",
+    "file": "backend/src/main/java/com/sporekart\\customer\\api\\CustomerController.java",
+    "method": "POST",
+    "path": "/customer/addresses",
+    "handler": "addAddress",
+    "return_type": "ResponseEntity<ApiResponse<CustomerDtos.AddressDto>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CustomerDtos.AddressRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody CustomerDtos.AddressRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminAuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AdminAuthController.java",
+    "method": "POST",
+    "path": "/admin/auth/otp/request",
+    "handler": "requestAdminOtp",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AuthDtos.OtpRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody(required = false) AuthDtos.OtpRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminAuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AdminAuthController.java",
+    "method": "POST",
+    "path": "/admin/auth/otp/verify",
+    "handler": "verifyAdminOtp",
+    "return_type": "ResponseEntity<ApiResponse<AuthDtos.AuthResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AuthDtos.VerifyOtpRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody(required = false) AuthDtos.VerifyOtpRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+    "method": "POST",
+    "path": "/auth/otp/request",
+    "handler": "requestOtp",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AuthDtos.OtpRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody(required = false) AuthDtos.OtpRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+    "method": "POST",
+    "path": "/auth/otp/verify",
+    "handler": "verifyOtp",
+    "return_type": "ResponseEntity<ApiResponse<AuthDtos.AuthResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AuthDtos.VerifyOtpRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody(required = false) AuthDtos.VerifyOtpRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+    "method": "POST",
+    "path": "/auth/oauth/google",
+    "handler": "loginWithGoogle",
+    "return_type": "ResponseEntity<ApiResponse<AuthDtos.AuthResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "AuthDtos.GoogleOAuthRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody AuthDtos.GoogleOAuthRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AuthController",
+    "file": "backend/src/main/java/com/sporekart\\identity\\api\\AuthController.java",
+    "method": "GET",
+    "path": "/auth/me",
+    "handler": "getCurrentUser",
+    "return_type": "ResponseEntity<ApiResponse<AuthDtos.UserDto>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "MediaController",
+    "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaController.java",
+    "method": "POST",
+    "path": "/media/upload/initiate",
+    "handler": "initiateUpload",
+    "return_type": "ResponseEntity<ApiResponse<MediaDtos.InitiateUploadResponse>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": true,
+    "body_type": "MediaDtos.InitiateUploadRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody MediaDtos.InitiateUploadRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "MediaController",
+    "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaController.java",
+    "method": "POST",
+    "path": "/media/upload/complete",
+    "handler": "completeUpload",
+    "return_type": "ResponseEntity<ApiResponse<MediaDtos.MediaAssetDto>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": true,
+    "body_type": "MediaDtos.CompleteUploadRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody MediaDtos.CompleteUploadRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "MediaController",
+    "file": "backend/src/main/java/com/sporekart\\media\\api\\MediaController.java",
+    "method": "POST",
+    "path": "/media/link",
+    "handler": "linkMediaToEntity",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "MediaDtos.LinkMediaRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody MediaDtos.LinkMediaRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\AdminNotificationController.java",
+    "method": "GET",
+    "path": "/admin/notifications",
+    "handler": "getAllNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationEvent>>>",
+    "auth": "hasRole('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) String eventType",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\AdminNotificationController.java",
+    "method": "GET",
+    "path": "/api/v1/admin/notifications",
+    "handler": "getAllNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationEvent>>>",
+    "auth": "hasRole('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) String eventType",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\AdminNotificationController.java",
+    "method": "GET",
+    "path": "/admin/notifications/in-app",
+    "handler": "getAdminInAppNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationDto>>>",
+    "auth": "hasRole('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(defaultValue = \"false\") boolean unreadOnly",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\AdminNotificationController.java",
+    "method": "GET",
+    "path": "/api/v1/admin/notifications/in-app",
+    "handler": "getAdminInAppNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationDto>>>",
+    "auth": "hasRole('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(defaultValue = \"false\") boolean unreadOnly",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\CustomerNotificationController.java",
+    "method": "GET",
+    "path": "/notifications",
+    "handler": "getCustomerNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationDto>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"false\") boolean unreadOnly",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\CustomerNotificationController.java",
+    "method": "GET",
+    "path": "/api/v1/notifications",
+    "handler": "getCustomerNotifications",
+    "return_type": "ResponseEntity<ApiResponse<Page<NotificationDto>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"false\") boolean unreadOnly",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\CustomerNotificationController.java",
+    "method": "GET",
+    "path": "/notifications/unread-count",
+    "handler": "getUnreadCount",
+    "return_type": "ResponseEntity<ApiResponse<Map<String, Object>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "CustomerNotificationController",
+    "file": "backend/src/main/java/com/sporekart\\notification\\api\\CustomerNotificationController.java",
+    "method": "GET",
+    "path": "/api/v1/notifications/unread-count",
+    "handler": "getUnreadCount",
+    "return_type": "ResponseEntity<ApiResponse<Map<String, Object>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AdminOrderController",
+    "file": "backend/src/main/java/com/sporekart\\order\\api\\AdminOrderController.java",
+    "method": "GET",
+    "path": "/admin/orders",
+    "handler": "getAllOrders",
+    "return_type": "ResponseEntity<ApiResponse<Page<OrderResponse>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(value = \"page\", defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"size\", defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"status\", required = false) OrderStatus status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"includeUnpaid\", defaultValue = \"false\") boolean includeUnpaid",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "OrderController",
+    "file": "backend/src/main/java/com/sporekart\\order\\api\\OrderController.java",
+    "method": "POST",
+    "path": "/orders",
+    "handler": "createOrder",
+    "return_type": "ResponseEntity<ApiResponse<OrderResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CreateOrderRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(value = \"Idempotency-Key\", required = false) String idempotencyKey",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@Valid @RequestBody CreateOrderRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "OrderController",
+    "file": "backend/src/main/java/com/sporekart\\order\\api\\OrderController.java",
+    "method": "GET",
+    "path": "/orders",
+    "handler": "getMyOrders",
+    "return_type": "ResponseEntity<ApiResponse<List<OrderResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "PaymentController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentController.java",
+    "method": "POST",
+    "path": "/payment/initiate",
+    "handler": "initiatePayment",
+    "return_type": "ResponseEntity<ApiResponse<PaymentDtos.InitiatePaymentResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "PaymentDtos.InitiatePaymentRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody PaymentDtos.InitiatePaymentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "PaymentController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentController.java",
+    "method": "POST",
+    "path": "/payment/initiate-enrollment",
+    "handler": "initiateEnrollmentPayment",
+    "return_type": "ResponseEntity<ApiResponse<PaymentDtos.InitiatePaymentResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "PaymentDtos.InitiateEnrollmentPaymentRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody PaymentDtos.InitiateEnrollmentPaymentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "PaymentController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentController.java",
+    "method": "POST",
+    "path": "/payment/verify",
+    "handler": "verifyPayment",
+    "return_type": "ResponseEntity<ApiResponse<PaymentDtos.VerifyPaymentResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "PaymentDtos.VerifyPaymentRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody PaymentDtos.VerifyPaymentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(name = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "PaymentController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentController.java",
+    "method": "GET",
+    "path": "/payment/summary",
+    "handler": "getPaymentSummary",
+    "return_type": "ResponseEntity<ApiResponse<PaymentDtos.PaymentSummaryResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(defaultValue = \"ORDER\") String type",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam java.util.UUID id",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(name = \"X-Session-ID\", required = false) String sessionId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "PaymentController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentController.java",
+    "method": "POST",
+    "path": "/payment/verify-enrollment",
+    "handler": "verifyEnrollmentPayment",
+    "return_type": "ResponseEntity<ApiResponse<PaymentDtos.VerifyEnrollmentPaymentResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "PaymentDtos.VerifyEnrollmentPaymentRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody PaymentDtos.VerifyEnrollmentPaymentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "PaymentWebhookController",
+    "file": "backend/src/main/java/com/sporekart\\payment\\api\\PaymentWebhookController.java",
+    "method": "POST",
+    "path": "/payment/webhook",
+    "handler": "handleWebhook",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "String",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody String rawBody",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Razorpay-Signature\", required = false) String signature",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminPromotionController",
+    "file": "backend/src/main/java/com/sporekart\\promotion\\api\\AdminPromotionController.java",
+    "method": "GET",
+    "path": "/admin/promotions",
+    "handler": "getPromotions",
+    "return_type": "ResponseEntity<ApiResponse<Page<Promotion>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) PromotionStatus status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) PromotionTargetAudience audience",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminPromotionController",
+    "file": "backend/src/main/java/com/sporekart\\promotion\\api\\AdminPromotionController.java",
+    "method": "POST",
+    "path": "/admin/promotions",
+    "handler": "createPromotion",
+    "return_type": "ResponseEntity<ApiResponse<Promotion>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "PromotionDtos.CreatePromotionRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody PromotionDtos.CreatePromotionRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerPromotionController",
+    "file": "backend/src/main/java/com/sporekart\\promotion\\api\\CustomerPromotionController.java",
+    "method": "GET",
+    "path": "/promotions/available",
+    "handler": "getAvailablePromotions",
+    "return_type": "ResponseEntity<ApiResponse<List<Promotion>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) PromotionTargetAudience audience",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerPromotionController",
+    "file": "backend/src/main/java/com/sporekart\\promotion\\api\\CustomerPromotionController.java",
+    "method": "POST",
+    "path": "/promotions/validate-batch",
+    "handler": "validateBatchPromotion",
+    "return_type": "ResponseEntity<ApiResponse<PromotionDtos.PromotionValidationResult>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "PromotionDtos.BatchPromotionValidationRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody PromotionDtos.BatchPromotionValidationRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\AdminReviewController.java",
+    "method": "GET",
+    "path": "/admin/reviews",
+    "handler": "getAdminReviews",
+    "return_type": "ResponseEntity<ApiResponse<Page<ReviewDtos.ReviewResponse>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) ReviewStatus status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) Integer rating",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) UUID productId",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String q",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"15\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\AdminReviewController.java",
+    "method": "GET",
+    "path": "/admin/reviews/summary",
+    "handler": "getAdminReviewSummary",
+    "return_type": "ResponseEntity<ApiResponse<ReviewDtos.AdminReviewSummary>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "CustomerReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\CustomerReviewController.java",
+    "method": "POST",
+    "path": "/customer/reviews",
+    "handler": "createReview",
+    "return_type": "ResponseEntity<ApiResponse<ReviewDtos.ReviewResponse>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": true,
+    "body_type": "ReviewDtos.CreateReviewRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody ReviewDtos.CreateReviewRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\CustomerReviewController.java",
+    "method": "GET",
+    "path": "/customer/reviews",
+    "handler": "getCustomerReviews",
+    "return_type": "ResponseEntity<ApiResponse<Page<ReviewDtos.ReviewResponse>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"10\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "CustomerReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\CustomerReviewController.java",
+    "method": "GET",
+    "path": "/customer/reviews/pending",
+    "handler": "getPendingReviews",
+    "return_type": "ResponseEntity<ApiResponse<List<ReviewDtos.PendingReviewDto>>>",
+    "auth": "isAuthenticated()",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "PublicReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\PublicReviewController.java",
+    "method": "GET",
+    "path": "/reviews/latest",
+    "handler": "getLatestReviews",
+    "return_type": "ResponseEntity<ApiResponse<List<ReviewDtos.ReviewResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(defaultValue = \"5\") int limit",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "PublicReviewController",
+    "file": "backend/src/main/java/com/sporekart\\review\\api\\PublicReviewController.java",
+    "method": "GET",
+    "path": "/reviews",
+    "handler": "getAllPublishedReviews",
+    "return_type": "ResponseEntity<ApiResponse<Page<ReviewDtos.ReviewResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"10\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "SeoController",
+    "file": "backend/src/main/java/com/sporekart\\shared\\api\\SeoController.java",
+    "method": "GET",
+    "path": "/seo/robots.txt",
+    "handler": "getRobotsTxt",
+    "return_type": "ResponseEntity<String>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "SeoController",
+    "file": "backend/src/main/java/com/sporekart\\shared\\api\\SeoController.java",
+    "method": "GET",
+    "path": "/seo/sitemap.xml",
+    "handler": "getSitemapXml",
+    "return_type": "ResponseEntity<String>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "ShippingController",
+    "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingController.java",
+    "method": "POST",
+    "path": "/shipping/create",
+    "handler": "createShipment",
+    "return_type": "ResponseEntity<ApiResponse<ShippingDtos.ShipmentResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "ShippingDtos.CreateShipmentRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody ShippingDtos.CreateShipmentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "ShippingWebhookController",
+    "file": "backend/src/main/java/com/sporekart\\shipping\\api\\ShippingWebhookController.java",
+    "method": "POST",
+    "path": "/shipping/webhook",
+    "handler": "handleShiprocketWebhook",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "ShippingDtos.ShiprocketWebhookPayload",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestBody ShippingDtos.ShiprocketWebhookPayload payload",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Shiprocket-Signature\", required = false) String signature",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestHeader(value = \"X-Shiprocket-Token\", required = false) String token",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminSupportController",
+    "file": "backend/src/main/java/com/sporekart\\support\\api\\AdminSupportController.java",
+    "method": "GET",
+    "path": "/admin/support/tickets",
+    "handler": "getAllTickets",
+    "return_type": "ResponseEntity<ApiResponse<Page<SupportTicket>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(value = \"page\", defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(value = \"size\", defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminSupportController",
+    "file": "backend/src/main/java/com/sporekart\\support\\api\\AdminSupportController.java",
+    "method": "GET",
+    "path": "/admin/support/csat-summary",
+    "handler": "getCsatSummary",
+    "return_type": "ResponseEntity<ApiResponse<Map<String, Object>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "SupportController",
+    "file": "backend/src/main/java/com/sporekart\\support\\api\\SupportController.java",
+    "method": "POST",
+    "path": "/support/tickets",
+    "handler": "createTicket",
+    "return_type": "ResponseEntity<ApiResponse<SupportTicket>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "CreateTicketRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody CreateTicketRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "SupportController",
+    "file": "backend/src/main/java/com/sporekart\\support\\api\\SupportController.java",
+    "method": "GET",
+    "path": "/support/tickets",
+    "handler": "getMyTickets",
+    "return_type": "ResponseEntity<ApiResponse<List<SupportTicket>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "GET",
+    "path": "/admin/training/enrollments",
+    "handler": "getEnrollments",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingDtos.AdminEnrollmentResponse>>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/categories",
+    "handler": "createCategory",
+    "return_type": "ResponseEntity<ApiResponse<CourseCategory>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.CreateCategoryRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.CreateCategoryRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/courses",
+    "handler": "createCourse",
+    "return_type": "ResponseEntity<ApiResponse<TrainingDtos.CourseResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.CreateCourseRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.CreateCourseRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/batches",
+    "handler": "createBatch",
+    "return_type": "ResponseEntity<ApiResponse<TrainingDtos.BatchResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.CreateBatchRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.CreateBatchRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/schedules",
+    "handler": "addSchedule",
+    "return_type": "ResponseEntity<ApiResponse<TrainingDtos.ScheduleResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.AddScheduleRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.AddScheduleRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/attendance",
+    "handler": "markAttendance",
+    "return_type": "ResponseEntity<ApiResponse<String>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.MarkAttendanceRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.MarkAttendanceRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminTrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\AdminTrainingController.java",
+    "method": "POST",
+    "path": "/admin/training/complete-course",
+    "handler": "completeCourse",
+    "return_type": "ResponseEntity<ApiResponse<TrainingDtos.CertificateResponse>>",
+    "auth": "hasRole('ADMIN')",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.CompleteCourseRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.CompleteCourseRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/courses",
+    "handler": "getCourses",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingDtos.CourseResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/my-bookings",
+    "handler": "getMyBookings",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingDtos.EnrollmentResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "POST",
+    "path": "/training/reviews",
+    "handler": "createReview",
+    "return_type": "ResponseEntity<ApiResponse<TrainingDtos.TrainingReviewResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.CreateTrainingReviewRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.CreateTrainingReviewRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/my-reviews",
+    "handler": "getMyReviews",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingDtos.TrainingReviewResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/pending-reviews",
+    "handler": "getPendingReviews",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingDtos.PendingTrainingReviewResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "org.springframework.security.core.Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/glimpses",
+    "handler": "getPublicGlimpses",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingGlimpse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "GET",
+    "path": "/training/admin/glimpses",
+    "handler": "getAdminGlimpses",
+    "return_type": "ResponseEntity<ApiResponse<List<TrainingGlimpse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "TrainingController",
+    "file": "backend/src/main/java/com/sporekart\\training\\api\\TrainingController.java",
+    "method": "POST",
+    "path": "/training/admin/glimpses",
+    "handler": "saveGlimpse",
+    "return_type": "ResponseEntity<ApiResponse<TrainingGlimpse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "TrainingDtos.SaveTrainingGlimpseRequest",
+    "has_valid": true,
+    "params": [
+      {
+        "raw": "@Valid @RequestBody TrainingDtos.SaveTrainingGlimpseRequest req",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminFinanceController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\AdminFinanceController.java",
+    "method": "GET",
+    "path": "/admin/finance/overview",
+    "handler": "getFinanceOverview",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.AdminFinanceSummaryResponse>>",
+    "auth": "hasAuthority('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": []
+  },
+  {
+    "controller": "AdminFinanceController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\AdminFinanceController.java",
+    "method": "GET",
+    "path": "/admin/finance/transactions",
+    "handler": "getAllTransactions",
+    "return_type": "ResponseEntity<ApiResponse<Page<WalletDtos.WalletTransactionResponse>>>",
+    "auth": "hasAuthority('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminFinanceController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\AdminFinanceController.java",
+    "method": "GET",
+    "path": "/admin/finance/withdrawals",
+    "handler": "getAllWithdrawals",
+    "return_type": "ResponseEntity<ApiResponse<Page<WalletDtos.WithdrawalResponse>>>",
+    "auth": "hasAuthority('ROLE_ADMIN')",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "@RequestParam(required = false, defaultValue = \"ALL\") String status",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"25\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "AdminFinanceController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\AdminFinanceController.java",
+    "method": "POST",
+    "path": "/admin/finance/manual-adjustment",
+    "handler": "performManualAdjustment",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>>",
+    "auth": "hasAuthority('ROLE_ADMIN')",
+    "has_request_body": true,
+    "body_type": "WalletDtos.AdminManualAdjustmentRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody WalletDtos.AdminManualAdjustmentRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "GET",
+    "path": "/wallet",
+    "handler": "getWallet",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.WalletResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "GET",
+    "path": "/wallet/balance",
+    "handler": "getWalletBalance",
+    "return_type": "ResponseEntity<ApiResponse<BigDecimal>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "GET",
+    "path": "/wallet/transactions",
+    "handler": "getTransactions",
+    "return_type": "ResponseEntity<ApiResponse<Page<WalletDtos.WalletTransactionResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestParam(required = false, defaultValue = \"ALL\") String type",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) String search",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"0\") int page",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(defaultValue = \"20\") int size",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "POST",
+    "path": "/wallet/withdraw",
+    "handler": "requestWithdrawal",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.WithdrawalResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "WalletDtos.WithdrawRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody WalletDtos.WithdrawRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "GET",
+    "path": "/wallet/withdrawals",
+    "handler": "getWithdrawals",
+    "return_type": "ResponseEntity<ApiResponse<List<WalletDtos.WithdrawalResponse>>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": false,
+    "body_type": null,
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "POST",
+    "path": "/wallet/add-money",
+    "handler": "addMoney",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.AddMoneyResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "WalletDtos.AddMoneyRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody WalletDtos.AddMoneyRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "POST",
+    "path": "/wallet/verify-add-money",
+    "handler": "verifyAddMoney",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "WalletDtos.VerifyAddMoneyRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody WalletDtos.VerifyAddMoneyRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      },
+      {
+        "raw": "@RequestParam(required = false) BigDecimal amount",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": true,
+        "is_auth": false
+      }
+    ]
+  },
+  {
+    "controller": "WalletController",
+    "file": "backend/src/main/java/com/sporekart\\wallet\\api\\WalletController.java",
+    "method": "POST",
+    "path": "/wallet/checkout-pay",
+    "handler": "processCheckoutWalletPay",
+    "return_type": "ResponseEntity<ApiResponse<WalletDtos.WalletCheckoutPayResponse>>",
+    "auth": "PERMIT_ALL_OR_SECURITY_CONFIG",
+    "has_request_body": true,
+    "body_type": "WalletDtos.WalletCheckoutPayRequest",
+    "has_valid": false,
+    "params": [
+      {
+        "raw": "Authentication authentication",
+        "is_body": false,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": true
+      },
+      {
+        "raw": "@RequestBody WalletDtos.WalletCheckoutPayRequest request",
+        "is_body": true,
+        "is_path_var": false,
+        "is_request_param": false,
+        "is_auth": false
+      }
+    ]
+  }
+]

@@ -243,7 +243,13 @@ class CartServiceUnitTest {
                 .thenReturn(Optional.of(guestCart));
         when(cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE))
                 .thenReturn(Optional.of(testCart));
-        when(variantRepository.findById(variantId)).thenReturn(Optional.of(testVariant));
+        when(variantRepository.findAllById(any())).thenReturn(List.of(testVariant));
+        PricingService.PriceCalculationResult priceResult = PricingService.PriceCalculationResult.builder()
+                .netPriceInr(new BigDecimal("100.00"))
+                .gstAmountInr(new BigDecimal("5.00"))
+                .finalPriceInr(new BigDecimal("105.00"))
+                .build();
+        when(pricingService.calculatePrice(any(), any())).thenReturn(priceResult);
         when(cartRepository.save(any(Cart.class))).thenAnswer(i -> i.getArgument(0));
 
         CartResponse response = cartService.mergeGuestCart(guestSession, userId);

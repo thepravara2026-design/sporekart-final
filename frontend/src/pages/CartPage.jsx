@@ -1,4 +1,10 @@
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import EmptyState from '../components/EmptyState';
+import MediaImage from '../components/MediaImage';
 import PromoCodeSection from '../components/PromoCodeSection';
+import { ShoppingBag, Minus, Plus, Trash2, Truck, ShieldCheck, RefreshCw, AlertTriangle, Tag, ArrowRight } from 'lucide-react';
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, loading, validateCart } = useCart();
@@ -13,7 +19,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="min-h-screen pt-4 sm:pt-6 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-forest-900">Your Shopping Cart</h1>
         <p className="text-sm text-typography-secondary mt-1">

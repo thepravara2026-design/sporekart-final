@@ -5,7 +5,7 @@ import ContactSection from '../components/ContactSection';
 
 export default function ContactPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-16 space-y-6 sm:space-y-8">
       <SeoHead
         title="Contact Sporekart — Shriyap Enterprise, Davangere & Customer Support"
         description="Get in touch with Sporekart (Shriyap Enterprise, Davangere-577001) for fresh mushroom bulk orders, spawn seed inquiries, farm setup consultancy, and workshop enrollments."
@@ -17,6 +17,7 @@ export default function ContactPage() {
       <ContactSection 
         title="Contact Sporekart Support & Advisory"
         subtitle="Have questions about spawn seeds, orders, payments, shipments, or masterclass enrollments? Contact us directly or open a support ticket."
+        isH1={true}
       />
     </div>
   );

@@ -268,7 +268,7 @@ export default function CheckoutPage({ user, setUser }) {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="min-h-screen pt-4 sm:pt-6 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-fade-in">
       {/* Step Indicator Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-forest-900">Secure Checkout</h1>

@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-18T01:26:43Z",
+  "scenario_1": {
+    "scenario": "Payment Reconciliation",
+    "orderId": "60654756-7a20-437d-ae72-65c7d96bda16",
+    "razorpayOrderId": "order_mock_65ff7f03",
+    "isIdempotentReconciled": true,
+    "duplicateCharged": false
+  },
+  "scenario_2": {
+    "scenario": "Wallet Debit vs Order Completion",
+    "orderId": "ea573f65-c7fd-4b82-b49f-a9e0e190e2d0",
+    "orderTotal": 222.88,
+    "balInitial": 2967.12,
+    "balAfterDebit": 2744.24,
+    "statusAfterCheckoutPay": "PENDING_PAYMENT",
+    "statusAfterCancel": "CANCELLED",
+    "balAfterCancel": 2744.24,
+    "isAutoCompensated": false,
+    "finding": "Wallet debit occurs before order status update. If verify is not completed, cancelling a PENDING_PAYMENT order does NOT credit wallet because isPaidOrder check requires PAID status!"
+  },
+  "scenario_3": {
+    "scenario": "Courier Webhook Duplicate Deliveries",
+    "orderId": "5f6f3488-a5f1-4a74-b8e5-c8f392fb1afb",
+    "awb": "AWB-1792286781075",
+    "eventsAfterFirst": 2,
+    "eventsAfterSecond": 2,
+    "duplicateScanIgnored": true,
+    "orderStatusFinal": "DELIVERED",
+    "duplicateNotificationsPrevented": true
+  }
+}

@@ -111,7 +111,7 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
     : "https://sporekart.in/products";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-16 space-y-6 sm:space-y-8 animate-fade-in">
       <SeoHead
         title="Mushroom Catalog — Fresh Mushrooms, Spawn Seeds & Growing Kits | Sporekart"
         description="Buy fresh organic button & oyster mushrooms, high-yield grain spawn seeds, dehydrated mushrooms, and indoor growing kits online across India."

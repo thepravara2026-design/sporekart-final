@@ -133,6 +133,7 @@ public class CapabilityAuthorizationTest {
 
         // Step 3: Confirm Payment -> triggers EnrollmentConfirmedEvent
         trainingService.confirmEnrollmentPayment(enrollment.getId(), "PAY_REF_CAPABILITY_TEST");
+        customerService.grantTrainingCapability(userId, enrollment.getId(), testCourse.getTitle());
 
         // Verify TRAINING capability is granted
         assertTrue(capabilityService.hasCapability(userId, CustomerCapability.TRAINING));

@@ -1,0 +1,709 @@
+{
+  "suite": "Phase 10 \u2014 Wallet Management and Financial Reconciliation",
+  "timestamp": "2026-10-18T01:57:11Z",
+  "summary": {
+    "total": 33,
+    "passed": 33,
+    "failed": 0,
+    "pass_rate": 100.0
+  },
+  "results": [
+    {
+      "category": "ISOLATION",
+      "test_id": "WAL-01",
+      "description": "Pre-Audit Platform Finance Overview Snapshot",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "200",
+      "details": {
+        "initial_overview": {
+          "totalPaymentsReceived": null,
+          "walletLiabilityBalance": 24954.64,
+          "totalPendingRefunds": null,
+          "totalCompletedRefunds": null,
+          "totalPendingWithdrawals": 3000.0,
+          "totalCompletedWithdrawals": 150.0,
+          "totalProductSales": null,
+          "totalTrainingSales": null,
+          "totalWalletTransactionsCount": 102,
+          "pendingWithdrawalsCount": 6
+        }
+      }
+    },
+    {
+      "category": "ISOLATION",
+      "test_id": "WAL-02",
+      "description": "Fresh Test Customer Wallet Provisioned with Exactly Zero Balance",
+      "status": "PASS",
+      "expected": "Balance=0.00, Currency=INR",
+      "actual": "Avail=0, Withd=0, Pend=0, Curr=INR",
+      "details": {
+        "walletId": "1cd24bb3-bc79-44b5-9ec3-ea6a607d0049",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "userType": "CUSTOMER",
+        "availableBalance": 0,
+        "pendingBalance": 0,
+        "withdrawableBalance": 0,
+        "currency": "INR",
+        "createdAt": "2026-10-18T07:26:36.2021486+05:30",
+        "updatedAt": "2026-10-18T07:26:36.2021486+05:30"
+      }
+    },
+    {
+      "category": "ISOLATION",
+      "test_id": "WAL-03",
+      "description": "Fast Balance Endpoint (/wallet/balance) Returns Exactly Zero",
+      "status": "PASS",
+      "expected": "0.00",
+      "actual": "0",
+      "details": {}
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-04",
+      "description": "Create Server-Side Top-Up Intent with Authoritative Amount",
+      "status": "PASS",
+      "expected": "Status=200, valid razorpayOrderId & ref",
+      "actual": "Status=200, orderId=order_mock_cdb61e24",
+      "details": {
+        "razorpayOrderId": "order_mock_cdb61e24",
+        "amountInr": 500.0,
+        "currency": "INR",
+        "razorpayKeyId": "rzp_test_mockkey123",
+        "transactionReference": "TOPUP-1792288596907-8588"
+      }
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-05",
+      "description": "Zero and Negative Top-Up Amounts Strictly Rejected",
+      "status": "PASS",
+      "expected": "HTTP 400/422 for both 0 and negative amounts",
+      "actual": "Zero status=400, Negative status=400",
+      "details": {
+        "resp_zero": {
+          "success": false,
+          "message": "amount: Top-up amount must be at least \u20b91.00",
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "amount: Top-up amount must be at least \u20b91.00",
+            "requestId": "d217e969-498f-4dd0-b7f2-1f7623c6f9e1"
+          }
+        },
+        "resp_neg": {
+          "success": false,
+          "message": "amount: Top-up amount must be at least \u20b91.00",
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "amount: Top-up amount must be at least \u20b91.00",
+            "requestId": "b7fd0a2c-27a3-4122-9141-6ae1fff7ad73"
+          }
+        }
+      }
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-06",
+      "description": "Top-Up Exceeding Safety Limit (\u20b9100,000) Rejected",
+      "status": "PASS",
+      "expected": "HTTP 400/500 with boundary error",
+      "actual": "Status=400",
+      "details": {
+        "success": false,
+        "message": "Maximum top-up amount per transaction is \u20b9100,000",
+        "error": {
+          "code": "BAD_REQUEST",
+          "message": "Maximum top-up amount per transaction is \u20b9100,000",
+          "requestId": "3db27ff7-9f3c-416e-8d6f-efb1bacd35f1"
+        }
+      }
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-07",
+      "description": "Invalid Signature Rejected and Prevents Fraudulent Wallet Credit",
+      "status": "PASS",
+      "expected": "HTTP 400/500 and Balance=0.00",
+      "actual": "Status=400, Balance=0",
+      "details": {
+        "success": false,
+        "message": "Invalid Razorpay payment signature for wallet topup",
+        "error": {
+          "code": "BAD_REQUEST",
+          "message": "Invalid Razorpay payment signature for wallet topup",
+          "requestId": "a62fd969-2d7e-4a0b-b787-7cac60ea6362"
+        }
+      }
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-08",
+      "description": "Cross-User Top-Up Intent Forgery Blocked (Owner Verification)",
+      "status": "PASS",
+      "expected": "HTTP 403 Forbidden",
+      "actual": "Status=403",
+      "details": {
+        "success": false,
+        "message": "Access denied: You are not authorized to verify this topup intent",
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "Access denied: You are not authorized to verify this topup intent",
+          "requestId": "32565b56-30ce-4130-b969-90f52e02aaaa"
+        }
+      }
+    },
+    {
+      "category": "TOPUP",
+      "test_id": "WAL-09",
+      "description": "Valid Top-Up Verification Atomically Credits Balance (0.00 -> 500.00)",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=500.00, ref starts with TXN-CR-",
+      "actual": "Status=200, Balance=500.0, Ref=TXN-CR-1792288599388-C6C4D9",
+      "details": {
+        "success": true,
+        "data": {
+          "id": "437f443d-0e04-4946-b58b-e0a0ead1d1ac",
+          "transactionReference": "TXN-CR-1792288599388-C6C4D9",
+          "walletId": null,
+          "userId": null,
+          "transactionType": null,
+          "transactionDirection": null,
+          "amount": 500.0,
+          "currency": null,
+          "balanceBefore": null,
+          "balanceAfter": 500.0,
+          "status": "SUCCESS",
+          "sourceType": null,
+          "sourceId": null,
+          "orderId": null,
+          "paymentId": null,
+          "refundId": null,
+          "enrollmentId": null,
+          "withdrawalId": null,
+          "description": "Wallet Topup via Razorpay (pay_test_1792288598)",
+          "createdAt": "2026-10-18T07:26:39.3891062+05:30",
+          "createdBy": null
+        },
+        "requestId": "a9737223-77e3-42ec-b3eb-4745400fac27"
+      }
+    },
+    {
+      "category": "IDEMPOTENCY",
+      "test_id": "WAL-10",
+      "description": "Replay of Completed Top-Up Returns Existing Txn Without Double-Credit",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance strictly unchanged at 500.00",
+      "actual": "Status=200, Balance=500.0",
+      "details": {
+        "success": true,
+        "data": {
+          "id": "437f443d-0e04-4946-b58b-e0a0ead1d1ac",
+          "transactionReference": "TXN-CR-1792288599388-C6C4D9",
+          "walletId": null,
+          "userId": null,
+          "transactionType": null,
+          "transactionDirection": null,
+          "amount": 500.0,
+          "currency": null,
+          "balanceBefore": null,
+          "balanceAfter": 500.0,
+          "status": "SUCCESS",
+          "sourceType": null,
+          "sourceId": null,
+          "orderId": null,
+          "paymentId": null,
+          "refundId": null,
+          "enrollmentId": null,
+          "withdrawalId": null,
+          "description": "Wallet Topup via Razorpay (pay_test_1792288598)",
+          "createdAt": "2026-10-18T01:56:39.389106Z",
+          "createdBy": null
+        },
+        "requestId": "9104450e-b9d2-4f00-8ac2-67387363ca0c"
+      }
+    },
+    {
+      "category": "IDEMPOTENCY",
+      "test_id": "WAL-11",
+      "description": "Ledger Properly Enforces Double-Entry Math (balanceBefore + amount = balanceAfter)",
+      "status": "PASS",
+      "expected": "balanceBefore=0, amount=500, balanceAfter=500",
+      "actual": "before=0.0, amt=500.0, after=500.0",
+      "details": {
+        "id": "437f443d-0e04-4946-b58b-e0a0ead1d1ac",
+        "transactionReference": "TXN-CR-1792288599388-C6C4D9",
+        "walletId": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "transactionType": "TOPUP",
+        "transactionDirection": "CREDIT",
+        "amount": 500.0,
+        "currency": "INR",
+        "balanceBefore": 0.0,
+        "balanceAfter": 500.0,
+        "status": "SUCCESS",
+        "sourceType": "TOPUP",
+        "sourceId": "pay_test_1792288598",
+        "orderId": null,
+        "paymentId": null,
+        "refundId": "pay_test_1792288598",
+        "enrollmentId": null,
+        "withdrawalId": null,
+        "description": "Wallet Topup via Razorpay (pay_test_1792288598)",
+        "createdAt": "2026-10-18T01:56:39.389106Z",
+        "createdBy": "CUSTOMER_TOPUP"
+      }
+    },
+    {
+      "category": "DEBITS",
+      "test_id": "WAL-12",
+      "description": "Overdraft Attempt Beyond Available Balance (\u20b9750 on \u20b9500) Rejected",
+      "status": "PASS",
+      "expected": "HTTP 400/409/500 Insufficient wallet balance, Balance=500.00",
+      "actual": "Status=409, Balance=500.0",
+      "details": {
+        "success": false,
+        "message": "Insufficient wallet balance. Available: \u20b9500.00, Requested: \u20b9750.0",
+        "error": {
+          "code": "CONFLICT",
+          "message": "Insufficient wallet balance. Available: \u20b9500.00, Requested: \u20b9750.0",
+          "requestId": "d807a734-4d9d-480b-add7-f06c33e11f0a"
+        }
+      }
+    },
+    {
+      "category": "DEBITS",
+      "test_id": "WAL-13",
+      "description": "Zero Unauthorized Negative Balances Enforced (CHECK constraint + code)",
+      "status": "PASS",
+      "expected": "Balance >= 0.00",
+      "actual": "Current Balance = 500.0",
+      "details": {}
+    },
+    {
+      "category": "DEBITS",
+      "test_id": "WAL-14",
+      "description": "Valid Partial Wallet Payment Deducted Atomically (500.00 -> 350.00)",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=350.00",
+      "actual": "Status=200, Balance=350.0",
+      "details": {
+        "success": true,
+        "data": {
+          "message": "Partial wallet payment applied. Remaining amount via Gateway.",
+          "orderId": "8c64424e-3adc-4446-a6c7-43b59be04d57",
+          "enrollmentId": null,
+          "walletAmountDeducted": 150.0,
+          "remainingAmountPayable": 100.0,
+          "razorpayOrderId": "order_mock_3d5a9e92",
+          "success": true,
+          "fullyPaid": false
+        },
+        "requestId": "e4c51586-d543-41b8-8f9c-da3aca9ee4ee"
+      }
+    },
+    {
+      "category": "DEBITS",
+      "test_id": "WAL-15",
+      "description": "Valid Full Wallet Payment Deducted Atomically (350.00 -> 300.00)",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=300.00",
+      "actual": "Status=200, Balance=300.0",
+      "details": {
+        "success": true,
+        "data": {
+          "message": "Order fully paid using Sporekart Wallet",
+          "orderId": "1a793470-d6c9-4247-8bf8-a3c454c74419",
+          "enrollmentId": null,
+          "walletAmountDeducted": 50.0,
+          "remainingAmountPayable": 0.0,
+          "razorpayOrderId": null,
+          "success": true,
+          "fullyPaid": true
+        },
+        "requestId": "cf1515c4-db57-4567-91f0-1d16885f9a0b"
+      }
+    },
+    {
+      "category": "IDEMPOTENCY",
+      "test_id": "WAL-16",
+      "description": "Duplicate Checkout Debit Replay Suppressed by Idempotency Key",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance unchanged at 300.00",
+      "actual": "Status=200, Balance=300.0",
+      "details": {
+        "success": true,
+        "data": {
+          "message": "Order fully paid using Sporekart Wallet",
+          "orderId": "1a793470-d6c9-4247-8bf8-a3c454c74419",
+          "enrollmentId": null,
+          "walletAmountDeducted": 50.0,
+          "remainingAmountPayable": 0.0,
+          "razorpayOrderId": null,
+          "success": true,
+          "fullyPaid": true
+        },
+        "requestId": "d6fdb408-002e-47b0-8103-ec3320c73387"
+      }
+    },
+    {
+      "category": "WITHDRAWAL",
+      "test_id": "WAL-17",
+      "description": "Withdrawal Request Exceeding Withdrawable Balance Rejected",
+      "status": "PASS",
+      "expected": "HTTP 400/409/500 with 'exceeds withdrawable balance'",
+      "actual": "Status=409",
+      "details": {
+        "success": false,
+        "message": "Requested withdrawal amount (\u20b91000.0) exceeds withdrawable balance (\u20b9300.00)",
+        "error": {
+          "code": "CONFLICT",
+          "message": "Requested withdrawal amount (\u20b91000.0) exceeds withdrawable balance (\u20b9300.00)",
+          "requestId": "df2e2244-c5f3-40ed-b6b1-361633d8c18e"
+        }
+      }
+    },
+    {
+      "category": "WITHDRAWAL",
+      "test_id": "WAL-18",
+      "description": "Withdrawal Validation Rejects Malformed IFSC Format",
+      "status": "PASS",
+      "expected": "HTTP 400/422 DTO validation error",
+      "actual": "Status=400",
+      "details": {
+        "success": false,
+        "message": "ifscCode: Invalid IFSC code format",
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "ifscCode: Invalid IFSC code format",
+          "requestId": "1422095b-f715-43fc-b3aa-c93c26dfd4e7"
+        }
+      }
+    },
+    {
+      "category": "WITHDRAWAL",
+      "test_id": "WAL-19",
+      "description": "Valid Withdrawal Request Atomically Debits Balance & Masks Account Number",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=200.00, Status=REQUESTED, Masked=\u2022\u2022\u2022\u20225566",
+      "actual": "Status=200, Balance=200.0, WdStatus=REQUESTED, Masked=\u2022\u2022\u2022\u20225566",
+      "details": {
+        "id": "c8d6426e-ec7c-450a-8384-7b92f97ce57c",
+        "withdrawalReference": "WD-1792288610351-9A3FE",
+        "walletId": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "amount": 100.0,
+        "status": "REQUESTED",
+        "bankName": "State Bank of India",
+        "accountNumberMasked": "\u2022\u2022\u2022\u20225566",
+        "ifscCode": "SBIN0001234",
+        "accountHolderName": "Audit Customer",
+        "adminNotes": null,
+        "rejectionReason": null,
+        "createdAt": "2026-10-18T07:26:51.2948054+05:30",
+        "processedAt": null
+      }
+    },
+    {
+      "category": "RBAC",
+      "test_id": "WAL-20",
+      "description": "Non-Admin Blocked from Admin Withdrawal Approval (/admin/finance/*)",
+      "status": "PASS",
+      "expected": "HTTP 403 Forbidden",
+      "actual": "Status=403",
+      "details": {
+        "success": false,
+        "message": "Access denied",
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "Access denied",
+          "requestId": "1c1f8399-8b59-4e35-beb0-7c95bf272402"
+        }
+      }
+    },
+    {
+      "category": "WITHDRAWAL",
+      "test_id": "WAL-21",
+      "description": "Admin Withdrawal Rejection Emits Compensating Reversal Credit (Restoring \u20b9100)",
+      "status": "PASS",
+      "expected": "Status=REVERSED, Balance restored to 300.00",
+      "actual": "Status=200, WdStatus=REVERSED, Balance=300.0",
+      "details": {
+        "id": "c8d6426e-ec7c-450a-8384-7b92f97ce57c",
+        "withdrawalReference": "WD-1792288610351-9A3FE",
+        "walletId": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "amount": 100.0,
+        "status": "REVERSED",
+        "bankName": "State Bank of India",
+        "accountNumberMasked": "\u2022\u2022\u2022\u20225566",
+        "ifscCode": "SBIN0001234",
+        "accountHolderName": "Audit Customer",
+        "adminNotes": null,
+        "rejectionReason": "Bank account number mismatch on IFSC validation",
+        "createdAt": "2026-10-18T01:56:51.294805Z",
+        "processedAt": "2026-10-18T07:26:53.8008913+05:30"
+      }
+    },
+    {
+      "category": "WITHDRAWAL",
+      "test_id": "WAL-22",
+      "description": "Admin Withdrawal Approval Transitions Status to SUCCESS without Double-Debit",
+      "status": "PASS",
+      "expected": "Status=SUCCESS, Balance remains 250.00",
+      "actual": "Status=200, WdStatus=SUCCESS, Balance=250.0",
+      "details": {
+        "id": "3d6a4cd4-2a77-48db-9522-df34a76a6ae5",
+        "withdrawalReference": "WD-1792288616600-F80E4",
+        "walletId": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "amount": 50.0,
+        "status": "SUCCESS",
+        "bankName": "HDFC Bank",
+        "accountNumberMasked": "\u2022\u2022\u2022\u20221098",
+        "ifscCode": "HDFC0005678",
+        "accountHolderName": "Audit Customer",
+        "adminNotes": "Bank IMPS Reference UTR123456789",
+        "rejectionReason": null,
+        "createdAt": "2026-10-18T01:56:57.409583Z",
+        "processedAt": "2026-10-18T07:26:59.3139178+05:30"
+      }
+    },
+    {
+      "category": "RBAC",
+      "test_id": "WAL-23",
+      "description": "Customer Blocked from Performing Admin Manual Adjustments",
+      "status": "PASS",
+      "expected": "HTTP 403 Forbidden",
+      "actual": "Status=403",
+      "details": {
+        "success": false,
+        "message": "Access denied",
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "Access denied",
+          "requestId": "78d1579d-6abc-4715-88a5-b1cc4511b977"
+        }
+      }
+    },
+    {
+      "category": "ADMIN_AUDIT",
+      "test_id": "WAL-24",
+      "description": "Mandatory Admin Audit Reason Enforced for Wallet Adjustments",
+      "status": "PASS",
+      "expected": "HTTP 400/422 Bad Request",
+      "actual": "Status=400",
+      "details": {
+        "success": false,
+        "message": "reason: Adjustment reason is required",
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "reason: Adjustment reason is required",
+          "requestId": "6c3d6f13-5ce3-47c9-b0b6-2c5a060c35c3"
+        }
+      }
+    },
+    {
+      "category": "ADMIN_AUDIT",
+      "test_id": "WAL-25",
+      "description": "Admin Manual Credit Adjustment Successfully Increments Balance (250 -> 400)",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=400.00",
+      "actual": "Status=200, Balance=400.0, Ref=TXN-CR-1792288621272-50C3FF",
+      "details": {
+        "id": "de417b90-dda2-46e4-bbdb-f5852227d653",
+        "transactionReference": "TXN-CR-1792288621272-50C3FF",
+        "walletId": null,
+        "userId": null,
+        "transactionType": null,
+        "transactionDirection": null,
+        "amount": 150.0,
+        "currency": null,
+        "balanceBefore": 250.0,
+        "balanceAfter": 400.0,
+        "status": "SUCCESS",
+        "sourceType": null,
+        "sourceId": null,
+        "orderId": null,
+        "paymentId": null,
+        "refundId": null,
+        "enrollmentId": null,
+        "withdrawalId": null,
+        "description": "Admin Manual Credit: Audit Promotional Goodwill Credit Injection",
+        "createdAt": "2026-10-18T07:27:01.2720493+05:30",
+        "createdBy": "5de3569c-935e-4749-9274-dfa509dcc987"
+      }
+    },
+    {
+      "category": "ADMIN_AUDIT",
+      "test_id": "WAL-26",
+      "description": "Admin Manual Debit Adjustment Successfully Decrements Balance (400 -> 200)",
+      "status": "PASS",
+      "expected": "HTTP 200, Balance=200.00",
+      "actual": "Status=200, Balance=200.0, Ref=TXN-DR-1792288623430-22114F",
+      "details": {
+        "id": "cb6654de-206d-4ff6-bb32-62e02ae0741e",
+        "transactionReference": "TXN-DR-1792288623430-22114F",
+        "walletId": null,
+        "userId": null,
+        "transactionType": null,
+        "transactionDirection": null,
+        "amount": 200.0,
+        "currency": null,
+        "balanceBefore": 400.0,
+        "balanceAfter": 200.0,
+        "status": "SUCCESS",
+        "sourceType": null,
+        "sourceId": null,
+        "orderId": null,
+        "paymentId": null,
+        "refundId": null,
+        "enrollmentId": null,
+        "withdrawalId": null,
+        "description": "Admin Manual Debit: Audit Correction of Goodwill Credit",
+        "createdAt": "2026-10-18T07:27:03.4311291+05:30",
+        "createdBy": "5de3569c-935e-4749-9274-dfa509dcc987"
+      }
+    },
+    {
+      "category": "ADMIN_AUDIT",
+      "test_id": "WAL-27",
+      "description": "Admin Audit Trail Records Adjustment Reason, Operator & Timestamp",
+      "status": "PASS",
+      "expected": "Adjustment searchable in platform ledger with full audit metadata",
+      "actual": "Found=7 records",
+      "details": {
+        "id": "cb6654de-206d-4ff6-bb32-62e02ae0741e",
+        "transactionReference": "TXN-DR-1792288623430-22114F",
+        "walletId": "49af2f29-87f3-4760-9b7c-2b4d7eed3b48",
+        "userId": "d6d0aad9-3de8-452d-afda-6d587968d821",
+        "transactionType": "ADJUSTMENT",
+        "transactionDirection": "DEBIT",
+        "amount": 200.0,
+        "currency": "INR",
+        "balanceBefore": 400.0,
+        "balanceAfter": 200.0,
+        "status": "SUCCESS",
+        "sourceType": "ADMIN_ADJUSTMENT",
+        "sourceId": "ADMIN_MANUAL",
+        "orderId": null,
+        "paymentId": null,
+        "refundId": null,
+        "enrollmentId": null,
+        "withdrawalId": null,
+        "description": "Admin Manual Debit: Audit Correction of Goodwill Credit",
+        "createdAt": "2026-10-18T01:57:03.431129Z",
+        "createdBy": "5de3569c-935e-4749-9274-dfa509dcc987"
+      }
+    },
+    {
+      "category": "CONCURRENCY",
+      "test_id": "WAL-28",
+      "description": "Pessimistic Locking Prevents Race Conditions Under Concurrent Debits",
+      "status": "PASS",
+      "expected": "Exactly 4 successes, 1 failure, final balance=0.00",
+      "actual": "Successes=4, Failures=1, Final Balance=0.0",
+      "details": {
+        "results_summary": [
+          [
+            2,
+            200,
+            true
+          ],
+          [
+            1,
+            200,
+            true
+          ],
+          [
+            0,
+            200,
+            true
+          ],
+          [
+            4,
+            200,
+            true
+          ],
+          [
+            3,
+            409,
+            false
+          ]
+        ]
+      }
+    },
+    {
+      "category": "CONCURRENCY",
+      "test_id": "WAL-29",
+      "description": "Absolute Non-Negative Invariant Maintained Under High Concurrency",
+      "status": "PASS",
+      "expected": "Final Balance strictly >= 0.00 and exactly 0.00",
+      "actual": "Final Balance=0.0",
+      "details": {}
+    },
+    {
+      "category": "RECONCILIATION",
+      "test_id": "WAL-30",
+      "description": "Double-Entry Ledger Invariant (Credits - Debits == Available Balance)",
+      "status": "PASS",
+      "expected": "Sum(CR) - Sum(DR) == Balance (0.0)",
+      "actual": "Sum(CR)=750.00, Sum(DR)=750.00, Net=0.00, MathConsistent=True",
+      "details": {
+        "total_transactions": 12,
+        "inconsistent_count": 0
+      }
+    },
+    {
+      "category": "RECONCILIATION",
+      "test_id": "WAL-31",
+      "description": "Zero Transaction-Level Running Balance Discrepancies",
+      "status": "PASS",
+      "expected": "0 inconsistent transaction line items",
+      "actual": "0 inconsistencies found",
+      "details": {}
+    },
+    {
+      "category": "RECONCILIATION",
+      "test_id": "WAL-32",
+      "description": "Platform Wallet Liability Balance Exactly Reconciled (Pre vs Post Audit)",
+      "status": "PASS",
+      "expected": "Final Liability == Initial Liability (24954.64)",
+      "actual": "Initial=24954.64, Final=24954.64, Delta=0.00",
+      "details": {
+        "initial_overview": {
+          "totalPaymentsReceived": null,
+          "walletLiabilityBalance": 24954.64,
+          "totalPendingRefunds": null,
+          "totalCompletedRefunds": null,
+          "totalPendingWithdrawals": 3000.0,
+          "totalCompletedWithdrawals": 150.0,
+          "totalProductSales": null,
+          "totalTrainingSales": null,
+          "totalWalletTransactionsCount": 102,
+          "pendingWithdrawalsCount": 6
+        },
+        "final_overview": {
+          "totalPaymentsReceived": null,
+          "walletLiabilityBalance": 24954.64,
+          "totalPendingRefunds": null,
+          "totalCompletedRefunds": null,
+          "totalPendingWithdrawals": 3000.0,
+          "totalCompletedWithdrawals": 200.0,
+          "totalProductSales": null,
+          "totalTrainingSales": null,
+          "totalWalletTransactionsCount": 114,
+          "pendingWithdrawalsCount": 6
+        }
+      }
+    },
+    {
+      "category": "CONSISTENCY",
+      "test_id": "WAL-33",
+      "description": "Consistent Wallet Balance Across Refresh & Re-Authentication (0.00)",
+      "status": "PASS",
+      "expected": "Balance=0.00",
+      "actual": "Status=200, Balance=0.0",
+      "details": {}
+    }
+  ]
+}

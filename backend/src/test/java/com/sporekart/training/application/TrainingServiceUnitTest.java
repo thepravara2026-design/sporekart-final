@@ -1,5 +1,6 @@
 package com.sporekart.training.application;
 
+import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.training.domain.*;
 import com.sporekart.training.domain.event.EnrollmentConfirmedEvent;
 import com.sporekart.training.infrastructure.*;
@@ -218,6 +219,7 @@ public class TrainingServiceUnitTest {
         Enrollment enrollment = Enrollment.builder().id(enrollmentId).batch(fullBatch).status(EnrollmentStatus.PENDING_PAYMENT).build();
 
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(fullBatch));
         when(batchRepository.incrementEnrolledCountIfCapacityAvailable(batchId)).thenReturn(0);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
@@ -251,7 +253,7 @@ public class TrainingServiceUnitTest {
         UUID enrollmentId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        Batch batch = Batch.builder().startDate(LocalDate.now().plusDays(10)).enrolledCount(3).build();
+        Batch batch = Batch.builder().id(UUID.randomUUID()).startDate(LocalDate.now().plusDays(10)).enrolledCount(3).build();
         Enrollment enrollment = Enrollment.builder().id(enrollmentId).userId(userId).batch(batch).status(EnrollmentStatus.CONFIRMED).build();
 
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));
@@ -260,11 +262,11 @@ public class TrainingServiceUnitTest {
         Enrollment cancelled = trainingService.cancelEnrollment(enrollmentId, userId, "Plans changed");
 
         assertEquals(EnrollmentStatus.CANCELLED, cancelled.getStatus());
-        assertEquals(2, batch.getEnrolledCount());
+        verify(batchRepository).decrementEnrolledCount(batch.getId());
     }
 
     @Test
-    @DisplayName("TRN-12: cancelEnrollment by wrong user throws IllegalArgumentException")
+    @DisplayName("TRN-12: cancelEnrollment by wrong user throws ForbiddenOperationException")
     void TRN_12_cancel_enrollment_wrong_user_throws_illegal_argument() {
         UUID enrollmentId = UUID.randomUUID();
         UUID ownerId = UUID.randomUUID();
@@ -273,7 +275,7 @@ public class TrainingServiceUnitTest {
         Enrollment enrollment = Enrollment.builder().id(enrollmentId).userId(ownerId).build();
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+        ForbiddenOperationException ex = assertThrows(ForbiddenOperationException.class, () ->
                 trainingService.cancelEnrollment(enrollmentId, attackerId, "Malicious cancel")
         );
 
@@ -286,7 +288,7 @@ public class TrainingServiceUnitTest {
         UUID enrollmentId = UUID.randomUUID();
         UUID scheduleId = UUID.randomUUID();
 
-        Enrollment enrollment = Enrollment.builder().id(enrollmentId).build();
+        Enrollment enrollment = Enrollment.builder().id(enrollmentId).status(EnrollmentStatus.CONFIRMED).build();
         BatchSchedule schedule = BatchSchedule.builder().id(scheduleId).build();
 
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(enrollment));

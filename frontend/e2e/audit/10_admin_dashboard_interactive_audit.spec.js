@@ -8,8 +8,8 @@ test.describe('PHASE 9: Admin Dashboard Complete Interaction & Functional Audit'
     await authenticateInBrowser(page, null, true);
 
     // 2. Verify Admin Console Header & Role
-    await expect(page.getByText(/Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/ROLE_ADMIN/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/SUPER ADMINISTRATOR|ROLE_ADMIN/i).first()).toBeVisible({ timeout: 10000 });
 
     // 3. Verify Metric Cards render with numerical data
     await expect(page.locator('[data-testid="header-metric-catalog"]')).toBeVisible({ timeout: 15000 });
@@ -20,23 +20,23 @@ test.describe('PHASE 9: Admin Dashboard Complete Interaction & Functional Audit'
     // 4. Test interactive analytics modal on metric card click
     await page.locator('[data-testid="header-metric-catalog"]').click();
     await expect(page.getByText(/Catalog Products & Inventory Registry|Complete catalog/i).first()).toBeVisible({ timeout: 10000 });
-    await page.locator('button').filter({ hasText: '✕' }).first().click();
+    await page.getByRole('button', { name: /Close modal/i }).click();
   });
 
   test('ADMIN-02: Products & Variants Section - Table, Search & Filter', async ({ page }) => {
     await authenticateInBrowser(page, null, true);
 
-    // Navigate to Products via sidebar link
-    const prodLink = page.locator('a[href*="/admin/products"]').first();
-    await expect(prodLink).toBeVisible({ timeout: 10000 });
-    await prodLink.click();
+    // Click Product & Catalog domain card
+    const catalogDomain = page.getByRole('link', { name: /Product & Catalog/i });
+    await expect(catalogDomain).toBeVisible({ timeout: 15000 });
+    await catalogDomain.click();
 
-    // Verify products table or catalog renders
-    await expect(page.getByText(/Product Catalog|All Products|Products & Spawn/i).first()).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('table, div[role="table"]').first()).toBeVisible({ timeout: 10000 });
+    // Verify products table renders
+    await expect(page.getByText(/Catalog Products Registry/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('table').first()).toBeVisible({ timeout: 10000 });
 
     // Test Search input
-    const searchInput = page.locator('input[placeholder*="Search"]').first();
+    const searchInput = page.getByPlaceholder(/Search title, SKU/i);
     if (await searchInput.isVisible()) {
       await searchInput.fill('Oyster');
       await page.waitForTimeout(500);

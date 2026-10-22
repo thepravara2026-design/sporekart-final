@@ -186,7 +186,7 @@ export default function AdminReviewsManager() {
     reviewApi
       .getAdminReviewSummary()
       .then((res) => setSummary(res.data?.data))
-      .catch(() => {});
+      .catch((err) => console.warn('Failed to load admin review summary:', err));
   };
 
   const loadReviews = (pageNumber) => {
@@ -210,7 +210,7 @@ export default function AdminReviewsManager() {
           setPage(data.number || 0);
         }
       })
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load admin reviews:', err))
       .finally(() => setIsLoading(false));
   };
 

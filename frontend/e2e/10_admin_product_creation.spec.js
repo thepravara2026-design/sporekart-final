@@ -6,22 +6,13 @@ test.describe('E2E Flows 10, 11, 12: Admin Product Creation, Media Upload & Orde
     await page.goto('/admin/login');
     await expect(page).toHaveURL(/\/admin\/login/);
 
-    // 2. Submit Dev Mock Admin OTP (admin@sporekart.in + 123456)
-    const directOtpBtn = page.getByRole('button', { name: /Enter OTP Directly/i });
-    if (await directOtpBtn.isVisible()) {
-      await directOtpBtn.click();
-    } else {
-      await page.getByRole('button', { name: /Send Admin OTP/i }).click();
-    }
-
-    const otpInput = page.getByTestId('otp-code-input');
-    await expect(otpInput).toBeVisible({ timeout: 10000 });
-    await otpInput.fill('123456');
-
-    await page.getByTestId('verify-otp-btn').click();
+    // 2. Submit Dev Mock Admin Authentication (thepravara2026@gmail.com)
+    const adminDevBtn = page.getByRole('button', { name: /Dev Mode: Sign in as thepravara2026@gmail.com|Continue as thepravara2026@gmail.com/i });
+    await expect(adminDevBtn).toBeVisible({ timeout: 15000 });
+    await adminDevBtn.click();
 
     // 3. Verify Admin Control Dashboard Access
-    await expect(page).toHaveURL(/\/admin/);
-    await expect(page.getByText(/Sporekart Admin Control Plane|Admin Control Desk|Admin Console|Management Console|Dashboard|Restricted Access/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/admin/, { timeout: 15000 });
+    await expect(page.getByText(/Sporekart Control Plane|Sporekart Control Console|Dashboard|Overview/i).first()).toBeVisible({ timeout: 20000 });
   });
 });

@@ -54,9 +54,12 @@ export default function TrainingPage({ user, setUser }) {
   // Authentication & Preview Modal State
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [previewEnrollment, setPreviewEnrollment] = useState(null); // { course, slot }
+  const [pendingEnrollment, setPendingEnrollment] = useState(null);
 
   const initiateEnrollment = (course, slot) => {
+    const targetSlot = slot || (course.slots && course.slots.length > 0 ? course.slots[0] : null);
     if (!user) {
+      setPendingEnrollment({ course, slot: targetSlot });
       setShowAuthModal(true);
       return;
     }
@@ -64,7 +67,6 @@ export default function TrainingPage({ user, setUser }) {
       alert('The admin account (thepravara2026@gmail.com) is purely dedicated for administrative operations. Storefront trainee enrollments are not permitted on the admin entity.');
       return;
     }
-    const targetSlot = slot || (course.slots && course.slots.length > 0 ? course.slots[0] : null);
     setPreviewEnrollment({ course, slot: targetSlot });
   };
 
@@ -88,7 +90,7 @@ export default function TrainingPage({ user, setUser }) {
   }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-fade-in text-forest-900">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-16 space-y-8 sm:space-y-10 animate-fade-in text-forest-900">
       <SeoHead
         title="Mushroom Cultivation & Spawn Production Training Masterclasses | Sporekart"
         description="Enroll in certified commercial mushroom cultivation and pure grain spawn lab workshops. Hands-on online & laboratory training with market buyback support in India."
@@ -216,14 +218,18 @@ export default function TrainingPage({ user, setUser }) {
                                   {slot.startDate ? new Date(slot.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Upcoming'} • {slot.availableSeats} seats left
                                 </p>
                               </div>
-
-                              <button
-                                onClick={() => initiateEnrollment(course, slot)}
-                                disabled={!slot.isAvailable}
-                                className="btn-secondary font-bold px-3 py-1.5 text-xs button-press disabled:opacity-50"
-                              >
-                                {slot.isAvailable ? 'Select Slot' : 'Full'}
-                              </button>
+                              {(() => {
+                                const isAvailable = slot.isAvailable || slot.available || ((slot.availableSeats ?? 0) > 0);
+                                return (
+                                  <button
+                                    onClick={() => initiateEnrollment(course, slot)}
+                                    disabled={!isAvailable}
+                                    className="btn-secondary font-bold px-3 py-1.5 text-xs button-press disabled:opacity-50"
+                                  >
+                                    {isAvailable ? 'Select Slot' : 'Full'}
+                                  </button>
+                                );
+                              })()}
                             </div>
                           ))
                         ) : (
@@ -255,6 +261,10 @@ export default function TrainingPage({ user, setUser }) {
               setUser={setUser}
               onSuccess={() => {
                 setShowAuthModal(false);
+                if (pendingEnrollment) {
+                  setPreviewEnrollment(pendingEnrollment);
+                  setPendingEnrollment(null);
+                }
               }}
             />
           </div>

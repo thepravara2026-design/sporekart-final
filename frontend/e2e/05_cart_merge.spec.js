@@ -23,23 +23,15 @@ test.describe('CART-6 & CART-7: Guest Cart Persistence & Session Merge on Login'
     await expect(page).toHaveURL(/\/cart/);
     await page.waitForLoadState('domcontentloaded');
 
-    // 2. Open Auth Modal & Authenticate via Fallback OTP
+    // 2. Open Auth Modal & Authenticate via Google Auth
     const loginBtn = page.getByRole('button', { name: /Login or Sign Up|Login \/ Signup|Login/i }).first();
     await expect(loginBtn).toBeVisible({ timeout: 15000 });
     await loginBtn.click();
     
-    const testEmail = `cartmerge_${Date.now()}@sporekart.com`;
-    const identifierInput = page.getByTestId('auth-identifier-input');
-    await identifierInput.waitFor({ state: 'visible', timeout: 10000 });
-    await identifierInput.fill(testEmail);
-
-    await page.getByTestId('send-otp-btn').click();
-
-    const otpInput = page.getByTestId('otp-code-input');
-    await otpInput.waitFor({ state: 'visible', timeout: 15000 });
-    await otpInput.fill('123456');
-
-    await page.getByTestId('verify-otp-btn').click();
+    // Click Google Auth Dev Login button
+    const googleLoginBtn = page.getByRole('button', { name: /Continue with Google|Quick Google Login Test/i }).first();
+    await expect(googleLoginBtn).toBeVisible({ timeout: 10000 });
+    await googleLoginBtn.click();
 
     // 3. Verify Cart Persistence & Merged Session Item Count
     await page.goto('/cart');

@@ -8,7 +8,9 @@ export const reportWebVitals = (onPerfEntry) => {
         if (navEntry) {
           onPerfEntry({ name: 'TTFB', value: navEntry.responseStart });
         }
-      } catch (e) {}
+      } catch (_err) {
+        // PerformanceObserver or navigation timing not supported in this environment
+      }
 
       // LCP (Largest Contentful Paint)
       try {
@@ -18,7 +20,9 @@ export const reportWebVitals = (onPerfEntry) => {
           onPerfEntry({ name: 'LCP', value: lastEntry.startTime });
         });
         lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-      } catch (e) {}
+      } catch (_err) {
+        // PerformanceObserver for LCP not supported
+      }
 
       // CLS (Cumulative Layout Shift)
       try {
@@ -32,7 +36,9 @@ export const reportWebVitals = (onPerfEntry) => {
           onPerfEntry({ name: 'CLS', value: clsValue });
         });
         clsObserver.observe({ type: 'layout-shift', buffered: true });
-      } catch (e) {}
+      } catch (_err) {
+        // PerformanceObserver for CLS not supported
+      }
 
       // INP (Interaction to Next Paint)
       try {
@@ -42,7 +48,9 @@ export const reportWebVitals = (onPerfEntry) => {
           }
         });
         inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 16 });
-      } catch (e) {}
+      } catch (_err) {
+        // PerformanceObserver for INP not supported
+      }
     }
   }
 };

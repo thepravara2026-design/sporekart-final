@@ -47,7 +47,9 @@ export default function PaymentPage() {
       if (res.data && res.data.success) {
         setWallet(res.data.data);
       }
-    } catch (ignored) {}
+    } catch (err) {
+      console.warn('Could not load user wallet:', err);
+    }
   };
 
   const loadSummary = async () => {
@@ -82,7 +84,7 @@ export default function PaymentPage() {
       }
 
       const options = {
-        key: rzpData.razorpayKeyId,
+        key: rzpData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: Math.round((rzpData.amountInr || remainingGatewayAmount) * 100),
         currency: rzpData.currency || 'INR',
         name: 'Sporekart Agritech',
@@ -190,7 +192,8 @@ export default function PaymentPage() {
       }
 
       // If Razorpay SDK is available and public key configured, open authentic Razorpay modal
-      if (window.Razorpay && rzpData.razorpayKeyId && !rzpData.razorpayOrderId.startsWith('order_mock_')) {
+      const configuredKey = rzpData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (window.Razorpay && configuredKey && !rzpData.razorpayOrderId.startsWith('order_mock_')) {
         await launchRazorpayModal(rzpData);
         await fetchCart();
         setPaymentSuccess(true);

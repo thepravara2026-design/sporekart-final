@@ -58,8 +58,16 @@ public class PaymentServiceUnitTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private PaymentEventIdempotencyService paymentEventIdempotencyService;
+
     @InjectMocks
     private PaymentService paymentService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        lenient().when(paymentEventIdempotencyService.recordEventIfUnique(any())).thenReturn(true);
+    }
 
     @Test
     @DisplayName("PAY-1: initiatePayment creates gateway order and saves INITIATED payment")

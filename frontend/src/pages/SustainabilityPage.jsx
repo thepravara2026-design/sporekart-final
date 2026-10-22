@@ -104,7 +104,7 @@ export default function SustainabilityPage() {
         canonicalUrl="https://sporekart.in/sustainability"
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10 sm:space-y-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-16 space-y-6 sm:space-y-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumbs items={[{ label: 'Sustainability', path: '/sustainability' }]} />
 

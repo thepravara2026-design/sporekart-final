@@ -45,6 +45,9 @@ public class CatalogModuleTest {
     @Autowired
     private ProductOfferRepository offerRepository;
 
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
     @BeforeEach
     void setUp() {
         offerRepository.deleteAll();
@@ -209,5 +212,57 @@ public class CatalogModuleTest {
 
         Product publishedProduct = adminCatalogService.publishProduct(draftProduct.getId());
         assertEquals(ProductStatus.ACTIVE, publishedProduct.getStatus());
+    }
+
+    @Test
+    void testProductMediaAndInformationSerialization() throws Exception {
+        CatalogDtos.CreateCategoryRequest catReq = new CatalogDtos.CreateCategoryRequest("Button Mushrooms", "button-cat", "Desc", null, true);
+        Category category = adminCatalogService.createCategory(catReq);
+
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("12345678901234");
+        infoReq.setBrandName("Sporekart");
+
+        CatalogDtos.CreateProductRequest createReq = new CatalogDtos.CreateProductRequest(
+                category.getId(),
+                "Active Button Pack",
+                "active-button-pack",
+                "Description",
+                ProductType.FRESH_MUSHROOM,
+                ProductStatus.ACTIVE,
+                "07095900",
+                BigDecimal.valueOf(5.0),
+                "Title",
+                "Desc",
+                "url",
+                true,
+                infoReq
+        );
+
+        Product created = adminCatalogService.createProduct(createReq);
+        assertNotNull(created.getId());
+        assertEquals(ProductStatus.ACTIVE, created.getStatus());
+
+        // Test getProduct
+        Product fetched = adminCatalogService.getProduct(created.getId());
+        assertNotNull(fetched);
+
+        // Test sync media and serialization
+        CatalogDtos.CreateMediaRequest mediaReq = new CatalogDtos.CreateMediaRequest();
+        mediaReq.setMediaUrl("https://example.com/test.jpg");
+        mediaReq.setPrimary(true);
+        mediaReq.setDisplayOrder(0);
+        List<ProductMedia> mediaList = adminCatalogService.syncProductMedia(created.getId(), List.of(mediaReq));
+        assertEquals(1, mediaList.size());
+
+        // Verify Jackson serializes ProductMedia and ProductInformation without ByteBuddy/Hibernate proxy errors
+        String mediaJson = objectMapper.writeValueAsString(com.sporekart.shared.api.ApiResponse.success(mediaList.get(0)));
+        assertTrue(mediaJson.contains("https://example.com/test.jpg"));
+        assertFalse(mediaJson.contains("hibernateLazyInitializer"));
+
+        ProductInformation info = adminCatalogService.saveOrUpdateProductInformation(created, infoReq);
+        String infoJson = objectMapper.writeValueAsString(com.sporekart.shared.api.ApiResponse.success(info));
+        assertTrue(infoJson.contains("12345678901234"));
+        assertFalse(infoJson.contains("hibernateLazyInitializer"));
     }
 }

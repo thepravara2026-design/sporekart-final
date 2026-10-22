@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping({"/admin/notifications", "/api/v1/admin/notifications"})
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminNotificationController {
 
@@ -41,17 +41,27 @@ public class AdminNotificationController {
     ) {
         NotificationEventType typeEnum = null;
         if (eventType != null && !eventType.isBlank() && !"ALL".equalsIgnoreCase(eventType)) {
-            try { typeEnum = NotificationEventType.valueOf(eventType.toUpperCase()); } catch (Exception ignored) {}
+            try {
+                typeEnum = NotificationEventType.valueOf(eventType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid notification eventType: '" + eventType + "'. Allowed values: " + java.util.Arrays.toString(NotificationEventType.values()));
+            }
         }
 
         NotificationStatus statusEnum = null;
         if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
-            try { statusEnum = NotificationStatus.valueOf(status.toUpperCase()); } catch (Exception ignored) {}
+            try {
+                statusEnum = NotificationStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid notification status: '" + status + "'. Allowed values: " + java.util.Arrays.toString(NotificationStatus.values()));
+            }
         }
 
-        Page<NotificationEvent> result = notificationRepository.findAllFiltered(
-                typeEnum, statusEnum, search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
-        );
+        String trimmedSearch = (search != null && !search.isBlank()) ? search.trim() : null;
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<NotificationEvent> result = (typeEnum == null && statusEnum == null && trimmedSearch == null)
+                ? notificationRepository.findAll(pageable)
+                : notificationRepository.findAllFiltered(typeEnum, statusEnum, trimmedSearch, pageable);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

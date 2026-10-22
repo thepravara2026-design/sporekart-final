@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.util.HtmlUtils;
+
 import java.math.BigDecimal;
 
 @Slf4j
@@ -19,6 +21,11 @@ public class NotificationTemplateService {
 
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
+
+    private String escape(String val) {
+        if (val == null) return "";
+        return HtmlUtils.htmlEscape(val);
+    }
 
     public String buildHtmlEmail(NotificationEventType eventType, String payloadJson) {
         try {
@@ -98,10 +105,10 @@ public class NotificationTemplateService {
     }
 
     private String buildOrderConfirmedBody(JsonNode data) {
-        String orderNumber = data.path("orderNumber").asText();
-        String customerName = data.path("customerName").asText("Valued Grower");
-        String totalAmount = data.path("totalAmount").asText("0.00");
-        String paymentMethod = data.path("paymentMethod").asText("Razorpay Online");
+        String orderNumber = escape(data.path("orderNumber").asText());
+        String customerName = escape(data.path("customerName").asText("Valued Grower"));
+        String totalAmount = escape(data.path("totalAmount").asText("0.00"));
+        String paymentMethod = escape(data.path("paymentMethod").asText("Razorpay Online"));
         String ctaUrl = frontendUrl + "/dashboard?tab=activeTrack&orderId=" + data.path("orderId").asText();
 
         StringBuilder itemsHtml = new StringBuilder();
@@ -109,9 +116,9 @@ public class NotificationTemplateService {
         if (items.isArray()) {
             for (JsonNode item : items) {
                 itemsHtml.append("<tr>")
-                        .append("<td><strong>").append(item.path("title").asText()).append("</strong><br><span style='font-size:11px;color:#64748b;'>").append(item.path("variant").asText("")).append("</span></td>")
+                        .append("<td><strong>").append(escape(item.path("title").asText())).append("</strong><br><span style='font-size:11px;color:#64748b;'>").append(escape(item.path("variant").asText(""))).append("</span></td>")
                         .append("<td style='text-align:center;'>").append(item.path("quantity").asInt(1)).append("</td>")
-                        .append("<td style='text-align:right;'>₹").append(item.path("price").asText("0.00")).append("</td>")
+                        .append("<td style='text-align:right;'>₹").append(escape(item.path("price").asText("0.00"))).append("</td>")
                         .append("</tr>");
             }
         }
@@ -150,10 +157,10 @@ public class NotificationTemplateService {
     }
 
     private String buildOrderCancelledBody(JsonNode data) {
-        String orderNumber = data.path("orderNumber").asText();
-        String customerName = data.path("customerName").asText("Grower");
-        String reason = data.path("reason").asText("Cancelled by request");
-        String refundAmount = data.path("refundAmount").asText("0.00");
+        String orderNumber = escape(data.path("orderNumber").asText());
+        String customerName = escape(data.path("customerName").asText("Grower"));
+        String reason = escape(data.path("reason").asText("Cancelled by request"));
+        String refundAmount = escape(data.path("refundAmount").asText("0.00"));
         String ctaUrl = frontendUrl + "/dashboard?tab=history&orderId=" + data.path("orderId").asText();
 
         return """
@@ -176,17 +183,17 @@ public class NotificationTemplateService {
     }
 
     private String buildShipmentBody(NotificationEventType type, JsonNode data) {
-        String orderNumber = data.path("orderNumber").asText();
-        String customerName = data.path("customerName").asText("Grower");
-        String courierName = data.path("courierName").asText("Delhivery / Shiprocket");
-        String awbCode = data.path("awbCode").asText("AWB-PENDING");
+        String orderNumber = escape(data.path("orderNumber").asText());
+        String customerName = escape(data.path("customerName").asText("Grower"));
+        String courierName = escape(data.path("courierName").asText("Delhivery / Shiprocket"));
+        String awbCode = escape(data.path("awbCode").asText("AWB-PENDING"));
         String orderId = data.path("orderId").asText();
         String fallbackUrl = frontendUrl + "/dashboard?tab=activeTrack" + (orderId.isBlank() ? "" : "&orderId=" + orderId);
         String trackingUrl = data.path("trackingUrl").asText(fallbackUrl);
         if (trackingUrl == null || trackingUrl.isBlank() || trackingUrl.contains("AWB-PENDING")) {
             trackingUrl = fallbackUrl;
         }
-        String currentStatus = data.path("status").asText(type.name());
+        String currentStatus = escape(data.path("status").asText(type.name()));
 
         String headerTitle = switch (type) {
           case SHIPMENT_HANDOVER -> "🚚 Handed Over to Delivery Partner";
@@ -217,8 +224,8 @@ public class NotificationTemplateService {
     }
 
     private String buildOrderDeliveredBody(JsonNode data) {
-        String orderNumber = data.path("orderNumber").asText();
-        String customerName = data.path("customerName").asText("Grower");
+        String orderNumber = escape(data.path("orderNumber").asText());
+        String customerName = escape(data.path("customerName").asText("Grower"));
         String ctaUrl = frontendUrl + "/dashboard?tab=history&orderId=" + data.path("orderId").asText();
 
         return """
@@ -239,9 +246,9 @@ public class NotificationTemplateService {
     }
 
     private String buildRefundBody(NotificationEventType type, JsonNode data) {
-        String refundId = data.path("refundId").asText();
-        String amount = data.path("amount").asText("0.00");
-        String reason = data.path("reason").asText("Refund processed");
+        String refundId = escape(data.path("refundId").asText());
+        String amount = escape(data.path("amount").asText("0.00"));
+        String reason = escape(data.path("reason").asText("Refund processed"));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         return """
@@ -264,10 +271,10 @@ public class NotificationTemplateService {
     }
 
     private String buildEnrollmentConfirmedBody(JsonNode data) {
-        String courseTitle = data.path("courseTitle").asText("Masterclass Training");
-        String batchCode = data.path("batchCode").asText("UPCOMING");
-        String studentName = data.path("studentName").asText("Trainee");
-        String fee = data.path("fee").asText("0.00");
+        String courseTitle = escape(data.path("courseTitle").asText("Masterclass Training"));
+        String batchCode = escape(data.path("batchCode").asText("UPCOMING"));
+        String studentName = escape(data.path("studentName").asText("Trainee"));
+        String fee = escape(data.path("fee").asText("0.00"));
         String ctaUrl = frontendUrl + "/dashboard?tab=trainings";
 
         return """
@@ -290,9 +297,9 @@ public class NotificationTemplateService {
     }
 
     private String buildEnrollmentCancelledBody(JsonNode data) {
-        String courseTitle = data.path("courseTitle").asText("Masterclass Training");
-        String studentName = data.path("studentName").asText("Trainee");
-        String refundAmount = data.path("refundAmount").asText("0.00");
+        String courseTitle = escape(data.path("courseTitle").asText("Masterclass Training"));
+        String studentName = escape(data.path("studentName").asText("Trainee"));
+        String refundAmount = escape(data.path("refundAmount").asText("0.00"));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         return """
@@ -313,9 +320,9 @@ public class NotificationTemplateService {
     }
 
     private String buildWalletTopupBody(JsonNode data) {
-        String txnRef = data.path("transactionRef").asText();
-        String amount = data.path("amount").asText("0.00");
-        String newBalance = data.path("newBalance").asText("0.00");
+        String txnRef = escape(data.path("transactionRef").asText());
+        String amount = escape(data.path("amount").asText("0.00"));
+        String newBalance = escape(data.path("newBalance").asText("0.00"));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         return """
@@ -337,10 +344,10 @@ public class NotificationTemplateService {
     }
 
     private String buildWalletRefundCreditBody(JsonNode data) {
-        String txnRef = data.path("transactionRef").asText();
-        String amount = data.path("amount").asText("0.00");
-        String newBalance = data.path("newBalance").asText("0.00");
-        String desc = data.path("description").asText("Refund credit");
+        String txnRef = escape(data.path("transactionRef").asText());
+        String amount = escape(data.path("amount").asText("0.00"));
+        String newBalance = escape(data.path("newBalance").asText("0.00"));
+        String desc = escape(data.path("description").asText("Refund credit"));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         return """
@@ -363,9 +370,9 @@ public class NotificationTemplateService {
     }
 
     private String buildWalletPaymentBody(JsonNode data) {
-        String txnRef = data.path("transactionRef").asText();
-        String amount = data.path("amount").asText("0.00");
-        String newBalance = data.path("newBalance").asText("0.00");
+        String txnRef = escape(data.path("transactionRef").asText());
+        String amount = escape(data.path("amount").asText("0.00"));
+        String newBalance = escape(data.path("newBalance").asText("0.00"));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         return """
@@ -387,11 +394,11 @@ public class NotificationTemplateService {
     }
 
     private String buildWalletWithdrawalBody(NotificationEventType type, JsonNode data) {
-        String wdRef = data.path("withdrawalRef").asText();
-        String amount = data.path("amount").asText("0.00");
-        String maskedAcc = data.path("maskedAccount").asText("••••");
-        String bankName = data.path("bankName").asText("Bank");
-        String status = data.path("status").asText(type.name());
+        String wdRef = escape(data.path("withdrawalRef").asText());
+        String amount = escape(data.path("amount").asText("0.00"));
+        String maskedAcc = escape(data.path("maskedAccount").asText("••••"));
+        String bankName = escape(data.path("bankName").asText("Bank"));
+        String status = escape(data.path("status").asText(type.name()));
         String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
 
         String statusBadge = switch (type) {
@@ -419,9 +426,9 @@ public class NotificationTemplateService {
     }
 
     private String buildAbandonedCartBody(JsonNode data) {
-        String customerName = data.path("customerName").asText("Grower");
-        String itemCount = data.path("itemCount").asText("1");
-        String cartTotal = data.path("cartTotal").asText("0.00");
+        String customerName = escape(data.path("customerName").asText("Grower"));
+        String itemCount = escape(data.path("itemCount").asText("1"));
+        String cartTotal = escape(data.path("cartTotal").asText("0.00"));
         String ctaUrl = frontendUrl + "/cart";
 
         return """
@@ -442,8 +449,8 @@ public class NotificationTemplateService {
     }
 
     private String buildAbandonedEnrollmentBody(JsonNode data) {
-        String studentName = data.path("studentName").asText("Trainee");
-        String courseTitle = data.path("courseTitle").asText("Masterclass Training");
+        String studentName = escape(data.path("studentName").asText("Trainee"));
+        String courseTitle = escape(data.path("courseTitle").asText("Masterclass Training"));
         String ctaUrl = frontendUrl + "/training";
 
         return """
@@ -460,14 +467,14 @@ public class NotificationTemplateService {
     }
 
     private String buildSupportTicketClosedBody(JsonNode data) {
-        String ticketNumber = data.path("ticketNumber").asText();
-        String subject = data.path("subject").asText("Support Ticket Inquiry");
-        String category = data.path("category").asText("GENERAL_SUPPORT");
-        String priority = data.path("priority").asText("MEDIUM");
-        String closedBy = data.path("closedBy").asText("Support Team");
+        String ticketNumber = escape(data.path("ticketNumber").asText());
+        String subject = escape(data.path("subject").asText("Support Ticket Inquiry"));
+        String category = escape(data.path("category").asText("GENERAL_SUPPORT"));
+        String priority = escape(data.path("priority").asText("MEDIUM"));
+        String closedBy = escape(data.path("closedBy").asText("Support Team"));
         int rating = data.path("satisfactionRating").asInt(0);
-        String feedback = data.path("satisfactionFeedback").asText("");
-        String lastMessage = data.path("lastMessage").asText("");
+        String feedback = escape(data.path("satisfactionFeedback").asText(""));
+        String lastMessage = escape(data.path("lastMessage").asText(""));
 
         String ctaUrl = frontendUrl + "/dashboard?tab=support";
 

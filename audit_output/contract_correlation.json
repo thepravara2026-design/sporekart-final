@@ -1,0 +1,428 @@
+{
+  "total_backend_endpoints": 204,
+  "total_frontend_api_calls": 146,
+  "matched_count": 146,
+  "unmatched_frontend": [],
+  "unconsumed_backend": [
+    {
+      "method": "GET",
+      "path": "/products",
+      "controller": "CatalogController",
+      "handler": "getProducts",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products/popular",
+      "controller": "CatalogController",
+      "handler": "getPopularProducts",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products/bestsellers",
+      "controller": "CatalogController",
+      "handler": "getBestSellingProducts",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products/search",
+      "controller": "CatalogController",
+      "handler": "searchProducts",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/products/{slug}",
+      "controller": "CatalogController",
+      "handler": "getProductBySlug",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/categories",
+      "controller": "CatalogController",
+      "handler": "getCategories",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/content/posts/{id}",
+      "controller": "AdminContentController",
+      "handler": "getPostById",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/content/posts/{id}",
+      "controller": "AdminContentController",
+      "handler": "updatePost",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/content/categories",
+      "controller": "AdminContentController",
+      "handler": "createCategory",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/content/authors",
+      "controller": "AdminContentController",
+      "handler": "createAuthor",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/content/tags",
+      "controller": "AdminContentController",
+      "handler": "createTag",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/content/posts",
+      "controller": "ContentController",
+      "handler": "getPublishedPosts",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/content/posts/{slug}",
+      "controller": "ContentController",
+      "handler": "getPostBySlug",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/content/categories",
+      "controller": "ContentController",
+      "handler": "getCategories",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/content/tags",
+      "controller": "ContentController",
+      "handler": "getTags",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/content/authors",
+      "controller": "ContentController",
+      "handler": "getAuthors",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/customer/capabilities",
+      "controller": "CustomerController",
+      "handler": "getCapabilities",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/auth/otp/request",
+      "controller": "AdminAuthController",
+      "handler": "requestAdminOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/auth/otp/verify",
+      "controller": "AdminAuthController",
+      "handler": "verifyAdminOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/otp/request",
+      "controller": "AuthController",
+      "handler": "requestOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/otp/verify",
+      "controller": "AuthController",
+      "handler": "verifyOtp",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/media/upload/initiate",
+      "controller": "MediaController",
+      "handler": "initiateUpload",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "POST",
+      "path": "/media/upload/complete",
+      "controller": "MediaController",
+      "handler": "completeUpload",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "GET",
+      "path": "/media/{id}",
+      "controller": "MediaController",
+      "handler": "getMediaAsset",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/media/{id}/signed-url",
+      "controller": "MediaController",
+      "handler": "getSignedUrl",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "DELETE",
+      "path": "/media/{id}",
+      "controller": "MediaController",
+      "handler": "deleteMediaAsset",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/media/link",
+      "controller": "MediaController",
+      "handler": "linkMediaToEntity",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/notifications",
+      "controller": "AdminNotificationController",
+      "handler": "getAllNotifications",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications",
+      "controller": "AdminNotificationController",
+      "handler": "getAllNotifications",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/notifications/{id}/retry",
+      "controller": "AdminNotificationController",
+      "handler": "retryNotification",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/notifications/{id}/retry",
+      "controller": "AdminNotificationController",
+      "handler": "retryNotification",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications/in-app",
+      "controller": "AdminNotificationController",
+      "handler": "getAdminInAppNotifications",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/notifications/in-app/unread-count",
+      "controller": "AdminNotificationController",
+      "handler": "getAdminUnreadCount",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications/in-app/unread-count",
+      "controller": "AdminNotificationController",
+      "handler": "getAdminUnreadCount",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications/unread-count",
+      "controller": "AdminNotificationController",
+      "handler": "getAdminUnreadCount",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/notifications/in-app/{id}/read",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/admin/notifications/in-app/{id}/read",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/admin/notifications/in-app/{id}/read",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/notifications/in-app/read-all",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAllAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/admin/notifications/in-app/read-all",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAllAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/admin/notifications/in-app/read-all",
+      "controller": "AdminNotificationController",
+      "handler": "markAdminAllAsRead",
+      "auth": "hasRole('ROLE_ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/notifications",
+      "controller": "CustomerNotificationController",
+      "handler": "getCustomerNotifications",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/notifications/unread-count",
+      "controller": "CustomerNotificationController",
+      "handler": "getUnreadCount",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PUT",
+      "path": "/notifications/{id}/read",
+      "controller": "CustomerNotificationController",
+      "handler": "markAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/notifications/{id}/read",
+      "controller": "CustomerNotificationController",
+      "handler": "markAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/notifications/{id}/read",
+      "controller": "CustomerNotificationController",
+      "handler": "markAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PUT",
+      "path": "/notifications/read-all",
+      "controller": "CustomerNotificationController",
+      "handler": "markAllAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/notifications/read-all",
+      "controller": "CustomerNotificationController",
+      "handler": "markAllAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/notifications/read-all",
+      "controller": "CustomerNotificationController",
+      "handler": "markAllAsRead",
+      "auth": "isAuthenticated()"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/orders/{id}/invoice",
+      "controller": "AdminOrderController",
+      "handler": "downloadInvoice",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/webhook",
+      "controller": "PaymentWebhookController",
+      "handler": "handleWebhook",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/seo/robots.txt",
+      "controller": "SeoController",
+      "handler": "getRobotsTxt",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/seo/sitemap.xml",
+      "controller": "SeoController",
+      "handler": "getSitemapXml",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/shipping/webhook",
+      "controller": "ShippingWebhookController",
+      "handler": "handleShiprocketWebhook",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/training/categories",
+      "controller": "AdminTrainingController",
+      "handler": "createCategory",
+      "auth": "hasRole('ADMIN')"
+    },
+    {
+      "method": "GET",
+      "path": "/training/courses/{courseId}/batches",
+      "controller": "TrainingController",
+      "handler": "getBatchesForCourse",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/training/bookings",
+      "controller": "TrainingController",
+      "handler": "enroll",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "POST",
+      "path": "/training/enrollments/{enrollmentId}/confirm-payment",
+      "controller": "TrainingController",
+      "handler": "confirmPayment",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/training/user/{userId}/enrollments",
+      "controller": "TrainingController",
+      "handler": "getUserEnrollments",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    },
+    {
+      "method": "GET",
+      "path": "/training/certificate/{enrollmentId}",
+      "controller": "TrainingController",
+      "handler": "getCertificate",
+      "auth": "PERMIT_ALL_OR_CONFIG"
+    }
+  ]
+}

@@ -4,10 +4,12 @@ import com.sporekart.identity.domain.User;
 import com.sporekart.identity.infrastructure.UserRepository;
 import com.sporekart.notification.application.NotificationEventService;
 import com.sporekart.notification.domain.NotificationEventType;
+import com.sporekart.shared.application.ResourceNotFoundException;
 import com.sporekart.support.domain.*;
 import com.sporekart.support.infrastructure.TicketMessageRepository;
 import com.sporekart.support.infrastructure.SupportTicketRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SupportApplicationService {
@@ -117,7 +120,9 @@ public class SupportApplicationService {
                     "/admin/support?ticketId=" + savedTicket.getId(),
                     "ADMIN_TICKET_CREATED:" + savedTicket.getId()
             );
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Failed to record admin ticket creation notification for ticket {}: {}", savedTicket.getId(), e.getMessage());
+        }
 
         return savedTicket;
     }
@@ -125,7 +130,7 @@ public class SupportApplicationService {
     @Transactional
     public TicketMessage addMessageToTicket(UUID ticketId, UUID senderId, String senderType, String senderName, String messageText) {
         SupportTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Support ticket not found: " + ticketId));
+                .orElseThrow(() -> new ResourceNotFoundException("Support ticket not found: " + ticketId));
 
         TicketMessage message = TicketMessage.builder()
                 .ticket(ticket)
@@ -156,7 +161,9 @@ public class SupportApplicationService {
                     if (r >= 1 && r <= 5) {
                         ticket.setSatisfactionRating(r);
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    log.warn("Failed to parse CSAT rating from resolution message for ticket {}: {}", ticket.getId(), e.getMessage());
+                }
             }
         } else if ("CUSTOMER".equalsIgnoreCase(senderType) && ticket.getStatus() == TicketStatus.WAITING_ON_CUSTOMER) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
@@ -192,7 +199,7 @@ public class SupportApplicationService {
     @Transactional
     public SupportTicket closeTicketWithCsat(UUID ticketId, String closedBy, Integer rating, String feedback) {
         SupportTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Support ticket not found: " + ticketId));
+                .orElseThrow(() -> new ResourceNotFoundException("Support ticket not found: " + ticketId));
 
         ticket.setStatus(TicketStatus.CLOSED);
         ticket.setClosedBy(closedBy != null ? closedBy : "CUSTOMER");
@@ -228,7 +235,7 @@ public class SupportApplicationService {
     @Transactional
     public SupportTicket updateTicketStatus(UUID ticketId, TicketStatus status, TicketPriority priority) {
         SupportTicket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Support ticket not found: " + ticketId));
+                .orElseThrow(() -> new ResourceNotFoundException("Support ticket not found: " + ticketId));
 
         boolean wasClosed = ticket.getStatus() == TicketStatus.CLOSED;
         if (status != null) {
@@ -310,7 +317,7 @@ public class SupportApplicationService {
     @Transactional(readOnly = true)
     public SupportTicket getTicketDetails(UUID ticketId) {
         return ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Support ticket not found: " + ticketId));
+                .orElseThrow(() -> new ResourceNotFoundException("Support ticket not found: " + ticketId));
     }
 
     @Transactional(readOnly = true)

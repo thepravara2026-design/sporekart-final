@@ -39,8 +39,13 @@ test.describe('PHASE 3A: Customer Account Lifecycle & Profile Management', () =>
     await page.goto('/dashboard?tab=addresses');
     await page.waitForLoadState('domcontentloaded');
 
+    // Explicitly click Delivery Addresses tab to ensure it is active
+    const addressTabBtn = page.getByRole('button', { name: /Delivery Addresses/i }).first();
+    await expect(addressTabBtn).toBeVisible({ timeout: 15000 });
+    await addressTabBtn.click();
+
     // Click Add New Address
-    const addAddressBtn = page.getByRole('button', { name: /Add New Address|\+ Add Address/i }).first();
+    const addAddressBtn = page.getByRole('button', { name: /Add New Address|\+ Add Delivery Address|\+ Add Address/i }).first();
     await expect(addAddressBtn).toBeVisible({ timeout: 15000 });
     await addAddressBtn.click();
 
@@ -51,13 +56,15 @@ test.describe('PHASE 3A: Customer Account Lifecycle & Profile Management', () =>
       await phoneInput.fill(testUser.phone);
     }
     await page.getByPlaceholder('e.g. 560001').fill('411001');
+    // Wait for pincode auto-fill lookup to complete
+    await page.waitForTimeout(600);
     await page.getByPlaceholder('e.g. Plot 12, Green Agro Farm, Main Road').fill('Flat 402 Mushroom Residency');
 
     // Submit address
     const saveBtn = page.getByRole('button', { name: /Save Shipping Address|Save Address/i }).first();
     await saveBtn.click();
 
-    // Verify address card is displayed or modal closes
+    // Verify address card is displayed
     await expect(page.getByText(/Flat 402 Mushroom Residency|Test User QA/i).first()).toBeVisible({ timeout: 15000 });
   });
 
