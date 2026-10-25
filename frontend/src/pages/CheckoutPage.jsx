@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag, Smartphone, Building2, Wallet } from 'lucide-react';
+import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag, Smartphone, Building2 } from 'lucide-react';
 import { customerApi, orderApi, authApi } from '../api';
 import { useCart } from '../context/CartContext';
 import MediaImage from '../components/MediaImage';
@@ -461,10 +461,10 @@ export default function CheckoutPage({ user, setUser }) {
             </div>
 
             <p className="text-xs text-typography-secondary">
-              Choose your preferred payment method. Free to pay via UPI, QR, Net Banking, Cards, or Sporekart Wallet with 0% extra fee.
+              Choose your preferred payment method. Free to pay via UPI, QR, Net Banking, or Cards with 0% extra fee.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
               {/* UPI & QR */}
               <div
                 onClick={() => setSelectedPaymentMethod('upi')}
@@ -533,29 +533,6 @@ export default function CheckoutPage({ user, setUser }) {
                   Direct Bank Authorization
                 </span>
               </div>
-
-              {/* Wallet */}
-              <div
-                onClick={() => setSelectedPaymentMethod('wallet')}
-                className={`p-4 rounded-card border cursor-pointer transition-all relative ${
-                  selectedPaymentMethod === 'wallet'
-                    ? 'bg-surface-cream border-forest-700 ring-1 ring-forest-700 shadow-sm'
-                    : 'bg-surface-white border-surface-border hover:border-forest-700/40'
-                }`}
-              >
-                <div className="flex items-center justify-between font-bold text-xs text-forest-900 mb-1">
-                  <span className="flex items-center gap-1.5">
-                    <Wallet className="w-4 h-4 text-forest-700" /> Sporekart Ag-Wallet
-                  </span>
-                  {selectedPaymentMethod === 'wallet' && <CheckCircle2 className="w-4 h-4 text-forest-700" />}
-                </div>
-                <p className="text-[11px] text-typography-muted">
-                  Use stored credit balance for instant 1-click checkout
-                </p>
-                <span className="inline-block mt-2 text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">
-                  Instant Balance Deduct
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -612,10 +589,8 @@ export default function CheckoutPage({ user, setUser }) {
                   <Smartphone className="w-4 h-4 text-forest-700" />
                 ) : selectedPaymentMethod === 'card' ? (
                   <CreditCard className="w-4 h-4 text-forest-700" />
-                ) : selectedPaymentMethod === 'netbanking' ? (
-                  <Building2 className="w-4 h-4 text-forest-700" />
                 ) : (
-                  <Wallet className="w-4 h-4 text-forest-700" />
+                  <Building2 className="w-4 h-4 text-forest-700" />
                 )}
                 <div>
                   <span className="text-typography-muted text-[10px] uppercase font-bold block">Selected Payment</span>
@@ -624,9 +599,7 @@ export default function CheckoutPage({ user, setUser }) {
                       ? 'UPI & Instant QR'
                       : selectedPaymentMethod === 'card'
                       ? 'Credit / Debit Cards'
-                      : selectedPaymentMethod === 'netbanking'
-                      ? 'Net Banking'
-                      : 'Sporekart Ag-Wallet'}
+                      : 'Net Banking'}
                   </span>
                 </div>
               </div>

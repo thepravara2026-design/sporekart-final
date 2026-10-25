@@ -49,6 +49,10 @@ public class Payment {
     @Builder.Default
     private List<PaymentEvent> events = new ArrayList<>();
 
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Refund> refunds = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

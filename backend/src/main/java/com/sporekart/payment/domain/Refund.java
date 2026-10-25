@@ -1,0 +1,75 @@
+package com.sporekart.payment.domain;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "refunds")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Refund {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
+
+    @Column(name = "order_id")
+    private UUID orderId;
+
+    @Column(name = "user_id")
+    private UUID userId;
+
+    @Column(name = "razorpay_refund_id", unique = true)
+    private String razorpayRefundId;
+
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    @Column(name = "amount_inr", nullable = false, precision = 10, scale = 2)
+    private BigDecimal amountInr;
+
+    @Column(name = "currency", nullable = false)
+    @Builder.Default
+    private String currency = "INR";
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private RefundStatus status = RefundStatus.PENDING;
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Column(name = "idempotency_key", unique = true)
+    private String idempotencyKey;
+
+    @Column(name = "failure_reason")
+    private String failureReason;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = OffsetDateTime.now();
+        if (updatedAt == null) updatedAt = OffsetDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = OffsetDateTime.now();
+    }
+}

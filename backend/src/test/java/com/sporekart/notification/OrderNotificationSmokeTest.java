@@ -100,6 +100,9 @@ public class OrderNotificationSmokeTest {
     @Autowired
     private NotificationWorker notificationWorker;
 
+    @Autowired
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     private User testUser;
     private ProductVariant testVariant;
 
@@ -133,10 +136,14 @@ public class OrderNotificationSmokeTest {
 
         // 2. Setup Catalog Product & Stock
         String unique = UUID.randomUUID().toString().substring(0, 8);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
         CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(
                 null, "Fresh Pink Oyster Mushroom " + unique, "pink-oyster-" + unique,
                 "Cultivated Fresh Mushroom", com.sporekart.catalog.domain.ProductType.FRESH_MUSHROOM, com.sporekart.catalog.domain.ProductStatus.ACTIVE,
-                "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true
+                "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true,
+                infoReq
         );
         Product testProduct = adminCatalogService.createProduct(prodReq);
 
@@ -172,6 +179,15 @@ public class OrderNotificationSmokeTest {
 
         assertNotNull(order1Resp);
         assertNotNull(order1Resp.getId());
+
+        // In hardened flow, order confirmation notification is triggered when payment is confirmed
+        orderService.updateOrderStatus(order1Resp.getId(), OrderStatus.CONFIRMED, "Payment confirmed", "PAYMENT_GATEWAY");
+        eventPublisher.publishEvent(com.sporekart.analytics.domain.events.PaymentCapturedEvent.builder()
+                .paymentId(UUID.randomUUID())
+                .orderId(order1Resp.getId())
+                .amountInr(order1Resp.getTotalAmountInr())
+                .razorpayPaymentId("pay_smoke_123")
+                .build());
 
         // Pause briefly to let async @TransactionalEventListener process after transaction commit
         Thread.sleep(800);

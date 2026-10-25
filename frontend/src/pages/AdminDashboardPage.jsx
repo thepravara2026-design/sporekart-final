@@ -8,7 +8,7 @@ import {
   Search, Filter, Layers, ArrowUpRight, Sparkles, TrendingUp,
   Clock, SlidersHorizontal, Eye, Edit3, Trash2, Copy, ExternalLink,
   ChevronRight, Check, AlertTriangle, Layers2, Sparkle, Download,
-  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Wallet, Award, X,
+  MapPin, CheckSquare, Clock3, Lock, RotateCcw, Ban, XCircle, DollarSign, Award, X,
   ShoppingCart, Globe, Star, ArrowUpDown, FileSpreadsheet
 } from 'lucide-react';
 import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi, shippingApi } from '../api';
@@ -1198,9 +1198,13 @@ export default function AdminDashboardPage({ user }) {
 
     setStatusMessage(''); setErrorMessage('');
     try {
-      const newStatus = (cancelTargetOrder.status === 'PAID' || cancelTargetOrder.status === 'PROCESSING') ? 'REFUNDED' : 'CANCELLED';
       const formattedAdminReason = cancelReasonInput ? `Cancelled by Admin: ${cancelReasonInput}` : 'Cancelled by Admin: Operational / Inventory adjustment';
-      await adminApi.updateOrderStatus(cancelTargetOrder.id, newStatus, formattedAdminReason);
+      if (typeof adminApi.cancelOrder === 'function') {
+        await adminApi.cancelOrder(cancelTargetOrder.id, formattedAdminReason);
+      } else {
+        const newStatus = (cancelTargetOrder.status === 'PAID' || cancelTargetOrder.status === 'PROCESSING') ? 'REFUNDED' : 'CANCELLED';
+        await adminApi.updateOrderStatus(cancelTargetOrder.id, newStatus, formattedAdminReason);
+      }
       setStatusMessage(`Order ${cancelTargetOrder.orderNumber} cancelled successfully. Payment refund of ₹${cancelTargetOrder.totalAmountInr} initiated via Razorpay Gateway.`);
       setCancelTargetOrder(null);
       setCancelReasonInput('');
@@ -1951,7 +1955,7 @@ export default function AdminDashboardPage({ user }) {
         amount: o.totalAmountInr,
         date: new Date(o.createdAt).toLocaleDateString(),
         metadata: {
-          Reference: `rfnd_${o.id?.slice(0, 8)}`,
+          Reference: o.refunds?.[0]?.razorpayRefundId || (o.status === 'REFUNDED' ? (o.razorpayPaymentId || 'Settled') : 'N/A'),
         },
       })),
       actionButton: {
@@ -2185,64 +2189,60 @@ export default function AdminDashboardPage({ user }) {
     if (type === 'TRANSACTIONS') {
       setAnalyticsModalConfig({
         domain: 'Platform Finance',
-        title: 'Customer Wallet Transactions',
+        title: 'Historical Financial Ledger & Transactions',
         metric: `₹${(financeSummary?.totalTransactionVolume || 0).toLocaleString('en-IN')}`,
-        subtitle: 'Total volume of wallet deposits, referral credits, order purchases, and adjustments.',
+        subtitle: 'Audited log of payments, refunds, settlements, and archived transactions.',
         badge: 'Audited Ledger',
         badgeColor: 'forest',
-        icon: Wallet,
+        icon: CreditCard,
         breakdown: [
           { label: 'Transaction Count', value: financeSummary?.totalTransactionsCount || platformTxns.length || 0 },
           { label: 'Audited Status', value: 'Reconciled' },
         ],
         items: platformTxns.map((t, idx) => ({
           id: t.id || `txn_${idx + 1}`,
-          title: `Wallet ${t.direction || 'CREDIT'} - ${t.notes || t.reason || 'Transaction'}`,
+          title: `Entry ${t.direction || 'CREDIT'} - ${t.notes || t.reason || 'Transaction'}`,
           subtitle: `User ID: ${t.userId || 'Platform User'} • Reference: ${t.referenceId || 'N/A'}`,
           status: t.direction || 'CREDIT',
           statusColor: t.direction === 'DEBIT' ? 'red' : 'green',
           amount: t.amount,
           date: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : undefined,
         })),
-        actionButton: {
-          label: 'Perform Wallet Adjustment',
-          onClick: () => setManualAdjModalOpen(true),
-        },
       });
     } else if (type === 'BALANCE') {
       setAnalyticsModalConfig({
         domain: 'Treasury Liability',
-        title: 'Customer Wallet Balances',
+        title: 'Archived Customer Balances',
         metric: `₹${(financeSummary?.totalAvailableBalance || 0).toLocaleString('en-IN')}`,
-        subtitle: 'Outstanding aggregate platform wallet liability held on behalf of customers and trainees.',
-        badge: 'Platform Liability',
+        subtitle: 'Historical immutable balance records. Spendable wallets are permanently retired.',
+        badge: 'Archived Ledger',
         badgeColor: 'green',
         icon: DollarSign,
         breakdown: [
-          { label: 'Available Balance', value: `₹${(financeSummary?.totalAvailableBalance || 0).toLocaleString('en-IN')}` },
-          { label: 'Escrow Status', value: '100% Backed' },
+          { label: 'Archived Balance', value: `₹${(financeSummary?.totalAvailableBalance || 0).toLocaleString('en-IN')}` },
+          { label: 'Status', value: 'Retired / Archived' },
         ],
         items: customers.slice(0, 10).map(c => ({
           id: c.userId,
-          title: c.fullName || 'Customer Wallet',
+          title: c.fullName || 'Customer Record',
           subtitle: c.email || c.phone,
-          status: 'ACTIVE WALLET',
+          status: 'RETIRED ARCHIVE',
           statusColor: 'green',
-          amount: 500,
+          amount: 0,
         })),
       });
     } else if (type === 'PENDING_WITHDRAWALS') {
       setAnalyticsModalConfig({
         domain: 'Payout Desk',
-        title: 'Pending Bank Withdrawal Requests',
+        title: 'Archived Bank Withdrawal Requests',
         metric: `₹${(financeSummary?.totalPendingWithdrawalsAmount || 0).toLocaleString('en-IN')}`,
-        subtitle: 'Customer and trainee wallet payout requests awaiting admin review and bank disbursement.',
-        badge: 'Action Required',
+        subtitle: 'Historical bank withdrawal requests archive. Spendable withdrawals permanently retired.',
+        badge: 'Archived',
         badgeColor: 'amber',
         icon: CreditCard,
         breakdown: [
           { label: 'Requests Count', value: financeSummary?.pendingWithdrawalCount || platformWithdrawals.length || 0 },
-          { label: 'Payout SLA', value: '24 Hours' },
+          { label: 'Status', value: 'Archived' },
         ],
         items: platformWithdrawals.map(w => ({
           id: w.id,
@@ -2849,7 +2849,7 @@ export default function AdminDashboardPage({ user }) {
       sections: [
         { id: 'orders', label: 'All Orders', path: '/admin/orders', icon: ShoppingBag },
         { id: 'order-refunds', label: 'Order Refunds & Reversals', path: '/admin/order-refunds', icon: RotateCcw },
-        { id: 'finance', label: 'Platform Finance & Wallets', path: '/admin/finance', icon: Wallet },
+        { id: 'finance', label: 'Gateway Finance & Reconciliation', path: '/admin/finance', icon: CreditCard },
         { id: 'shipping', label: 'Shipments & Logistics', path: '/admin/shipping', icon: Truck },
         { id: 'payments', label: 'Payment Ledger', path: '/admin/payments', icon: CreditCard }
       ]
@@ -3317,9 +3317,9 @@ export default function AdminDashboardPage({ user }) {
                 to="/admin/finance"
                 className="p-3 bg-surface-cream hover:bg-forest-900 hover:text-white rounded-xl border border-surface-border hover:border-forest-900 transition-all duration-200 text-center group flex flex-col items-center justify-center space-y-1.5 shadow-xs"
               >
-                <Wallet className="w-4 h-4 text-forest-700 group-hover:text-gold" />
+                <DollarSign className="w-4 h-4 text-forest-700 group-hover:text-gold" />
                 <span className="text-xs font-bold">Ledger</span>
-                <span className="text-[9px] text-typography-muted group-hover:text-surface-neutral/80">Wallets &amp; Payout</span>
+                <span className="text-[9px] text-typography-muted group-hover:text-surface-neutral/80">Finance &amp; Reconciliation</span>
               </Link>
             </div>
           </div>
@@ -5848,9 +5848,25 @@ export default function AdminDashboardPage({ user }) {
                           )}
                         </td>
                         <td className="p-3.5 whitespace-nowrap">
-                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase border ${statusPillStyle}`}>
-                            {order.status}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase border ${statusPillStyle}`}>
+                              {order.status}
+                            </span>
+                            {order.refundStatus && (
+                              <span className={`px-2 py-0.5 text-[9px] font-bold rounded flex items-center gap-1 border ${
+                                order.refundStatus === 'PROCESSED'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  : order.refundStatus === 'PENDING'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                                  : order.refundStatus === 'FAILED'
+                                  ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                  : 'bg-blue-50 text-blue-800 border-blue-300'
+                              }`}>
+                                <RotateCcw className="w-2.5 h-2.5" />
+                                {order.refundStatus === 'PROCESSED' ? `Refunded ₹${order.refundedAmountInr || order.totalAmountInr}` : `Refund ${order.refundStatus}`}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="p-3.5 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -6263,15 +6279,22 @@ export default function AdminDashboardPage({ user }) {
                           {order.cancellationReason || 'Cancelled by User / System'}
                         </span>
                       </td>
-                      <td className="p-3.5 font-bold text-red-700 font-sans text-xs whitespace-nowrap">₹{order.totalAmountInr}</td>
-                      <td className="p-3.5 font-mono text-forest-800 whitespace-nowrap">rfnd_{order.id.substring(0, 10)}</td>
+                      <td className="p-3.5 font-bold text-red-700 font-sans text-xs whitespace-nowrap">
+                        ₹{order.refundedAmountInr != null ? order.refundedAmountInr : (order.status === 'REFUNDED' ? order.totalAmountInr : '0.00')}
+                      </td>
+                      <td className="p-3.5 font-mono text-forest-800 whitespace-nowrap">
+                        {(order.refunds && order.refunds.length > 0 && order.refunds[0].razorpayRefundId)
+                          ? order.refunds[0].razorpayRefundId
+                          : (order.status === 'REFUNDED' ? (order.razorpayPaymentId || 'Settled') : 'N/A')}
+                      </td>
                       <td className="p-3.5 whitespace-nowrap">
                         <span className={`px-2.5 py-1 border text-[10px] font-bold rounded-lg uppercase ${
-                          order.status === 'REFUNDED' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
-                          order.status === 'REFUND_PENDING' ? 'bg-amber-600/10 text-amber-700 border-amber-600/20' :
+                          (order.refundStatus === 'PROCESSED' || order.status === 'REFUNDED') ? 'bg-green-600/10 text-green-700 border-green-600/20' :
+                          (order.refundStatus === 'PENDING' || order.status === 'REFUND_PENDING') ? 'bg-amber-600/10 text-amber-700 border-amber-600/20' :
+                          order.refundStatus === 'FAILED' ? 'bg-rose-600/10 text-rose-700 border-rose-600/20' :
                           'bg-red-600/10 text-red-700 border-red-600/20'
                         }`}>
-                          {order.status === 'REFUNDED' ? 'REFUND_PROCESSED' : order.status}
+                          {order.refundStatus ? `REFUND_${order.refundStatus}` : (order.status === 'REFUNDED' ? 'REFUND_PROCESSED' : order.status)}
                         </span>
                       </td>
                     </tr>
@@ -6416,7 +6439,7 @@ export default function AdminDashboardPage({ user }) {
               value="ICICI Bank •••• 4092"
               badge="Automated T+1 Cycle"
               badgeStyle="text-forest-800 bg-forest-900/10"
-              icon={Wallet}
+              icon={CreditCard}
               iconColor="text-forest-700"
               onClick={() => openPaymentAnalytics('SETTLEMENT_ACCOUNT')}
               testId="kpi-card-payment-settlement-account"
@@ -6467,40 +6490,40 @@ export default function AdminDashboardPage({ user }) {
           {/* Finance Executive KPI Ribbon */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <AnalyticsMetricCard
-              title="Total Wallet Transactions"
+              title="Gateway Financial Events"
               value={`₹${(financeSummary?.totalTransactionVolume || 0).toLocaleString('en-IN')}`}
               badge={`${financeSummary?.totalTransactionsCount || 0} ledger records`}
               badgeStyle="text-forest-800 bg-forest-900/10"
-              icon={Wallet}
+              icon={CreditCard}
               iconColor="text-forest-700"
               valueColor="text-forest-800"
               onClick={() => openFinanceAnalytics('TRANSACTIONS')}
               testId="kpi-card-finance-txns"
             />
             <AnalyticsMetricCard
-              title="Total Customer Wallet Balance"
-              value={`₹${(financeSummary?.totalAvailableBalance || 0).toLocaleString('en-IN')}`}
-              badge="Platform Liability"
+              title="Razorpay Settlement Architecture"
+              value="Direct Bank (T+1)"
+              badge="Zero Stored Balances"
               badgeStyle="text-green-700 bg-green-600/10"
-              icon={DollarSign}
+              icon={ShieldCheck}
               iconColor="text-green-600"
               valueColor="text-green-700"
               onClick={() => openFinanceAnalytics('BALANCE')}
               testId="kpi-card-finance-balance"
             />
             <AnalyticsMetricCard
-              title="Pending Withdrawals"
+              title="Pending Settlements / Holds"
               value={`₹${(financeSummary?.totalPendingWithdrawalsAmount || 0).toLocaleString('en-IN')}`}
-              badge={`${financeSummary?.pendingWithdrawalCount || 0} requests awaiting`}
+              badge={`${financeSummary?.pendingWithdrawalCount || 0} historical entries`}
               badgeStyle="text-amber-800 bg-amber-500/10"
-              icon={CreditCard}
+              icon={Clock}
               iconColor="text-amber-600"
               valueColor="text-amber-600"
               onClick={() => openFinanceAnalytics('PENDING_WITHDRAWALS')}
               testId="kpi-card-finance-pending"
             />
             <AnalyticsMetricCard
-              title="Completed Withdrawals"
+              title="Completed Disbursals"
               value={`₹${(financeSummary?.totalCompletedWithdrawalsAmount || 0).toLocaleString('en-IN')}`}
               badge="Bank Disbursed"
               badgeStyle="text-forest-800 bg-forest-900/10"
@@ -6514,18 +6537,12 @@ export default function AdminDashboardPage({ user }) {
           {/* Action Ribbon */}
           <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-white p-4 rounded-card border border-surface-border shadow-level-1">
             <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-forest-700 shrink-0" />
+              <CreditCard className="w-5 h-5 text-forest-700 shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-typography-primary font-display">Platform Financial Ledger & Settlement Control</h4>
-                <p className="text-xs text-typography-secondary">Audit financial movements, process wallet withdrawals, and execute audited wallet balance adjustments.</p>
+                <h4 className="font-bold text-sm text-typography-primary font-display">Gateway Financial Ledger &amp; Settlement Reconciliation</h4>
+                <p className="text-xs text-typography-secondary">Audit financial movements, review immutable transaction history, and inspect bank settlements. Spendable wallets are retired.</p>
               </div>
             </div>
-            <button
-              onClick={() => setManualAdjModalOpen(true)}
-              className="px-4 py-2.5 btn-primary font-extrabold text-xs flex items-center gap-2 shadow-sm hover:scale-[1.02] transition-transform"
-            >
-              <Plus className="w-4 h-4" /> Perform Manual Wallet Adjustment
-            </button>
           </div>
 
           {/* Bank Withdrawal Requests Desk */}
@@ -6533,9 +6550,9 @@ export default function AdminDashboardPage({ user }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-display font-extrabold text-lg text-typography-primary flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-forest-700 shrink-0" /> Customer & Trainee Withdrawal Desk
+                  <CreditCard className="w-5 h-5 text-forest-700 shrink-0" /> Historical Bank Settlement &amp; Withdrawal Archive
                 </h3>
-                <p className="text-xs text-typography-secondary">Review pending bank payout requests and approve payout disburser settlements.</p>
+                <p className="text-xs text-typography-secondary">Audited record of legacy bank payout requests and provider settlements. Manual payout overrides are retired.</p>
               </div>
             </div>
 
@@ -6549,7 +6566,7 @@ export default function AdminDashboardPage({ user }) {
                     <th className="p-3.5">Bank Payout Info</th>
                     <th className="p-3.5">Amount (INR)</th>
                     <th className="p-3.5">Status</th>
-                    <th className="p-3.5">Actions</th>
+                    <th className="p-3.5">Audit Record</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-border">
@@ -6582,24 +6599,7 @@ export default function AdminDashboardPage({ user }) {
                         </span>
                       </td>
                       <td className="p-3.5 whitespace-nowrap">
-                        {wd.status === 'REQUESTED' || wd.status === 'PROCESSING' ? (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setWithdrawalActionModal({ ...wd, type: 'APPROVE' })}
-                              className="px-3 py-1 bg-green-700 text-white font-bold text-[11px] rounded-lg hover:bg-green-800 transition-colors"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => setWithdrawalActionModal({ ...wd, type: 'REJECT' })}
-                              className="px-3 py-1 bg-red-600/10 text-red-700 border border-red-600/20 font-bold text-[11px] rounded-lg hover:bg-red-600/20 transition-colors"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-typography-muted italic">{wd.adminNotes || 'Settled'}</span>
-                        )}
+                        <span className="text-[10px] text-typography-muted italic">{wd.adminNotes || 'Audit Archived'}</span>
                       </td>
                     </tr>
                   ))}
@@ -6690,132 +6690,7 @@ export default function AdminDashboardPage({ user }) {
             </div>
           </div>
 
-          {/* Modal for Withdrawal Approval / Rejection */}
-          {withdrawalActionModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
-                <h4 className="font-bold text-base font-display text-typography-primary">
-                  {withdrawalActionModal.type === 'APPROVE' ? 'Approve Bank Payout Withdrawal' : 'Reject Withdrawal & Reverse Balance'}
-                </h4>
-                <p className="text-xs text-typography-secondary leading-relaxed">
-                  Withdrawal Ref: <code className="font-mono font-bold text-forest-800">{withdrawalActionModal.withdrawalReference}</code> for amount <strong className="text-green-700">₹{withdrawalActionModal.amount}</strong>.
-                </p>
 
-                <div>
-                  <label className="block text-typography-primary font-bold text-xs mb-1">
-                    {withdrawalActionModal.type === 'APPROVE' ? 'Admin Approval Notes (Optional)' : 'Rejection Reason *'}
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder={withdrawalActionModal.type === 'APPROVE' ? 'e.g. Bank IMPS Transfer Ref #981241' : 'e.g. Bank account details mismatch'}
-                    value={actionNotes}
-                    onChange={(e) => setActionNotes(e.target.value)}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
-                  />
-                </div>
-
-                <div className="flex gap-2 text-xs">
-                  {withdrawalActionModal.type === 'APPROVE' ? (
-                    <button
-                      onClick={() => handleApproveWithdrawal(withdrawalActionModal.id)}
-                      className="flex-1 bg-green-700 text-white font-extrabold py-3 rounded-xl hover:bg-green-800 transition-colors"
-                    >
-                      Confirm Payout Approval
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleRejectWithdrawal(withdrawalActionModal.id)}
-                      className="flex-1 bg-red-600 text-white font-extrabold py-3 rounded-xl hover:bg-red-700 transition-colors"
-                    >
-                      Reject & Reverse Funds
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setWithdrawalActionModal(null); setActionNotes(''); }}
-                    className="px-4 btn-secondary font-bold"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Modal for Manual Wallet Adjustment */}
-          {manualAdjModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
-                <div className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-forest-700 shrink-0" />
-                  <h4 className="font-bold text-base font-display text-typography-primary">Execute Manual Wallet Balance Adjustment</h4>
-                </div>
-                <p className="text-xs text-typography-secondary">
-                  Manual wallet adjustments write an immutable audited ledger transaction.
-                </p>
-
-                <form onSubmit={handlePerformManualAdjustment} className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-typography-primary font-bold mb-1">Target User ID *</label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="Enter Customer/Trainee User ID"
-                      value={manualAdjForm.userId}
-                      onChange={(e) => setManualAdjForm({ ...manualAdjForm, userId: e.target.value })}
-                      className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-typography-primary font-bold mb-1">Direction *</label>
-                      <select
-                        value={manualAdjForm.direction}
-                        onChange={(e) => setManualAdjForm({ ...manualAdjForm, direction: e.target.value })}
-                        className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700 font-bold"
-                      >
-                        <option value="CREDIT">CREDIT (+)</option>
-                        <option value="DEBIT">DEBIT (-)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-typography-primary font-bold mb-1">Amount (INR) *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        required
-                        placeholder="0.00"
-                        value={manualAdjForm.amount}
-                        onChange={(e) => setManualAdjForm({ ...manualAdjForm, amount: e.target.value })}
-                        className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-typography-primary font-bold mb-1">Mandatory Audit Reason *</label>
-                    <textarea
-                      rows={2}
-                      required
-                      placeholder="e.g. Promotional goodwill credit / Manual chargeback correction"
-                      value={manualAdjForm.reason}
-                      onChange={(e) => setManualAdjForm({ ...manualAdjForm, reason: e.target.value })}
-                      className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-forest-700"
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button type="submit" className="flex-1 btn-primary py-3 font-extrabold rounded-xl">
-                      Post Audited Transaction
-                    </button>
-                    <button type="button" onClick={() => setManualAdjModalOpen(false)} className="px-4 btn-secondary font-bold">
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -8252,7 +8127,7 @@ export default function AdminDashboardPage({ user }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setAdminReplyText("We have verified your transaction and initiated a full refund to your Sporekart Wallet / original payment method.")}
+                        onClick={() => setAdminReplyText("We have verified your transaction and initiated a full refund to your original payment method via Razorpay (typically credited by your bank within 5-7 business days).")}
                         className="px-2.5 py-1 bg-surface-cream hover:bg-surface-white border border-surface-border rounded-lg text-typography-primary transition-all font-medium"
                       >
                         💳 Refund Initiated

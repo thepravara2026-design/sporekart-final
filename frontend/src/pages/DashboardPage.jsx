@@ -4,7 +4,7 @@ import {
   ShoppingBag, GraduationCap, Truck, Clock, CheckCircle2, User, RefreshCw, 
   Lock, ShieldCheck, MapPin, FileText, XCircle, AlertCircle, PlusCircle, 
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
-  Wallet, CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
+  CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
 } from 'lucide-react';
 import { orderApi, trainingApi, customerApi, supportApi, walletApi, shippingApi } from '../api';
 import SeoHead from '../components/SeoHead';
@@ -39,15 +39,10 @@ export default function DashboardPage({ user, setUser }) {
   const [bookings, setBookings] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const [wallet, setWallet] = useState({ availableBalance: 0, pendingBalance: 0, withdrawableBalance: 0 });
   const [walletTxns, setWalletTxns] = useState([]);
   const [walletWithdrawals, setWalletWithdrawals] = useState([]);
   const [walletTxnFilter, setWalletTxnFilter] = useState('ALL');
   const [walletTxnSearch, setWalletTxnSearch] = useState('');
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
-  const [withdrawForm, setWithdrawForm] = useState({ amount: '', bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '' });
-  const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
-  const [addMoneyAmount, setAddMoneyAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [reviewModalItem, setReviewModalItem] = useState(null);
@@ -119,12 +114,11 @@ export default function DashboardPage({ user, setUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [orderRes, bookingRes, addrRes, ticketRes, walletRes, txnRes, wdRes] = await Promise.allSettled([
+      const [orderRes, bookingRes, addrRes, ticketRes, txnRes, wdRes] = await Promise.allSettled([
         orderApi.getUserOrders(),
         trainingApi.getUserBookings(),
         customerApi.getAddresses(),
         supportApi.getUserTickets(),
-        walletApi.getWallet(),
         walletApi.getTransactions({ page: 0, size: 50 }),
         walletApi.getWithdrawals(),
       ]);
@@ -144,9 +138,6 @@ export default function DashboardPage({ user, setUser }) {
       if (ticketRes.status === 'fulfilled') {
         const d = ticketRes.value.data?.data;
         setTickets(Array.isArray(d) ? d : (d?.content || []));
-      }
-      if (walletRes.status === 'fulfilled') {
-        setWallet(walletRes.value.data?.data || { availableBalance: 0, pendingBalance: 0, withdrawableBalance: 0 });
       }
       if (txnRes.status === 'fulfilled') {
         const d = txnRes.value.data?.data;
@@ -195,8 +186,8 @@ export default function DashboardPage({ user, setUser }) {
     } else if (urlBookingId) {
       setActiveTab('trainings');
     } else if (urlTab) {
-      const normalizedTab = urlTab === 'orders' ? 'activeTrack' : urlTab === 'training' ? 'trainings' : urlTab;
-      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'wallet', 'support', 'reviews'];
+      const normalizedTab = urlTab === 'orders' ? 'activeTrack' : urlTab === 'training' ? 'trainings' : (urlTab === 'wallet' || urlTab === 'ledger') ? 'ledger' : urlTab;
+      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'ledger', 'wallet', 'support', 'reviews'];
       if (validTabs.includes(normalizedTab)) {
         setActiveTab(normalizedTab);
       }
@@ -412,105 +403,6 @@ export default function DashboardPage({ user, setUser }) {
       fetchData();
     } catch (err) {
       console.error('Failed to delete address:', err);
-    }
-  };
-
-  // Submit Withdrawal Request
-  const handleRequestWithdrawal = async (e) => {
-    e.preventDefault();
-    if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
-      return;
-    }
-    if (!withdrawForm.bankName || !withdrawForm.accountNumber) {
-      return;
-    }
-    setActionLoading((prev) => ({ ...prev, withdraw: true }));
-    try {
-      const res = await walletApi.requestWithdrawal({
-        amount: parseFloat(withdrawForm.amount),
-        bankName: withdrawForm.bankName,
-        accountNumber: withdrawForm.accountNumber,
-        ifscCode: withdrawForm.ifscCode,
-        accountHolderName: withdrawForm.accountHolderName,
-      });
-      if (res.data && res.data.success) {
-        setWithdrawModalOpen(false);
-        setWithdrawForm({ amount: '', bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '' });
-        fetchData();
-      }
-    } catch (err) {
-      console.error('Withdrawal request failed:', err);
-    } finally {
-      setActionLoading((prev) => ({ ...prev, withdraw: false }));
-    }
-  };
-
-  // Submit Add Money to Wallet via Razorpay
-  const handleAddMoneyToWallet = async (e) => {
-    e.preventDefault();
-    if (!addMoneyAmount || parseFloat(addMoneyAmount) <= 0) {
-      return;
-    }
-    setActionLoading((prev) => ({ ...prev, addMoney: true }));
-    try {
-      const amt = parseFloat(addMoneyAmount);
-      const res = await walletApi.addMoney({ amount: amt });
-      if (res.data && res.data.success) {
-        const topupData = res.data.data;
-
-        const completeVerification = async (rzpOrder, rzpPayment, rzpSignature) => {
-          try {
-            const verifyRes = await walletApi.verifyAddMoney({
-              razorpayOrderId: rzpOrder,
-              razorpayPaymentId: rzpPayment,
-              razorpaySignature: rzpSignature,
-            }, amt);
-            if (verifyRes.data && verifyRes.data.success) {
-              setAddMoneyModalOpen(false);
-              setAddMoneyAmount('');
-              fetchData();
-            }
-          } catch (err) {
-            console.error('Wallet topup verification failed:', err);
-          }
-        };
-
-        if (window.Razorpay) {
-          const options = {
-            key: topupData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Tqs0MmdXUl8FRk',
-            amount: Math.round(amt * 100),
-            currency: topupData.currency || 'INR',
-            name: 'Sporekart Agritech',
-            description: 'Wallet Balance Topup',
-            order_id: topupData.razorpayOrderId,
-            handler: function (response) {
-              completeVerification(
-                response.razorpay_order_id || topupData.razorpayOrderId,
-                response.razorpay_payment_id || ('pay_topup_' + Date.now()),
-                response.razorpay_signature || 'mock_sig'
-              );
-            },
-            prefill: {
-              name: user?.fullName || '',
-              email: user?.email || '',
-              contact: user?.phone || '',
-            },
-            theme: { color: '#1b4332' },
-          };
-          const rzp = new window.Razorpay(options);
-          rzp.open();
-        } else {
-          await completeVerification(
-            topupData.razorpayOrderId,
-            'pay_topup_' + Date.now(),
-            'mock_topup_sig'
-          );
-        }
-      }
-    } catch (err) {
-      console.error('Failed to initiate wallet topup:', err);
-    } finally {
-      setActionLoading((prev) => ({ ...prev, addMoney: false }));
     }
   };
 
@@ -907,14 +799,14 @@ export default function DashboardPage({ user, setUser }) {
         </button>
 
         <button
-          onClick={() => setActiveTab('wallet')}
+          onClick={() => setActiveTab('ledger')}
           className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
-            activeTab === 'wallet'
+            activeTab === 'ledger' || activeTab === 'wallet'
               ? 'btn-primary text-white shadow-level-1'
               : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
           }`}
         >
-          <Wallet className="w-4 h-4 text-forest-700" /> Wallet &amp; Ledger (₹{(wallet.availableBalance || 0).toLocaleString('en-IN')})
+          <CreditCard className="w-4 h-4 text-forest-700" /> Payments &amp; Financial Ledger
         </button>
 
         <button
@@ -975,6 +867,20 @@ export default function DashboardPage({ user, setUser }) {
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-mono font-extrabold text-typography-primary text-lg tracking-wider">{order.orderNumber}</span>
                         {getStatusBadge(order.status)}
+                        {order.refundStatus && (
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 border ${
+                            order.refundStatus === 'PROCESSED'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : order.refundStatus === 'PENDING'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                              : order.refundStatus === 'FAILED'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            <RotateCcw className="w-3 h-3" />
+                            Refund: {order.refundStatus === 'PROCESSED' ? `₹${order.refundedAmountInr || order.totalAmountInr} Settled` : order.refundStatus}
+                          </span>
+                        )}
                         {isTargeted && (
                           <span className="px-2.5 py-0.5 rounded-full bg-forest-900 text-white text-[10px] font-bold uppercase tracking-wide animate-fade-in shadow-xs">
                             🎯 Targeted from Notification
@@ -1014,12 +920,13 @@ export default function DashboardPage({ user, setUser }) {
                       )}
 
                       {/* Cancel Order Action */}
-                      {order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'REFUNDED' ? (
+                      {order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'REFUNDED' && order.status !== 'REFUND_PENDING' ? (
                         <button
                           onClick={() => setCancellingOrder(order)}
-                          className="px-3.5 py-2 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:bg-red-600/20"
+                          disabled={actionLoading[order.id]}
+                          className="px-3.5 py-2 bg-red-600/10 text-red-700 border border-red-600/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:bg-red-600/20 disabled:opacity-50"
                         >
-                          <XCircle className="w-4 h-4 text-red-600" /> Cancel Order
+                          <XCircle className="w-4 h-4 text-red-600" /> {actionLoading[order.id] ? 'Cancelling...' : 'Cancel Order'}
                         </button>
                       ) : order.status === 'SHIPPED' ? (
                         <span className="px-3 py-1.5 bg-surface-cream border border-surface-border text-typography-muted text-xs font-medium rounded-xl flex items-center gap-1" title="Cancellation cutoff reached. Order is currently in transit with courier.">
@@ -1675,65 +1582,32 @@ export default function DashboardPage({ user, setUser }) {
         </div>
       )}
 
-      {/* TAB 6: WALLET & PAYMENT LEDGER */}
-      {activeTab === 'wallet' && (
+      {/* TAB 6: PAYMENTS & FINANCIAL LEDGER */}
+      {(activeTab === 'ledger' || activeTab === 'wallet') && (
         <div className="space-y-6">
-          {/* Wallet Balance KPI Banner */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1: Available Balance */}
-            <div className="bg-forest-900 text-white p-6 rounded-card border border-forest-800 shadow-level-2 space-y-4 relative overflow-hidden">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-leaf">Sporekart Available Balance</span>
-                  <h2 className="text-3xl font-black font-mono mt-1 text-white">₹{(wallet.availableBalance || 0).toLocaleString('en-IN')}</h2>
-                  <p className="text-[11px] text-sage mt-1">Ready for 1-click purchases &amp; training enrollments.</p>
+          {/* Direct Razorpay Settlement & Gateway Assurance Banner */}
+          <div className="bg-gradient-to-r from-forest-900 via-forest-800 to-forest-900 text-white p-6 sm:p-8 rounded-card border border-forest-700 shadow-level-2 relative overflow-hidden">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2 max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 bg-leaf/20 text-leaf text-[10px] font-bold rounded-lg border border-leaf/30 uppercase tracking-wider">
+                    Authoritative Gateway Architecture
+                  </span>
+                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-lg border border-emerald-400/30 uppercase tracking-wider">
+                    Zero Middleman Balances
+                  </span>
                 </div>
-                <div className="p-3 bg-forest-800/80 rounded-2xl border border-forest-700 text-leaf">
-                  <Wallet className="w-6 h-6" />
-                </div>
+                <h2 className="text-xl sm:text-2xl font-black font-display text-white">
+                  Direct Razorpay Settlement &amp; Authoritative Gateway Refunds
+                </h2>
+                <p className="text-xs text-sage leading-relaxed">
+                  All customer payments and eligible cancellation refunds process directly through RBI-authorized Razorpay gateway rails to and from your original payment instruments (UPI, Cards, NetBanking). Sporekart does not retain customer wallet deposits or spendable balances.
+                </p>
               </div>
-
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-forest-800">
-                <button
-                  onClick={() => setAddMoneyModalOpen(true)}
-                  className="px-3.5 py-2 bg-leaf text-forest-900 hover:bg-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-level-1"
-                >
-                  <PlusCircle className="w-4 h-4" /> Add Money
-                </button>
-                <button
-                  onClick={() => setWithdrawModalOpen(true)}
-                  className="px-3.5 py-2 bg-forest-800 text-white hover:bg-forest-700 border border-forest-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
-                >
-                  <ArrowUpRight className="w-4 h-4 text-leaf" /> Withdraw to Bank
-                </button>
-              </div>
-            </div>
-
-            {/* Card 2: Pending Refunds & Ledger Balance */}
-            <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-xs font-bold uppercase text-typography-muted">Pending Refunds &amp; In-Flight Credits</span>
-                  <h3 className="text-2xl font-extrabold font-mono text-typography-primary mt-1">₹{(wallet.pendingBalance || 0).toLocaleString('en-IN')}</h3>
-                  <p className="text-xs text-typography-secondary mt-1">Refunds being processed from Razorpay / Order Cancellations.</p>
-                </div>
-                <div className="p-2.5 bg-surface-cream text-forest-700 rounded-xl border border-surface-border">
-                  <Clock className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Withdrawable Balance */}
-            <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-xs font-bold uppercase text-typography-muted">Eligible Withdrawable Balance</span>
-                  <h3 className="text-2xl font-extrabold font-mono text-green-700 mt-1">₹{(wallet.withdrawableBalance || 0).toLocaleString('en-IN')}</h3>
-                  <p className="text-xs text-typography-secondary mt-1">Eligible for instant electronic transfer to bank account.</p>
-                </div>
-                <div className="p-2.5 bg-green-600/10 text-green-700 rounded-xl border border-green-600/20">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center shrink-0 min-w-[200px]">
+                <ShieldCheck className="w-8 h-8 text-leaf mx-auto mb-1" />
+                <span className="text-xs font-bold text-white block">100% Gateway Protected</span>
+                <span className="text-[10px] text-sage block mt-0.5">5-7 Business Days Bank Refunds</span>
               </div>
             </div>
           </div>
@@ -1742,7 +1616,7 @@ export default function DashboardPage({ user, setUser }) {
           {walletWithdrawals.length > 0 && (
             <div className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 shadow-level-1">
               <h3 className="font-bold text-typography-primary text-sm uppercase tracking-wider flex items-center gap-2">
-                <ArrowUpRight className="w-4 h-4 text-forest-700" /> Recent Bank Withdrawal Requests
+                <ArrowUpRight className="w-4 h-4 text-forest-700" /> Historical Bank Withdrawal Archive
               </h3>
               <div className="divide-y divide-surface-border">
                 {walletWithdrawals.map((wd) => (
@@ -1761,7 +1635,7 @@ export default function DashboardPage({ user, setUser }) {
                         Bank: <strong className="text-typography-primary">{wd.bankName}</strong> ({wd.accountNumberMasked}) • Requested on {new Date(wd.createdAt).toLocaleDateString()}
                       </p>
                       {wd.rejectionReason && (
-                        <p className="text-red-700 text-[11px]">Rejection Reason: {wd.rejectionReason} (Amount reversed to wallet)</p>
+                        <p className="text-red-700 text-[11px]">Rejection Reason: {wd.rejectionReason}</p>
                       )}
                     </div>
                     <div className="text-right">
@@ -1872,140 +1746,7 @@ export default function DashboardPage({ user, setUser }) {
         <MyReviewsTab onOpenReviewModal={(item) => setReviewModalItem(item)} />
       )}
 
-      {/* MODAL: WITHDRAW MONEY TO BANK */}
-      {withdrawModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <h4 className="font-bold text-lg text-typography-primary font-display flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-forest-700" /> Bank Account Withdrawal Request
-              </h4>
-              <button onClick={() => setWithdrawModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
-            </div>
 
-            <div className="p-3 bg-surface-cream rounded-xl border border-surface-border text-xs text-typography-secondary flex justify-between items-center">
-              <span>Withdrawable Balance:</span>
-              <strong className="text-green-700 font-mono font-bold text-sm">₹{(wallet.withdrawableBalance || 0).toLocaleString('en-IN')}</strong>
-            </div>
-
-            <form onSubmit={handleRequestWithdrawal} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-typography-primary font-bold mb-1">Withdrawal Amount (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max={wallet.withdrawableBalance}
-                  placeholder="e.g. 500"
-                  value={withdrawForm.amount}
-                  onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: e.target.value })}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-typography-primary font-bold mb-1">Bank Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. HDFC Bank / State Bank of India"
-                  value={withdrawForm.bankName}
-                  onChange={(e) => setWithdrawForm({ ...withdrawForm, bankName: e.target.value })}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-typography-primary font-bold mb-1">Account Number *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 50100293849102"
-                  value={withdrawForm.accountNumber}
-                  onChange={(e) => setWithdrawForm({ ...withdrawForm, accountNumber: e.target.value })}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-typography-primary font-bold mb-1">IFSC Code *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="HDFC0001234"
-                    value={withdrawForm.ifscCode}
-                    onChange={(e) => setWithdrawForm({ ...withdrawForm, ifscCode: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 font-mono text-typography-primary focus:outline-none focus:border-forest-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-typography-primary font-bold mb-1">Account Holder Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Account Holder Name"
-                    value={withdrawForm.accountHolderName}
-                    onChange={(e) => setWithdrawForm({ ...withdrawForm, accountHolderName: e.target.value })}
-                    className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={actionLoading.withdraw} className="flex-1 btn-primary py-3 font-bold flex items-center justify-center gap-1.5">
-                  {actionLoading.withdraw ? 'Submitting...' : 'Submit Withdrawal Request'}
-                </button>
-                <button type="button" onClick={() => setWithdrawModalOpen(false)} className="px-4 btn-secondary font-bold">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ADD MONEY TO WALLET */}
-      {addMoneyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-typography-primary/45 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-surface-white p-6 rounded-card max-w-md w-full space-y-4 border border-surface-border shadow-level-3 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <h4 className="font-bold text-lg text-typography-primary font-display flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-forest-700" /> Topup Sporekart Wallet
-              </h4>
-              <button onClick={() => setAddMoneyModalOpen(false)} className="text-typography-muted hover:text-typography-primary">✕</button>
-            </div>
-
-            <form onSubmit={handleAddMoneyToWallet} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-typography-primary font-bold mb-1">Topup Amount (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  min="10"
-                  placeholder="e.g. 1000"
-                  value={addMoneyAmount}
-                  onChange={(e) => setAddMoneyAmount(e.target.value)}
-                  className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-lg font-mono font-bold text-forest-800 focus:outline-none focus:border-forest-700"
-                />
-              </div>
-
-              <div className="p-3 bg-surface-cream rounded-xl border border-surface-border text-[11px] text-typography-secondary space-y-1">
-                <span className="font-bold text-typography-primary block flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-green-600" /> Payment Protection:
-                </span>
-                <div>✓ Instant authorization via Razorpay 256-bit encrypted gateway</div>
-                <div>✓ Funds immediately available for mushroom orders &amp; masterclasses</div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={actionLoading.addMoney} className="flex-1 btn-primary py-3 font-bold flex items-center justify-center gap-1.5">
-                  {actionLoading.addMoney ? 'Processing Gateway...' : `Pay ₹${addMoneyAmount || 0} & Topup Wallet`}
-                </button>
-                <button type="button" onClick={() => setAddMoneyModalOpen(false)} className="px-4 btn-secondary font-bold">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* CANCEL ORDER MODAL */}
       {cancellingOrder && (
@@ -2019,7 +1760,7 @@ export default function DashboardPage({ user, setUser }) {
             </div>
 
             <p className="text-xs text-typography-secondary leading-relaxed">
-              Please select a cancellation reason. Reserved stock will be returned to inventory and any paid amount will be <strong>credited directly into your Sporekart Wallet balance</strong> (which you can use for future orders or transfer to your bank account of choice).
+              Please select a cancellation reason. Reserved stock will be returned to inventory and any paid amount will be <strong>refunded directly to your original payment method via Razorpay</strong> (typically credited to your bank/card within 5-7 business days).
             </p>
 
             <form onSubmit={handleConfirmCancelOrder} className="space-y-4">

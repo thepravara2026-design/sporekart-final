@@ -105,4 +105,53 @@ public class OrderResponse {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    private String refundStatus;
+    private BigDecimal refundedAmountInr;
+    private List<RefundSummaryResponse> refunds = new ArrayList<>();
+
+    public String getRefundStatus() { return refundStatus; }
+    public void setRefundStatus(String refundStatus) { this.refundStatus = refundStatus; }
+
+    public BigDecimal getRefundedAmountInr() { return refundedAmountInr; }
+    public void setRefundedAmountInr(BigDecimal refundedAmountInr) { this.refundedAmountInr = refundedAmountInr; }
+
+    public List<RefundSummaryResponse> getRefunds() { return refunds; }
+    public void setRefunds(List<RefundSummaryResponse> refunds) { this.refunds = refunds; }
+
+    public static class RefundSummaryResponse {
+        private UUID id;
+        private String razorpayRefundId;
+        private BigDecimal amountInr;
+        private String currency;
+        private String status;
+        private String reason;
+        private OffsetDateTime createdAt;
+
+        public RefundSummaryResponse() {}
+        public RefundSummaryResponse(UUID id, String razorpayRefundId, BigDecimal amountInr, String currency, String status, String reason, OffsetDateTime createdAt) {
+            this.id = id;
+            this.razorpayRefundId = razorpayRefundId;
+            this.amountInr = amountInr;
+            this.currency = currency;
+            this.status = status;
+            this.reason = reason;
+            this.createdAt = createdAt;
+        }
+
+        public UUID getId() { return id; }
+        public void setId(UUID id) { this.id = id; }
+        public String getRazorpayRefundId() { return razorpayRefundId; }
+        public void setRazorpayRefundId(String razorpayRefundId) { this.razorpayRefundId = razorpayRefundId; }
+        public BigDecimal getAmountInr() { return amountInr; }
+        public void setAmountInr(BigDecimal amountInr) { this.amountInr = amountInr; }
+        public String getCurrency() { return currency; }
+        public void setCurrency(String currency) { this.currency = currency; }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
+        public OffsetDateTime getCreatedAt() { return createdAt; }
+        public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    }
 }

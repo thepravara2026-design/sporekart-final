@@ -82,50 +82,40 @@ public class RazorpayPaymentGateway implements PaymentGateway {
             return false;
         }
 
+        // Check real HMAC signature if secret is present
+        if (keySecret != null && !keySecret.trim().isEmpty()) {
+            try {
+                JSONObject options = new JSONObject();
+                options.put("razorpay_order_id", razorpayOrderId);
+                options.put("razorpay_payment_id", razorpayPaymentId);
+                options.put("razorpay_signature", signature);
+
+                if (Utils.verifyPaymentSignature(options, keySecret)) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+            }
+            String expectedHmac = calculateHmacSha256(razorpayOrderId + "|" + razorpayPaymentId, keySecret);
+            if (java.security.MessageDigest.isEqual(
+                    expectedHmac.getBytes(StandardCharsets.UTF_8),
+                    signature.getBytes(StandardCharsets.UTF_8)
+            )) {
+                return true;
+            }
+        }
+
+        // If mock mode is explicitly enabled and signature matched designated test mock signatures
         if (isMockMode()) {
-            return true;
+            return "mock_signature".equals(signature)
+                    || "test_signature".equals(signature)
+                    || "mock_sig".equals(signature)
+                    || "valid_mock_sig".equals(signature)
+                    || "mock_signature_valid".equals(signature)
+                    || signature.startsWith("sig_mock_")
+                    || signature.endsWith("_verified_sig");
         }
 
-        if (isDevOrTestProfile()) {
-            if ("mock_signature".equals(signature)
-                    || "mock_signature_bypass".equals(signature)
-                    || signature.startsWith("mock_")
-                    || signature.startsWith("simulated_")
-                    || signature.startsWith("upi_")
-                    || signature.startsWith("qr_")
-                    || signature.startsWith("nb_")
-                    || signature.startsWith("card_")
-                    || signature.endsWith("_sig")
-                    || "test_signature".equals(signature)) {
-                return true;
-            }
-        }
-
-        if (keySecret == null || keySecret.trim().isEmpty()) {
-            return false;
-        }
-
-        try {
-            JSONObject options = new JSONObject();
-            options.put("razorpay_order_id", razorpayOrderId);
-            options.put("razorpay_payment_id", razorpayPaymentId);
-            options.put("razorpay_signature", signature);
-
-            if (Utils.verifyPaymentSignature(options, keySecret)) {
-                return true;
-            }
-            String expectedHmac = calculateHmacSha256(razorpayOrderId + "|" + razorpayPaymentId, keySecret);
-            return java.security.MessageDigest.isEqual(
-                    expectedHmac.getBytes(StandardCharsets.UTF_8),
-                    signature.getBytes(StandardCharsets.UTF_8)
-            );
-        } catch (Exception e) {
-            String expectedHmac = calculateHmacSha256(razorpayOrderId + "|" + razorpayPaymentId, keySecret);
-            return java.security.MessageDigest.isEqual(
-                    expectedHmac.getBytes(StandardCharsets.UTF_8),
-                    signature.getBytes(StandardCharsets.UTF_8)
-            );
-        }
+        return false;
     }
 
     @Override
@@ -193,13 +183,7 @@ public class RazorpayPaymentGateway implements PaymentGateway {
     public GatewayPaymentDetails fetchPayment(String razorpayPaymentId) {
         if (isMockMode() || (razorpayPaymentId != null && (
                 razorpayPaymentId.startsWith("pay_mock_")
-                || razorpayPaymentId.startsWith("pay_test_")
-                || razorpayPaymentId.startsWith("pay_simulated_")
-                || razorpayPaymentId.startsWith("pay_wallet_")
-                || razorpayPaymentId.startsWith("pay_upi_")
-                || razorpayPaymentId.startsWith("pay_qr_")
-                || razorpayPaymentId.startsWith("pay_nb_")
-                || razorpayPaymentId.startsWith("pay_card_")))) {
+                || razorpayPaymentId.startsWith("pay_simulated_")))) {
             String status = razorpayPaymentId != null && razorpayPaymentId.contains("failed") ? "failed" : "captured";
             Long amountPaise = null;
             if (razorpayPaymentId != null && razorpayPaymentId.contains("mismatched_amount")) {
@@ -211,8 +195,6 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                     method = "upi";
                 } else if (razorpayPaymentId.contains("nb") || razorpayPaymentId.contains("netbanking")) {
                     method = "netbanking";
-                } else if (razorpayPaymentId.contains("wallet")) {
-                    method = "wallet";
                 }
             }
             return GatewayPaymentDetails.builder()
@@ -251,22 +233,12 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                     .build();
         } catch (RazorpayException e) {
             log.warn("Failed to fetch Razorpay payment {}: {}", razorpayPaymentId, e.getMessage());
-            if (isDevOrTestProfile()) {
-                return GatewayPaymentDetails.builder()
-                        .paymentId(razorpayPaymentId)
-                        .orderId(null)
-                        .status("captured")
-                        .currency("INR")
-                        .method("card")
-                        .build();
-            }
             throw new RuntimeException("Failed to fetch Razorpay payment: " + e.getMessage(), e);
         }
     }
 
     public boolean isDevOrTestProfile() {
         return (activeProfile != null && (activeProfile.contains("dev") || activeProfile.contains("test")))
-                || (keyId != null && keyId.startsWith("rzp_test_"))
                 || mockMode;
     }
 
@@ -275,10 +247,13 @@ public class RazorpayPaymentGateway implements PaymentGateway {
         if (mockMode) {
             return true;
         }
-        if (activeProfile != null && activeProfile.contains("test")) {
-            return keyId == null || keyId.trim().isEmpty() || keyId.startsWith("rzp_test_mock");
+        if (keyId != null && keyId.startsWith("rzp_test_mock")) {
+            return true;
         }
-        return keyId == null || keyId.trim().isEmpty() || keyId.startsWith("rzp_test_mock");
+        if (activeProfile != null && activeProfile.contains("test")) {
+            return keyId == null || keyId.trim().isEmpty();
+        }
+        return false;
     }
 
     public String getKeyId() {

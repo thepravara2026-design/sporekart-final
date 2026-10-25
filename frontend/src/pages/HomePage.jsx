@@ -190,7 +190,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       topic: 'Secure Checkout',
       question: "What payment options are accepted on Sporekart?",
       takeaway: "100% secure 256-bit encrypted checkout via Razorpay with instant digital invoice.",
-      answer: "We support UPI (Google Pay, PhonePe, Paytm), NetBanking, Credit/Debit Cards, and Wallets with real-time order tracking and GST-compliant invoicing.",
+      answer: "We support UPI (Google Pay, PhonePe, Paytm), NetBanking, and Credit/Debit Cards via Razorpay with real-time order tracking and GST-compliant invoicing.",
       specs: ['Instant UPI & Cards', 'Razorpay 256-Bit SSL', 'Instant Digital GST Invoice'],
       trustBadge: "100% Safe Payments"
     }

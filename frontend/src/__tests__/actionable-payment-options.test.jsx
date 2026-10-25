@@ -68,7 +68,7 @@ describe('Actionable Payment Options & Razorpay Gateway Integration', () => {
     );
   };
 
-  it('renders all 4 payment channels with active selection capabilities', async () => {
+  it('renders 3 authoritative Razorpay payment channels and ensures wallet option is completely absent', async () => {
     renderPaymentPage();
 
     await waitFor(() => {
@@ -79,7 +79,8 @@ describe('Actionable Payment Options & Razorpay Gateway Integration', () => {
     expect(screen.getByText('UPI & QR')).toBeInTheDocument();
     expect(screen.getByText('Cards')).toBeInTheDocument();
     expect(screen.getByText('Net Banking')).toBeInTheDocument();
-    expect(screen.getByText('Ag-Wallet')).toBeInTheDocument();
+    expect(screen.queryByText('Ag-Wallet')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sporekart Agri-Wallet/i)).not.toBeInTheDocument();
 
     // Verify default active channel is UPI & QR with dynamic QR code
     expect(screen.getByText(/Instant Dynamic UPI QR/i)).toBeInTheDocument();
@@ -155,22 +156,20 @@ describe('Actionable Payment Options & Razorpay Gateway Integration', () => {
     expect(screen.getByTestId('pay-button')).toHaveTextContent(/Net Banking/i);
   });
 
-  it('interactively applies Sporekart Wallet balance and calculates deductions', async () => {
+  it('verifies wallet payment method is retired and does not allow wallet balance deductions', async () => {
     renderPaymentPage();
 
     await waitFor(() => {
-      expect(screen.getByText(/Sporekart Agri-Wallet/i)).toBeInTheDocument();
+      expect(screen.getByText(/Choose Payment Method/i)).toBeInTheDocument();
     });
 
-    // Click "Use Balance"
-    const applyBalanceBtn = screen.getByRole('button', { name: /Use Balance/i });
-    fireEvent.click(applyBalanceBtn);
+    // Wallet balance application should not exist on PaymentPage
+    expect(screen.queryByText(/Sporekart Agri-Wallet/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Use Balance/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Wallet Contribution:/i)).not.toBeInTheDocument();
 
-    // Order total is ₹1,500, wallet has ₹500, remaining gateway amount is ₹1,000
-    expect(screen.getByText(/Wallet Contribution:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/-₹500/i)[0]).toBeInTheDocument();
-    expect(screen.getByText(/Remaining Gateway Amount:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/₹1,000/i)[0]).toBeInTheDocument();
+    // The order total is 100% gateway payable
+    expect(screen.getAllByText(/₹1,500/i).length).toBeGreaterThan(0);
   });
 
   it('successfully triggers payment simulation in test mode', async () => {

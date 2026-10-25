@@ -106,11 +106,11 @@ export default function App() {
                   {/* Legacy URL Aliases & Notification Email Direct Route Aliases */}
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
                   <Route path="/catalog/:slug" element={<CatalogPage />} />
-                  <Route path="/wallet" element={<Navigate to="/dashboard?tab=wallet" replace />} />
+                  <Route path="/wallet" element={<Navigate to="/dashboard?tab=ledger" replace />} />
                   <Route path="/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
                   <Route path="/orders/:orderId" element={<OrderRedirect />} />
                   <Route path="/account" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/account/wallet" element={<Navigate to="/dashboard?tab=wallet" replace />} />
+                  <Route path="/account/wallet" element={<Navigate to="/dashboard?tab=ledger" replace />} />
                   <Route path="/account/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
                   <Route path="/account/orders/:orderId" element={<OrderRedirect />} />
 
@@ -161,7 +161,7 @@ export default function App() {
                   <Route path="/admin/batch-refunds" element={adminElement} />
                   <Route path="/admin/payments" element={adminElement} />
                   <Route path="/admin/finance" element={adminElement} />
-                  <Route path="/admin/platform-wallets" element={adminElement} />
+                  <Route path="/admin/platform-wallets" element={<Navigate to="/admin/finance" replace />} />
                   <Route path="/admin/shipping" element={adminElement} />
                   <Route path="/admin/training" element={adminElement} />
                   <Route path="/admin/glimpses" element={adminElement} />

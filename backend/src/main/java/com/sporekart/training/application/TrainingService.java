@@ -40,7 +40,8 @@ public class TrainingService {
     private final TrainingReviewRepository trainingReviewRepository;
     private final TrainingGlimpseRepository trainingGlimpseRepository;
     private final UserRepository userRepository;
-    private final com.sporekart.wallet.application.WalletService walletService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.application.PaymentGateway paymentGateway;
     private final com.sporekart.promotion.application.PromotionService promotionService;
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     private final ApplicationEventPublisher eventPublisher;
@@ -453,15 +454,13 @@ public class TrainingService {
 
         // Only issue a financial refund if previous status was CONFIRMED (meaning payment was actually completed)
         if (previousStatus == EnrollmentStatus.CONFIRMED && saved.getUserId() != null && saved.getFeePaidInr() != null && saved.getFeePaidInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            walletService.processRefundToWallet(
-                    saved.getUserId(),
-                    saved.getFeePaidInr(),
-                    null,
-                    saved.getId(),
-                    "rfnd_tr_" + saved.getId().toString().substring(0, 8),
-                    reason != null ? reason : "Masterclass Training Enrollment Cancellation",
-                    "TRAINING_REFUND_SYSTEM"
-            );
+            if (saved.getPaymentReference() != null && saved.getPaymentReference().startsWith("pay_") && paymentGateway != null) {
+                try {
+                    paymentGateway.refund(saved.getPaymentReference(), saved.getFeePaidInr(), reason != null ? reason : "Masterclass Training Enrollment Cancellation");
+                } catch (Exception ex) {
+                    log.error("Failed to process Razorpay refund for training enrollment {}: {}", saved.getId(), ex.getMessage());
+                }
+            }
         }
 
         try {

@@ -7,7 +7,7 @@ import {
   Inbox, 
   Package, 
   Truck, 
-  Wallet, 
+  CreditCard, 
   GraduationCap, 
   FileText, 
   Tag, 
@@ -57,12 +57,13 @@ function getCategoryMeta(category) {
         color: 'text-sky-700 bg-sky-50 border-sky-200',
         label: 'Shipping',
       };
+    case 'FINANCE':
     case 'WALLET':
     case 'REFUND':
       return {
-        icon: Wallet,
+        icon: CreditCard,
         color: 'text-amber-700 bg-amber-50 border-amber-200',
-        label: 'Wallet',
+        label: 'Payment/Refund',
       };
     case 'TRAINING':
     case 'ENROLLMENT':
@@ -190,8 +191,11 @@ export function resolveNotificationUrl(notification, isAdmin = false) {
     if (category === 'TRAINING' || category === 'ENROLLMENT' || entityType.includes('TRAINING') || eventType.includes('ENROLLMENT')) {
       return `/dashboard?tab=trainings${entityId ? `&bookingId=${entityId}` : ''}`;
     }
-    if (category === 'WALLET' || entityType === 'WALLET' || eventType.includes('WALLET') || eventType.includes('REFUND')) {
-      return '/dashboard?tab=wallet';
+    if (category === 'REFUND' || entityType === 'REFUND' || eventType.includes('REFUND')) {
+      return `/dashboard?tab=history${entityId ? `&orderId=${entityId}` : ''}`;
+    }
+    if (category === 'WALLET' || entityType === 'WALLET' || eventType.includes('WALLET')) {
+      return '/dashboard?tab=ledger';
     }
     if (category === 'SHIPPING' || category === 'SHIPMENT' || eventType.includes('SHIPMENT')) {
       return `/dashboard?tab=activeTrack${entityId ? `&orderId=${entityId}` : ''}`;

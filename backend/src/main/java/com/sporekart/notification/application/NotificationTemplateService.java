@@ -173,7 +173,7 @@ public class NotificationTemplateService {
         <div class="card">
           <div style="font-size:12px; color:#64748b; margin-bottom:6px;">CANCELLATION SUMMARY</div>
           <div style="font-size:13px; color:#1e293b; margin-bottom:4px;"><strong>Reason:</strong> %s</div>
-          <div style="font-size:13px; color:#166534;"><strong>Refund Status:</strong> ₹%s credited to Sporekart Wallet</div>
+          <div style="font-size:13px; color:#166534;"><strong>Refund Status:</strong> ₹%s initiated to original payment method via Razorpay (expected in 5-7 business days)</div>
         </div>
 
         <div style="text-align:center; margin-top:24px;">
@@ -249,7 +249,7 @@ public class NotificationTemplateService {
         String refundId = escape(data.path("refundId").asText());
         String amount = escape(data.path("amount").asText("0.00"));
         String reason = escape(data.path("reason").asText("Refund processed"));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=orders";
 
         return """
         <div style="text-align:center; margin-bottom:20px;">
@@ -261,11 +261,11 @@ public class NotificationTemplateService {
           <div style="font-size:13px; margin-bottom:6px;"><strong>Refund ID:</strong> %s</div>
           <div style="font-size:15px; font-weight:bold; color:#166534; margin-bottom:6px;">Refund Amount: ₹%s</div>
           <div style="font-size:13px; color:#475569;"><strong>Details:</strong> %s</div>
-          <div style="font-size:12px; color:#64748b; margin-top:6px;">Amount credited directly to your Sporekart Wallet.</div>
+          <div style="font-size:12px; color:#64748b; margin-top:6px;">Refund initiated to your original payment method via Razorpay. It will reflect in your bank account in 5-7 business days.</div>
         </div>
 
         <div style="text-align:center; margin-top:24px;">
-          <a href="%s" class="btn">View Wallet Balance</a>
+          <a href="%s" class="btn">View Order & Refund Status</a>
         </div>
         """.formatted(refundId, amount, reason, ctaUrl);
     }
@@ -300,7 +300,7 @@ public class NotificationTemplateService {
         String courseTitle = escape(data.path("courseTitle").asText("Masterclass Training"));
         String studentName = escape(data.path("studentName").asText("Trainee"));
         String refundAmount = escape(data.path("refundAmount").asText("0.00"));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=trainings";
 
         return """
         <div style="text-align:center; margin-bottom:20px;">
@@ -310,11 +310,11 @@ public class NotificationTemplateService {
         </div>
 
         <div class="card">
-          <div style="font-size:13px; color:#166534;">Refund of <strong>₹%s</strong> has been credited to your Sporekart Wallet.</div>
+          <div style="font-size:13px; color:#166534;">Refund of <strong>₹%s</strong> has been initiated to your original payment method via Razorpay (5-7 business days).</div>
         </div>
 
         <div style="text-align:center; margin-top:24px;">
-          <a href="%s" class="btn">View Wallet Balance</a>
+          <a href="%s" class="btn">View Trainings</a>
         </div>
         """.formatted(studentName, courseTitle, refundAmount, ctaUrl);
     }
@@ -323,7 +323,7 @@ public class NotificationTemplateService {
         String txnRef = escape(data.path("transactionRef").asText());
         String amount = escape(data.path("amount").asText("0.00"));
         String newBalance = escape(data.path("newBalance").asText("0.00"));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=ledger";
 
         return """
         <div style="text-align:center; margin-bottom:20px;">
@@ -348,7 +348,7 @@ public class NotificationTemplateService {
         String amount = escape(data.path("amount").asText("0.00"));
         String newBalance = escape(data.path("newBalance").asText("0.00"));
         String desc = escape(data.path("description").asText("Refund credit"));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=ledger";
 
         return """
         <div style="text-align:center; margin-bottom:20px;">
@@ -373,7 +373,7 @@ public class NotificationTemplateService {
         String txnRef = escape(data.path("transactionRef").asText());
         String amount = escape(data.path("amount").asText("0.00"));
         String newBalance = escape(data.path("newBalance").asText("0.00"));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=ledger";
 
         return """
         <div style="text-align:center; margin-bottom:20px;">
@@ -399,7 +399,7 @@ public class NotificationTemplateService {
         String maskedAcc = escape(data.path("maskedAccount").asText("••••"));
         String bankName = escape(data.path("bankName").asText("Bank"));
         String status = escape(data.path("status").asText(type.name()));
-        String ctaUrl = frontendUrl + "/dashboard?tab=wallet";
+        String ctaUrl = frontendUrl + "/dashboard?tab=ledger";
 
         String statusBadge = switch (type) {
             case WALLET_WITHDRAWAL_COMPLETED -> "<span class='badge badge-emerald'>✓ Withdrawal Completed</span>";
@@ -512,46 +512,6 @@ public class NotificationTemplateService {
         </div>
         """.formatted(ticketNumber, ticketNumber, subject, category, priority, closedByDisplay, ratingHtml, msgHtml, ctaUrl);
     }
-
-    public String buildSmsText(NotificationEventType eventType, String payloadJson) {
-        try {
-            JsonNode data = objectMapper.readTree(payloadJson);
-            return switch (eventType) {
-                case ORDER_CONFIRMED, ORDER_PACKED -> 
-                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " confirmed! Total Amount: INR " + data.path("totalAmount").asText("0.00") + ". Thank you for your purchase!";
-                case ORDER_CANCELLED -> 
-                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " has been cancelled. Refund details have been sent to your registered email.";
-                case SHIPMENT_HANDOVER, SHIPMENT_SHIPPED, SHIPMENT_IN_TRANSIT -> 
-                    "Sporekart: Your order #" + data.path("orderNumber").asText("N/A") + " is shipped via " + data.path("courierName").asText("Courier") + ". AWB: " + data.path("awbCode").asText("N/A") + ". Track here: " + data.path("trackingUrl").asText("N/A");
-                case SHIPMENT_OUT_FOR_DELIVERY -> 
-                    "Sporekart: Your order #" + data.path("orderNumber").asText("N/A") + " is OUT FOR DELIVERY today! Please be available to collect.";
-                case ORDER_DELIVERED -> 
-                    "Sporekart: Order #" + data.path("orderNumber").asText("N/A") + " has been delivered successfully! Thank you for choosing Sporekart.";
-                case REFUND_INITIATED, REFUND_PROCESSING, REFUND_COMPLETED -> 
-                    "Sporekart: Refund of INR " + data.path("refundAmount").asText("0.00") + " for order #" + data.path("orderNumber").asText("N/A") + " status: " + eventType.name() + ".";
-                case ENROLLMENT_CONFIRMED -> 
-                    "Sporekart Training: Masterclass enrollment for '" + data.path("courseTitle").asText("Course") + "' confirmed! Batch: " + data.path("batchCode").asText("UPCOMING") + ".";
-                case ENROLLMENT_CANCELLED -> 
-                    "Sporekart Training: Enrollment for '" + data.path("courseTitle").asText("Course") + "' has been cancelled.";
-                case WALLET_TOPUP_SUCCESS -> 
-                    "Sporekart Wallet: Top-up of INR " + data.path("amount").asText("0.00") + " successful! Transaction Ref: " + data.path("transactionRef").asText("N/A") + ".";
-                case WALLET_REFUND_CREDIT -> 
-                    "Sporekart Wallet: INR " + data.path("amount").asText("0.00") + " credited as refund to your Sporekart wallet.";
-                case WALLET_PAYMENT_SUCCESS -> 
-                    "Sporekart Wallet: Payment of INR " + data.path("amount").asText("0.00") + " processed successfully from your wallet.";
-                case WALLET_WITHDRAWAL_REQUESTED, WALLET_WITHDRAWAL_COMPLETED -> 
-                    "Sporekart Wallet: Withdrawal of INR " + data.path("amount").asText("0.00") + " status: " + eventType.name() + ".";
-                case CART_ABANDONED, ENROLLMENT_CHECKOUT_ABANDONED -> 
-                    "Sporekart: You left items in your cart! Complete your checkout now at " + frontendUrl + "/cart";
-                case SUPPORT_TICKET_CLOSED -> 
-                    "Sporekart Support: Ticket #" + data.path("ticketNumber").asText("N/A") + " ('" + data.path("subject").asText("") + "') has been resolved and closed.";
-                default -> 
-                    "Sporekart Alert: An update has been posted to your account. Log in to view details: " + frontendUrl;
-            };
-        } catch (Exception e) {
-            log.error("Failed to build SMS text for event {}: {}", eventType, e.getMessage());
-            return "Sporekart Alert: You have a new notification on Sporekart. Please check your account dashboard.";
-        }
-    }
 }
+
 

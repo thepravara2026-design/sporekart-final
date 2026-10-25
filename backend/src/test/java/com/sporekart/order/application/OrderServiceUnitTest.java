@@ -78,6 +78,12 @@ public class OrderServiceUnitTest {
     @Mock
     private com.sporekart.shipping.application.ShippingService shippingService;
 
+    @Mock
+    private com.sporekart.payment.infrastructure.PaymentRepository paymentRepository;
+
+    @Mock
+    private com.sporekart.payment.application.PaymentService paymentService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -503,7 +509,7 @@ public class OrderServiceUnitTest {
     }
 
     @Test
-    @DisplayName("ORD-21: cancelOrder on PAID status releases sold stock and sets status to REFUNDED")
+    @DisplayName("ORD-21: cancelOrder on PAID status without payment ID transitions to REFUND_PENDING")
     void ORD_21_cancel_order_paid_status_sets_refund_pending() {
         UUID orderId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -524,7 +530,7 @@ public class OrderServiceUnitTest {
 
         OrderResponse cancelled = orderService.cancelOrder(orderId, userId, "Changed mind");
 
-        assertEquals(OrderStatus.REFUNDED, cancelled.getStatus());
+        assertEquals(OrderStatus.REFUND_PENDING, cancelled.getStatus());
         verify(inventoryService, times(1)).releaseCancelledOrder(variantId, 1, "SK-CANCEL-PAID", true, "Changed mind", userId.toString());
     }
 

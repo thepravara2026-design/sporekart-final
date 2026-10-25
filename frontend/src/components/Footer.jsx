@@ -84,7 +84,7 @@ export default function Footer() {
             <CreditCard className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
             <div>
               <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Secure Razorpay</h4>
-              <p className="text-[11px] text-sage/80">UPI, Cards, NetBanking, Wallet</p>
+              <p className="text-[11px] text-sage/80">UPI, Cards, NetBanking, Razorpay</p>
             </div>
           </Link>
 

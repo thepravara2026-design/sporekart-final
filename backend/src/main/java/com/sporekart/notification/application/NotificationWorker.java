@@ -3,7 +3,6 @@ package com.sporekart.notification.application;
 import com.sporekart.notification.domain.NotificationEvent;
 import com.sporekart.notification.domain.NotificationStatus;
 import com.sporekart.notification.infrastructure.NotificationEventRepository;
-import com.sporekart.shared.infrastructure.TwilioSmsService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ public class NotificationWorker {
     private final NotificationEventRepository notificationRepository;
     private final NotificationTemplateService templateService;
     private final JavaMailSender mailSender;
-    private final TwilioSmsService twilioSmsService;
 
     @Value("${spring.mail.username:}")
     private String smtpUsername;
@@ -83,27 +81,7 @@ public class NotificationWorker {
         event.setAttemptCount(event.getAttemptCount() + 1);
         event.setLastAttemptAt(ZonedDateTime.now());
         notificationRepository.save(event);
-
-        // 1. DISPATCH TWILIO SMS NOTIFICATION (if phone is present)
-        if (event.getRecipientPhone() != null && !event.getRecipientPhone().isBlank()) {
-            try {
-                String smsMessageText = templateService.buildSmsText(event.getEventType(), event.getPayloadJson());
-                String messageSid = twilioSmsService.sendSms(event.getRecipientPhone(), smsMessageText);
-                
-                event.setSmsStatus("SENT");
-                event.setSmsSentAt(ZonedDateTime.now());
-                event.setSmsProviderMessageId(messageSid);
-                event.setSmsErrorMessage(null);
-                log.info("Successfully dispatched Twilio SMS notification ID {} [{}] to {}", event.getId(), event.getEventType(), event.getRecipientPhone());
-            } catch (Exception smsEx) {
-                log.error("Failed Twilio SMS dispatch for notification ID {} [{}]: {}", event.getId(), event.getEventType(), smsEx.getMessage());
-                event.setSmsStatus("FAILED");
-                event.setSmsFailedAt(ZonedDateTime.now());
-                event.setSmsErrorMessage(smsEx.getMessage());
-            }
-        }
-
-        // 2. DISPATCH EMAIL NOTIFICATION (if email is present)
+        // DISPATCH EMAIL NOTIFICATION (if email is present)
         try {
             if (event.getRecipientEmail() != null && event.getRecipientEmail().contains("@")) {
                 String htmlBody = templateService.buildHtmlEmail(event.getEventType(), event.getPayloadJson());

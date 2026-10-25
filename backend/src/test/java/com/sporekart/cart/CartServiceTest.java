@@ -63,10 +63,14 @@ public class CartServiceTest {
         productRepository.deleteAll();
 
         String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        CatalogDtos.CreateProductInformationRequest infoReq = new CatalogDtos.CreateProductInformationRequest();
+        infoReq.setFssaiLicenseNumber("10020011000123");
+
         CatalogDtos.CreateProductRequest prodReq = new CatalogDtos.CreateProductRequest(
                 null, "Fresh Oyster " + uniqueSuffix, "fresh-oyster-" + uniqueSuffix,
                 "Fresh Oyster Mushrooms", ProductType.FRESH_MUSHROOM, ProductStatus.ACTIVE,
-                "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true
+                "0709", new BigDecimal("5.00"), "Meta", "Desc", "url", true,
+                infoReq
         );
         testProduct = adminCatalogService.createProduct(prodReq);
 

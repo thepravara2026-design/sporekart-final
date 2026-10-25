@@ -46,13 +46,17 @@ public class OrderService {
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.application.AuthService authService;
     @org.springframework.context.annotation.Lazy
-    private final com.sporekart.wallet.application.WalletService walletService;
-    @org.springframework.context.annotation.Lazy
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.identity.infrastructure.UserRepository userRepository;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.shipping.application.ShippingService shippingService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.infrastructure.PaymentRepository paymentRepository;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.application.PaymentService paymentService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.infrastructure.RefundRepository refundRepository;
 
     @org.springframework.beans.factory.annotation.Value("${sporekart.shiprocket.tracking-base-url:https://track.shiprocket.in/}")
     private String trackingBaseUrl = "https://track.shiprocket.in/";
@@ -433,36 +437,16 @@ public class OrderService {
         boolean isPaidOrder = (previousStatus == OrderStatus.PAID || previousStatus == OrderStatus.CONFIRMED || previousStatus == OrderStatus.PROCESSING);
 
         if (isPaidOrder && (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUND_PENDING || newStatus == OrderStatus.REFUNDED)) {
-            newStatus = OrderStatus.REFUNDED;
-            // Prevent double wallet refund: if status update was triggered by PaymentService (SYSTEM_REFUND),
-            // PaymentService has already credited or dispatched the refund.
-            boolean alreadyRefundedByPaymentService = "SYSTEM_REFUND".equals(updatedBy) || "PAYMENT_SERVICE".equals(updatedBy);
-            if (!alreadyRefundedByPaymentService && order.getUserId() != null && order.getTotalAmountInr() != null && order.getTotalAmountInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                String walletReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Order Cancellation Refund";
-                try {
-                    if (walletService != null) {
-                        walletService.processRefundToWallet(
-                                order.getUserId(),
-                                order.getTotalAmountInr(),
-                                order.getId(),
-                                null,
-                                "REF-" + order.getOrderNumber(),
-                                "Order #" + order.getOrderNumber() + " cancellation refund credited to Sporekart Wallet (" + walletReason + ")",
-                                updatedBy != null ? updatedBy : "SYSTEM"
-                        );
-                    }
-                } catch (Exception e) {
-                    org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error crediting wallet for cancelled order {}: {}", order.getId(), e.getMessage(), e);
-                    throw new IllegalStateException("Failed to credit refund to customer wallet: " + e.getMessage(), e);
-                }
-            }
+            newStatus = (newStatus == OrderStatus.REFUND_PENDING) ? OrderStatus.REFUND_PENDING : OrderStatus.REFUNDED;
         }
 
         order.setStatus(newStatus);
         if (reason != null && !reason.trim().isEmpty()) {
             order.setCancellationReason(reason);
         } else if (newStatus == OrderStatus.REFUNDED) {
-            order.setCancellationReason("Order refunded directly to Sporekart Wallet");
+            order.setCancellationReason("Order refunded");
+        } else if (newStatus == OrderStatus.REFUND_PENDING) {
+            order.setCancellationReason("Order refund pending gateway confirmation");
         } else if (newStatus == OrderStatus.CANCELLED) {
             order.setCancellationReason("Order cancelled");
         }
@@ -599,6 +583,9 @@ public class OrderService {
         if (order.getUserId() != null && !userId.equals(order.getUserId()) && !isAdmin) {
             throw new ForbiddenOperationException("Access denied: You are not authorized to cancel this order");
         }
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.REFUNDED) {
+            throw new IllegalStateException("Order is already " + order.getStatus());
+        }
 
         return performOrderCancellation(order, userId, reason);
     }
@@ -608,22 +595,47 @@ public class OrderService {
         boolean isAdmin = isCallerAdmin(userId);
 
         OrderStatus currentStatus = order.getStatus();
-        if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED) {
-            throw new IllegalStateException("Order is already " + currentStatus);
+        if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED || currentStatus == OrderStatus.REFUND_PENDING) {
+            org.slf4j.LoggerFactory.getLogger(OrderService.class).info("Order {} is already in terminal/cancellation status {}. Returning existing state idempotently.", orderId, currentStatus);
+            return mapToResponse(order);
         }
         if (currentStatus == OrderStatus.SHIPPED || currentStatus == OrderStatus.DELIVERED) {
             throw new IllegalStateException("Order cannot be cancelled once " + currentStatus);
         }
 
         boolean isPaidOrder = (currentStatus == OrderStatus.PAID || currentStatus == OrderStatus.CONFIRMED || currentStatus == OrderStatus.PROCESSING);
-        OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUNDED : OrderStatus.CANCELLED;
 
-        String formattedReason = (reason != null && !reason.trim().isEmpty()) ? reason : "Cancelled by Customer";
+        // Check if an in-flight payment attempt succeeded for PENDING_PAYMENT orders
+        if (!isPaidOrder && order.getRazorpayOrderId() != null && paymentRepository != null) {
+            try {
+                paymentRepository.findByRazorpayOrderId(order.getRazorpayOrderId()).ifPresent(p -> {
+                    if (p.getStatus() == com.sporekart.payment.domain.PaymentStatus.CAPTURED) {
+                        order.setStatus(OrderStatus.PAID);
+                        if (order.getRazorpayPaymentId() == null && p.getRazorpayPaymentId() != null) {
+                            order.setRazorpayPaymentId(p.getRazorpayPaymentId());
+                        }
+                    }
+                });
+                if (order.getStatus() == OrderStatus.PAID) {
+                    isPaidOrder = true;
+                }
+            } catch (Exception ex) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: in-flight payment check failed: {}", ex.getMessage());
+            }
+        }
+
+        String formattedReason = (reason != null && !reason.trim().isEmpty())
+                ? reason
+                : (isAdmin ? "Cancelled by Admin" : "Cancelled by Customer");
 
         // Release reserved stock back to available inventory
         for (OrderItem item : order.getItems()) {
             if (item.getVariantId() != null) {
-                inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), isPaidOrder, formattedReason, userId != null ? userId.toString() : "CUSTOMER");
+                try {
+                    inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), isPaidOrder, formattedReason, isAdmin ? ("ADMIN:" + userId) : (userId != null ? userId.toString() : "CUSTOMER"));
+                } catch (Exception ex) {
+                    org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Failed to release inventory for variant {}: {}", item.getVariantId(), ex.getMessage());
+                }
             }
         }
 
@@ -638,6 +650,33 @@ public class OrderService {
             org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: Shipment cancel notification skipped: {}", e.getMessage());
         }
 
+        // Trigger tracked gateway/wallet refund if order was paid
+        if (isPaidOrder && paymentService != null) {
+            try {
+                // If razorpayPaymentId is not yet on the order entity, attempt to resolve from paymentRepository
+                if (order.getRazorpayPaymentId() == null && paymentRepository != null) {
+                    paymentRepository.findByOrderId(orderId).stream()
+                            .filter(p -> p.getStatus() == com.sporekart.payment.domain.PaymentStatus.CAPTURED)
+                            .findFirst()
+                            .ifPresent(p -> {
+                                order.setRazorpayPaymentId(p.getRazorpayPaymentId());
+                                orderRepository.save(order);
+                            });
+                }
+                if (order.getRazorpayPaymentId() != null) {
+                    paymentService.refundPayment(orderId, order.getTotalAmountInr(), formattedReason);
+                    return getOrderById(orderId);
+                } else {
+                    org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Paid order {} has no payment ID recorded. Marking REFUND_PENDING for manual review.", orderId);
+                    return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending manual review (missing payment ID): " + formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+                }
+            } catch (Exception ex) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Gateway/wallet refund dispatch failed for order {}: {}", orderId, ex.getMessage());
+                return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending gateway processing: " + formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+            }
+        }
+
+        OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUNDED : OrderStatus.CANCELLED;
         return updateOrderStatus(orderId, nextStatus, formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
     }
 
@@ -771,6 +810,61 @@ public class OrderService {
             return eventResp;
         }).collect(Collectors.toList());
         response.setEvents(eventResponses);
+
+        if (refundRepository != null && order.getId() != null) {
+            try {
+                List<com.sporekart.payment.domain.Refund> refundEntities = refundRepository.findByOrderId(order.getId());
+                if (!refundEntities.isEmpty()) {
+                    List<OrderResponse.RefundSummaryResponse> refundSummaries = refundEntities.stream()
+                            .map(r -> new OrderResponse.RefundSummaryResponse(
+                                    r.getId(),
+                                    r.getRazorpayRefundId(),
+                                    r.getAmountInr(),
+                                    r.getCurrency(),
+                                    r.getStatus() != null ? r.getStatus().name() : "PENDING",
+                                    r.getReason(),
+                                    r.getCreatedAt()
+                            ))
+                            .collect(Collectors.toList());
+                    response.setRefunds(refundSummaries);
+
+                    BigDecimal totalRefunded = refundEntities.stream()
+                            .filter(r -> r.getStatus() == com.sporekart.payment.domain.RefundStatus.PROCESSED)
+                            .map(com.sporekart.payment.domain.Refund::getAmountInr)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    response.setRefundedAmountInr(totalRefunded);
+
+                    boolean hasProcessed = refundEntities.stream().anyMatch(r -> r.getStatus() == com.sporekart.payment.domain.RefundStatus.PROCESSED);
+                    boolean hasPending = refundEntities.stream().anyMatch(r -> r.getStatus() == com.sporekart.payment.domain.RefundStatus.PENDING);
+                    boolean hasFailed = refundEntities.stream().anyMatch(r -> r.getStatus() == com.sporekart.payment.domain.RefundStatus.FAILED);
+
+                    if (order.getTotalAmountInr() != null && totalRefunded.compareTo(order.getTotalAmountInr()) >= 0 && totalRefunded.compareTo(BigDecimal.ZERO) > 0) {
+                        response.setRefundStatus("PROCESSED");
+                    } else if (hasProcessed && totalRefunded.compareTo(BigDecimal.ZERO) > 0) {
+                        response.setRefundStatus("PARTIALLY_REFUNDED");
+                    } else if (hasPending) {
+                        response.setRefundStatus("PENDING");
+                    } else if (hasFailed) {
+                        response.setRefundStatus("FAILED");
+                    }
+                } else if (order.getStatus() == OrderStatus.REFUND_PENDING) {
+                    response.setRefundStatus("PENDING");
+                } else if (order.getStatus() == OrderStatus.REFUNDED) {
+                    response.setRefundStatus("PROCESSED");
+                    response.setRefundedAmountInr(order.getTotalAmountInr());
+                }
+            } catch (Exception ex) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: failed to load refund details for order {}: {}", order.getId(), ex.getMessage());
+            }
+        } else {
+            if (order.getStatus() == OrderStatus.REFUND_PENDING) {
+                response.setRefundStatus("PENDING");
+            } else if (order.getStatus() == OrderStatus.REFUNDED) {
+                response.setRefundStatus("PROCESSED");
+                response.setRefundedAmountInr(order.getTotalAmountInr());
+            }
+        }
 
         return response;
     }

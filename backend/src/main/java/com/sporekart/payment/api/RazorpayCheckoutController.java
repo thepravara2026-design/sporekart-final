@@ -59,17 +59,63 @@ public class RazorpayCheckoutController {
             ));
         }
 
+        long amountPaise = request.getAmount();
+        String receipt = request.getReceipt();
+
+        // Server-side amount validation when linked to an existing order
+        if (request.getOrderId() != null) {
+            try {
+                com.sporekart.order.api.dto.OrderResponse order = orderService.getOrderById(request.getOrderId());
+                if (order == null) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "status", "failure",
+                            "error", "Associated order not found: " + request.getOrderId(),
+                            "message", "Order not found"
+                    ));
+                }
+                if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "status", "failure",
+                            "error", "Order " + order.getOrderNumber() + " is already " + order.getStatus() + ", cannot initiate payment.",
+                            "message", "Order already processed"
+                    ));
+                }
+                if (order.getTotalAmountInr() != null) {
+                    long expectedPaise = order.getTotalAmountInr().multiply(BigDecimal.valueOf(100)).longValue();
+                    if (amountPaise != expectedPaise) {
+                        log.error("PAYMENT_TAMPERING_DETECTED: Order {} server total is {} paise, but client supplied {} paise",
+                                order.getOrderNumber(), expectedPaise, amountPaise);
+                        return ResponseEntity.badRequest().body(Map.of(
+                                "status", "failure",
+                                "error", "Amount mismatch with server order total",
+                                "message", "Amount mismatch with order total: expected " + expectedPaise + " paise but received " + amountPaise + " paise"
+                        ));
+                    }
+                    amountPaise = expectedPaise;
+                }
+                if (receipt == null || receipt.trim().isEmpty()) {
+                    receipt = order.getOrderNumber();
+                }
+            } catch (com.sporekart.shared.application.ResourceNotFoundException ex) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "status", "failure",
+                        "error", "Associated order not found: " + request.getOrderId(),
+                        "message", "Order not found"
+                ));
+            }
+        }
+
         try {
             RazorpayPaymentGateway.RazorpayOrderResult result = razorpayPaymentGateway.createRawOrder(
-                    request.getAmount(),
+                    amountPaise,
                     request.getCurrency(),
-                    request.getReceipt()
+                    receipt
             );
 
             // If an internal Sporekart orderId was provided, link initiated payment entity
             if (request.getOrderId() != null) {
                 try {
-                    recordInitiatedPayment(request.getOrderId(), result.getOrderId(), BigDecimal.valueOf(result.getAmount()).divide(BigDecimal.valueOf(100)));
+                    recordInitiatedPayment(request.getOrderId(), result.getOrderId(), BigDecimal.valueOf(result.getAmount()).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP));
                 } catch (Exception ex) {
                     log.warn("Could not record initiated payment link to order {}: {}", request.getOrderId(), ex.getMessage());
                 }
@@ -121,7 +167,8 @@ public class RazorpayCheckoutController {
      * POST /api/verify-payment (or /verify-payment)
      * Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
      * Compare generated signature with razorpay_signature
-     * Return success only if signatures match
+     * Authoritative Gateway State check: fetchPayment(payment_id)
+     * Return success only if signatures and gateway status match
      * Signature mismatch: return 400, do NOT mark as paid
      * Missing fields: return 400
      */
@@ -167,7 +214,44 @@ public class RazorpayCheckoutController {
             ));
         }
 
-        // Signature is valid! Update associated payment and order in Sporekart if linked
+        // Authoritative server-to-server gateway check
+        try {
+            com.sporekart.payment.application.PaymentGateway.GatewayPaymentDetails gatewayDetails = razorpayPaymentGateway.fetchPayment(paymentId);
+            if (gatewayDetails != null) {
+                if (!razorpayPaymentGateway.isMockMode()) {
+                    if (!"captured".equalsIgnoreCase(gatewayDetails.getStatus()) && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                        log.error("Gateway payment verification failed: status is {} for paymentId={}", gatewayDetails.getStatus(), paymentId);
+                        return ResponseEntity.badRequest().body(Map.of(
+                                "status", "failure",
+                                "error", "Gateway payment status is not captured: " + gatewayDetails.getStatus(),
+                                "message", "Payment not captured at gateway",
+                                "verified", false
+                        ));
+                    }
+                    if (gatewayDetails.getOrderId() != null && !gatewayDetails.getOrderId().equals(orderId)) {
+                        log.error("Gateway order ID mismatch: gateway returned {}, expected {}", gatewayDetails.getOrderId(), orderId);
+                        return ResponseEntity.badRequest().body(Map.of(
+                                "status", "failure",
+                                "error", "Gateway order ID mismatch",
+                                "message", "Order ID mismatch",
+                                "verified", false
+                        ));
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Could not fetch gateway details for {}: {}", paymentId, ex.getMessage());
+            if (!razorpayPaymentGateway.isMockMode()) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "status", "failure",
+                        "error", "Unable to verify payment status with Razorpay gateway",
+                        "message", ex.getMessage(),
+                        "verified", false
+                ));
+            }
+        }
+
+        // Signature and gateway checks are valid! Update associated payment and order in Sporekart if linked
         try {
             updatePaymentAndOrderSuccess(orderId, paymentId, signature, request.getSporekartOrderId());
         } catch (Exception ex) {

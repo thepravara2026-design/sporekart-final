@@ -1,15 +1,18 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${SUPABASE_DB_HOST:aws-0-ap-northeast-1.pooler.supabase.com}:${SUPABASE_DB_PORT:6543}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${SUPABASE_DB_HOST:aws-0-ap-northeast-1.pooler.supabase.com}:${SUPABASE_DB_PORT:6543}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0&tcpKeepAlive=true&connectTimeout=10&socketTimeout=60}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
     username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USERNAME:postgres.irwiiyowpppdynbmwwuz}}
     password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD:MyDbSporekart@123#}}
     hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
-      idle-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 60000
       connection-timeout: 20000
-      max-lifetime: 1800000
+      max-lifetime: 300000
+      keepalive-time: 45000
+      connection-test-query: SELECT 1
+      validation-timeout: 3000
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}

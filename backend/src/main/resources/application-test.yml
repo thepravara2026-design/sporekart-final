@@ -25,8 +25,6 @@ app:
 sporekart:
   mail:
     use-real-smtp: false
-  twilio:
-    use-real-twilio: false
   shiprocket:
     use-real-shiprocket: false
     webhook-token: test_secret_token_12345

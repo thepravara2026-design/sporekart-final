@@ -55,10 +55,8 @@ public class AdminFinanceController {
             @PathVariable UUID id,
             @Valid @RequestBody(required = false) WalletDtos.AdminWithdrawalActionRequest request
     ) {
-        String adminUser = authentication != null ? authentication.getName() : "ADMIN";
-        String notes = request != null ? request.getNotes() : "Approved by Admin";
-        WalletDtos.WithdrawalResponse response = walletService.approveWithdrawal(id, adminUser, notes);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet withdrawal operations have been permanently retired."));
     }
 
     @PostMapping("/withdrawals/{id}/reject")
@@ -67,10 +65,8 @@ public class AdminFinanceController {
             @PathVariable UUID id,
             @Valid @RequestBody WalletDtos.AdminWithdrawalActionRequest request
     ) {
-        String adminUser = authentication != null ? authentication.getName() : "ADMIN";
-        String reason = request != null ? request.getRejectionReason() : "Rejected by Admin";
-        WalletDtos.WithdrawalResponse response = walletService.rejectWithdrawal(id, adminUser, reason);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet withdrawal operations have been permanently retired."));
     }
 
     @PostMapping("/manual-adjustment")
@@ -78,27 +74,7 @@ public class AdminFinanceController {
             Authentication authentication,
             @Valid @RequestBody WalletDtos.AdminManualAdjustmentRequest request
     ) {
-        String adminUser = authentication != null ? authentication.getName() : "ADMIN";
-        WalletTransaction txn = walletService.performAdminAdjustment(
-                request.getUserId(),
-                request.getAmount(),
-                request.getDirection(),
-                request.getReason(),
-                adminUser
-        );
-
-        WalletDtos.WalletTransactionResponse res = WalletDtos.WalletTransactionResponse.builder()
-                .id(txn.getId())
-                .transactionReference(txn.getTransactionReference())
-                .amount(txn.getAmount())
-                .balanceBefore(txn.getBalanceBefore())
-                .balanceAfter(txn.getBalanceAfter())
-                .status(txn.getStatus())
-                .description(txn.getDescription())
-                .createdAt(txn.getCreatedAt())
-                .createdBy(txn.getCreatedBy())
-                .build();
-
-        return ResponseEntity.ok(ApiResponse.success(res));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Manual wallet adjustments have been permanently retired. All transactions settle automatically through Razorpay merchant transfers."));
     }
 }

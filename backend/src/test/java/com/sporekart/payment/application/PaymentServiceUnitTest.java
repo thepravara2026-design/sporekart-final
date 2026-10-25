@@ -61,6 +61,9 @@ public class PaymentServiceUnitTest {
     @Mock
     private PaymentEventIdempotencyService paymentEventIdempotencyService;
 
+    @Mock
+    private com.sporekart.payment.infrastructure.RefundRepository refundRepository;
+
     @InjectMocks
     private PaymentService paymentService;
 
@@ -124,6 +127,10 @@ public class PaymentServiceUnitTest {
 
         when(paymentGateway.verifySignature(rzpOrderId, rzpPayId, sig)).thenReturn(true);
         when(paymentRepository.findByRazorpayOrderId(rzpOrderId)).thenReturn(Optional.of(payment));
+        OrderResponse orderResp = new OrderResponse();
+        orderResp.setId(orderId);
+        orderResp.setStatus(OrderStatus.PENDING_PAYMENT);
+        when(orderService.getOrderById(orderId)).thenReturn(orderResp);
 
         PaymentDtos.VerifyPaymentRequest request = PaymentDtos.VerifyPaymentRequest.builder()
                 .orderId(orderId)

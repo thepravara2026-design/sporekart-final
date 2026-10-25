@@ -260,6 +260,7 @@ export const adminApi = {
   getOrders: (params) => api.get('/admin/orders', { params }),
   getOrderById: (id) => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (orderId, status, reason) => api.put(`/admin/orders/${orderId}/status`, { status, reason }),
+  cancelOrder: (orderId, reason) => api.post(`/admin/orders/${orderId}/cancel`, null, { params: { reason } }),
   downloadPackingSlip: (id) => api.get(`/admin/orders/${id}/packing-slip`, { responseType: 'blob' }),
   createCourse: (data) => api.post('/admin/training/courses', data),
   createBatch: (data) => api.post('/admin/training/batches', data),

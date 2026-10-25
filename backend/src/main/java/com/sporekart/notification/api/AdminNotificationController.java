@@ -30,7 +30,7 @@ public class AdminNotificationController {
     private final NotificationWorker notificationWorker;
     private final NotificationEventService notificationEventService;
 
-    // Outbox Email / SMS Operations
+    // Outbox Email Operations
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationEvent>>> getAllNotifications(
             @RequestParam(required = false) String eventType,

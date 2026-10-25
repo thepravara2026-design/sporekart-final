@@ -65,16 +65,52 @@ public class AdminOrderController {
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
 
         String oldStatus = existing.getStatus().name();
-        OrderResponse updated = orderService.updateOrderStatus(id, request.getStatus(), request.getReason(), "ADMIN");
+        UUID adminId = getAdminId(authentication);
+
+        OrderResponse updated;
+        if (request.getStatus() == OrderStatus.CANCELLED || request.getStatus() == OrderStatus.REFUNDED) {
+            // Admin cancellation must invoke complete lifecycle: inventory release, courier cancellation, and gateway refund
+            updated = orderService.cancelOrder(id, adminId, request.getReason() != null ? request.getReason() : "Cancelled by Admin");
+        } else {
+            updated = orderService.updateOrderStatus(id, request.getStatus(), request.getReason(), "ADMIN:" + adminId);
+        }
 
         adminAuditService.logAction(
-                getAdminId(authentication),
+                adminId,
                 "UPDATE_ORDER_STATUS",
                 "ORDER",
                 id.toString(),
                 oldStatus,
-                request.getStatus().name(),
-                "Order " + existing.getOrderNumber() + " status updated to " + request.getStatus(),
+                updated.getStatus().name(),
+                "Order " + existing.getOrderNumber() + " status updated to " + updated.getStatus(),
+                null
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(updated));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(
+            @PathVariable("id") UUID id,
+            @RequestParam(value = "reason", required = false, defaultValue = "Cancelled by admin") String reason,
+            Authentication authentication
+    ) {
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
+
+        String oldStatus = existing.getStatus().name();
+        UUID adminId = getAdminId(authentication);
+
+        OrderResponse updated = orderService.cancelOrder(id, adminId, reason);
+
+        adminAuditService.logAction(
+                adminId,
+                "CANCEL_ORDER",
+                "ORDER",
+                id.toString(),
+                oldStatus,
+                updated.getStatus().name(),
+                "Admin cancelled order " + existing.getOrderNumber() + ". Reason: " + reason,
                 null
         );
 

@@ -28,6 +28,7 @@ import java.util.Optional;
 public class NotificationEventListener {
 
     private final NotificationEventService notificationEventService;
+    @org.springframework.context.annotation.Lazy
     private final OrderService orderService;
     private final TrainingService trainingService;
     private final UserRepository userRepository;
@@ -36,7 +37,14 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleOrderCreated(com.sporekart.analytics.domain.events.OrderCreatedEvent event) {
         if (event.getOrderId() == null) return;
-        processOrderConfirmation(event.getOrderId(), "Order Checkout");
+        try {
+            OrderResponse order = orderService.getOrderById(event.getOrderId());
+            if (order != null && (order.getStatus() == com.sporekart.order.domain.OrderStatus.PAID || order.getStatus() == com.sporekart.order.domain.OrderStatus.CONFIRMED)) {
+                processOrderConfirmation(event.getOrderId(), "Order Checkout");
+            }
+        } catch (Exception e) {
+            log.warn("Could not verify order status for OrderCreatedEvent: {}", e.getMessage());
+        }
     }
 
     @Async
@@ -50,6 +58,10 @@ public class NotificationEventListener {
         try {
             OrderResponse order = orderService.getOrderById(orderId);
             if (order == null) return;
+            if (order.getStatus() != com.sporekart.order.domain.OrderStatus.PAID && order.getStatus() != com.sporekart.order.domain.OrderStatus.CONFIRMED) {
+                log.info("Skipping premature ORDER_CONFIRMED notification for order {} in status {}", orderId, order.getStatus());
+                return;
+            }
 
             String recipientEmail = null;
             String recipientPhone = null;
@@ -73,6 +85,10 @@ public class NotificationEventListener {
                 }
             }
 
+            if (recipientName == null || recipientName.isBlank()) {
+                recipientName = "Valued Customer";
+            }
+
             List<Map<String, Object>> itemsList = new ArrayList<>();
             if (order.getItems() != null) {
                 for (var item : order.getItems()) {
@@ -94,13 +110,13 @@ public class NotificationEventListener {
                     recipientEmail,
                     recipientPhone,
                     recipientName,
-                    "Sporekart Order Confirmation #" + order.getOrderNumber() + " 🍄",
+                    "Sporekart Order Confirmation #" + (order.getOrderNumber() != null ? order.getOrderNumber() : order.getId().toString().substring(0, 8)) + " 🍄",
                     Map.of(
                             "orderId", order.getId().toString(),
-                            "orderNumber", order.getOrderNumber(),
+                            "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : "ORD-" + order.getId().toString().substring(0, 8),
                             "customerName", recipientName,
                             "totalAmount", order.getTotalAmountInr() != null ? order.getTotalAmountInr().toString() : "0.00",
-                            "paymentMethod", paymentMethod,
+                            "paymentMethod", paymentMethod != null ? paymentMethod : "Online Payment",
                             "items", itemsList
                     ),
                     dedupKey
@@ -206,8 +222,8 @@ public class NotificationEventListener {
                     "Your Sporekart Order #" + order.getOrderNumber() + " Has Been Delivered 🎉",
                     Map.of(
                             "orderId", order.getId().toString(),
-                            "orderNumber", order.getOrderNumber(),
-                            "customerName", recipientName
+                            "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : "ORD-" + order.getId().toString().substring(0, 8),
+                            "customerName", recipientName != null ? recipientName : "Valued Customer"
                     ),
                     dedupKey
             );

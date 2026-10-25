@@ -117,16 +117,14 @@ public class NotificationEventService {
                 .userId(userId)
                 .recipientEmail(recipientEmail != null ? recipientEmail.trim().toLowerCase() : null)
                 .recipientPhone(recipientPhone != null ? recipientPhone.trim() : null)
-                .deliveryChannel("EMAIL_AND_SMS")
+                .deliveryChannel("EMAIL")
                 .recipientName(resolvedName)
                 .templateKey(eventType.name())
                 .subject(subject)
                 .payloadJson(payloadJson)
                 .status(NotificationStatus.PENDING)
-                .smsStatus("PENDING")
                 .attemptCount(0)
                 .provider("GMAIL")
-                .smsProvider("TWILIO")
                 .deduplicationKey(deduplicationKey)
                 .isRead(false)
                 .category(resolveCategory(eventType, entityType))
@@ -142,7 +140,7 @@ public class NotificationEventService {
             log.info("Duplicate key race condition caught for deduplicationKey {}: returning existing event", deduplicationKey);
             return notificationRepository.findByDeduplicationKey(deduplicationKey);
         }
-        log.info("Recorded notification event ID {} [{}] for Email: {}, Phone: {}, isAppNotification: true", saved.getId(), eventType, recipientEmail, recipientPhone);
+        log.info("Recorded notification event ID {} [{}] for Email: {}, isAppNotification: true", saved.getId(), eventType, recipientEmail);
 
         // Asynchronous post-commit dispatch for external channels (avoids holding DB locks during SMTP I/O)
         if (!event.isAdminNotification() || (event.getRecipientEmail() != null && event.getRecipientEmail().contains("@"))) {
@@ -212,7 +210,7 @@ public class NotificationEventService {
             return "/dashboard?tab=activeTrack" + (entityId != null ? "&orderId=" + entityId : "");
         }
         if ("WALLET".equalsIgnoreCase(entityType)) {
-            return "/dashboard?tab=wallet";
+            return "/dashboard?tab=ledger";
         }
         if ("TRAINING".equalsIgnoreCase(entityType) || "ENROLLMENT".equalsIgnoreCase(entityType)) {
             return "/dashboard?tab=trainings" + (entityId != null ? "&bookingId=" + entityId : "");

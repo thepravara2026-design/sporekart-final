@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderAddressSnapshot {
 
     @Size(max = 100, message = "Recipient name cannot exceed 100 characters")

@@ -61,7 +61,7 @@ export default function IdentityConflictModal({
             {conflictingValue || 'Already Registered Identity'}
           </div>
           <p className="text-xs text-typography-secondary leading-relaxed pt-1">
-            This {isPhone ? 'phone number' : 'email'} is already linked to an existing Sporekart customer profile. To ensure your order history, digital training certificates, and wallet rewards remain uniform, multiple accounts cannot share the same contact identity.
+            This {isPhone ? 'phone number' : 'email'} is already linked to an existing Sporekart customer profile. To ensure your order history, digital training certificates, and customer profile details remain uniform, multiple accounts cannot share the same contact identity.
           </p>
         </div>
 

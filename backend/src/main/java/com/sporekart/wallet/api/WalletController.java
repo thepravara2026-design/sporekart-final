@@ -67,19 +67,15 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody WalletDtos.WithdrawRequest request
     ) {
-        UUID userId = extractUserId(authentication);
-        if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required to request withdrawal");
-        }
-        WalletDtos.WithdrawalResponse response = walletService.requestWithdrawal(userId, request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet withdrawals have been permanently retired. All merchant and customer funds settle directly via official banking channels."));
     }
 
     @GetMapping("/withdrawals")
     public ResponseEntity<ApiResponse<List<WalletDtos.WithdrawalResponse>>> getWithdrawals(Authentication authentication) {
         UUID userId = extractUserId(authentication);
         if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required to view withdrawals");
+            throw new ForbiddenOperationException("Authentication required to view historical withdrawals");
         }
         List<WalletDtos.WithdrawalResponse> withdrawals = walletService.getUserWithdrawals(userId);
         return ResponseEntity.ok(ApiResponse.success(withdrawals));
@@ -90,13 +86,8 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody WalletDtos.AddMoneyRequest request
     ) {
-        UUID userId = extractUserId(authentication);
-        if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required to add money to wallet");
-        }
-
-        WalletDtos.AddMoneyResponse response = walletService.createTopupIntent(userId, request.getAmount());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet top-ups have been permanently retired. All payments are processed directly via Razorpay."));
     }
 
     @PostMapping("/verify-add-money")
@@ -105,29 +96,8 @@ public class WalletController {
             @Valid @RequestBody WalletDtos.VerifyAddMoneyRequest request,
             @RequestParam(required = false) BigDecimal amount
     ) {
-        UUID userId = extractUserId(authentication);
-        if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required to verify wallet topup");
-        }
-
-        WalletTransaction txn = walletService.verifyTopup(
-                userId,
-                request.getRazorpayOrderId(),
-                request.getRazorpayPaymentId(),
-                request.getRazorpaySignature()
-        );
-
-        WalletDtos.WalletTransactionResponse res = WalletDtos.WalletTransactionResponse.builder()
-                .id(txn.getId())
-                .transactionReference(txn.getTransactionReference())
-                .amount(txn.getAmount())
-                .balanceAfter(txn.getBalanceAfter())
-                .status(txn.getStatus())
-                .description(txn.getDescription())
-                .createdAt(txn.getCreatedAt())
-                .build();
-
-        return ResponseEntity.ok(ApiResponse.success(res));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet top-ups have been permanently retired."));
     }
 
     @PostMapping("/checkout-pay")
@@ -135,53 +105,8 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody WalletDtos.WalletCheckoutPayRequest request
     ) {
-        UUID userId = extractUserId(authentication);
-        if (userId == null) {
-            throw new ForbiddenOperationException("Authentication required to use wallet for checkout");
-        }
-
-        BigDecimal walletAmount = request.getAmountFromWallet() != null ? request.getAmountFromWallet() : BigDecimal.ZERO;
-        BigDecimal gatewayAmount = request.getAmountFromGateway() != null ? request.getAmountFromGateway() : BigDecimal.ZERO;
-
-        if (walletAmount.compareTo(BigDecimal.ZERO) > 0) {
-            walletService.debitWallet(
-                    userId,
-                    walletAmount,
-                    gatewayAmount.compareTo(BigDecimal.ZERO) == 0 ? WalletTransactionType.WALLET_PAYMENT : WalletTransactionType.PARTIAL_PAYMENT,
-                    "ENROLLMENT".equalsIgnoreCase(request.getType()) ? WalletSourceType.TRAINING_ENROLLMENT : WalletSourceType.ORDER,
-                    request.getOrderId() != null ? request.getOrderId().toString() : (request.getEnrollmentId() != null ? request.getEnrollmentId().toString() : "CHECKOUT"),
-                    request.getOrderId(),
-                    request.getEnrollmentId(),
-                    "Wallet payment for " + (request.getOrderId() != null ? "Order #" + request.getOrderId() : "Enrollment #" + request.getEnrollmentId()),
-                    "chk_pay_" + (request.getOrderId() != null ? request.getOrderId() : request.getEnrollmentId()),
-                    "CUSTOMER_CHECKOUT"
-            );
-        }
-
-        boolean isFullyPaid = gatewayAmount.compareTo(BigDecimal.ZERO) <= 0;
-        String razorpayOrderId = null;
-
-        if (!isFullyPaid) {
-            PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(
-                    request.getOrderId(),
-                    request.getOrderId() != null ? request.getOrderId().toString() : request.getEnrollmentId().toString(),
-                    gatewayAmount
-            );
-            razorpayOrderId = result.getRazorpayOrderId();
-        }
-
-        WalletDtos.WalletCheckoutPayResponse response = WalletDtos.WalletCheckoutPayResponse.builder()
-                .isSuccess(true)
-                .message(isFullyPaid ? "Order fully paid using Sporekart Wallet" : "Partial wallet payment applied. Remaining amount via Gateway.")
-                .orderId(request.getOrderId())
-                .enrollmentId(request.getEnrollmentId())
-                .walletAmountDeducted(walletAmount)
-                .remainingAmountPayable(gatewayAmount)
-                .isFullyPaid(isFullyPaid)
-                .razorpayOrderId(razorpayOrderId)
-                .build();
-
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body(ApiResponse.error("WALLET_RETIRED", "Wallet payments at checkout have been permanently retired. Please pay via Razorpay (UPI, Cards, NetBanking, QR)."));
     }
 
     private UUID extractUserId(Authentication authentication) {

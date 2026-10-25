@@ -8,6 +8,15 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USERNAME:postgres}}
     password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD:}}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 60000
+      connection-timeout: 20000
+      max-lifetime: 300000
+      keepalive-time: 45000
+      connection-test-query: SELECT 1
+      validation-timeout: 3000
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
@@ -104,12 +113,6 @@ sporekart:
   notification:
     retention:
       cron: ${NOTIFICATION_RETENTION_CRON:0 0 3 * * ?}
-  twilio:
-    use-real-twilio: ${USE_REAL_TWILIO_SMS:false}
-    account-sid: ${TWILIO_ACCOUNT_SID:}
-    auth-token: ${TWILIO_AUTH_TOKEN:}
-    from-phone-number: ${TWILIO_PHONE_NUMBER:}
-    messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
   shiprocket:
     use-real-shiprocket: ${USE_REAL_SHIPROCKET:false}
     email: ${SHIPROCKET_EMAIL:}
