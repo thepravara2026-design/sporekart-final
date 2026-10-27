@@ -31,6 +31,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
       return;
     }
 
+    if (loading) return;
     if (setLoading) setLoading(true);
     try {
       const payload = parseJwt(response.credential);
@@ -58,6 +59,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
 
   // Dev Mock Google Login when Client ID is missing, fails to render, or in dev mode fallback
   const handleDevMockGoogleLogin = async () => {
+    if (loading) return;
     if (setLoading) setLoading(true);
     try {
       const mockSub = isAdminMode

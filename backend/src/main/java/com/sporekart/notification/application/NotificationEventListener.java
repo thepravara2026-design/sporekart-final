@@ -33,7 +33,6 @@ public class NotificationEventListener {
     private final TrainingService trainingService;
     private final UserRepository userRepository;
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleOrderCreated(com.sporekart.analytics.domain.events.OrderCreatedEvent event) {
         if (event.getOrderId() == null) return;
@@ -47,7 +46,6 @@ public class NotificationEventListener {
         }
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handlePaymentCaptured(PaymentCapturedEvent event) {
         if (event.getOrderId() == null) return;
@@ -137,7 +135,6 @@ public class NotificationEventListener {
         }
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleEnrollmentConfirmed(EnrollmentConfirmedEvent event) {
         if (event.getEnrollmentId() == null) return;

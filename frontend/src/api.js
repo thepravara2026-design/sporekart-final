@@ -263,7 +263,9 @@ export const adminApi = {
   cancelOrder: (orderId, reason) => api.post(`/admin/orders/${orderId}/cancel`, null, { params: { reason } }),
   downloadPackingSlip: (id) => api.get(`/admin/orders/${id}/packing-slip`, { responseType: 'blob' }),
   createCourse: (data) => api.post('/admin/training/courses', data),
+  getBatches: () => api.get('/admin/training/batches'),
   createBatch: (data) => api.post('/admin/training/batches', data),
+  cancelBatch: (batchId) => api.post(`/admin/training/batches/${batchId}/cancel`),
   addBatchSchedule: (data) => api.post('/admin/training/schedules', data),
   markAttendance: (data) => api.post('/admin/training/attendance', data),
   completeCourse: (data) => api.post('/admin/training/complete-course', data),
@@ -318,6 +320,13 @@ export const adminNotificationApi = {
   getInAppUnreadCount: () => api.get('/admin/notifications/unread-count'),
   markInAppAsRead: (id) => api.patch(`/admin/notifications/in-app/${id}/read`),
   markInAppAllAsRead: () => api.patch('/admin/notifications/in-app/read-all'),
+};
+
+export const contentApi = {
+  getPosts: (params = {}) => api.get('/content/posts', { params }),
+  getPostBySlug: (slug) => api.get(`/content/posts/${slug}`),
+  getCategories: () => api.get('/content/categories'),
+  getTags: () => api.get('/content/tags'),
 };
 
 export default api;

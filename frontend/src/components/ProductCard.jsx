@@ -150,7 +150,7 @@ export default function ProductCard({
         <div className="flex items-baseline justify-between gap-1 flex-wrap pt-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="font-display font-extrabold text-base sm:text-lg text-forest-900">
-              ₹{activeVariant?.priceInr || 0}
+              ₹{activeVariant?.calculatedFinalPriceInr || activeVariant?.priceInr || 0}
             </span>
             {hasComparePrice && (
               <span
@@ -160,6 +160,7 @@ export default function ProductCard({
                 ₹{activeVariant.compareAtPriceInr}
               </span>
             )}
+            <span className="text-[10px] text-typography-muted font-normal">incl. GST</span>
           </div>
 
           {activeVariant?.variantName && product.variants?.length <= 1 && (

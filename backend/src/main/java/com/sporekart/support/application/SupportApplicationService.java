@@ -4,12 +4,15 @@ import com.sporekart.identity.domain.User;
 import com.sporekart.identity.infrastructure.UserRepository;
 import com.sporekart.notification.application.NotificationEventService;
 import com.sporekart.notification.domain.NotificationEventType;
+import com.sporekart.order.domain.Order;
+import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import com.sporekart.support.domain.*;
 import com.sporekart.support.infrastructure.TicketMessageRepository;
 import com.sporekart.support.infrastructure.SupportTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class SupportApplicationService {
     private final TicketMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final NotificationEventService notificationEventService;
+    private final OrderRepository orderRepository;
 
     private static final Set<String> DOMAIN_KEYWORDS = Set.of(
             "order", "shipment", "shipping", "deliver", "delivery", "tracking", "courier",
@@ -49,13 +53,30 @@ public class SupportApplicationService {
             UUID courseId,
             UUID productId
     ) {
+        String trimmedSubject = subject != null ? subject.trim() : "";
+        String trimmedMessage = messageBody != null ? messageBody.trim() : "";
+        if (trimmedSubject.isEmpty()) {
+            throw new IllegalArgumentException("Subject is required and cannot be blank");
+        }
+        if (trimmedMessage.isEmpty()) {
+            throw new IllegalArgumentException("Message is required and cannot be blank");
+        }
+
+        if (orderId != null) {
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Referenced order not found: " + orderId));
+            if (userId != null && order.getUserId() != null && !order.getUserId().equals(userId)) {
+                throw new AccessDeniedException("You do not have permission to link an order that does not belong to you");
+            }
+        }
+
         String ticketNumber = generateTicketNumber();
 
         SupportTicket ticket = SupportTicket.builder()
                 .ticketNumber(ticketNumber)
                 .userId(userId)
-                .subject(subject)
-                .message(messageBody)
+                .subject(trimmedSubject)
+                .message(trimmedMessage)
                 .category(category != null ? category : TicketCategory.GENERAL_SUPPORT)
                 .priority(priority != null ? priority : TicketPriority.MEDIUM)
                 .status(TicketStatus.OPEN)
@@ -72,13 +93,13 @@ public class SupportApplicationService {
                 .senderId(userId)
                 .senderType(userId != null ? "CUSTOMER" : "GUEST")
                 .senderName(senderName != null ? senderName : "Customer")
-                .message(messageBody)
+                .message(trimmedMessage)
                 .build();
 
         ticket.addMessage(initialMsg);
 
         // FAANG-Level Automated Intelligent Reply & Guardrail Check
-        String autoReplyText = generateAutomatedResponse(ticket, subject + " " + messageBody);
+        String autoReplyText = generateAutomatedResponse(ticket, trimmedSubject + " " + trimmedMessage);
         TicketMessage autoReplyMsg = TicketMessage.builder()
                 .ticket(ticket)
                 .senderId(null)
@@ -192,6 +213,8 @@ public class SupportApplicationService {
         SupportTicket savedTicket = ticketRepository.save(ticket);
         if (isCloseMessage) {
             notifyTicketClosed(savedTicket, messageText);
+        } else if ("ADMIN".equalsIgnoreCase(senderType) || "SUPPORT_AGENT".equalsIgnoreCase(senderType)) {
+            notifyTicketReply(savedTicket, savedMsg);
         }
         return savedMsg;
     }
@@ -298,6 +321,41 @@ public class SupportApplicationService {
         }
     }
 
+    private void notifyTicketReply(SupportTicket ticket, TicketMessage replyMsg) {
+        if (ticket == null || ticket.getUserId() == null) return;
+        try {
+            User user = userRepository.findById(ticket.getUserId()).orElse(null);
+            String recipientEmail = user != null && user.getEmail() != null ? user.getEmail() : null;
+            String recipientName = user != null && user.getFullName() != null ? user.getFullName() : "Valued Customer";
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("ticketNumber", ticket.getTicketNumber());
+            payload.put("ticketId", ticket.getId().toString());
+            payload.put("subject", ticket.getSubject());
+            payload.put("replyMessage", replyMsg.getMessage());
+            payload.put("repliedBy", replyMsg.getSenderName() != null ? replyMsg.getSenderName() : "Support Agent");
+            payload.put("repliedAt", replyMsg.getCreatedAt() != null ? replyMsg.getCreatedAt().toString() : LocalDateTime.now().toString());
+            payload.put("actionUrl", "/dashboard?tab=support&ticketId=" + ticket.getId());
+
+            String deduplicationKey = "ticket-reply-" + replyMsg.getId();
+            String emailSubject = "💬 New Support Reply on Ticket #" + ticket.getTicketNumber() + " - " + ticket.getSubject();
+
+            notificationEventService.recordEvent(
+                    NotificationEventType.SUPPORT_TICKET_REPLY,
+                    "SUPPORT_TICKET",
+                    ticket.getId(),
+                    ticket.getUserId(),
+                    recipientEmail,
+                    recipientName,
+                    emailSubject,
+                    payload,
+                    deduplicationKey
+            );
+        } catch (Exception e) {
+            log.warn("Failed to record ticket reply notification for ticket {}: {}", ticket.getTicketNumber(), e.getMessage());
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<SupportTicket> getUserTickets(UUID userId) {
         if (userId == null) return List.of();
@@ -373,7 +431,7 @@ public class SupportApplicationService {
             case TRAINING_ISSUE ->
                     "⚡ [FAANG AI Instant Assistant]: Welcome Trainee! Masterclass batch timings, Google Meet/Zoom links, and downloadable study guides are accessible under the 'Training Masterclasses' tab in your dashboard. Our agronomists will confirm any batch adjustment requests.";
             case PAYMENT_ISSUE ->
-                    "⚡ [FAANG AI Instant Assistant]: Payment security notice: All transactions are processed through 256-bit SSL encrypted Razorpay payment gateway. For order or enrollment cancellations, 100% of refunded amounts are credited directly to your Sporekart Wallet or returned to source within 3-5 business days.";
+                    "⚡ [FAANG AI Instant Assistant]: Payment security notice: All transactions are processed through 256-bit SSL encrypted Razorpay payment gateway. For order or enrollment cancellations, 100% of refunded amounts are credited directly to your original payment method via Razorpay within 3-5 business days.";
             case PRODUCT_INQUIRY ->
                     "⚡ [FAANG AI Instant Assistant]: Thank you for inquiring about Sporekart Agro Products! For fresh mushrooms and spawn bags, store at 2°C–4°C refrigeration upon receipt. Our mycology technical specialists will provide tailored substrate and incubation advice on this thread.";
             default ->

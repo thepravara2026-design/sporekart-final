@@ -34,4 +34,7 @@ public interface RefundRepository extends JpaRepository<Refund, UUID> {
             @Param("paymentId") UUID paymentId,
             @Param("statuses") Collection<RefundStatus> statuses
     );
+
+    @Query("SELECT COALESCE(SUM(r.amountInr), 0) FROM Refund r WHERE r.status = com.sporekart.payment.domain.RefundStatus.PROCESSED")
+    BigDecimal sumTotalProcessedRefunds();
 }

@@ -1,5 +1,8 @@
 package com.sporekart.support.application;
 
+import com.sporekart.identity.infrastructure.UserRepository;
+import com.sporekart.notification.application.NotificationEventService;
+import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.support.domain.*;
 import com.sporekart.support.infrastructure.SupportTicketRepository;
 import com.sporekart.support.infrastructure.TicketMessageRepository;
@@ -27,6 +30,12 @@ class SupportServiceUnitTest {
     private SupportTicketRepository ticketRepository;
     @Mock
     private TicketMessageRepository messageRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private NotificationEventService notificationEventService;
+    @Mock
+    private OrderRepository orderRepository;
 
     @InjectMocks
     private SupportApplicationService supportService;
@@ -130,5 +139,57 @@ class SupportServiceUnitTest {
         assertEquals(4.8, csatSummary.get("averageRating"));
         assertEquals(10L, csatSummary.get("ratedTicketsCount"));
         assertEquals(12L, csatSummary.get("totalTickets"));
+    }
+
+    @Test
+    @DisplayName("SUP-6: Create ticket with null or blank subject throws IllegalArgumentException")
+    void SUP_6_createTicket_blankSubject_throwsException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                supportService.createTicket(userId, "   ", TicketCategory.GENERAL_SUPPORT, TicketPriority.MEDIUM,
+                        "Valid message body here", "John Doe", null, null, null, null, null)
+        );
+    }
+
+    @Test
+    @DisplayName("SUP-7: Create ticket with cross-customer orderId throws AccessDeniedException")
+    void SUP_7_createTicket_crossCustomerOrder_throwsException() {
+        UUID otherCustomerId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+        com.sporekart.order.domain.Order otherOrder = com.sporekart.order.domain.Order.builder()
+                .id(orderId)
+                .userId(otherCustomerId)
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(otherOrder));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, () ->
+                supportService.createTicket(userId, "Order inquiry", TicketCategory.ORDER_ISSUE, TicketPriority.MEDIUM,
+                        "Where is this order?", "John Doe", orderId, null, null, null, null)
+        );
+    }
+
+    @Test
+    @DisplayName("SUP-8: Admin reply to ticket records SUPPORT_TICKET_REPLY notification event")
+    void SUP_8_addMessageToTicket_adminReply_recordsNotification() {
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(testTicket));
+        when(messageRepository.save(any(TicketMessage.class))).thenAnswer(i -> i.getArgument(0));
+        when(ticketRepository.save(any(SupportTicket.class))).thenAnswer(i -> i.getArgument(0));
+
+        TicketMessage msg = supportService.addMessageToTicket(
+                ticketId, UUID.randomUUID(), "ADMIN", "Support Lead", "We have dispatched your spawn replacement."
+        );
+
+        assertNotNull(msg);
+        verify(notificationEventService).recordEvent(
+                eq(com.sporekart.notification.domain.NotificationEventType.SUPPORT_TICKET_REPLY),
+                eq("SUPPORT_TICKET"),
+                eq(ticketId),
+                eq(userId),
+                any(),
+                any(),
+                anyString(),
+                anyMap(),
+                anyString()
+        );
     }
 }

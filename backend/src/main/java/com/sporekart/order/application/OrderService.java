@@ -18,6 +18,7 @@ import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -99,28 +101,33 @@ public class OrderService {
 
         if (userId != null) {
             if (addressSnapshot.getPhone() != null && !addressSnapshot.getPhone().isBlank()) {
-                authService.linkPhoneToUser(userId, addressSnapshot.getPhone());
-            }
-            if (request.getAddressId() == null && request.getShippingAddress() != null) {
-                List<CustomerDtos.AddressDto> existingAddrs = customerService.getAddresses(userId);
-                if (existingAddrs.isEmpty()) {
-                    customerService.addAddress(userId, CustomerDtos.AddressRequest.builder()
-                            .recipientName(addressSnapshot.getRecipientName())
-                            .phone(addressSnapshot.getPhone())
-                            .line1(addressSnapshot.getLine1())
-                            .line2(addressSnapshot.getLine2())
-                            .city(addressSnapshot.getCity())
-                            .state(addressSnapshot.getState())
-                            .pincode(addressSnapshot.getPincode())
-                            .isDefault(true)
-                            .build());
+                try {
+                    authService.linkPhoneToUser(userId, addressSnapshot.getPhone());
+                } catch (Exception e) {
+                    log.info("Could not link shipping recipient phone to user profile (phone already in use or profile locked): {}", e.getMessage());
                 }
             }
-        } else {
-            if (addressSnapshot.getPhone() != null && !addressSnapshot.getPhone().isBlank()) {
-                authService.validatePhoneUniqueness(null, addressSnapshot.getPhone());
+            if (request.getAddressId() == null && request.getShippingAddress() != null) {
+                try {
+                    List<CustomerDtos.AddressDto> existingAddrs = customerService.getAddresses(userId);
+                    if (existingAddrs.isEmpty()) {
+                        customerService.addAddress(userId, CustomerDtos.AddressRequest.builder()
+                                .recipientName(addressSnapshot.getRecipientName())
+                                .phone(addressSnapshot.getPhone())
+                                .line1(addressSnapshot.getLine1())
+                                .line2(addressSnapshot.getLine2())
+                                .city(addressSnapshot.getCity())
+                                .state(addressSnapshot.getState())
+                                .pincode(addressSnapshot.getPincode())
+                                .isDefault(true)
+                                .build());
+                    }
+                } catch (Exception e) {
+                    log.info("Could not auto-save initial customer address during checkout: {}", e.getMessage());
+                }
             }
         }
+
 
         // 4. Generate Order Number
         String orderNumber = generateOrderNumber();
@@ -159,8 +166,12 @@ public class OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException("Product variant not found: " + item.getVariantId()));
             Product product = variant.getProduct();
 
-            if (product == null || !product.isActive()) {
-                throw new IllegalStateException("Product '" + (product != null ? product.getTitle() : "Unknown") + "' is unavailable");
+            if (product == null || !product.isActive() || product.getStatus() != com.sporekart.catalog.domain.ProductStatus.ACTIVE) {
+                throw new IllegalStateException("Product '" + (product != null ? product.getTitle() : "Unknown") + "' is unavailable or unreleased");
+            }
+
+            if (!variant.isActive()) {
+                throw new IllegalStateException("Variant '" + variant.getVariantName() + "' is inactive or discontinued");
             }
 
             // Reserve stock atomically via InventoryService
@@ -216,6 +227,9 @@ public class OrderService {
                 if (promoResult.isFreeShipping()) {
                     shippingFee = BigDecimal.ZERO;
                 }
+            } else {
+                String reason = promoResult.getMessage() != null ? promoResult.getMessage() : "Promo code is no longer eligible";
+                throw new IllegalStateException("Applied promotion '" + cart.getAppliedPromoCode() + "' could not be applied: " + reason);
             }
         }
 
@@ -274,12 +288,12 @@ public class OrderService {
     private boolean isCallerAdmin(UUID userId) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getAuthorities() != null) {
-                boolean hasAdminRole = auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-                if (hasAdminRole) {
-                    return true;
+            if (auth != null && auth.isAuthenticated() && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+                if (auth.getAuthorities() != null) {
+                    return auth.getAuthorities().stream()
+                            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
                 }
+                return false;
             }
         } catch (Exception ignored) {
             // Security context unavailable (e.g. non-web background job)
@@ -416,7 +430,10 @@ public class OrderService {
     public OrderResponse updateOrderStatus(UUID orderId, OrderStatus newStatus, String reason, String updatedBy) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        return updateOrderStatusForEntity(order, newStatus, reason, updatedBy);
+    }
 
+    public OrderResponse updateOrderStatusForEntity(Order order, OrderStatus newStatus, String reason, String updatedBy) {
         OrderStatus previousStatus = order.getStatus();
         if (previousStatus == newStatus) {
             return mapToResponse(order);
@@ -437,7 +454,7 @@ public class OrderService {
         boolean isPaidOrder = (previousStatus == OrderStatus.PAID || previousStatus == OrderStatus.CONFIRMED || previousStatus == OrderStatus.PROCESSING);
 
         if (isPaidOrder && (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUND_PENDING || newStatus == OrderStatus.REFUNDED)) {
-            newStatus = (newStatus == OrderStatus.REFUND_PENDING) ? OrderStatus.REFUND_PENDING : OrderStatus.REFUNDED;
+            newStatus = (newStatus == OrderStatus.REFUNDED) ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING;
         }
 
         order.setStatus(newStatus);
@@ -468,57 +485,99 @@ public class OrderService {
                         .orderNumber(saved.getOrderNumber())
                         .build());
             }
-        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
-            try {
-                String recipientEmail = null;
-                String recipientName = "Valued Customer";
-                if (saved.getUserId() != null && userRepository != null) {
-                    var userOpt = userRepository.findById(saved.getUserId());
-                    if (userOpt.isPresent()) {
-                        recipientEmail = userOpt.get().getEmail();
-                        recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
+        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED || newStatus == OrderStatus.REFUND_PENDING) {
+            final OrderStatus statusForNotification = newStatus;
+            final String reasonForNotification = reason;
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    String recipientEmail = null;
+                    String recipientName = "Valued Customer";
+                    if (saved.getUserId() != null && userRepository != null) {
+                        var userOpt = userRepository.findById(saved.getUserId());
+                        if (userOpt.isPresent()) {
+                            recipientEmail = userOpt.get().getEmail();
+                            recipientName = userOpt.get().getFullName() != null ? userOpt.get().getFullName() : userOpt.get().getFirstName();
+                        }
                     }
-                }
-                OrderAddressSnapshot addrSnap = OrderAddressSnapshot.fromJson(saved.getShippingAddressJson());
-                if ((recipientEmail == null || recipientEmail.isBlank()) && addrSnap != null) {
-                    recipientEmail = addrSnap.getEmail();
-                    if (addrSnap.getRecipientName() != null) {
-                        recipientName = addrSnap.getRecipientName();
+                    OrderAddressSnapshot addrSnap = OrderAddressSnapshot.fromJson(saved.getShippingAddressJson());
+                    if ((recipientEmail == null || recipientEmail.isBlank()) && addrSnap != null) {
+                        recipientEmail = addrSnap.getEmail();
+                        if (addrSnap.getRecipientName() != null) {
+                            recipientName = addrSnap.getRecipientName();
+                        }
                     }
-                }
 
-                if (notificationEventService != null) {
-                    notificationEventService.recordEvent(
-                            com.sporekart.notification.domain.NotificationEventType.ORDER_CANCELLED,
-                            "ORDER",
-                            saved.getId(),
-                            saved.getUserId(),
-                            recipientEmail,
-                            recipientName,
-                            "Sporekart Order Cancellation #" + saved.getOrderNumber(),
-                            java.util.Map.of(
-                                    "orderId", saved.getId().toString(),
-                                    "orderNumber", saved.getOrderNumber(),
-                                    "customerName", recipientName != null ? recipientName : "Grower",
-                                    "reason", reason != null ? reason : "Cancelled",
-                                    "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00"
-                            ),
-                            "ORDER_CANCELLED:" + saved.getId()
-                    );
+                    if (notificationEventService != null) {
+                        notificationEventService.recordEvent(
+                                com.sporekart.notification.domain.NotificationEventType.ORDER_CANCELLED,
+                                "ORDER",
+                                saved.getId(),
+                                saved.getUserId(),
+                                recipientEmail,
+                                recipientName,
+                                "Sporekart Order Cancellation #" + saved.getOrderNumber(),
+                                java.util.Map.of(
+                                        "orderId", saved.getId().toString(),
+                                        "orderNumber", saved.getOrderNumber(),
+                                        "customerName", recipientName != null ? recipientName : "Grower",
+                                        "reason", reasonForNotification != null ? reasonForNotification : "Cancelled",
+                                        "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00"
+                                ),
+                                "ORDER_CANCELLED:" + saved.getId()
+                        );
 
-                    notificationEventService.recordAdminNotification(
-                            com.sporekart.notification.domain.NotificationEventType.ADMIN_ORDER_CANCELLED,
-                            "ORDER",
-                            saved.getId(),
-                            "Order #" + saved.getOrderNumber() + " Cancelled",
-                            "Customer cancelled order #" + saved.getOrderNumber() + ". Reason: " + (reason != null ? reason : "Cancelled"),
-                            "/admin?tab=orders&id=" + saved.getId(),
-                            "ADMIN_ORDER_CANCELLED:" + saved.getId()
-                    );
+                        notificationEventService.recordAdminNotification(
+                                com.sporekart.notification.domain.NotificationEventType.ADMIN_ORDER_CANCELLED,
+                                "ORDER",
+                                saved.getId(),
+                                "Order #" + saved.getOrderNumber() + " Cancelled",
+                                "Customer cancelled order #" + saved.getOrderNumber() + ". Reason: " + (reasonForNotification != null ? reasonForNotification : "Cancelled"),
+                                "/admin?tab=orders&id=" + saved.getId(),
+                                "ADMIN_ORDER_CANCELLED:" + saved.getId()
+                        );
+
+                        if (statusForNotification == OrderStatus.REFUND_PENDING) {
+                            notificationEventService.recordEvent(
+                                    com.sporekart.notification.domain.NotificationEventType.REFUND_INITIATED,
+                                    "ORDER",
+                                    saved.getId(),
+                                    saved.getUserId(),
+                                    recipientEmail,
+                                    recipientName,
+                                    "Refund Initiated: Order #" + saved.getOrderNumber() + " ⏳",
+                                    java.util.Map.of(
+                                            "orderId", saved.getId().toString(),
+                                            "orderNumber", saved.getOrderNumber(),
+                                            "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00",
+                                            "actionUrl", "/dashboard?tab=orders&orderId=" + saved.getId()
+                                    ),
+                                    "REFUND_INITIATED:" + saved.getId()
+                            );
+                        }
+
+                        if (statusForNotification == OrderStatus.REFUNDED) {
+                            notificationEventService.recordEvent(
+                                    com.sporekart.notification.domain.NotificationEventType.REFUND_COMPLETED,
+                                    "ORDER",
+                                    saved.getId(),
+                                    saved.getUserId(),
+                                    recipientEmail,
+                                    recipientName,
+                                    "Refund Processed: ₹" + (saved.getTotalAmountInr() != null ? saved.getTotalAmountInr() : "0.00") + " for Order #" + saved.getOrderNumber() + " 💸",
+                                    java.util.Map.of(
+                                            "orderId", saved.getId().toString(),
+                                            "orderNumber", saved.getOrderNumber(),
+                                            "refundAmount", saved.getTotalAmountInr() != null ? saved.getTotalAmountInr().toString() : "0.00",
+                                            "actionUrl", "/dashboard?tab=orders&orderId=" + saved.getId()
+                                    ),
+                                    "REFUND_COMPLETED:" + saved.getId()
+                            );
+                        }
+                    }
+                } catch (Exception e) {
+                    org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_CANCELLED / REFUND notification: {}", e.getMessage());
                 }
-            } catch (Exception e) {
-                org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Error recording ORDER_CANCELLED notification: {}", e.getMessage());
-            }
+            });
         } else if (newStatus == OrderStatus.PROCESSING) {
             try {
                 String recipientEmail = null;
@@ -564,16 +623,17 @@ public class OrderService {
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse cancelOrder(UUID orderId, UUID userId, String sessionId, String reason) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         validateOrderAccess(order, userId, sessionId);
-        return performOrderCancellation(order, userId, reason);
+        boolean isAdmin = isCallerAdmin(userId);
+        return performOrderCancellation(order, userId, reason, isAdmin);
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse cancelOrder(UUID orderId, UUID userId, String reason) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         boolean isAdmin = isCallerAdmin(userId);
@@ -583,16 +643,16 @@ public class OrderService {
         if (order.getUserId() != null && !userId.equals(order.getUserId()) && !isAdmin) {
             throw new ForbiddenOperationException("Access denied: You are not authorized to cancel this order");
         }
-        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.REFUNDED) {
-            throw new IllegalStateException("Order is already " + order.getStatus());
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.REFUNDED || order.getStatus() == OrderStatus.REFUND_PENDING) {
+            org.slf4j.LoggerFactory.getLogger(OrderService.class).info("Order {} is already in terminal/cancellation status {}. Returning existing state idempotently.", orderId, order.getStatus());
+            return mapToResponse(order);
         }
 
-        return performOrderCancellation(order, userId, reason);
+        return performOrderCancellation(order, userId, reason, isAdmin);
     }
 
-    private OrderResponse performOrderCancellation(Order order, UUID userId, String reason) {
+    private OrderResponse performOrderCancellation(Order order, UUID userId, String reason, boolean isAdmin) {
         UUID orderId = order.getId();
-        boolean isAdmin = isCallerAdmin(userId);
 
         OrderStatus currentStatus = order.getStatus();
         if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED || currentStatus == OrderStatus.REFUND_PENDING) {
@@ -639,15 +699,17 @@ public class OrderService {
             }
         }
 
-        // Cancel associated courier shipment if active
-        try {
-            shippingService.getShipmentByOrderId(orderId).ifPresent(s -> {
-                if (s.getStatus() != com.sporekart.shipping.domain.ShipmentStatus.CANCELLED) {
-                    shippingService.cancelShipment(s.getId(), "Order cancelled prior to delivery");
-                }
-            });
-        } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: Shipment cancel notification skipped: {}", e.getMessage());
+        // Cancel associated courier shipment if active (only relevant if order was beyond pending payment)
+        if (currentStatus != OrderStatus.PENDING_PAYMENT) {
+            try {
+                shippingService.getShipmentByOrderId(orderId).ifPresent(s -> {
+                    if (s.getStatus() != com.sporekart.shipping.domain.ShipmentStatus.CANCELLED) {
+                        shippingService.cancelShipment(s.getId(), "Order cancelled prior to delivery");
+                    }
+                });
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Note: Shipment cancel notification skipped: {}", e.getMessage());
+            }
         }
 
         // Trigger tracked gateway/wallet refund if order was paid
@@ -676,8 +738,8 @@ public class OrderService {
             }
         }
 
-        OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUNDED : OrderStatus.CANCELLED;
-        return updateOrderStatus(orderId, nextStatus, formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+        OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUND_PENDING : OrderStatus.CANCELLED;
+        return updateOrderStatusForEntity(order, nextStatus, formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
     }
 
     private OrderAddressSnapshot resolveAddressSnapshot(UUID userId, CreateOrderRequest request) {

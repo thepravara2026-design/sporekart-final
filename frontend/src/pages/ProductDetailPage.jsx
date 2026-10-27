@@ -319,13 +319,13 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
               <span className="text-xs text-typography-muted block font-medium">Price (incl. GST)</span>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-forest-900 font-display" data-testid="product-price">
-                  ₹{selectedVariant?.priceInr || price}
+                  ₹{selectedVariant?.calculatedFinalPriceInr || selectedVariant?.priceInr || price}
                 </span>
-                {selectedVariant?.compareAtPriceInr && Number(selectedVariant.compareAtPriceInr) > Number(selectedVariant?.priceInr || price) && (
+                {selectedVariant?.compareAtPriceInr && Number(selectedVariant.compareAtPriceInr) > Number(selectedVariant?.calculatedFinalPriceInr || selectedVariant?.priceInr || price) && (
                   <>
                     <span className="text-sm text-typography-muted line-through">₹{selectedVariant.compareAtPriceInr}</span>
                     <span className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-extrabold rounded-full shadow-sm tracking-wide border border-emerald-500/40" data-testid="discount-badge">
-                      SAVE {Math.round(((Number(selectedVariant.compareAtPriceInr) - Number(selectedVariant.priceInr || price)) / Number(selectedVariant.compareAtPriceInr)) * 100)}%
+                      SAVE {Math.round(((Number(selectedVariant.compareAtPriceInr) - Number(selectedVariant?.calculatedFinalPriceInr || selectedVariant?.priceInr || price)) / Number(selectedVariant.compareAtPriceInr)) * 100)}%
                     </span>
                   </>
                 )}
@@ -355,7 +355,7 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                         : 'bg-surface-white border-surface-border text-typography-secondary hover:border-surface-border'
                     }`}
                   >
-                    {v.variantName} — ₹{v.priceInr}
+                    {v.variantName} — ₹{v.calculatedFinalPriceInr || v.priceInr}
                   </button>
                 ))}
               </div>

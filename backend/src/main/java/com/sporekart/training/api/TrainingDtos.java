@@ -224,6 +224,8 @@ public class TrainingDtos {
         private BigDecimal amountPaidInr;
         private String paymentReference;
         private ZonedDateTime enrolledAt;
+        private Boolean alreadyEnrolled;
+        private String message;
     }
 
     @Data

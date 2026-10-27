@@ -197,4 +197,33 @@ public class ShippingControllerSecurityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.awbCode").value("AWB-OWNER-123"));
     }
+
+    @Test
+    @DisplayName("SEC-09: Customer cannot access shipping label endpoint (403 Forbidden)")
+    void testGetShippingLabel_customer_forbidden() throws Exception {
+        UUID customerId = UUID.randomUUID();
+        UUID shipmentId = UUID.randomUUID();
+        String customerToken = tokenProvider.generateToken(customerId, "customer@example.com", "ROLE_CUSTOMER");
+
+        mockMvc.perform(get("/shipping/label/" + shipmentId)
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("SEC-10: Admin user can access shipping label endpoint (200 OK)")
+    void testGetShippingLabel_admin_success() throws Exception {
+        UUID adminId = UUID.randomUUID();
+        UUID shipmentId = UUID.randomUUID();
+        String adminToken = tokenProvider.generateToken(adminId, "admin@sporekart.in", "ROLE_ADMIN");
+
+        when(shippingService.getShippingLabelUrl(shipmentId))
+                .thenReturn("https://track.shiprocket.in/label/AWB-123");
+
+        mockMvc.perform(get("/shipping/label/" + shipmentId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shipmentId").value(shipmentId.toString()))
+                .andExpect(jsonPath("$.data.labelUrl").value("https://track.shiprocket.in/label/AWB-123"));
+    }
 }

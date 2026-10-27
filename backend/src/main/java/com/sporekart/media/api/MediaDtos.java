@@ -1,5 +1,6 @@
 package com.sporekart.media.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sporekart.media.domain.MediaStatus;
 import com.sporekart.media.domain.MediaType;
 import jakarta.validation.constraints.Min;
@@ -26,6 +27,7 @@ public class MediaDtos {
         private long sizeBytes;
         private MediaType mediaType = MediaType.IMAGE;
         private String altText;
+        @JsonProperty("isPublic")
         private boolean isPublic = true;
     }
 
@@ -82,6 +84,7 @@ public class MediaDtos {
         private MediaType mediaType;
         private MediaStatus status;
         private String altText;
+        @JsonProperty("isPublic")
         private boolean isPublic;
         private String publicUrl;
         private String thumbnailUrl;

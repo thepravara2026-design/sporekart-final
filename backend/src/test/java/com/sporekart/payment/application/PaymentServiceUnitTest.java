@@ -366,15 +366,16 @@ public class PaymentServiceUnitTest {
         UUID orderId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        Order order = Order.builder().id(orderId).userId(userId).status(OrderStatus.PENDING_PAYMENT).build();
-        OrderResponse orderResp = new OrderResponse();
-        orderResp.setId(orderId);
-        orderResp.setOrderNumber("SK-SUMMARY-1");
-        orderResp.setTotalAmountInr(new BigDecimal("1200.00"));
-        orderResp.setStatus(OrderStatus.PENDING_PAYMENT);
+        Order order = Order.builder()
+                .id(orderId)
+                .userId(userId)
+                .orderNumber("SK-SUMMARY-1")
+                .totalAmountInr(new BigDecimal("1200.00"))
+                .status(OrderStatus.PENDING_PAYMENT)
+                .shippingAddressJson("{\"recipientName\":\"Test Customer\",\"phone\":\"+919876543210\",\"city\":\"Pune\",\"state\":\"Maharashtra\"}")
+                .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(orderService.getOrderById(orderId)).thenReturn(orderResp);
 
         PaymentDtos.PaymentSummaryResponse summary = paymentService.getPaymentSummary("ORDER", orderId, userId, null);
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, User, ArrowRight, Sprout, Package, GraduationCap, Compass } from 'lucide-react';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 import BlogSection from '../components/BlogSection';
+import { contentApi } from '../api';
 
 export const BLOG_POSTS = [
   {
@@ -63,6 +64,18 @@ export const BLOG_POSTS = [
 ];
 
 export default function BlogIndexPage() {
+  const [livePostsCount, setLivePostsCount] = useState(0);
+
+  useEffect(() => {
+    contentApi.getPosts({ size: 1 })
+      .then((res) => {
+        if (res.data?.data?.totalElements) {
+          setLivePostsCount(res.data.data.totalElements);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const blogListSchema = {
     "@context": "https://schema.org",
     "@type": "Blog",

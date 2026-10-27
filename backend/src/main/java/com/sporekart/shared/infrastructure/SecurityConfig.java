@@ -104,6 +104,7 @@ public class SecurityConfig {
                     .requestMatchers("/admin/auth/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/shipping/create", "/shipping/cancel/**", "/shipping/simulate-event/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/shipping/label/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/media/link").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/media/**").hasRole("ADMIN")
                     .anyRequest().authenticated();

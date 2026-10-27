@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,18 +35,7 @@ public class CatalogApplicationService {
 
     @Transactional(readOnly = true)
     public UUID getMostPopularProductId() {
-        try {
-            List<Object[]> topSelling = orderRepository.findTopSellingProductIds();
-            if (topSelling != null && !topSelling.isEmpty()) {
-                Object[] top = topSelling.get(0);
-                if (top != null && top.length > 0 && top[0] instanceof UUID uuid) {
-                    return uuid;
-                }
-            }
-        } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(CatalogApplicationService.class).warn("Could not determine most popular product: {}", e.getMessage());
-        }
-        return null;
+        return rankingService.getTopSellingProductId();
     }
 
     @Transactional(readOnly = true)
@@ -89,11 +79,37 @@ public class CatalogApplicationService {
         return variantRepository.findById(variantId);
     }
 
+    private static class CachedSearchResult {
+        final Page<CatalogDtos.ProductDto> page;
+        final long expiresAt;
+
+        CachedSearchResult(Page<CatalogDtos.ProductDto> page, long ttlMs) {
+            this.page = page;
+            this.expiresAt = System.currentTimeMillis() + ttlMs;
+        }
+
+        boolean isValid() {
+            return System.currentTimeMillis() < expiresAt;
+        }
+    }
+
+    private final Map<String, CachedSearchResult> searchCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public void evictSearchCache() {
+        searchCache.clear();
+    }
+
     @Transactional(readOnly = true)
     public Page<CatalogDtos.ProductDto> searchProducts(String categorySlug, ProductType productType, String searchQuery, int page, int size, String sortBy) {
         String cleanCategory = resolveCategorySlug(categorySlug);
         ProductType cleanType = productType != null ? productType : (cleanCategory != null ? null : resolveProductType(categorySlug));
         String cleanQuery = (searchQuery != null && !searchQuery.trim().isEmpty()) ? searchQuery.trim() : null;
+
+        String cacheKey = String.format("%s:%s:%s:%d:%d:%s", cleanCategory, cleanType, cleanQuery, page, size, sortBy);
+        CachedSearchResult cached = searchCache.get(cacheKey);
+        if (cached != null && cached.isValid()) {
+            return cached.page;
+        }
 
         Page<Product> productPage;
         if ("price_asc".equalsIgnoreCase(sortBy)) {
@@ -118,7 +134,9 @@ public class CatalogApplicationService {
                 .collect(Collectors.toList());
 
         List<CatalogDtos.ProductDto> enrichedContent = rankingService.enrichAndRankProducts(rawDtos, cleanCategory, sortBy);
-        return new org.springframework.data.domain.PageImpl<>(enrichedContent, productPage.getPageable(), productPage.getTotalElements());
+        Page<CatalogDtos.ProductDto> resultPage = new org.springframework.data.domain.PageImpl<>(enrichedContent, productPage.getPageable(), productPage.getTotalElements());
+        searchCache.put(cacheKey, new CachedSearchResult(resultPage, 60_000L));
+        return resultPage;
     }
 
     @Transactional(readOnly = true)

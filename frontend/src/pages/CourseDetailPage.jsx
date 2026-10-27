@@ -45,7 +45,7 @@ export default function CourseDetailPage({ user, setUser }) {
           || (courseSlug && (courseSlug.toLowerCase().includes('cultivation') || courseSlug.toLowerCase().includes('commercial'))
               ? coursesList.find((c) => c.slug.toLowerCase().includes('cultivation') || c.slug.toLowerCase().includes('commercial'))
               : null)
-          || coursesList[0];
+          || null;
         setCourse(found);
         if (found) {
           fetchPendingReviews(found.id);
@@ -83,8 +83,23 @@ export default function CourseDetailPage({ user, setUser }) {
 
   if (!course) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-typography-muted font-medium">
-        Masterclass course not found.
+      <div className="max-w-7xl mx-auto px-4 py-24 text-center space-y-6">
+        <SeoHead
+          title="Course Not Found | Sporekart Training"
+          description="The requested training masterclass could not be found."
+          noindex={true}
+        />
+        <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-typography-primary">
+          Masterclass Course Not Found
+        </h1>
+        <p className="text-typography-secondary text-sm max-w-md mx-auto">
+          The course you are looking for may have been retired or rescheduled. Browse our active certified cultivation and spawn production workshops below.
+        </p>
+        <div className="pt-2">
+          <Link to="/training" className="btn-primary px-6 py-3 text-xs font-bold inline-flex items-center gap-2">
+            <span>Explore All Training Workshops</span>
+          </Link>
+        </div>
       </div>
     );
   }

@@ -7,6 +7,7 @@ import com.sporekart.identity.infrastructure.OtpRepository;
 import com.sporekart.identity.infrastructure.UserRepository;
 import com.sporekart.shared.infrastructure.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -27,6 +29,17 @@ public class AuthService {
     private final org.springframework.core.env.Environment environment;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.customer.infrastructure.CustomerAddressRepository customerAddressRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    private synchronized org.springframework.transaction.support.TransactionTemplate getTransactionTemplate() {
+        if (transactionTemplate == null && transactionManager != null) {
+            transactionTemplate = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        }
+        return transactionTemplate;
+    }
 
     public void checkIfPhoneIsAlternateDeliveryOnly(String rawPhone) {
         if (rawPhone == null || rawPhone.isBlank() || rawPhone.contains("@")) return;
@@ -45,12 +58,11 @@ public class AuthService {
         }
     }
 
-    @Transactional
     public AuthDtos.AuthResponse loginWithGoogle(AuthDtos.GoogleOAuthRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         String googleSub = request.getGoogleSub().trim();
 
-        User user = findOrCreateUserForIdentity(IdentityProvider.GOOGLE, googleSub, email, request.getFirstName(), request.getLastName(), request.getFullName());
+        User user = getOrCreateUserWithLock(IdentityProvider.GOOGLE, googleSub, email, request.getFirstName(), request.getLastName(), request.getFullName());
 
         // Single entity enforcement: only thepravara2026@gmail.com is permissible for ROLE_ADMIN via Google OAuth
         if ("thepravara2026@gmail.com".equalsIgnoreCase(email)) {
@@ -86,8 +98,47 @@ public class AuthService {
                 .build();
     }
 
+    protected User getOrCreateUserWithLock(IdentityProvider provider, String providerSubject, String emailOrPhone, String reqFirstName, String reqLastName, String reqFullName) {
+        String lockKey = ("oauth_lock_" + provider + "_" + (emailOrPhone != null ? emailOrPhone.toLowerCase().trim() : providerSubject)).intern();
+        synchronized (lockKey) {
+            org.springframework.transaction.support.TransactionTemplate tt = getTransactionTemplate();
+            try {
+                if (tt != null) {
+                    return tt.execute(status -> findOrCreateUserForIdentity(provider, providerSubject, emailOrPhone, reqFirstName, reqLastName, reqFullName));
+                } else {
+                    return findOrCreateUserForIdentity(provider, providerSubject, emailOrPhone, reqFirstName, reqLastName, reqFullName);
+                }
+            } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                // Concurrency fallback: if another thread/instance committed in parallel, recover by reading the committed user
+                if (tt != null) {
+                    User resolved = tt.execute(status -> doResolveExistingUser(provider, providerSubject, emailOrPhone));
+                    if (resolved != null) {
+                        return resolved;
+                    }
+                } else {
+                    User resolved = doResolveExistingUser(provider, providerSubject, emailOrPhone);
+                    if (resolved != null) {
+                        return resolved;
+                    }
+                }
+                throw ex;
+            }
+        }
+    }
+
+    private User doResolveExistingUser(IdentityProvider provider, String providerSubject, String emailOrPhone) {
+        Optional<CustomerIdentity> identity = customerIdentityRepository.findByProviderAndProviderSubject(provider, providerSubject);
+        if (identity.isPresent()) {
+            return userRepository.findById(identity.get().getUserId()).orElse(null);
+        }
+        if (emailOrPhone != null && emailOrPhone.contains("@")) {
+            return userRepository.findByEmail(emailOrPhone.trim().toLowerCase()).orElse(null);
+        }
+        return findUserByPhoneFlexible(emailOrPhone).orElse(null);
+    }
+
     @Transactional
-    protected User findOrCreateUserForIdentity(IdentityProvider provider, String providerSubject, String emailOrPhone, String reqFirstName, String reqLastName, String reqFullName) {
+    public User findOrCreateUserForIdentity(IdentityProvider provider, String providerSubject, String emailOrPhone, String reqFirstName, String reqLastName, String reqFullName) {
         // 1. Check if this exact identity provider subject is already registered
         Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(provider, providerSubject);
         if (existingIdentity.isPresent()) {
@@ -153,13 +204,15 @@ public class AuthService {
         }
 
         // Link new identity provider to the Customer Account
-        CustomerIdentity newIdentity = CustomerIdentity.builder()
-                .userId(user.getId())
-                .provider(provider)
-                .providerSubject(providerSubject)
-                .build();
+        if (!customerIdentityRepository.existsByProviderAndProviderSubject(provider, providerSubject)) {
+            CustomerIdentity newIdentity = CustomerIdentity.builder()
+                    .userId(user.getId())
+                    .provider(provider)
+                    .providerSubject(providerSubject)
+                    .build();
 
-        customerIdentityRepository.save(newIdentity);
+            customerIdentityRepository.save(newIdentity);
+        }
 
         return user;
     }
@@ -244,20 +297,24 @@ public class AuthService {
             String phoneToSet = normalizePhone(rawPhone);
 
             if (user.getPhone() == null || user.getPhone().isBlank()) {
-                validatePhoneUniqueness(userId, rawPhone);
-                user.setPhone(phoneToSet);
-                user.setPhoneVerified(true);
-                updated = true;
+                try {
+                    validatePhoneUniqueness(userId, rawPhone);
+                    user.setPhone(phoneToSet);
+                    user.setPhoneVerified(true);
+                    updated = true;
 
-                Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
-                        IdentityProvider.PHONE_OTP, phoneToSet);
-                if (existingIdentity.isEmpty()) {
-                    CustomerIdentity newIdentity = CustomerIdentity.builder()
-                            .userId(userId)
-                            .provider(IdentityProvider.PHONE_OTP)
-                            .providerSubject(phoneToSet)
-                            .build();
-                    customerIdentityRepository.save(newIdentity);
+                    Optional<CustomerIdentity> existingIdentity = customerIdentityRepository.findByProviderAndProviderSubject(
+                            IdentityProvider.PHONE_OTP, phoneToSet);
+                    if (existingIdentity.isEmpty()) {
+                        CustomerIdentity newIdentity = CustomerIdentity.builder()
+                                .userId(userId)
+                                .provider(IdentityProvider.PHONE_OTP)
+                                .providerSubject(phoneToSet)
+                                .build();
+                        customerIdentityRepository.save(newIdentity);
+                    }
+                } catch (com.sporekart.identity.domain.DuplicateIdentityConflictException ex) {
+                    log.info("Shipping recipient phone {} is registered to another user; skipping primary identity linking for user {}", phoneToSet, userId);
                 }
             }
         }

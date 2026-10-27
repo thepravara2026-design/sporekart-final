@@ -1,10 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, User, ArrowRight } from 'lucide-react';
 import { BLOG_POSTS } from '../pages/BlogIndexPage';
+import { contentApi } from '../api';
 
 export default function BlogSection({ limit = null, showHeading = true, showViewAllLink = true }) {
-  const postsToDisplay = limit ? BLOG_POSTS.slice(0, limit) : BLOG_POSTS;
+  const [posts, setPosts] = useState(BLOG_POSTS);
+
+  useEffect(() => {
+    contentApi.getPosts({ size: limit || 12 })
+      .then((res) => {
+        const fetched = res.data?.data?.content;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          const mapped = fetched.map((p) => ({
+            id: p.id,
+            slug: p.slug,
+            title: p.title,
+            excerpt: p.summary || '',
+            category: p.categoryName || 'Commercial Farming',
+            author: p.authorName || 'Dr. Anand Shinde',
+            date: p.publishedAt ? new Date(p.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'September 2026',
+            readTime: `${p.readingTimeMinutes || 5} min read`,
+            tags: p.tags || [],
+            targetIntent: null
+          }));
+          setPosts(mapped);
+        }
+      })
+      .catch(() => {
+        // graceful fallback to static posts
+      });
+  }, [limit]);
+
+  const postsToDisplay = limit ? posts.slice(0, limit) : posts;
 
   return (
     <section className="space-y-8">

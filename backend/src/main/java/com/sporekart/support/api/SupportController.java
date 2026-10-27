@@ -6,6 +6,8 @@ import com.sporekart.support.domain.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +64,8 @@ public class SupportController {
         boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        if (userId == null || (ticket.getUserId() != null && !ticket.getUserId().equals(userId) && !isAdmin)) {
+        boolean isOwner = ticket.getUserId() != null && ticket.getUserId().equals(userId);
+        if (!isOwner && !isAdmin) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied: You do not own this support ticket"));
         }
 
@@ -81,7 +84,8 @@ public class SupportController {
         boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        if (senderId == null || (ticket.getUserId() != null && !ticket.getUserId().equals(senderId) && !isAdmin)) {
+        boolean isOwner = ticket.getUserId() != null && ticket.getUserId().equals(senderId);
+        if (!isOwner && !isAdmin) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied: You cannot message on this ticket"));
         }
 
@@ -109,7 +113,8 @@ public class SupportController {
         boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        if (userId == null || (ticket.getUserId() != null && !ticket.getUserId().equals(userId) && !isAdmin)) {
+        boolean isOwner = ticket.getUserId() != null && ticket.getUserId().equals(userId);
+        if (!isOwner && !isAdmin) {
             return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied: You cannot close this ticket"));
         }
 
@@ -134,10 +139,16 @@ public class SupportController {
 
     @Data
     public static class CreateTicketRequest {
+        @NotBlank(message = "Subject is required")
+        @Size(min = 3, max = 255, message = "Subject must be between 3 and 255 characters")
         private String subject;
+
         private TicketCategory category;
         private TicketPriority priority;
+
+        @NotBlank(message = "Message is required")
         private String message;
+
         private UUID orderId;
         private UUID paymentId;
         private UUID shipmentId;
@@ -147,6 +158,7 @@ public class SupportController {
 
     @Data
     public static class AddMessageRequest {
+        @NotBlank(message = "Message is required")
         private String message;
     }
 

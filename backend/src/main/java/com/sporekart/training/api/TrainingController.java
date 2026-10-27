@@ -28,7 +28,19 @@ public class TrainingController {
     @GetMapping("/courses")
     public ResponseEntity<ApiResponse<List<TrainingDtos.CourseResponse>>> getCourses() {
         List<Course> courses = trainingService.getAllActiveCourses();
-        List<TrainingDtos.CourseResponse> response = courses.stream().map(this::mapCourse).collect(Collectors.toList());
+        if (courses.isEmpty()) {
+            return ResponseEntity.ok(ApiResponse.success(List.of()));
+        }
+
+        List<UUID> courseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
+        List<Batch> allBatches = trainingService.getBatchesForCourseIds(courseIds);
+        java.util.Map<UUID, List<Batch>> batchesByCourse = allBatches.stream()
+                .filter(b -> b.getCourse() != null && b.getCourse().getId() != null)
+                .collect(Collectors.groupingBy(b -> b.getCourse().getId()));
+
+        List<TrainingDtos.CourseResponse> response = courses.stream()
+                .map(c -> mapCourseWithBatches(c, batchesByCourse.getOrDefault(c.getId(), List.of())))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -182,6 +194,10 @@ public class TrainingController {
 
     private TrainingDtos.CourseResponse mapCourse(Course course) {
         List<Batch> batches = trainingService.getBatchesForCourse(course.getId());
+        return mapCourseWithBatches(course, batches);
+    }
+
+    private TrainingDtos.CourseResponse mapCourseWithBatches(Course course, List<Batch> batches) {
         List<TrainingDtos.BatchSlotResponse> slots = (batches != null ? batches.stream() : java.util.stream.Stream.<Batch>empty())
                 .filter(b -> b.getStatus() != BatchStatus.CANCELLED)
                 .map(b -> {
@@ -275,6 +291,8 @@ public class TrainingController {
                 .amountPaidInr(enrollment.getFeePaidInr())
                 .paymentReference(enrollment.getPaymentReference())
                 .enrolledAt(enrollment.getEnrolledAt())
+                .alreadyEnrolled(enrollment.getStatus() == EnrollmentStatus.CONFIRMED)
+                .message(enrollment.getStatus() == EnrollmentStatus.CONFIRMED ? "User is already actively enrolled in this batch." : null)
                 .build();
     }
 

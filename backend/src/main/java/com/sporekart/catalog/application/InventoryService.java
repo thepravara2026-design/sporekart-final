@@ -148,24 +148,51 @@ public class InventoryService {
     }
 
     private void syncVariantDisplayStock(UUID variantId, int availableQuantity) {
-        variantRepository.findById(variantId).ifPresent(v -> {
-            v.setStockQuantity(availableQuantity);
-            variantRepository.save(v);
-        });
+        try {
+            variantRepository.updateStockQuantity(variantId, availableQuantity);
+        } catch (Exception ex) {
+            variantRepository.findById(variantId).ifPresent(v -> {
+                v.setStockQuantity(availableQuantity);
+                variantRepository.save(v);
+            });
+        }
     }
 
     private void recordAuditLog(UUID variantId, InventoryEventType eventType, int quantityChanged, InventoryRecord record, String referenceId, String reason, String createdBy) {
-        InventoryAuditEvent audit = InventoryAuditEvent.builder()
-                .variantId(variantId)
-                .eventType(eventType)
-                .quantityChanged(quantityChanged)
-                .availableQuantityAfter(record.getAvailableQuantity())
-                .reservedQuantityAfter(record.getReservedQuantity())
-                .soldQuantityAfter(record.getSoldQuantity())
-                .referenceId(referenceId)
-                .reason(reason)
-                .createdBy(createdBy)
-                .build();
-        inventoryAuditRepository.save(audit);
+        Runnable task = () -> {
+            try {
+                String safeReason = reason;
+                if (safeReason != null && safeReason.length() > 255) {
+                    safeReason = safeReason.substring(0, 252) + "...";
+                }
+                InventoryAuditEvent audit = InventoryAuditEvent.builder()
+                        .variantId(variantId)
+                        .eventType(eventType)
+                        .quantityChanged(quantityChanged)
+                        .availableQuantityAfter(record.getAvailableQuantity())
+                        .reservedQuantityAfter(record.getReservedQuantity())
+                        .soldQuantityAfter(record.getSoldQuantity())
+                        .referenceId(referenceId)
+                        .reason(safeReason)
+                        .createdBy(createdBy)
+                        .build();
+                inventoryAuditRepository.save(audit);
+            } catch (Exception ex) {
+                org.slf4j.LoggerFactory.getLogger(InventoryService.class).warn("Background inventory audit log failed: {}", ex.getMessage());
+            }
+        };
+
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            java.util.concurrent.CompletableFuture.runAsync(task);
+                        }
+                    }
+            );
+        } else {
+            java.util.concurrent.CompletableFuture.runAsync(task);
+        }
     }
 }

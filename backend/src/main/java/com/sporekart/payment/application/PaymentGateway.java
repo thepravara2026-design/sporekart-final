@@ -48,6 +48,18 @@ public interface PaymentGateway {
         private String contact;
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class GatewayRefundDetails {
+        private String refundId;
+        private String paymentId;
+        private Long amountPaise;
+        private String currency; // "INR"
+        private String status; // "processed", "pending", "failed"
+    }
+
     InitiatePaymentResult createPaymentOrder(UUID orderId, String orderNumber, BigDecimal amountInr);
 
     boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String signature);
@@ -57,6 +69,8 @@ public interface PaymentGateway {
     RefundResult refund(String razorpayPaymentId, BigDecimal amountInr, String reason);
 
     GatewayPaymentDetails fetchPayment(String razorpayPaymentId);
+
+    GatewayRefundDetails fetchRefund(String razorpayRefundId);
 
     boolean isMockMode();
 }

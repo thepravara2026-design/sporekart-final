@@ -1,6 +1,7 @@
 package com.sporekart.catalog.api;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sporekart.catalog.domain.MediaType;
 import com.sporekart.catalog.domain.ProductMediaRole;
 import com.sporekart.catalog.domain.ProductStatus;
@@ -9,6 +10,8 @@ import com.sporekart.catalog.domain.StockAvailability;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,6 +34,7 @@ public class CatalogDtos {
         private String slug;
         private String description;
         private String imageUrl;
+        @JsonProperty("isActive")
         private boolean isActive;
     }
 
@@ -98,6 +102,7 @@ public class CatalogDtos {
         private String appliedOfferName;
         private int stockQuantity;
         private AvailabilityDto availability;
+        @JsonProperty("isActive")
         private boolean isActive;
     }
 
@@ -116,6 +121,7 @@ public class CatalogDtos {
         private String appliedOfferName;
         private int stockQuantity; // ADMIN ONLY: exact integer stock quantity
         private AvailabilityDto availability;
+        @JsonProperty("isActive")
         private boolean isActive;
     }
 
@@ -184,6 +190,7 @@ public class CatalogDtos {
         private List<String> imageUrls;
         private List<OfferDto> activeOffers;
         private ProductInformationDto productInformation;
+        @JsonProperty("isActive")
         private boolean isActive;
         private boolean isPopular;
         private boolean isBestSeller;
@@ -215,6 +222,7 @@ public class CatalogDtos {
         private List<String> imageUrls;
         private List<OfferDto> activeOffers;
         private ProductInformationDto productInformation;
+        @JsonProperty("isActive")
         private boolean isActive;
         private boolean isPopular;
         private boolean isBestSeller;
@@ -246,6 +254,7 @@ public class CatalogDtos {
         @NotBlank(message = "Category slug is required")
         private String slug;
         private String description;
+        @Pattern(regexp = "^(https?://.*)?$", message = "Image URL must use http:// or https:// protocol")
         @JsonAlias({"imageUrl", "image_url", "mediaUrl", "url"})
         private String imageUrl;
         private boolean isActive = true;
@@ -258,6 +267,7 @@ public class CatalogDtos {
         private String name;
         private String slug;
         private String description;
+        @Pattern(regexp = "^(https?://.*)?$", message = "Image URL must use http:// or https:// protocol")
         @JsonAlias({"imageUrl", "image_url", "mediaUrl", "url"})
         private String imageUrl;
         private Boolean isActive;
@@ -269,6 +279,7 @@ public class CatalogDtos {
     public static class CreateProductRequest {
         private UUID categoryId;
         @NotBlank(message = "Product title is required")
+        @Size(max = 255, message = "Product title cannot exceed 255 characters")
         private String title;
         @NotBlank(message = "Product slug is required")
         private String slug;
@@ -281,6 +292,8 @@ public class CatalogDtos {
         private String metaTitle;
         private String metaDescription;
         private String canonicalUrl;
+        @JsonProperty("isActive")
+        @JsonAlias({"is_active", "active"})
         private boolean isActive = true;
         @JsonAlias({"information", "productInformation", "product_information"})
         private CreateProductInformationRequest productInformation;
@@ -295,6 +308,7 @@ public class CatalogDtos {
     @AllArgsConstructor
     public static class UpdateProductRequest {
         private UUID categoryId;
+        @Size(max = 255, message = "Product title cannot exceed 255 characters")
         private String title;
         private String slug;
         private String description;
@@ -305,6 +319,8 @@ public class CatalogDtos {
         private String metaTitle;
         private String metaDescription;
         private String canonicalUrl;
+        @JsonProperty("isActive")
+        @JsonAlias({"is_active", "active"})
         private Boolean isActive;
         @JsonAlias({"information", "productInformation", "product_information"})
         private CreateProductInformationRequest productInformation;
@@ -373,6 +389,8 @@ public class CatalogDtos {
         private BigDecimal compareAtPriceInr;
         @Min(value = 0, message = "Stock quantity cannot be negative")
         private int stockQuantity;
+        @JsonProperty("isActive")
+        @JsonAlias({"is_active", "active"})
         private boolean isActive = true;
         private BigDecimal weightKg;
         private BigDecimal lengthCm;
@@ -414,6 +432,8 @@ public class CatalogDtos {
         private UUID productId;
         private UUID variantId;
         @NotBlank(message = "Media URL is required")
+        @Pattern(regexp = "^https?://.*", message = "Media URL must use http:// or https:// protocol")
+        @Size(max = 2000, message = "Media URL cannot exceed 2000 characters")
         @JsonAlias({"mediaUrl", "url", "imageUrl", "image_url"})
         private String mediaUrl;
         private MediaType mediaType = MediaType.IMAGE;

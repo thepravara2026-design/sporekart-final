@@ -215,11 +215,9 @@ export default function AdminDashboardPage({ user }) {
   const [batchCourseId, setBatchCourseId] = useState('');
   const [batchCode, setBatchCode] = useState('BATCH-2026-OCT-01');
   const [batchStartDate, setBatchStartDate] = useState('2026-10-15');
+  const [batchEndDate, setBatchEndDate] = useState('2026-10-29');
   const [batchCapacity, setBatchCapacity] = useState(25);
-  const [batchesList, setBatchesList] = useState([
-    { id: 'b1', code: 'BATCH-2026-OCT-OYSTER', courseTitle: 'Button & Oyster Commercial Cultivation', startDate: '2026-10-10', capacity: 25, enrolled: 18, status: 'UPCOMING' },
-    { id: 'b2', code: 'BATCH-2026-NOV-SPAWN', courseTitle: 'Masterclass in Mushroom Spawn Production', startDate: '2026-11-01', capacity: 20, enrolled: 12, status: 'UPCOMING' }
-  ]);
+  const [batchesList, setBatchesList] = useState([]);
   const [cancelTargetBatch, setCancelTargetBatch] = useState(null);
 
   // Training Refunds & Enrollments State
@@ -422,10 +420,11 @@ export default function AdminDashboardPage({ user }) {
           setCsatSummary(csatRes.value.data.data || { averageRating: 5.0, ratedTicketsCount: 0, totalTickets: 0 });
         }
       } else if (['training', 'courses', 'batches', 'enrollments', 'batch-refunds'].includes(section)) {
-        const [cRes, custRes, enrRes] = await Promise.allSettled([
+        const [cRes, custRes, enrRes, batchRes] = await Promise.allSettled([
           trainingApi.getCourses(),
           adminApi.getCustomers(),
-          adminApi.getEnrollments()
+          adminApi.getEnrollments(),
+          adminApi.getBatches()
         ]);
         if (cRes.status === 'fulfilled' && cRes.value.data?.success) {
           const data = cRes.value.data.data;
@@ -438,6 +437,20 @@ export default function AdminDashboardPage({ user }) {
         if (enrRes.status === 'fulfilled' && enrRes.value.data?.success) {
           const data = enrRes.value.data.data;
           setEnrolledStudents(Array.isArray(data) ? data : (data?.content || []));
+        }
+        if (batchRes.status === 'fulfilled' && batchRes.value.data?.success) {
+          const data = batchRes.value.data.data;
+          const liveBatches = (Array.isArray(data) ? data : (data?.content || [])).map(b => ({
+            id: b.id,
+            code: b.batchCode,
+            courseTitle: b.courseTitle || 'Masterclass',
+            startDate: b.startDate,
+            endDate: b.endDate,
+            capacity: b.capacity,
+            enrolled: b.enrolledCount || 0,
+            status: b.status || 'UPCOMING'
+          }));
+          setBatchesList(liveBatches);
         }
       }
     } catch (err) {
@@ -1270,7 +1283,7 @@ export default function AdminDashboardPage({ user }) {
   };
 
   // ADMIN BATCH CANCELLATION HANDLER
-  const handleAdminCancelBatch = (e) => {
+  const handleAdminCancelBatch = async (e) => {
     e.preventDefault();
     if (!cancelTargetBatch) return;
 
@@ -1279,19 +1292,17 @@ export default function AdminDashboardPage({ user }) {
       return;
     }
 
-    // Update batch status to CANCELLED and process student enrollment refunds
-    setBatchesList(batchesList.map(b => b.id === cancelTargetBatch.id ? { ...b, status: 'CANCELLED' } : b));
-    
-    // Update enrolled students list refund status
-    setEnrolledStudents(enrolledStudents.map(s => {
-      if (s.batchCode === cancelTargetBatch.code) {
-        return { ...s, status: 'CANCELLED', refundStatus: 'REFUND_PROCESSED', refundId: 'rfnd_batch_' + Date.now().toString().substring(6) };
-      }
-      return s;
-    }));
-
-    setStatusMessage(`Batch ${cancelTargetBatch.code} cancelled. Refund of enrolled student fees initiated successfully.`);
-    setCancelTargetBatch(null);
+    try {
+      setLoading(true);
+      await adminApi.cancelBatch(cancelTargetBatch.id);
+      setStatusMessage(`Batch ${cancelTargetBatch.code} cancelled successfully.`);
+      setCancelTargetBatch(null);
+      fetchDataForSection('batches');
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed cancelling batch.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ADMIN ENROLLMENT CANCELLATION HANDLER
@@ -1498,21 +1509,31 @@ export default function AdminDashboardPage({ user }) {
     }
   };
 
-  const handleCreateBatch = (e) => {
+  const handleCreateBatch = async (e) => {
     e.preventDefault();
-    const courseObj = courses.find(c => c.id === batchCourseId) || { title: 'Commercial Mushroom Farming Masterclass' };
-    const newBatch = {
-      id: 'b_' + Date.now(),
-      code: batchCode,
-      courseTitle: courseObj.title,
-      startDate: batchStartDate,
-      capacity: parseInt(batchCapacity),
-      enrolled: 0,
-      status: 'UPCOMING'
-    };
-    setBatchesList([...batchesList, newBatch]);
-    setStatusMessage(`Batch ${batchCode} created successfully.`);
-    setBatchCode(`BATCH-2026-OCT-0${batchesList.length + 2}`);
+    if (!batchCourseId) {
+      setErrorMessage('Please select an associated masterclass.');
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await adminApi.createBatch({
+        courseId: batchCourseId,
+        batchCode: batchCode.trim(),
+        startDate: batchStartDate,
+        endDate: batchEndDate,
+        capacity: parseInt(batchCapacity)
+      });
+      if (res.data?.success) {
+        setStatusMessage(`Batch ${batchCode} created and scheduled successfully.`);
+        setBatchCode(`BATCH-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`);
+        fetchDataForSection('batches');
+      }
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed creating batch.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ==========================================
@@ -6184,7 +6205,8 @@ export default function AdminDashboardPage({ user }) {
                       <textarea
                         required
                         rows={2}
-                        placeholder="e.g. Out of stock / Customer requested cancellation prior to dispatch"
+                        maxLength={250}
+                        placeholder="e.g. Out of stock / Customer requested cancellation prior to dispatch (max 250 characters)"
                         value={cancelReasonInput}
                         onChange={(e) => setCancelReasonInput(e.target.value)}
                         className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2 text-typography-primary focus:outline-none focus:border-red-600"
@@ -6920,14 +6942,18 @@ export default function AdminDashboardPage({ user }) {
                 <label className="block text-typography-primary font-bold mb-1">Batch Code ID *</label>
                 <input type="text" required value={batchCode} onChange={(e) => setBatchCode(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700 font-mono" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-typography-primary font-bold mb-1">Start Date</label>
-                  <input type="date" value={batchStartDate} onChange={(e) => setBatchStartDate(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
+                  <label className="block text-typography-primary font-bold mb-1">Start Date *</label>
+                  <input type="date" required value={batchStartDate} onChange={(e) => setBatchStartDate(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
                 </div>
                 <div>
-                  <label className="block text-typography-primary font-bold mb-1">Max Seat Capacity</label>
-                  <input type="number" value={batchCapacity} onChange={(e) => setBatchCapacity(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
+                  <label className="block text-typography-primary font-bold mb-1">End Date *</label>
+                  <input type="date" required value={batchEndDate} onChange={(e) => setBatchEndDate(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
+                </div>
+                <div>
+                  <label className="block text-typography-primary font-bold mb-1">Capacity *</label>
+                  <input type="number" min="1" required value={batchCapacity} onChange={(e) => setBatchCapacity(e.target.value)} className="w-full bg-surface-white border border-surface-border rounded-xl px-3.5 py-2.5 text-typography-primary focus:outline-none focus:border-forest-700" />
                 </div>
               </div>
               <button type="submit" className="w-full btn-primary py-3 rounded-xl font-bold">Publish Batch Schedule</button>
@@ -7430,7 +7456,7 @@ export default function AdminDashboardPage({ user }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <AnalyticsMetricCard
               title="Processed Training Refunds"
-              value={`₹${enrolledStudents.filter(s => s.status === 'CANCELLED').reduce((acc, curr) => acc + (curr.feePaid || 0), 0).toLocaleString('en-IN')}`}
+              value={`₹${enrolledStudents.filter(s => s.status === 'CANCELLED' && s.refundStatus === 'REFUND_PROCESSED').reduce((acc, curr) => acc + (curr.feePaid || 0), 0).toLocaleString('en-IN')}`}
               subtext="Total Reversed Tuition Fees"
               icon={RotateCcw}
               variant="red"

@@ -1792,9 +1792,10 @@ export default function DashboardPage({ user, setUser }) {
                   <textarea
                     rows={2}
                     required
+                    maxLength={250}
                     value={customCancelReason}
                     onChange={(e) => setCustomCancelReason(e.target.value)}
-                    placeholder="Enter reason for cancellation..."
+                    placeholder="Enter reason for cancellation (max 250 characters)..."
                     className="w-full bg-surface-white border border-surface-border rounded-xl p-3 text-typography-primary text-xs focus:outline-none focus:border-red-600"
                   />
                 </div>

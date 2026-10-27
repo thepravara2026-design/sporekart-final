@@ -21,6 +21,7 @@ export default function AuthForm({
 
   // Triggered when Google Auth payload is received (logs in immediately and merges cart)
   const handleGoogleAuthReceived = async (googleAuthData) => {
+    if (loading) return;
     setAuthError('');
     setAuthMessage('');
     if (isAdminMode && googleAuthData.email?.toLowerCase() !== 'thepravara2026@gmail.com') {

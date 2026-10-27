@@ -152,9 +152,11 @@ public class RazorpayPaymentGateway implements PaymentGateway {
     @Override
     public RefundResult refund(String razorpayPaymentId, BigDecimal amountInr, String reason) {
         String refundId = "rfnd_mock_" + UUID.randomUUID().toString().substring(0, 8);
-        String status = "PROCESSED";
+        String status = "pending";
 
-        if (!isMockMode()) {
+        if (!isMockMode() && !(razorpayPaymentId != null && (
+                razorpayPaymentId.startsWith("pay_mock_")
+                || razorpayPaymentId.startsWith("pay_simulated_")))) {
             if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
                 throw new IllegalStateException("Razorpay gateway credentials are not configured for processing refunds.");
             }
@@ -162,6 +164,11 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                 RazorpayClient client = new RazorpayClient(keyId, keySecret);
                 JSONObject refundRequest = new JSONObject();
                 refundRequest.put("amount", amountInr.multiply(new BigDecimal("100")).longValue());
+                if (reason != null && !reason.isBlank()) {
+                    JSONObject notes = new JSONObject();
+                    notes.put("reason", reason);
+                    refundRequest.put("notes", notes);
+                }
 
                 com.razorpay.Refund refund = client.payments.refund(razorpayPaymentId, refundRequest);
                 refundId = refund.get("id");
@@ -175,8 +182,50 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                 .refundId(refundId)
                 .razorpayPaymentId(razorpayPaymentId)
                 .amountInr(amountInr)
-                .status(status)
+                .status(status != null ? status.toUpperCase() : "PROCESSED")
                 .build();
+    }
+
+    @Override
+    public GatewayRefundDetails fetchRefund(String razorpayRefundId) {
+        if (isMockMode() || (razorpayRefundId != null && (
+                razorpayRefundId.startsWith("rfnd_mock_")
+                || razorpayRefundId.startsWith("rfnd_simulated_")))) {
+            String status = razorpayRefundId != null && razorpayRefundId.contains("failed") ? "failed" : "processed";
+            return GatewayRefundDetails.builder()
+                    .refundId(razorpayRefundId)
+                    .paymentId("pay_mock_ref")
+                    .status(status)
+                    .amountPaise(10000L)
+                    .currency("INR")
+                    .build();
+        }
+
+        if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
+            throw new IllegalStateException("Razorpay gateway credentials are not configured for fetching refund details.");
+        }
+
+        try {
+            RazorpayClient client = new RazorpayClient(keyId, keySecret);
+            com.razorpay.Refund rzpRefund = client.refunds.fetch(razorpayRefundId);
+
+            Long amount = null;
+            Object amtObj = rzpRefund.get("amount");
+            if (amtObj instanceof Number) {
+                amount = ((Number) amtObj).longValue();
+            }
+
+            return GatewayRefundDetails.builder()
+                    .refundId(rzpRefund.get("id"))
+                    .paymentId(rzpRefund.get("payment_id"))
+                    .status(rzpRefund.get("status"))
+                    .amountPaise(amount)
+                    .currency(rzpRefund.get("currency"))
+                    .build();
+        } catch (RazorpayException e) {
+            log.warn("Failed to fetch Razorpay refund {}: {}", razorpayRefundId, e.getMessage());
+            throw new RuntimeException("Failed to fetch Razorpay refund: " + e.getMessage(), e);
+        }
     }
 
     @Override

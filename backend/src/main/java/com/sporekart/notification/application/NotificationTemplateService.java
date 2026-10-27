@@ -44,8 +44,12 @@ public class NotificationTemplateService {
                 case WALLET_WITHDRAWAL_REQUESTED, WALLET_WITHDRAWAL_PROCESSING, WALLET_WITHDRAWAL_COMPLETED, WALLET_WITHDRAWAL_FAILED, WALLET_WITHDRAWAL_REVERSED -> buildWalletWithdrawalBody(eventType, data);
                 case CART_ABANDONED -> buildAbandonedCartBody(data);
                 case ENROLLMENT_CHECKOUT_ABANDONED -> buildAbandonedEnrollmentBody(data);
+                case SUPPORT_TICKET_CREATED -> buildSupportTicketCreatedBody(data);
+                case SUPPORT_TICKET_REPLY -> buildSupportTicketReplyBody(data);
                 case SUPPORT_TICKET_CLOSED -> buildSupportTicketClosedBody(data);
-                default -> buildOrderConfirmedBody(data);
+                case BLOG_PUBLISHED, PROMOTION_PUBLISHED -> buildBroadcastBody(eventType, data);
+                case TRAINING_BATCH_PUBLISHED, TRAINING_ANNOUNCEMENT -> buildBroadcastBody(eventType, data);
+                default -> buildGeneralNotificationBody(eventType, data);
             };
 
             return wrapInBaseTemplate(contentHtml);
@@ -511,6 +515,98 @@ public class NotificationTemplateService {
           <a href="%s" class="btn" style="background-color:#0f3d2e;">View Support Helpdesk</a>
         </div>
         """.formatted(ticketNumber, ticketNumber, subject, category, priority, closedByDisplay, ratingHtml, msgHtml, ctaUrl);
+    }
+
+    private String buildSupportTicketCreatedBody(JsonNode data) {
+        String ticketNumber = escape(data.path("ticketNumber").asText());
+        String subject = escape(data.path("subject").asText("Support Ticket Inquiry"));
+        String actionUrl = escape(data.path("actionUrl").asText("/dashboard?tab=support"));
+        String ctaUrl = actionUrl.startsWith("http") ? actionUrl : frontendUrl + actionUrl;
+
+        return """
+        <div style="text-align:center; margin-bottom:20px;">
+          <span class="badge badge-emerald">🎫 Support Ticket Received</span>
+          <h2 style="color:#0f3d2e; margin: 10px 0 4px 0;">We've Received Your Request</h2>
+          <p style="color:#64748b; font-size:14px; margin:0;">Our technical team is reviewing your ticket and will respond shortly.</p>
+        </div>
+
+        <div class="card">
+          <div style="font-size:12px; color:#64748b; margin-bottom:6px;">TICKET SUMMARY</div>
+          <div style="font-size:14px; font-weight:bold; color:#0f3d2e; margin-bottom:4px;">Ticket Reference: #%s</div>
+          <div style="font-size:13px; color:#1e293b; margin-bottom:4px;"><strong>Subject:</strong> %s</div>
+        </div>
+
+        <div style="text-align:center; margin-top:24px;">
+          <a href="%s" class="btn" style="background-color:#0f3d2e;">View Ticket Thread</a>
+        </div>
+        """.formatted(ticketNumber, subject, ctaUrl);
+    }
+
+    private String buildSupportTicketReplyBody(JsonNode data) {
+        String ticketNumber = escape(data.path("ticketNumber").asText());
+        String subject = escape(data.path("subject").asText("Support Ticket Inquiry"));
+        String replyMessage = escape(data.path("replyMessage").asText(""));
+        String repliedBy = escape(data.path("repliedBy").asText("Support Agent"));
+        String actionUrl = escape(data.path("actionUrl").asText("/dashboard?tab=support"));
+        String ctaUrl = actionUrl.startsWith("http") ? actionUrl : frontendUrl + actionUrl;
+
+        String msgHtml = !replyMessage.isBlank()
+                ? "<div class='card' style='border-left: 4px solid #059669;'><div style='font-size:12px; color:#64748b; margin-bottom:4px;'>LATEST MESSAGE FROM " + repliedBy.toUpperCase() + "</div><div style='font-size:13px; color:#334155; white-space:pre-wrap;'>" + replyMessage + "</div></div>"
+                : "";
+
+        return """
+        <div style="text-align:center; margin-bottom:20px;">
+          <span class="badge badge-emerald">💬 New Support Reply</span>
+          <h2 style="color:#0f3d2e; margin: 10px 0 4px 0;">Response on Ticket #%s</h2>
+          <p style="color:#64748b; font-size:14px; margin:0;">A new message has been posted on your support inquiry: <strong>%s</strong></p>
+        </div>
+
+        %s
+
+        <div style="text-align:center; margin-top:24px;">
+          <a href="%s" class="btn" style="background-color:#0f3d2e;">Reply on Helpdesk</a>
+        </div>
+        """.formatted(ticketNumber, subject, msgHtml, ctaUrl);
+    }
+
+    private String buildBroadcastBody(NotificationEventType eventType, JsonNode data) {
+        String title = escape(data.path("title").asText(eventType == NotificationEventType.BLOG_PUBLISHED ? "New Mushroom Cultivation Article" : "Special Sporekart Promotion"));
+        String summary = escape(data.path("summary").asText(data.path("message").asText("Check out our latest update on the Sporekart platform.")));
+        String actionUrl = escape(data.path("actionUrl").asText("/"));
+        String ctaUrl = actionUrl.startsWith("http") ? actionUrl : frontendUrl + actionUrl;
+
+        return """
+        <div style="text-align:center; margin-bottom:20px;">
+          <span class="badge badge-emerald">🍄 Community Update</span>
+          <h2 style="color:#0f3d2e; margin: 10px 0 4px 0;">%s</h2>
+        </div>
+
+        <div class="card">
+          <p style="font-size:14px; color:#334155; line-height:1.6;">%s</p>
+        </div>
+
+        <div style="text-align:center; margin-top:24px;">
+          <a href="%s" class="btn" style="background-color:#0f3d2e;">Explore on Sporekart</a>
+        </div>
+        """.formatted(title, summary, ctaUrl);
+    }
+
+    private String buildGeneralNotificationBody(NotificationEventType eventType, JsonNode data) {
+        String title = escape(data.path("title").asText("Notification Update"));
+        String message = escape(data.path("message").asText("You have a new update regarding your Sporekart account."));
+        String actionUrl = escape(data.path("actionUrl").asText("/dashboard"));
+        String ctaUrl = actionUrl.startsWith("http") ? actionUrl : frontendUrl + actionUrl;
+
+        return """
+        <div style="text-align:center; margin-bottom:20px;">
+          <h2 style="color:#0f3d2e; margin: 10px 0 4px 0;">%s</h2>
+          <p style="color:#64748b; font-size:14px; margin:0;">%s</p>
+        </div>
+
+        <div style="text-align:center; margin-top:24px;">
+          <a href="%s" class="btn" style="background-color:#0f3d2e;">View Details</a>
+        </div>
+        """.formatted(title, message, ctaUrl);
     }
 }
 

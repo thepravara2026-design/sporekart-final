@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class AdminContentController {
 
     private final BlogContentService blogService;
+    private final com.sporekart.shared.api.SeoController seoController;
 
     // --- Post Management ---
     @GetMapping("/posts")
@@ -96,6 +97,9 @@ public class AdminContentController {
     @PostMapping("/posts/{id}/publish")
     public ResponseEntity<ApiResponse<BlogDtos.BlogPostDetailResponse>> publishPost(@PathVariable UUID id) {
         BlogPost post = blogService.publishPost(id);
+        if (seoController != null) {
+            seoController.invalidateSitemapCache();
+        }
         return ResponseEntity.ok(ApiResponse.success(BlogMapper.toDetailResponse(post)));
     }
 

@@ -17,6 +17,8 @@ public interface ShippingProvider {
 
     CancelShipmentResult cancelShipment(String providerShipmentId, String awbCode);
 
+    String generateLabel(String providerShipmentId, String awbCode);
+
     @Data
     @Builder
     @NoArgsConstructor

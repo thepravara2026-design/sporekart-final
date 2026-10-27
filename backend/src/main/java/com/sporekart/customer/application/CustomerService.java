@@ -8,6 +8,7 @@ import com.sporekart.customer.infrastructure.CustomerAddressRepository;
 import com.sporekart.customer.infrastructure.CustomerRepository;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -115,7 +117,11 @@ public class CustomerService {
     @Transactional
     public CustomerDtos.AddressDto addAddress(UUID userId, CustomerDtos.AddressRequest request) {
         if (request.getAlternatePhone() != null && !request.getAlternatePhone().isBlank()) {
-            authService.validatePhoneUniqueness(null, request.getAlternatePhone().trim());
+            try {
+                authService.validatePhoneUniqueness(null, request.getAlternatePhone().trim());
+            } catch (Exception ex) {
+                log.info("Alternate delivery phone {} belongs to an existing user; allowing delivery contact phone on address.", request.getAlternatePhone());
+            }
         }
 
         if (userId != null) {

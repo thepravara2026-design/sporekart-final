@@ -32,6 +32,8 @@ public class AdminOrderController {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final AdminApplicationService adminAuditService;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.application.PaymentService paymentService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
@@ -162,9 +164,78 @@ public class AdminOrderController {
         }
     }
 
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<ApiResponse<OrderResponse>> refundOrder(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody AdminRefundRequest request,
+            Authentication authentication
+    ) {
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + id));
+
+        String oldStatus = existing.getStatus().name();
+        UUID adminId = getAdminId(authentication);
+
+        paymentService.refundPayment(id, request.getAmount(), request.getReason() != null ? request.getReason() : "Admin manual refund");
+        OrderResponse updated = orderService.getOrderById(id);
+
+        adminAuditService.logAction(
+                adminId,
+                "REFUND_ORDER",
+                "ORDER",
+                id.toString(),
+                oldStatus,
+                updated.getStatus().name(),
+                "Admin issued refund of ₹" + request.getAmount() + " for order " + existing.getOrderNumber() + ". Reason: " + request.getReason(),
+                null
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(updated));
+    }
+
+    @PostMapping("/{id}/retry-refund")
+    public ResponseEntity<ApiResponse<OrderResponse>> retryRefund(
+            @PathVariable("id") UUID id,
+            Authentication authentication
+    ) {
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + id));
+
+        if (existing.getStatus() != OrderStatus.REFUND_PENDING) {
+            throw new IllegalStateException("Only orders with status REFUND_PENDING can be retried. Current status: " + existing.getStatus());
+        }
+
+        UUID adminId = getAdminId(authentication);
+        String oldStatus = existing.getStatus().name();
+
+        paymentService.refundPayment(id, null, "Admin retried refund dispatch");
+        OrderResponse updated = orderService.getOrderById(id);
+
+        adminAuditService.logAction(
+                adminId,
+                "RETRY_REFUND",
+                "ORDER",
+                id.toString(),
+                oldStatus,
+                updated.getStatus().name(),
+                "Admin retried refund dispatch for order " + existing.getOrderNumber(),
+                null
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(updated));
+    }
+
     @Data
     public static class UpdateOrderStatusRequest {
         private OrderStatus status;
+        private String reason;
+    }
+
+    @Data
+    public static class AdminRefundRequest {
+        @jakarta.validation.constraints.NotNull(message = "Refund amount is required")
+        @jakarta.validation.constraints.DecimalMin(value = "0.01", message = "Refund amount must be greater than zero")
+        private java.math.BigDecimal amount;
         private String reason;
     }
 }

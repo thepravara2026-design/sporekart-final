@@ -40,6 +40,7 @@ public class InventoryAuditEvent {
     @Column(name = "reference_id")
     private String referenceId;
 
+    @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
 
     @Column(name = "created_by")

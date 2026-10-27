@@ -12,4 +12,5 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
     Optional<Shipment> findByOrderId(UUID orderId);
     Optional<Shipment> findByProviderShipmentId(String providerShipmentId);
     Optional<Shipment> findByAwbCode(String awbCode);
+    java.util.List<Shipment> findByStatusIn(java.util.Collection<com.sporekart.shipping.domain.ShipmentStatus> statuses);
 }

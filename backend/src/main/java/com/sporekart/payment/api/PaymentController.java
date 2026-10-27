@@ -41,6 +41,10 @@ public class PaymentController {
             org.springframework.security.core.Authentication authentication) {
         java.util.UUID userId = extractUserId(authentication);
         PaymentDtos.VerifyPaymentResponse response = paymentService.verifyPayment(request, userId, sessionId);
+        if (!response.isSuccess()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("PAYMENT_VERIFICATION_FAILED", response.getMessage()));
+        }
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -75,6 +79,10 @@ public class PaymentController {
             throw new com.sporekart.shared.application.ForbiddenOperationException("Authentication required to verify training enrollment payment");
         }
         PaymentDtos.VerifyEnrollmentPaymentResponse response = paymentService.verifyEnrollmentPayment(request, userId);
+        if (!response.isSuccess()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("ENROLLMENT_PAYMENT_VERIFICATION_FAILED", response.getMessage()));
+        }
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

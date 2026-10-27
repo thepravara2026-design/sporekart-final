@@ -214,6 +214,24 @@ class CartServiceUnitTest {
     }
 
     @Test
+    @DisplayName("CART-7b: Update item quantity to negative removes the item")
+    void CART_7b_updateItemQuantity_negative_removes_item() {
+        CartItem cartItem = new CartItem(testCart, variantId, 2, new BigDecimal("105.00"));
+        testCart.addItem(cartItem);
+
+        when(cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE))
+                .thenReturn(Optional.of(testCart));
+        when(cartItemRepository.findByCartIdAndVariantId(testCart.getId(), variantId))
+                .thenReturn(Optional.of(cartItem));
+
+        CartResponse response = cartService.updateItemQuantity(userId, sessionId, variantId, -2);
+
+        assertNotNull(response);
+        verify(cartItemRepository).delete(cartItem);
+        verify(cartRepository).save(testCart);
+    }
+
+    @Test
     @DisplayName("CART-8: Remove item from cart")
     void CART_8_removeItemFromCart_success() {
         CartItem cartItem = new CartItem(testCart, variantId, 2, new BigDecimal("105.00"));

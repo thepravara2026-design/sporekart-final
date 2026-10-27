@@ -230,6 +230,8 @@ public class ShippingService {
         if (targetStatus == ShipmentStatus.DELIVERED) {
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Order delivered via courier partner scan", "COURIER_SYSTEM");
             recordShipmentNotification(saved, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
+        } else if (targetStatus == ShipmentStatus.OUT_FOR_DELIVERY) {
+            recordShipmentNotification(saved, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_OUT_FOR_DELIVERY, "OUT_FOR_DELIVERY");
         } else if (targetStatus == ShipmentStatus.IN_TRANSIT) {
             recordShipmentNotification(saved, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
         }
@@ -276,6 +278,9 @@ public class ShippingService {
             shipment.setDeliveredAt(ZonedDateTime.now());
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Order delivered", "SHIPPING_SERVICE");
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
+        } else if ("OUT_FOR_DELIVERY".equalsIgnoreCase(trackingResult.getCurrentStatus()) && shipment.getStatus() != ShipmentStatus.DELIVERED) {
+            shipment.setStatus(ShipmentStatus.OUT_FOR_DELIVERY);
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_OUT_FOR_DELIVERY, "OUT_FOR_DELIVERY");
         } else if ("IN_TRANSIT".equalsIgnoreCase(trackingResult.getCurrentStatus()) && shipment.getStatus() != ShipmentStatus.DELIVERED) {
             shipment.setStatus(ShipmentStatus.IN_TRANSIT);
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
@@ -330,6 +335,9 @@ public class ShippingService {
             shipment.setDeliveredAt(ZonedDateTime.now());
             orderService.updateOrderStatus(shipment.getOrderId(), OrderStatus.DELIVERED, "Delivered via webhook", "SHIPROCKET_WEBHOOK");
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.ORDER_DELIVERED, "DELIVERED");
+        } else if ("OUT_FOR_DELIVERY".equalsIgnoreCase(currentStatus)) {
+            shipment.setStatus(ShipmentStatus.OUT_FOR_DELIVERY);
+            recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_OUT_FOR_DELIVERY, "OUT_FOR_DELIVERY");
         } else if ("IN_TRANSIT".equalsIgnoreCase(currentStatus)) {
             shipment.setStatus(ShipmentStatus.IN_TRANSIT);
             recordShipmentNotification(shipment, com.sporekart.notification.domain.NotificationEventType.SHIPMENT_IN_TRANSIT, "IN_TRANSIT");
@@ -337,6 +345,18 @@ public class ShippingService {
 
         shipment.addTrackingEvent(tracking);
         shipmentRepository.save(shipment);
+    }
+
+    @Transactional(readOnly = true)
+    public String getShippingLabelUrl(UUID shipmentId) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
+
+        if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot generate shipping label for a CANCELLED shipment.");
+        }
+
+        return shippingProvider.generateLabel(shipment.getProviderShipmentId(), shipment.getAwbCode());
     }
 
     @Transactional

@@ -96,7 +96,7 @@ public class BlogPost {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (canonicalUrl == null && slug != null) {
-            canonicalUrl = "https://sporekart.com/blog/" + slug;
+            canonicalUrl = "https://sporekart.in/blog/" + slug;
         }
         if (metaTitle == null) {
             metaTitle = title;
@@ -135,7 +135,7 @@ public class BlogPost {
     }
 
     public String generateArticleStructuredData() {
-        String siteUrl = "https://sporekart.com";
+        String siteUrl = "https://sporekart.in";
         String postUrl = canonicalUrl != null ? canonicalUrl : siteUrl + "/blog/" + slug;
         String pubDate = publishedAt != null ? publishedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         String authorName = author != null ? author.getName() : "Sporekart Editorial Team";
@@ -169,7 +169,7 @@ public class BlogPost {
     }
 
     public String generateBreadcrumbStructuredData() {
-        String siteUrl = "https://sporekart.com";
+        String siteUrl = "https://sporekart.in";
         String categoryName = category != null ? category.getName() : "General";
         String categorySlug = category != null ? category.getSlug() : "general";
 

@@ -99,4 +99,13 @@ public class ShippingDtos {
         private String courierName;
         private String message;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ShippingLabelResponse {
+        private UUID shipmentId;
+        private String labelUrl;
+    }
 }

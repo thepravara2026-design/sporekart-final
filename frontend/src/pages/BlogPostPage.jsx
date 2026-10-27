@@ -1,13 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { BLOG_POSTS } from './BlogIndexPage';
 import { Calendar, Clock, User, ArrowLeft, Tag, Share2, CheckCircle2 } from 'lucide-react';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
+import NotFoundPage from './NotFoundPage';
+import { contentApi } from '../api';
 
 export default function BlogPostPage() {
   const { slug } = useParams();
-  const post = BLOG_POSTS.find((p) => p.slug === slug) || BLOG_POSTS[0];
+  const staticPost = BLOG_POSTS.find((p) => p.slug === slug);
+  const [post, setPost] = useState(staticPost || null);
+  const [loading, setLoading] = useState(!staticPost);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (staticPost) {
+      setPost(staticPost);
+      setLoading(false);
+      setNotFound(false);
+      return;
+    }
+
+    setLoading(true);
+    setNotFound(false);
+    contentApi.getPostBySlug(slug)
+      .then((res) => {
+        if (res.data && res.data.success && res.data.data) {
+          const d = res.data.data;
+          setPost({
+            id: d.id,
+            slug: d.slug,
+            title: d.title,
+            excerpt: d.summary || d.metaDescription || '',
+            content: d.content || '',
+            category: d.categoryName || 'Mushroom Agritech',
+            author: d.authorName || 'Dr. Anand Shinde',
+            date: d.publishedAt ? new Date(d.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'September 2026',
+            readTime: `${d.readingTimeMinutes || 5} min read`,
+            tags: d.tags || []
+          });
+        } else {
+          setNotFound(true);
+        }
+      })
+      .catch(() => {
+        setNotFound(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [slug]);
+
+  if (notFound) {
+    return <NotFoundPage />;
+  }
+
+  if (loading || !post) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center text-typography-secondary animate-pulse">
+        <p className="text-sm">Loading agritech knowledge article...</p>
+      </div>
+    );
+  }
 
   const blogArticleSchema = {
     "@context": "https://schema.org",
@@ -86,26 +141,34 @@ export default function BlogPostPage() {
           {post.excerpt}
         </p>
 
-        <h2 className="font-display font-bold text-xl text-typography-primary">1. Infrastructure Requirements & Capital Expenditure</h2>
-        <p>
-          To establish a commercial 1,000 sq. ft. mushroom fruiting chamber in tropical or subtropical Indian climates, temperature control (18°C–24°C) and relative humidity (85%–90% RH) maintenance are non-negotiable.
-        </p>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><strong className="text-typography-primary">Insulated PUF Panels or Double-Brick Structure:</strong> Essential to lower cooling HVAC electricity consumption.</li>
-          <li><strong className="text-typography-primary">Fogger & Humidifier Units:</strong> High-pressure ultrasonic nozzle humidifiers maintain fog without soaking bag surfaces.</li>
-          <li><strong className="text-typography-primary">Spawn Requirement:</strong> 250kg of lab-certified wheat grain spawn per 10-ton wet substrate batch.</li>
-        </ul>
+        {post.content ? (
+          <div className="prose max-w-none text-typography-secondary whitespace-pre-line space-y-4">
+            {post.content}
+          </div>
+        ) : (
+          <>
+            <h2 className="font-display font-bold text-xl text-typography-primary">1. Infrastructure Requirements & Capital Expenditure</h2>
+            <p>
+              To establish a commercial 1,000 sq. ft. mushroom fruiting chamber in tropical or subtropical Indian climates, temperature control (18°C–24°C) and relative humidity (85%–90% RH) maintenance are non-negotiable.
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong className="text-typography-primary">Insulated PUF Panels or Double-Brick Structure:</strong> Essential to lower cooling HVAC electricity consumption.</li>
+              <li><strong className="text-typography-primary">Fogger & Humidifier Units:</strong> High-pressure ultrasonic nozzle humidifiers maintain fog without soaking bag surfaces.</li>
+              <li><strong className="text-typography-primary">Spawn Requirement:</strong> 250kg of lab-certified wheat grain spawn per 10-ton wet substrate batch.</li>
+            </ul>
 
-        <h2 className="font-display font-bold text-xl text-typography-primary">2. Financial Projections & Payback Period</h2>
-        <p>
-          With an average market price of ₹120–₹160 per kg for fresh oyster mushrooms and ₹140–₹180 per kg for button mushrooms, small-to-mid scale farms achieve complete capital payback within 12 to 14 months.
-        </p>
-        <div className="p-4 rounded-2xl bg-forest-900/10 border border-forest-700/30 flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
-          <p className="text-xs text-forest-900">
-            <strong className="font-bold">Pro Tip:</strong> Selling value-added dehydrated mushroom powder and mushroom soup premixes increases profit margins by up to 45% compared to raw fresh sales.
-          </p>
-        </div>
+            <h2 className="font-display font-bold text-xl text-typography-primary">2. Financial Projections & Payback Period</h2>
+            <p>
+              With an average market price of ₹120–₹160 per kg for fresh oyster mushrooms and ₹140–₹180 per kg for button mushrooms, small-to-mid scale farms achieve complete capital payback within 12 to 14 months.
+            </p>
+            <div className="p-4 rounded-2xl bg-forest-900/10 border border-forest-700/30 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
+              <p className="text-xs text-forest-900">
+                <strong className="font-bold">Pro Tip:</strong> Selling value-added dehydrated mushroom powder and mushroom soup premixes increases profit margins by up to 45% compared to raw fresh sales.
+              </p>
+            </div>
+          </>
+        )}
       </article>
 
       <div className="bg-surface-white p-6 rounded-card border border-surface-border shadow-level-1 flex flex-col sm:flex-row items-center justify-between gap-4">

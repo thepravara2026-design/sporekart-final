@@ -3,6 +3,7 @@ package com.sporekart.payment.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sporekart.order.domain.Order;
+import com.sporekart.order.domain.OrderAddressSnapshot;
 import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.order.api.dto.OrderResponse;
@@ -39,6 +40,21 @@ public class PaymentService {
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final PaymentEventIdempotencyService paymentEventIdempotencyService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.notification.application.NotificationEventService notificationEventService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private io.micrometer.core.instrument.MeterRegistry meterRegistry;
+
+    private void recordMetric(String name, String... tags) {
+        if (meterRegistry != null) {
+            try {
+                meterRegistry.counter(name, tags).increment();
+            } catch (Exception e) {
+                log.debug("Failed to record metric {}: {}", name, e.getMessage());
+            }
+        }
+    }
 
     @Transactional
     public PaymentDtos.InitiatePaymentResponse initiatePayment(UUID orderId) {
@@ -67,6 +83,8 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         orderService.setRazorpayOrderId(orderId, result.getRazorpayOrderId());
+
+        recordMetric("payment.initiated.total", "channel", "ORDER");
 
         return PaymentDtos.InitiatePaymentResponse.builder()
                 .razorpayOrderId(result.getRazorpayOrderId())
@@ -122,6 +140,7 @@ public class PaymentService {
         // Idempotency check: if already captured, return success immediately without duplicate inventory processing
         if (payment.getStatus() == PaymentStatus.CAPTURED) {
             log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(), targetOrderId);
+            recordMetric("payment.verified.success.total", "channel", "DIRECT_IDEMPOTENT");
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(true)
                     .message("Payment already verified")
@@ -227,6 +246,8 @@ public class PaymentService {
                     .razorpayPaymentId(request.getRazorpayPaymentId())
                     .build());
 
+            recordMetric("payment.verified.success.total", "channel", "DIRECT");
+
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(true)
                     .message("Payment verified successfully")
@@ -242,6 +263,8 @@ public class PaymentService {
                     .build();
             payment.addEvent(event);
             paymentRepository.save(payment);
+
+            recordMetric("payment.verified.failed.total", "reason", "signature_or_gateway_failure");
 
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(false)
@@ -261,6 +284,8 @@ public class PaymentService {
             JsonNode root = objectMapper.readTree(rawBody);
             String eventType = root.path("event").asText();
             String eventId = root.path("event_id").asText();
+
+            recordMetric("payment.webhook.received.total", "event", eventType != null ? eventType : "unknown");
 
             // Duplicate Webhook Protection (Fast Read Check)
             if (eventId != null && !eventId.trim().isEmpty()) {
@@ -328,6 +353,7 @@ public class PaymentService {
                         orderService.setRazorpayPaymentId(order.getId(), razorpayPaymentId);
                         orderService.updateOrderStatus(order.getId(), OrderStatus.PAID, "Payment captured via webhook", "RAZORPAY_WEBHOOK");
                         orderService.confirmOrderInventory(order.getId());
+                        recordMetric("payment.verified.success.total", "channel", "WEBHOOK");
                     }
                 }
 
@@ -589,37 +615,125 @@ public class PaymentService {
         }
 
         // Dispatches refund exclusively to Razorpay gateway (source payment method)
-        PaymentGateway.RefundResult refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), refundAmt, reason);
-        if (refundRecord != null) {
-            refundRecord.setRazorpayRefundId(refundResult.getRefundId());
-            refundRecord.setRazorpayPaymentId(order.getRazorpayPaymentId());
-            if ("PROCESSED".equalsIgnoreCase(refundResult.getStatus())) {
-                refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
+        PaymentGateway.RefundResult refundResult;
+        try {
+            refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), refundAmt, reason);
+            boolean isGatewayProcessed = "PROCESSED".equalsIgnoreCase(refundResult.getStatus());
+            if (refundRecord != null) {
+                refundRecord.setRazorpayRefundId(refundResult.getRefundId());
+                refundRecord.setRazorpayPaymentId(order.getRazorpayPaymentId());
+                if (isGatewayProcessed) {
+                    refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
+                } else {
+                    refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+                }
             }
-        }
-        if (refundRepository != null && refundRecord != null) {
-            refundRepository.save(refundRecord);
-        }
+            if (refundRepository != null && refundRecord != null) {
+                refundRepository.save(refundRecord);
+            }
 
-        BigDecimal newTotalRefunded = alreadyRefunded.add(refundAmt);
-        boolean isFullRefund = newTotalRefunded.compareTo(originalPaidAmount) >= 0;
+            BigDecimal newTotalRefunded = alreadyRefunded.add(refundAmt);
+            boolean isFullRefund = newTotalRefunded.compareTo(originalPaidAmount) >= 0;
 
-        if (payment != null) {
-            payment.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
-            PaymentEvent event = PaymentEvent.builder()
-                    .payment(payment)
-                    .eventType(isFullRefund ? "REFUND_FULL_PROCESSED" : "REFUND_PARTIAL_PROCESSED")
-                    .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + refundAmt + "\",\"isFull\":" + isFullRefund + "}")
-                    .createdBy("SYSTEM_REFUND")
+            if (payment != null) {
+                if (isGatewayProcessed) {
+                    payment.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
+                }
+                PaymentEvent event = PaymentEvent.builder()
+                        .payment(payment)
+                        .eventType(isGatewayProcessed ? (isFullRefund ? "REFUND_FULL_PROCESSED" : "REFUND_PARTIAL_PROCESSED") : "REFUND_DISPATCH_PENDING")
+                        .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + refundAmt + "\",\"isFull\":" + isFullRefund + ",\"gatewayStatus\":\"" + refundResult.getStatus() + "\"}")
+                        .createdBy("SYSTEM_REFUND")
+                        .build();
+                payment.addEvent(event);
+                paymentRepository.save(payment);
+            }
+
+            if (order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REFUNDED) {
+                OrderStatus targetOrderStatus = (isGatewayProcessed && isFullRefund) ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING;
+                String statusMsg = isGatewayProcessed 
+                        ? ("Refund processed: ₹" + refundAmt + " (Ref: " + refundResult.getRefundId() + ")")
+                        : ("Refund initiated with gateway: ₹" + refundAmt + " (Ref: " + refundResult.getRefundId() + " - pending settlement)");
+                orderService.updateOrderStatus(orderId, targetOrderStatus, statusMsg, "SYSTEM_REFUND");
+            }
+
+            try {
+                if (notificationEventService != null) {
+                    com.sporekart.notification.domain.NotificationEventType refundEventType = isGatewayProcessed 
+                            ? com.sporekart.notification.domain.NotificationEventType.REFUND_COMPLETED 
+                            : com.sporekart.notification.domain.NotificationEventType.REFUND_INITIATED;
+                    String refundSubject = isGatewayProcessed 
+                            ? "Refund Processed: ₹" + refundAmt + " for Order #" + order.getOrderNumber() + " 💸"
+                            : "Refund Initiated: ₹" + refundAmt + " for Order #" + order.getOrderNumber() + " ⏳";
+                    String recipientEmail = order.getShippingAddress() != null ? order.getShippingAddress().getEmail() : null;
+                    String recipientName = (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null)
+                            ? order.getShippingAddress().getRecipientName() : "Valued Customer";
+                    notificationEventService.recordEvent(
+                            refundEventType,
+                            "ORDER",
+                            orderId,
+                            order.getUserId(),
+                            recipientEmail,
+                            recipientName,
+                            refundSubject,
+                            java.util.Map.of(
+                                    "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : orderId.toString(),
+                                    "refundAmount", refundAmt.toString(),
+                                    "refundId", refundResult.getRefundId() != null ? refundResult.getRefundId() : "PENDING",
+                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId
+                            ),
+                            "REFUND_" + refundEventType.name() + ":" + orderId + ":" + (refundResult.getRefundId() != null ? refundResult.getRefundId() : System.currentTimeMillis())
+                    );
+                }
+            } catch (Exception notifEx) {
+                log.warn("Failed to dispatch refund notification for order {}: {}", orderId, notifEx.getMessage());
+            }
+
+            return refundResult;
+        } catch (Exception ex) {
+            log.error("Razorpay gateway refund dispatch failed for order {}: {}", orderId, ex.getMessage());
+            if (refundRecord != null) {
+                refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+                refundRecord.setFailureReason("Gateway dispatch pending: " + ex.getMessage());
+                if (refundRepository != null) {
+                    refundRepository.save(refundRecord);
+                }
+            }
+            if (order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REFUNDED) {
+                orderService.updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending gateway processing: " + (reason != null ? reason : "Order cancellation"), "SYSTEM_REFUND");
+            }
+            try {
+                if (notificationEventService != null) {
+                    String recipientEmail = order.getShippingAddress() != null ? order.getShippingAddress().getEmail() : null;
+                    String recipientName = (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null)
+                            ? order.getShippingAddress().getRecipientName() : "Valued Customer";
+                    notificationEventService.recordEvent(
+                            com.sporekart.notification.domain.NotificationEventType.REFUND_FAILED,
+                            "ORDER",
+                            orderId,
+                            order.getUserId(),
+                            recipientEmail,
+                            recipientName,
+                            "Refund Dispatch Failed for Order #" + order.getOrderNumber(),
+                            java.util.Map.of(
+                                    "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : orderId.toString(),
+                                    "refundAmount", refundAmt.toString(),
+                                    "error", ex.getMessage() != null ? ex.getMessage() : "Gateway timeout",
+                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId
+                            ),
+                            "REFUND_FAILED:" + orderId + ":" + System.currentTimeMillis()
+                    );
+                }
+            } catch (Exception notifEx) {
+                log.warn("Failed to dispatch refund failure notification for order {}: {}", orderId, notifEx.getMessage());
+            }
+            return PaymentGateway.RefundResult.builder()
+                    .refundId(null)
+                    .razorpayPaymentId(order.getRazorpayPaymentId())
+                    .amountInr(refundAmt)
+                    .status("PENDING")
                     .build();
-            payment.addEvent(event);
-            paymentRepository.save(payment);
         }
-
-        OrderStatus targetOrderStatus = isFullRefund ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING;
-        orderService.updateOrderStatus(orderId, targetOrderStatus, "Refund processed: ₹" + refundAmt + " (Ref: " + refundResult.getRefundId() + ")", "SYSTEM_REFUND");
-
-        return refundResult;
     }
 
     @Transactional(readOnly = true)
@@ -641,25 +755,25 @@ public class PaymentService {
                 Order orderEntity = orderOpt.get();
                 validateOrderAccess(orderEntity, userId, sessionId);
 
-                OrderResponse order = orderService.getOrderById(id);
-                String city = (order.getShippingAddress() != null && order.getShippingAddress().getCity() != null)
-                        ? order.getShippingAddress().getCity() : "";
-                String state = (order.getShippingAddress() != null && order.getShippingAddress().getState() != null)
-                        ? order.getShippingAddress().getState() : "";
+                OrderAddressSnapshot shippingAddress = OrderAddressSnapshot.fromJson(orderEntity.getShippingAddressJson());
+                String city = (shippingAddress != null && shippingAddress.getCity() != null)
+                        ? shippingAddress.getCity() : "";
+                String state = (shippingAddress != null && shippingAddress.getState() != null)
+                        ? shippingAddress.getState() : "";
                 String subtitle = (!city.isEmpty() || !state.isEmpty())
                         ? (city + (city.isEmpty() || state.isEmpty() ? "" : ", ") + state) : "Delivery Order";
-                String statusStr = order.getStatus() != null ? order.getStatus().name() : "PENDING_PAYMENT";
-                String orderNo = order.getOrderNumber() != null ? order.getOrderNumber() : order.getId().toString().substring(0, 8);
+                String statusStr = orderEntity.getStatus() != null ? orderEntity.getStatus().name() : "PENDING_PAYMENT";
+                String orderNo = orderEntity.getOrderNumber() != null ? orderEntity.getOrderNumber() : orderEntity.getId().toString().substring(0, 8);
 
                 return PaymentDtos.PaymentSummaryResponse.builder()
                         .type("ORDER")
-                        .id(order.getId())
+                        .id(orderEntity.getId())
                         .title("Order #" + orderNo)
                         .subtitle(subtitle)
-                        .amountInr(order.getTotalAmountInr() != null ? order.getTotalAmountInr() : BigDecimal.ZERO)
+                        .amountInr(orderEntity.getTotalAmountInr() != null ? orderEntity.getTotalAmountInr() : BigDecimal.ZERO)
                         .status(statusStr)
-                        .customerName(order.getShippingAddress() != null ? order.getShippingAddress().getRecipientName() : null)
-                        .customerPhone(order.getShippingAddress() != null ? order.getShippingAddress().getPhone() : null)
+                        .customerName(shippingAddress != null ? shippingAddress.getRecipientName() : null)
+                        .customerPhone(shippingAddress != null ? shippingAddress.getPhone() : null)
                         .build();
             } else {
                 isEnrollment = true;
@@ -746,6 +860,8 @@ public class PaymentService {
                 .build();
         payment.addEvent(event);
         paymentRepository.save(payment);
+
+        recordMetric("payment.initiated.total", "channel", "ENROLLMENT");
 
         return PaymentDtos.InitiatePaymentResponse.builder()
                 .razorpayOrderId(result.getRazorpayOrderId())
@@ -868,6 +984,8 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), rzpPaymentId);
+
+        recordMetric("payment.verified.success.total", "channel", "ENROLLMENT");
 
         return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
                 .isSuccess(true)

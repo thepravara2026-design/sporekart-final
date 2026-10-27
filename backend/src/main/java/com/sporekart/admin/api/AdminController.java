@@ -7,6 +7,8 @@ import com.sporekart.identity.infrastructure.UserRepository;
 import com.sporekart.order.infrastructure.OrderRepository;
 import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.training.infrastructure.CourseRepository;
+import com.sporekart.training.infrastructure.EnrollmentRepository;
+import com.sporekart.payment.infrastructure.RefundRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,8 @@ public class AdminController {
     private final OrderRepository orderRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final RefundRepository refundRepository;
 
     @GetMapping("/audit-logs")
     public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(
@@ -53,14 +57,29 @@ public class AdminController {
         long activeOrders = orderRepository.countActiveOrders();
         long totalCustomers = userRepository.count();
         long activeCourses = courseRepository.count();
-        BigDecimal totalRevenue = orderRepository.calculateTotalRevenueInr();
+
+        BigDecimal orderRevenue = orderRepository.calculateTotalRevenueInr();
+        if (orderRevenue == null) orderRevenue = BigDecimal.ZERO;
+
+        BigDecimal tuitionRevenue = enrollmentRepository.calculateTotalTuitionRevenueInr();
+        if (tuitionRevenue == null) tuitionRevenue = BigDecimal.ZERO;
+
+        BigDecimal completedRefunds = refundRepository.sumTotalProcessedRefunds();
+        if (completedRefunds == null) completedRefunds = BigDecimal.ZERO;
+
+        BigDecimal grossRevenue = orderRevenue.add(tuitionRevenue);
+        BigDecimal netRevenue = grossRevenue.subtract(completedRefunds);
 
         AdminAnalyticsOverview overview = AdminAnalyticsOverview.builder()
                 .totalProducts(totalProducts)
                 .activeOrders(activeOrders)
                 .totalCustomers(totalCustomers)
                 .activeCourses(activeCourses)
-                .totalRevenueInr(totalRevenue != null ? totalRevenue : BigDecimal.ZERO)
+                .totalRevenueInr(grossRevenue)
+                .grossRevenueInr(grossRevenue)
+                .netRevenueInr(netRevenue)
+                .totalRefundsInr(completedRefunds)
+                .trainingTuitionRevenueInr(tuitionRevenue)
                 .systemHealthStatus("HEALTHY")
                 .build();
         return ResponseEntity.ok(ApiResponse.success(overview));
@@ -76,6 +95,10 @@ public class AdminController {
         private long totalCustomers;
         private long activeCourses;
         private BigDecimal totalRevenueInr;
+        private BigDecimal grossRevenueInr;
+        private BigDecimal netRevenueInr;
+        private BigDecimal totalRefundsInr;
+        private BigDecimal trainingTuitionRevenueInr;
         private String systemHealthStatus;
     }
 }

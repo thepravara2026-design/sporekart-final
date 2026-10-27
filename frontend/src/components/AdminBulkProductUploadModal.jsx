@@ -371,7 +371,7 @@ export default function AdminBulkProductUploadModal({
         });
       }
 
-      const workbook = XLSX.read(buffer, { type: 'array' });
+      const workbook = XLSX.read(buffer, { type: 'array', cellFormula: false, cellHTML: false, cellStyles: false });
 
         // Find primary products sheet
         let sheetName = workbook.SheetNames.find(s => s.toLowerCase().includes('product')) || workbook.SheetNames[0];
@@ -390,10 +390,13 @@ export default function AdminBulkProductUploadModal({
         let lastSeenHandle = null;
 
         rawJson.forEach((rawRow, index) => {
-          // Normalize row keys to handle different column label spellings
+          // Normalize row keys and protect against prototype pollution
           const row = {};
           Object.keys(rawRow).forEach(k => {
-            row[normalizeKey(k)] = rawRow[k];
+            const normalized = normalizeKey(k);
+            if (normalized !== '__proto__' && normalized !== 'constructor' && normalized !== 'prototype') {
+              row[normalized] = rawRow[k];
+            }
           });
 
           // Identify handle or title

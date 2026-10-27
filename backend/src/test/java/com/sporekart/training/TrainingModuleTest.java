@@ -138,6 +138,10 @@ public class TrainingModuleTest {
 
         // Verify Event Listener granted TRAINING capability to Customer domain!
         CustomerProfile profileAfter = customerService.getCustomerProfile(userId);
+        for (int i = 0; i < 30 && !profileAfter.isHasTrainingCapability(); i++) {
+            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+            profileAfter = customerService.getCustomerProfile(userId);
+        }
         assertTrue(profileAfter.isHasTrainingCapability());
         assertNotNull(profileAfter.getTrainingCapabilityGrantedAt());
     }

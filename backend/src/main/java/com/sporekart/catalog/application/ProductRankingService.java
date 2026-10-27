@@ -23,6 +23,22 @@ public class ProductRankingService {
     private final OrderRepository orderRepository;
     private final ProductReviewRepository reviewRepository;
 
+    private static class CachedMetrics {
+        final Map<UUID, ProductMetrics> metricsMap;
+        final long expiresAt;
+
+        CachedMetrics(Map<UUID, ProductMetrics> metricsMap, long ttlMillis) {
+            this.metricsMap = metricsMap;
+            this.expiresAt = System.currentTimeMillis() + ttlMillis;
+        }
+
+        boolean isValid() {
+            return System.currentTimeMillis() < expiresAt;
+        }
+    }
+
+    private volatile CachedMetrics cachedMetrics = null;
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -50,47 +66,69 @@ public class ProductRankingService {
     }
 
     public Map<UUID, ProductMetrics> getAllProductMetrics() {
-        Map<UUID, ProductMetrics> metricsMap = new HashMap<>();
-
-        // 1. Fetch Sales Aggregations
-        try {
-            List<Object[]> salesData = orderRepository.findTopSellingProductIds();
-            if (salesData != null) {
-                for (Object[] row : salesData) {
-                    if (row != null && row.length >= 2 && row[0] instanceof UUID pid && row[1] instanceof Number numSales) {
-                        metricsMap.put(pid, ProductMetrics.builder()
-                                .productId(pid)
-                                .totalUnitsSold(numSales.longValue())
-                                .build());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to load top selling product aggregations for ranking: {}", e.getMessage());
+        CachedMetrics cached = this.cachedMetrics;
+        if (cached != null && cached.isValid()) {
+            return cached.metricsMap;
         }
 
-        // 2. Fetch Published Review Aggregations
-        try {
-            List<Object[]> reviewData = reviewRepository.findReviewStatsGroupedByProduct(ReviewStatus.PUBLISHED);
-            if (reviewData != null) {
-                for (Object[] row : reviewData) {
-                    if (row != null && row.length >= 3 && row[0] instanceof UUID pid) {
-                        double avgRating = row[1] instanceof Number numAvg ? numAvg.doubleValue() : 0.0;
-                        long totalRev = row[2] instanceof Number numRev ? numRev.longValue() : 0L;
-                        long verRev = row.length >= 4 && row[3] instanceof Number numVer ? numVer.longValue() : 0L;
+        synchronized (this) {
+            cached = this.cachedMetrics;
+            if (cached != null && cached.isValid()) {
+                return cached.metricsMap;
+            }
 
-                        ProductMetrics metrics = metricsMap.computeIfAbsent(pid, id -> ProductMetrics.builder().productId(id).build());
-                        metrics.setAverageRating(Math.round(avgRating * 10.0) / 10.0);
-                        metrics.setReviewCount(totalRev);
-                        metrics.setVerifiedCount(verRev);
+            Map<UUID, ProductMetrics> metricsMap = new HashMap<>();
+
+            // 1. Fetch Sales Aggregations
+            try {
+                List<Object[]> salesData = orderRepository.findTopSellingProductIds();
+                if (salesData != null) {
+                    for (Object[] row : salesData) {
+                        if (row != null && row.length >= 2 && row[0] instanceof UUID pid && row[1] instanceof Number numSales) {
+                            metricsMap.put(pid, ProductMetrics.builder()
+                                    .productId(pid)
+                                    .totalUnitsSold(numSales.longValue())
+                                    .build());
+                        }
                     }
                 }
+            } catch (Exception e) {
+                log.warn("Failed to load top selling product aggregations for ranking: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            log.warn("Failed to load review stats aggregations for ranking: {}", e.getMessage());
-        }
 
-        return metricsMap;
+            // 2. Fetch Published Review Aggregations
+            try {
+                List<Object[]> reviewData = reviewRepository.findReviewStatsGroupedByProduct(ReviewStatus.PUBLISHED);
+                if (reviewData != null) {
+                    for (Object[] row : reviewData) {
+                        if (row != null && row.length >= 3 && row[0] instanceof UUID pid) {
+                            double avgRating = row[1] instanceof Number numAvg ? numAvg.doubleValue() : 0.0;
+                            long totalRev = row[2] instanceof Number numRev ? numRev.longValue() : 0L;
+                            long verRev = row.length >= 4 && row[3] instanceof Number numVer ? numVer.longValue() : 0L;
+
+                            ProductMetrics metrics = metricsMap.computeIfAbsent(pid, id -> ProductMetrics.builder().productId(id).build());
+                            metrics.setAverageRating(Math.round(avgRating * 10.0) / 10.0);
+                            metrics.setReviewCount(totalRev);
+                            metrics.setVerifiedCount(verRev);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load review stats aggregations for ranking: {}", e.getMessage());
+            }
+
+            this.cachedMetrics = new CachedMetrics(metricsMap, 5 * 60 * 1000L); // 5-minute TTL
+            return metricsMap;
+        }
+    }
+
+    public UUID getTopSellingProductId() {
+        Map<UUID, ProductMetrics> metrics = getAllProductMetrics();
+        return metrics.values().stream()
+                .filter(m -> m.getTotalUnitsSold() > 0)
+                .max(Comparator.comparingLong(ProductMetrics::getTotalUnitsSold))
+                .map(ProductMetrics::getProductId)
+                .orElse(null);
     }
 
     public List<CatalogDtos.ProductDto> enrichAndRankProducts(List<CatalogDtos.ProductDto> products, String categorySlug, String sortBy) {

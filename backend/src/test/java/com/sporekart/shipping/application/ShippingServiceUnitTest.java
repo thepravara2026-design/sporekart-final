@@ -307,5 +307,25 @@ class ShippingServiceUnitTest {
                 eq("https://custom-tracking.sporekart.in/AWB-CUSTOM-123")
         );
     }
+
+    @Test
+    @DisplayName("SHP-12: Generate shipping label URL returns provider label")
+    void SHP_12_getShippingLabelUrl_success() {
+        when(shipmentRepository.findById(testShipment.getId())).thenReturn(Optional.of(testShipment));
+        when(shippingProvider.generateLabel(testShipment.getProviderShipmentId(), testShipment.getAwbCode()))
+                .thenReturn("https://track.shiprocket.in/label/AWB123456");
+
+        String labelUrl = shippingService.getShippingLabelUrl(testShipment.getId());
+        assertEquals("https://track.shiprocket.in/label/AWB123456", labelUrl);
+    }
+
+    @Test
+    @DisplayName("SHP-13: Generate shipping label for cancelled shipment throws IllegalStateException")
+    void SHP_13_getShippingLabelUrl_cancelled_throws() {
+        testShipment.setStatus(ShipmentStatus.CANCELLED);
+        when(shipmentRepository.findById(testShipment.getId())).thenReturn(Optional.of(testShipment));
+
+        assertThrows(IllegalStateException.class, () -> shippingService.getShippingLabelUrl(testShipment.getId()));
+    }
 }
 

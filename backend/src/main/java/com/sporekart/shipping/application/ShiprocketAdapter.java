@@ -285,6 +285,27 @@ public class ShiprocketAdapter implements ShippingProvider {
         }
     }
 
+    @Override
+    public String generateLabel(String providerShipmentId, String awbCode) {
+        log.info("Generating shipping label via Shiprocket adapter for shipment: {} [mode: {}]",
+                sanitizeForLog(providerShipmentId), isMockMode() ? "MOCK" : "LIVE");
+
+        if (isMockMode() || shiprocketRestClient == null) {
+            return "https://shiprocket.co/label/mock/" + (awbCode != null ? awbCode : providerShipmentId);
+        }
+
+        try {
+            ShiprocketDtos.GenerateLabelResponse labelResponse = shiprocketRestClient.generateLabel(providerShipmentId);
+            if (labelResponse != null && labelResponse.getLabelUrl() != null && !labelResponse.getLabelUrl().isBlank()) {
+                return labelResponse.getLabelUrl();
+            }
+            return "https://track.shiprocket.in/label/" + (awbCode != null ? awbCode : providerShipmentId);
+        } catch (Exception e) {
+            log.warn("Failed to generate live Shiprocket label for shipment {}: {}", sanitizeForLog(providerShipmentId), e.getMessage());
+            return "https://track.shiprocket.in/label/" + (awbCode != null ? awbCode : providerShipmentId);
+        }
+    }
+
     public boolean isMockMode() {
         return !useRealShiprocket || email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty();
     }

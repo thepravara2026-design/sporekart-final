@@ -66,10 +66,44 @@ public class CartService {
         return Boolean.TRUE.equals(isPostgreSql);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public CartResponse getCartResponse(UUID userId, String sessionId) {
-        Cart cart = getOrCreateCart(userId, sessionId);
+        Cart cart = findActiveCart(userId, sessionId);
+        if (cart == null) {
+            Cart emptyCart = new Cart(userId, sessionId);
+            return buildCartResponse(emptyCart);
+        }
         return buildCartResponse(cart);
+    }
+
+    private Cart findActiveCart(UUID userId, String sessionId) {
+        if (userId != null) {
+            List<Cart> userCarts = cartRepository.findAllByUserIdAndStatusOrderByUpdatedAtDesc(userId, CartStatus.ACTIVE);
+            if (userCarts != null && !userCarts.isEmpty()) {
+                return userCarts.get(0);
+            }
+            Optional<Cart> fallback = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
+            if (fallback != null && fallback.isPresent()) {
+                return fallback.get();
+            }
+        }
+
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            List<Cart> guestCarts = cartRepository.findAllBySessionIdAndStatusOrderByUpdatedAtDesc(sessionId.trim(), CartStatus.ACTIVE);
+            if (guestCarts != null && !guestCarts.isEmpty()) {
+                return guestCarts.get(0);
+            }
+            Optional<Cart> fallbackGuest = cartRepository.findBySessionIdAndStatus(sessionId.trim(), CartStatus.ACTIVE);
+            if (fallbackGuest != null && fallbackGuest.isPresent()) {
+                return fallbackGuest.get();
+            }
+        }
+
+        if (userId == null && (sessionId == null || sessionId.trim().isEmpty())) {
+            throw new IllegalArgumentException("Either userId or sessionId must be provided");
+        }
+
+        return null;
     }
 
     @Transactional
@@ -373,11 +407,11 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartValidationResponse validateCartForCheckout(UUID userId, String sessionId) {
-        Cart cart = getOrCreateCart(userId, sessionId);
+        Cart cart = findActiveCart(userId, sessionId);
         List<String> warnings = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
-        if (cart.getItems().isEmpty()) {
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
             errors.add("Your cart is empty");
             return new CartValidationResponse(false, warnings, errors);
         }

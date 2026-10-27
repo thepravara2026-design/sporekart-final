@@ -17,28 +17,35 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     Optional<Product> findBySlug(String slug);
     boolean existsBySlug(String slug);
     
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     List<Product> findByIsActiveTrue();
 
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     List<Product> findByStatusAndIsActiveTrue(ProductStatus status);
 
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     List<Product> findByProductTypeAndIsActiveTrue(ProductType type);
 
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     @Query("SELECT p FROM Product p LEFT JOIN p.category c WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE AND (c.slug = :categorySlug OR p.productType = :productType)")
     List<Product> findByCategorySlugOrProductType(@Param("categorySlug") String categorySlug, @Param("productType") ProductType productType);
 
-    @EntityGraph(attributePaths = {"category", "variants"})
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     @Query("SELECT p FROM Product p JOIN p.category c WHERE c.slug = :categorySlug AND p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE")
     List<Product> findByCategorySlug(@Param("categorySlug") String categorySlug);
 
-    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.category c " +
+    @EntityGraph(attributePaths = {"category", "productInformation"})
+    @Query(value = "SELECT p FROM Product p LEFT JOIN p.category c " +
+           "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
+           "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
+           "AND (:productType IS NULL OR p.productType = :productType) " +
+           "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))",
+           countQuery = "SELECT count(p) FROM Product p LEFT JOIN p.category c " +
            "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
            "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
            "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
@@ -51,13 +58,20 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Pageable pageable
     );
 
-    @Query("SELECT p FROM Product p LEFT JOIN p.category c " +
+    @EntityGraph(attributePaths = {"category", "productInformation"})
+    @Query(value = "SELECT p FROM Product p LEFT JOIN p.category c " +
            "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
            "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
            "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
            "AND (:productType IS NULL OR p.productType = :productType) " +
            "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) " +
-           "ORDER BY (SELECT COALESCE(MIN(v.priceInr), 0) FROM ProductVariant v WHERE v.product = p AND v.isActive = true) ASC")
+           "ORDER BY (SELECT COALESCE(MIN(v.priceInr), 0) FROM ProductVariant v WHERE v.product = p AND v.isActive = true) ASC, p.id ASC",
+           countQuery = "SELECT count(p) FROM Product p LEFT JOIN p.category c " +
+           "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
+           "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
+           "AND (:productType IS NULL OR p.productType = :productType) " +
+           "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
     Page<Product> searchProductsOrderByPriceAsc(
             @Param("categorySlug") String categorySlug,
             @Param("productType") ProductType productType,
@@ -65,13 +79,20 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Pageable pageable
     );
 
-    @Query("SELECT p FROM Product p LEFT JOIN p.category c " +
+    @EntityGraph(attributePaths = {"category", "productInformation"})
+    @Query(value = "SELECT p FROM Product p LEFT JOIN p.category c " +
            "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
            "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
            "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
            "AND (:productType IS NULL OR p.productType = :productType) " +
            "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) " +
-           "ORDER BY (SELECT COALESCE(MIN(v.priceInr), 0) FROM ProductVariant v WHERE v.product = p AND v.isActive = true) DESC")
+           "ORDER BY (SELECT COALESCE(MIN(v.priceInr), 0) FROM ProductVariant v WHERE v.product = p AND v.isActive = true) DESC, p.id ASC",
+           countQuery = "SELECT count(p) FROM Product p LEFT JOIN p.category c " +
+           "WHERE p.isActive = true AND p.status = com.sporekart.catalog.domain.ProductStatus.ACTIVE " +
+           "AND (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
+           "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug) " +
+           "AND (:productType IS NULL OR p.productType = :productType) " +
+           "AND (:searchQuery IS NULL OR :searchQuery = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchQuery, '%')))")
     Page<Product> searchProductsOrderByPriceDesc(
             @Param("categorySlug") String categorySlug,
             @Param("productType") ProductType productType,
@@ -79,6 +100,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"category", "productInformation", "variants"})
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.category c " +
            "WHERE (:categorySlug IS NULL OR :categorySlug = '' OR :categorySlug = 'ALL' " +
            "     OR LOWER(c.slug) = LOWER(:categorySlug) OR LOWER(c.name) = LOWER(:categorySlug) OR CAST(c.id AS string) = :categorySlug " +

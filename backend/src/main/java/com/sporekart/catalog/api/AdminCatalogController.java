@@ -7,6 +7,7 @@ import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin/catalog")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminCatalogController {
 
@@ -47,6 +49,13 @@ public class AdminCatalogController {
             org.springframework.security.core.Authentication authentication) {
         Product product = adminCatalogService.createProduct(request);
         adminService.logAction(getAdminUserId(authentication), "CREATE_PRODUCT", "Product", product.getId().toString(), null, product.getStatus().name(), "Created product: " + product.getTitle(), null);
+        return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
+    }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<ApiResponse<CatalogDtos.AdminProductDto>> getProduct(
+            @PathVariable("id") UUID productId) {
+        Product product = adminCatalogService.getProduct(productId);
         return ResponseEntity.ok(ApiResponse.success(catalogApplicationService.mapToAdminProductDto(product)));
     }
 

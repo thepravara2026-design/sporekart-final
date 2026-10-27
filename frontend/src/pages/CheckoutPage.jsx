@@ -22,6 +22,7 @@ export default function CheckoutPage({ user, setUser }) {
   const [validationResult, setValidationResult] = useState(null);
   const [validating, setValidating] = useState(true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('upi');
+  const [checkoutError, setCheckoutError] = useState(null);
 
   // New Address Form State & Validation
   const [newAddress, setNewAddress] = useState({
@@ -161,6 +162,7 @@ export default function CheckoutPage({ user, setUser }) {
 
   const handlePlaceOrder = async () => {
     setAddressFormErrors({});
+    setCheckoutError(null);
     let targetAddressId = selectedAddressId;
     let inlineShippingAddress = null;
 
@@ -197,11 +199,12 @@ export default function CheckoutPage({ user, setUser }) {
       const status = err.response?.status;
       const errCode = err.response?.data?.error?.code;
       const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to place order';
-      if (status === 409 || errCode === 'DUPLICATE_IDENTITY_CONFLICT') {
+      if (status === 409 && errCode === 'DUPLICATE_IDENTITY_CONFLICT') {
         const phoneVal = inlineShippingAddress?.phone || newAddress.phone || user?.phone || '';
         setConflictInfo({ isOpen: true, value: phoneVal, field: 'phone' });
       } else {
         console.error('Checkout order error:', msg);
+        setCheckoutError(msg);
       }
     } finally {
       setSubmitting(false);
@@ -607,6 +610,16 @@ export default function CheckoutPage({ user, setUser }) {
                 READY
               </span>
             </div>
+
+            {checkoutError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="font-bold block">Checkout Notice</span>
+                  <span>{checkoutError}</span>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={handlePlaceOrder}

@@ -20,6 +20,9 @@ public interface BatchRepository extends JpaRepository<Batch, UUID> {
     List<Batch> findByCourseId(UUID courseId);
 
     @EntityGraph(attributePaths = {"schedules"})
+    List<Batch> findByCourseIdIn(List<UUID> courseIds);
+
+    @EntityGraph(attributePaths = {"schedules"})
     List<Batch> findByCourseIdAndStatus(UUID courseId, BatchStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

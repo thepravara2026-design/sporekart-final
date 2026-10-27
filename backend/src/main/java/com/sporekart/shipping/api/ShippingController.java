@@ -99,6 +99,17 @@ public class ShippingController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/label/{shipmentId}")
+    public ResponseEntity<ApiResponse<ShippingDtos.ShippingLabelResponse>> getShippingLabel(
+            @PathVariable UUID shipmentId) {
+        String labelUrl = shippingService.getShippingLabelUrl(shipmentId);
+        return ResponseEntity.ok(ApiResponse.success(ShippingDtos.ShippingLabelResponse.builder()
+                .shipmentId(shipmentId)
+                .labelUrl(labelUrl)
+                .build()));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/simulate-event/{shipmentId}")
     public ResponseEntity<ApiResponse<ShippingDtos.ShipmentResponse>> simulateCourierEvent(
             @PathVariable UUID shipmentId,

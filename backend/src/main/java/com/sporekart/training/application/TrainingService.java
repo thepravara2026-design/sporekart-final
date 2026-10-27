@@ -42,6 +42,10 @@ public class TrainingService {
     private final UserRepository userRepository;
     @org.springframework.context.annotation.Lazy
     private final com.sporekart.payment.application.PaymentGateway paymentGateway;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.infrastructure.PaymentRepository paymentRepository;
+    @org.springframework.context.annotation.Lazy
+    private final com.sporekart.payment.infrastructure.RefundRepository refundRepository;
     private final com.sporekart.promotion.application.PromotionService promotionService;
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
     private final ApplicationEventPublisher eventPublisher;
@@ -109,8 +113,18 @@ public class TrainingService {
     @Transactional
     public List<Course> getAllActiveCourses() {
         List<Course> courses = courseRepository.findByIsActiveTrue();
+        if (courses.isEmpty()) {
+            return courses;
+        }
+
+        List<UUID> courseIds = courses.stream().map(Course::getId).collect(java.util.stream.Collectors.toList());
+        List<Batch> allBatches = batchRepository.findByCourseIdIn(courseIds);
+        java.util.Map<UUID, List<Batch>> batchesByCourseId = allBatches.stream()
+                .filter(b -> b.getCourse() != null && b.getCourse().getId() != null)
+                .collect(java.util.stream.Collectors.groupingBy(b -> b.getCourse().getId()));
+
         for (Course course : courses) {
-            List<Batch> batches = batchRepository.findByCourseId(course.getId());
+            List<Batch> batches = batchesByCourseId.get(course.getId());
             if (batches == null || batches.isEmpty()) {
                 log.info("Auto-provisioning default upcoming batch for course: {}", course.getTitle());
                 String codeSlug = course.getSlug() != null ? course.getSlug().replace("-", "").toUpperCase() : "COURSE";
@@ -127,6 +141,14 @@ public class TrainingService {
             }
         }
         return courses;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Batch> getBatchesForCourseIds(List<UUID> courseIds) {
+        if (courseIds == null || courseIds.isEmpty()) {
+            return List.of();
+        }
+        return batchRepository.findByCourseIdIn(courseIds);
     }
 
     @Transactional(readOnly = true)
@@ -168,6 +190,23 @@ public class TrainingService {
     @Transactional(readOnly = true)
     public List<Batch> getBatchesForCourse(UUID courseId) {
         return batchRepository.findByCourseId(courseId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Batch> getAllBatches() {
+        return batchRepository.findAll();
+    }
+
+    @Transactional
+    public Batch cancelBatch(UUID batchId) {
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found: " + batchId));
+        if (batch.getStatus() == BatchStatus.COMPLETED) {
+            throw new IllegalStateException("Completed batch cannot be cancelled.");
+        }
+        batch.setStatus(BatchStatus.CANCELLED);
+        log.info("Batch cancelled by admin: ID {}, code {}", batch.getId(), batch.getBatchCode());
+        return batchRepository.save(batch);
     }
 
     @Transactional
@@ -233,7 +272,10 @@ public class TrainingService {
         Optional<Enrollment> existing = enrollmentRepository.findByUserIdAndBatchId(userId, batchId);
 
         if (existing.isPresent()) {
-            return existing.get();
+            Enrollment current = existing.get();
+            log.info("Idempotent enrollCustomer request: User {} already has enrollment {} (status: {}) for batch {}",
+                    userId, current.getId(), current.getStatus(), batchId);
+            return current;
         }
 
         Course course = batch.getCourse();
@@ -455,10 +497,78 @@ public class TrainingService {
         // Only issue a financial refund if previous status was CONFIRMED (meaning payment was actually completed)
         if (previousStatus == EnrollmentStatus.CONFIRMED && saved.getUserId() != null && saved.getFeePaidInr() != null && saved.getFeePaidInr().compareTo(java.math.BigDecimal.ZERO) > 0) {
             if (saved.getPaymentReference() != null && saved.getPaymentReference().startsWith("pay_") && paymentGateway != null) {
+                com.sporekart.payment.domain.Payment payment = null;
+                if (paymentRepository != null) {
+                    payment = paymentRepository.findByRazorpayPaymentId(saved.getPaymentReference()).orElse(null);
+                    if (payment == null) {
+                        payment = com.sporekart.payment.domain.Payment.builder()
+                                .orderId(null)
+                                .razorpayPaymentId(saved.getPaymentReference())
+                                .amountInr(saved.getFeePaidInr())
+                                .currency("INR")
+                                .status(com.sporekart.payment.domain.PaymentStatus.CAPTURED)
+                                .build();
+                        payment = paymentRepository.save(payment);
+                    }
+                }
+
+                String idempKey = "REFUND-TR-" + saved.getId() + "-" + saved.getFeePaidInr();
+                com.sporekart.payment.domain.Refund refundRecord = null;
+                if (refundRepository != null && payment != null) {
+                    refundRecord = refundRepository.findByIdempotencyKey(idempKey).orElse(null);
+                    if (refundRecord == null) {
+                        refundRecord = com.sporekart.payment.domain.Refund.builder()
+                                .payment(payment)
+                                .orderId(null)
+                                .userId(saved.getUserId())
+                                .amountInr(saved.getFeePaidInr())
+                                .currency("INR")
+                                .status(com.sporekart.payment.domain.RefundStatus.PENDING)
+                                .reason(reason != null ? reason : "Masterclass Training Enrollment Cancellation")
+                                .idempotencyKey(idempKey)
+                                .razorpayPaymentId(saved.getPaymentReference())
+                                .build();
+                        refundRecord = refundRepository.save(refundRecord);
+                    }
+                }
+
                 try {
-                    paymentGateway.refund(saved.getPaymentReference(), saved.getFeePaidInr(), reason != null ? reason : "Masterclass Training Enrollment Cancellation");
+                    com.sporekart.payment.application.PaymentGateway.RefundResult refundResult = paymentGateway.refund(
+                            saved.getPaymentReference(),
+                            saved.getFeePaidInr(),
+                            reason != null ? reason : "Masterclass Training Enrollment Cancellation"
+                    );
+                    if (refundRecord != null) {
+                        refundRecord.setRazorpayRefundId(refundResult.getRefundId());
+                        if ("PROCESSED".equalsIgnoreCase(refundResult.getStatus())) {
+                            refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
+                        }
+                        if (refundRepository != null) {
+                            refundRepository.save(refundRecord);
+                        }
+                    }
+                    if (payment != null && "PROCESSED".equalsIgnoreCase(refundResult.getStatus())) {
+                        payment.setStatus(com.sporekart.payment.domain.PaymentStatus.REFUNDED);
+                        com.sporekart.payment.domain.PaymentEvent event = com.sporekart.payment.domain.PaymentEvent.builder()
+                                .payment(payment)
+                                .eventType("ENROLLMENT_REFUND_PROCESSED")
+                                .eventDataJson("{\"enrollmentId\":\"" + saved.getId() + "\",\"refundId\":\"" + refundResult.getRefundId() + "\"}")
+                                .createdBy("TRAINING_SERVICE")
+                                .build();
+                        payment.addEvent(event);
+                        if (paymentRepository != null) {
+                            paymentRepository.save(payment);
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error("Failed to process Razorpay refund for training enrollment {}: {}", saved.getId(), ex.getMessage());
+                    if (refundRecord != null) {
+                        refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+                        refundRecord.setFailureReason("Gateway dispatch pending: " + ex.getMessage());
+                        if (refundRepository != null) {
+                            refundRepository.save(refundRecord);
+                        }
+                    }
                 }
             }
         }

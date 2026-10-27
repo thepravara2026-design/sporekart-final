@@ -89,15 +89,27 @@ public class InventoryRecord {
             throw new IllegalArgumentException("Restock quantity must be greater than zero");
         }
         if (fromSold) {
-            if (soldQuantity < quantity) {
-                throw new IllegalArgumentException("Cannot restock more than sold quantity. Sold: " + soldQuantity);
+            if (soldQuantity >= quantity) {
+                soldQuantity -= quantity;
+            } else if (reservedQuantity >= quantity) {
+                reservedQuantity -= quantity;
+            } else {
+                int fromSoldPart = Math.min(soldQuantity, quantity);
+                soldQuantity -= fromSoldPart;
+                int remaining = quantity - fromSoldPart;
+                reservedQuantity = Math.max(0, reservedQuantity - remaining);
             }
-            soldQuantity -= quantity;
         } else {
-            if (reservedQuantity < quantity) {
-                throw new IllegalArgumentException("Cannot restock more than reserved quantity. Reserved: " + reservedQuantity);
+            if (reservedQuantity >= quantity) {
+                reservedQuantity -= quantity;
+            } else if (soldQuantity >= quantity) {
+                soldQuantity -= quantity;
+            } else {
+                int fromReservedPart = Math.min(reservedQuantity, quantity);
+                reservedQuantity -= fromReservedPart;
+                int remaining = quantity - fromReservedPart;
+                soldQuantity = Math.max(0, soldQuantity - remaining);
             }
-            reservedQuantity -= quantity;
         }
         availableQuantity += quantity;
     }

@@ -58,12 +58,19 @@ public class NotificationEventService {
             Map<String, Object> payload,
             String deduplicationKey
     ) {
+        User cachedUser = null;
+        if (userId != null && userRepository != null) {
+            boolean needsEmail = (recipientEmail == null || recipientEmail.isBlank() || !recipientEmail.contains("@"));
+            boolean needsPhone = (recipientPhone == null || recipientPhone.isBlank());
+            boolean needsName = (recipientName == null || recipientName.isBlank());
+            if (needsEmail || needsPhone || needsName) {
+                cachedUser = userRepository.findById(userId).orElse(null);
+            }
+        }
+
         if (recipientEmail == null || recipientEmail.isBlank() || !recipientEmail.contains("@")) {
-            if (userId != null) {
-                recipientEmail = userRepository.findById(userId)
-                        .map(User::getEmail)
-                        .filter(e -> e != null && e.contains("@"))
-                        .orElse(null);
+            if (cachedUser != null && cachedUser.getEmail() != null && cachedUser.getEmail().contains("@")) {
+                recipientEmail = cachedUser.getEmail();
             }
         }
 
@@ -74,11 +81,8 @@ public class NotificationEventService {
 
         // Auto-resolve recipient phone if not provided
         if (recipientPhone == null || recipientPhone.isBlank()) {
-            if (userId != null) {
-                recipientPhone = userRepository.findById(userId)
-                        .map(User::getPhone)
-                        .filter(p -> p != null && !p.isBlank())
-                        .orElse(null);
+            if (cachedUser != null && cachedUser.getPhone() != null && !cachedUser.getPhone().isBlank()) {
+                recipientPhone = cachedUser.getPhone();
             }
         }
         if (recipientPhone == null || recipientPhone.isBlank()) {
@@ -104,10 +108,12 @@ public class NotificationEventService {
         }
 
         String resolvedName = recipientName;
-        if ((resolvedName == null || resolvedName.isBlank()) && userId != null) {
-            resolvedName = userRepository.findById(userId)
-                    .map(u -> u.getFullName() != null ? u.getFullName() : u.getFirstName())
-                    .orElse("Valued Customer");
+        if ((resolvedName == null || resolvedName.isBlank())) {
+            if (cachedUser != null) {
+                resolvedName = cachedUser.getFullName() != null ? cachedUser.getFullName() : cachedUser.getFirstName();
+            } else {
+                resolvedName = "Valued Customer";
+            }
         }
 
         NotificationEvent event = NotificationEvent.builder()
@@ -135,7 +141,7 @@ public class NotificationEventService {
 
         NotificationEvent saved;
         try {
-            saved = notificationRepository.save(event);
+            saved = notificationRepository.saveAndFlush(event);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
             log.info("Duplicate key race condition caught for deduplicationKey {}: returning existing event", deduplicationKey);
             return notificationRepository.findByDeduplicationKey(deduplicationKey);
@@ -256,7 +262,7 @@ public class NotificationEventService {
         NotificationEvent event = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new com.sporekart.shared.application.ResourceNotFoundException("Notification not found: " + notificationId));
 
-        if (event.getUserId() != null && !event.getUserId().equals(userId)) {
+        if (event.isAdminNotification() || event.getUserId() == null || !event.getUserId().equals(userId)) {
             throw new com.sporekart.shared.application.ForbiddenOperationException("Access denied to notification: " + notificationId);
         }
 
@@ -345,7 +351,7 @@ public class NotificationEventService {
                     .targetRole("ROLE_ADMIN")
                     .isAdminNotification(true)
                     .build();
-            notificationRepository.save(event);
+            notificationRepository.saveAndFlush(event);
             log.info("Recorded admin operational notification: {}", title);
         } catch (Exception e) {
             log.error("Failed to record admin operational notification: {}", e.getMessage());

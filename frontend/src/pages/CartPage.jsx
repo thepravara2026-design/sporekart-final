@@ -155,7 +155,7 @@ export default function CartPage() {
                   <span className="font-semibold text-forest-900">₹{cart.subtotalInr}</span>
                 </div>
                 <div className="flex justify-between text-typography-secondary">
-                  <span>GST Total (5%)</span>
+                  <span>Estimated GST / Taxes</span>
                   <span className="font-semibold text-forest-900">₹{cart.gstTotalInr}</span>
                 </div>
                 <div className="flex justify-between text-typography-secondary">

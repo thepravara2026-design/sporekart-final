@@ -58,7 +58,9 @@ public class AdminNotificationController {
         }
 
         String trimmedSearch = (search != null && !search.isBlank()) ? search.trim() : null;
-        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(100, Math.max(1, size));
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<NotificationEvent> result = (typeEnum == null && statusEnum == null && trimmedSearch == null)
                 ? notificationRepository.findAll(pageable)
                 : notificationRepository.findAllFiltered(typeEnum, statusEnum, trimmedSearch, pageable);
@@ -88,9 +90,10 @@ public class AdminNotificationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        int clampedSize = Math.min(Math.max(size, 1), 50);
+        int safePage = Math.max(0, page);
+        int clampedSize = Math.min(Math.max(size, 1), 100);
         Page<NotificationDto> result = notificationEventService.getAdminNotifications(
-                unreadOnly, PageRequest.of(page, clampedSize)
+                unreadOnly, PageRequest.of(safePage, clampedSize)
         );
         return ResponseEntity.ok(ApiResponse.success(result));
     }

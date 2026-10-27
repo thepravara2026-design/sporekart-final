@@ -180,6 +180,13 @@ public class AdminCatalogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
         if (status != null) {
             product.setStatus(status);
+            if (isActive == null) {
+                if (status == ProductStatus.INACTIVE || status == ProductStatus.ARCHIVED) {
+                    product.setActive(false);
+                } else if (status == ProductStatus.ACTIVE) {
+                    product.setActive(true);
+                }
+            }
         }
         if (isActive != null) {
             product.setActive(isActive);
@@ -338,6 +345,10 @@ public class AdminCatalogService {
 
     @Transactional
     public ProductMedia addMedia(CatalogDtos.CreateMediaRequest request) {
+        if (request.getMediaUrl() == null || !request.getMediaUrl().trim().matches("^https?://.*")) {
+            throw new IllegalArgumentException("Media URL must use http:// or https:// protocol");
+        }
+
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + request.getProductId()));
 

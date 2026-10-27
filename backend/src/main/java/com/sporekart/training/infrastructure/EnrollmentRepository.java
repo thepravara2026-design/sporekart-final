@@ -29,4 +29,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     @EntityGraph(attributePaths = {"course", "batch"})
     List<Enrollment> findByStatusAndEnrolledAtBefore(EnrollmentStatus status, java.time.ZonedDateTime cutoff);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(e.feePaidInr), 0) FROM Enrollment e WHERE e.status = com.sporekart.training.domain.EnrollmentStatus.CONFIRMED OR e.status = com.sporekart.training.domain.EnrollmentStatus.COMPLETED")
+    java.math.BigDecimal calculateTotalTuitionRevenueInr();
 }

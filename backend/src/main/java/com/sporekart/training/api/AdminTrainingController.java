@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin/training")
@@ -44,6 +45,12 @@ public class AdminTrainingController {
         return ResponseEntity.ok(ApiResponse.success(mapCourse(course)));
     }
 
+    @GetMapping("/batches")
+    public ResponseEntity<ApiResponse<java.util.List<TrainingDtos.BatchResponse>>> getAllBatches() {
+        java.util.List<Batch> batches = trainingService.getAllBatches();
+        return ResponseEntity.ok(ApiResponse.success(batches.stream().map(this::mapBatch).collect(java.util.stream.Collectors.toList())));
+    }
+
     @PostMapping("/batches")
     public ResponseEntity<ApiResponse<TrainingDtos.BatchResponse>> createBatch(@Valid @RequestBody TrainingDtos.CreateBatchRequest request) {
         Batch batch = trainingService.createBatch(
@@ -53,6 +60,12 @@ public class AdminTrainingController {
                 request.getEndDate(),
                 request.getCapacity()
         );
+        return ResponseEntity.ok(ApiResponse.success(mapBatch(batch)));
+    }
+
+    @PostMapping("/batches/{batchId}/cancel")
+    public ResponseEntity<ApiResponse<TrainingDtos.BatchResponse>> cancelBatch(@PathVariable UUID batchId) {
+        Batch batch = trainingService.cancelBatch(batchId);
         return ResponseEntity.ok(ApiResponse.success(mapBatch(batch)));
     }
 

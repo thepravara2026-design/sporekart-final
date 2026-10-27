@@ -201,31 +201,37 @@ public class BlogContentService {
         BlogPost saved = postRepository.save(post);
 
         if (userRepository != null && notificationEventService != null) {
-            try {
-                userRepository.findAll().stream()
-                    .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
-                    .forEach(user -> {
-                        notificationEventService.recordEvent(
-                                com.sporekart.notification.domain.NotificationEventType.BLOG_PUBLISHED,
-                                "BLOG_POST",
-                                saved.getId(),
-                                user.getId(),
-                                null,
-                                null,
-                                user.getFullName() != null ? user.getFullName() : "Grower",
-                                "New Grower Guide: " + saved.getTitle() + " 📖",
-                                java.util.Map.of(
-                                        "title", saved.getTitle(),
-                                        "slug", saved.getSlug(),
-                                        "summary", saved.getSummary() != null ? saved.getSummary() : "",
-                                        "actionUrl", "/blog/" + saved.getSlug()
-                                ),
-                                "BLOG_PUBLISHED:" + saved.getId() + ":" + user.getId()
-                        );
-                    });
-        } catch (Exception e) {
-            log.error("Failed to record blog publication notifications: {}", e.getMessage());
-        }
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    userRepository.findAll().stream()
+                        .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                        .forEach(user -> {
+                            try {
+                                notificationEventService.recordEvent(
+                                        com.sporekart.notification.domain.NotificationEventType.BLOG_PUBLISHED,
+                                        "BLOG_POST",
+                                        saved.getId(),
+                                        user.getId(),
+                                        null,
+                                        null,
+                                        user.getFullName() != null ? user.getFullName() : "Grower",
+                                        "New Grower Guide: " + saved.getTitle() + " 📖",
+                                        java.util.Map.of(
+                                                "title", saved.getTitle(),
+                                                "slug", saved.getSlug(),
+                                                "summary", saved.getSummary() != null ? saved.getSummary() : "",
+                                                "actionUrl", "/blog/" + saved.getSlug()
+                                        ),
+                                        "BLOG_PUBLISHED:" + saved.getId() + ":" + user.getId()
+                                );
+                            } catch (Exception itemErr) {
+                                log.debug("Notification skip for user {}: {}", user.getId(), itemErr.getMessage());
+                            }
+                        });
+                } catch (Exception e) {
+                    log.error("Failed to record blog publication notifications: {}", e.getMessage());
+                }
+            });
         }
 
         return saved;

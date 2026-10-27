@@ -43,7 +43,76 @@ public class GlobalSearchService {
 
         String q = query.trim();
 
-        // 1. Products Search
+        // Run categories, training, and blogs concurrently
+        java.util.concurrent.CompletableFuture<List<GlobalSearchResponse.SearchResultItem>> categoriesFuture = 
+                java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try {
+                return categoryRepository
+                        .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q)
+                        .stream()
+                        .filter(Category::isActive)
+                        .limit(5)
+                        .map(c -> GlobalSearchResponse.SearchResultItem.builder()
+                                .id(c.getId() != null ? c.getId().toString() : null)
+                                .title(c.getName())
+                                .subtitle(c.getDescription())
+                                .slug(c.getSlug())
+                                .type("CATEGORY")
+                                .url("/products/" + c.getSlug())
+                                .imageUrl(c.getImageUrl())
+                                .build())
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                return List.of();
+            }
+        });
+
+        java.util.concurrent.CompletableFuture<List<GlobalSearchResponse.SearchResultItem>> trainingFuture = 
+                java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try {
+                return courseRepository
+                        .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q)
+                        .stream()
+                        .filter(Course::isActive)
+                        .limit(5)
+                        .map(c -> GlobalSearchResponse.SearchResultItem.builder()
+                                .id(c.getId() != null ? c.getId().toString() : null)
+                                .title(c.getTitle())
+                                .subtitle(c.getDescription())
+                                .slug(c.getSlug())
+                                .type("TRAINING")
+                                .url("/training/" + c.getSlug())
+                                .priceInr(c.getFeeInr() != null ? c.getFeeInr().toString() : null)
+                                .build())
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                return List.of();
+            }
+        });
+
+        java.util.concurrent.CompletableFuture<List<GlobalSearchResponse.SearchResultItem>> blogsFuture = 
+                java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try {
+                return blogPostRepository
+                        .findPublishedPosts(null, null, q, ZonedDateTime.now(), PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "publishedAt")))
+                        .getContent()
+                        .stream()
+                        .map(b -> GlobalSearchResponse.SearchResultItem.builder()
+                                .id(b.getId() != null ? b.getId().toString() : null)
+                                .title(b.getTitle())
+                                .subtitle(b.getSummary())
+                                .slug(b.getSlug())
+                                .type("BLOG")
+                                .url("/blog/" + b.getSlug())
+                                .imageUrl(b.getFeaturedMediaUrl())
+                                .build())
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                return List.of();
+            }
+        });
+
+        // 1. Products Search (runs in current transactional thread)
         List<GlobalSearchResponse.SearchResultItem> products = productRepository
                 .searchProducts(null, null, q, PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .getContent()
@@ -51,55 +120,9 @@ public class GlobalSearchService {
                 .map(this::mapProduct)
                 .collect(Collectors.toList());
 
-        // 2. Categories Search
-        List<GlobalSearchResponse.SearchResultItem> categories = categoryRepository
-                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q)
-                .stream()
-                .filter(Category::isActive)
-                .limit(5)
-                .map(c -> GlobalSearchResponse.SearchResultItem.builder()
-                        .id(c.getId() != null ? c.getId().toString() : null)
-                        .title(c.getName())
-                        .subtitle(c.getDescription())
-                        .slug(c.getSlug())
-                        .type("CATEGORY")
-                        .url("/products/" + c.getSlug())
-                        .imageUrl(c.getImageUrl())
-                        .build())
-                .collect(Collectors.toList());
-
-        // 3. Training Courses Search
-        List<GlobalSearchResponse.SearchResultItem> training = courseRepository
-                .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q)
-                .stream()
-                .filter(Course::isActive)
-                .limit(5)
-                .map(c -> GlobalSearchResponse.SearchResultItem.builder()
-                        .id(c.getId() != null ? c.getId().toString() : null)
-                        .title(c.getTitle())
-                        .subtitle(c.getDescription())
-                        .slug(c.getSlug())
-                        .type("TRAINING")
-                        .url("/training/" + c.getSlug())
-                        .priceInr(c.getFeeInr() != null ? c.getFeeInr().toString() : null)
-                        .build())
-                .collect(Collectors.toList());
-
-        // 4. Blog Posts Search
-        List<GlobalSearchResponse.SearchResultItem> blogs = blogPostRepository
-                .findPublishedPosts(null, null, q, ZonedDateTime.now(), PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "publishedAt")))
-                .getContent()
-                .stream()
-                .map(b -> GlobalSearchResponse.SearchResultItem.builder()
-                        .id(b.getId() != null ? b.getId().toString() : null)
-                        .title(b.getTitle())
-                        .subtitle(b.getSummary())
-                        .slug(b.getSlug())
-                        .type("BLOG")
-                        .url("/blog/" + b.getSlug())
-                        .imageUrl(b.getFeaturedMediaUrl())
-                        .build())
-                .collect(Collectors.toList());
+        List<GlobalSearchResponse.SearchResultItem> categories = categoriesFuture.join();
+        List<GlobalSearchResponse.SearchResultItem> training = trainingFuture.join();
+        List<GlobalSearchResponse.SearchResultItem> blogs = blogsFuture.join();
 
         return GlobalSearchResponse.builder()
                 .products(products)
