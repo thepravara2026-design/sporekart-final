@@ -23,6 +23,15 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
             List<NotificationStatus> statuses, int maxAttempts
     );
 
+    @Query(value = """
+        SELECT * FROM notification_events 
+        WHERE status IN ('PENDING', 'RETRY_SCHEDULED') 
+          AND attempt_count < :maxAttempts 
+        ORDER BY created_at ASC 
+        LIMIT 20
+        """, nativeQuery = true)
+    List<NotificationEvent> findPendingEventsForProcessing(@Param("maxAttempts") int maxAttempts);
+
     Page<NotificationEvent> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     Page<NotificationEvent> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(UUID userId, Pageable pageable);

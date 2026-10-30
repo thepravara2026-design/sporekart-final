@@ -1,6 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sprout, ShieldCheck, Truck, CreditCard, Award, Mail, Phone, MapPin, Building2, Send, Check } from 'lucide-react';
+import { 
+  Sprout, 
+  ShieldCheck, 
+  Truck, 
+  CreditCard, 
+  Award, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Building2, 
+  Send, 
+  Check, 
+  Sparkles,
+  Globe,
+  X,
+  ExternalLink
+} from 'lucide-react';
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -14,21 +30,11 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-const FacebookIcon = ({ className = "w-4 h-4" }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.325V1.325C24 .597 23.405 0 22.675 0z"/>
-  </svg>
-);
-
-const YouTubeIcon = ({ className = "w-4 h-4" }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-  </svg>
-);
-
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+  const [pravaraModalOpen, setPravaraModalOpen] = useState(false);
+  const pravaraRef = useRef(null);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -41,120 +47,146 @@ export default function Footer() {
     }
   };
 
+  // Close PravaraMedia popover on outside click or Esc
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (pravaraRef.current && !pravaraRef.current.contains(event.target)) {
+        setPravaraModalOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setPravaraModalOpen(false);
+      }
+    }
+
+    if (pravaraModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pravaraModalOpen]);
+
   return (
-    <footer id="footer" className="relative bg-[#0C2518] border-t border-forest-800 pt-16 pb-12 text-surface-neutral text-sm overflow-hidden">
+    <footer id="footer" className="relative bg-[#07170E] border-t border-forest-800/80 pt-12 pb-8 text-surface-neutral text-xs overflow-hidden">
       
-      {/* Subtle Botanical Mushroom Watermark Illustration in Bottom Right */}
-      <div className="absolute -bottom-8 -right-8 w-72 h-72 opacity-[0.04] pointer-events-none text-white select-none">
+      {/* Ambient background glow and minimalist botanical watermark */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 max-w-5xl h-32 bg-emerald-500/[0.04] blur-[90px] pointer-events-none rounded-full" />
+      <div className="absolute -bottom-10 -right-10 w-64 h-64 opacity-[0.03] pointer-events-none text-white select-none">
         <svg viewBox="0 0 200 200" fill="currentColor">
           <path d="M100 20 C60 20 20 60 20 95 C20 115 50 125 75 125 L75 175 C75 185 85 190 100 190 C115 190 125 185 125 175 L125 125 C150 125 180 115 180 95 C180 60 140 20 100 20 Z" />
         </svg>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Top Trust Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-12 border-b border-forest-800/80">
-          <Link 
-            to="/products/spawn-seeds" 
-            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
-          >
-            <ShieldCheck className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
-            <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Lab Certified Spawn</h4>
-              <p className="text-[11px] text-sage/80">100% pure grain mother cultures</p>
-            </div>
-          </Link>
+        
 
-          <Link 
-            to="/contact" 
-            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
-          >
-            <Truck className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
-            <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Cold-Chain Express</h4>
-              <p className="text-[11px] text-sage/80">Fast express delivery across India</p>
-            </div>
-          </Link>
-
-          <Link 
-            to="/orders" 
-            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
-          >
-            <CreditCard className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
-            <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Secure Razorpay</h4>
-              <p className="text-[11px] text-sage/80">UPI, Cards, NetBanking, Razorpay</p>
-            </div>
-          </Link>
-
-          <Link 
-            to="/training" 
-            className="flex items-center gap-3 p-4 rounded-2xl bg-forest-800/40 border border-forest-700/40 hover-lift hover:border-emerald-500/50 transition-all group"
-          >
-            <Award className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300 transition-colors shrink-0" />
-            <div>
-              <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-emerald-300 transition-colors">Certified Training</h4>
-              <p className="text-[11px] text-sage/80">Practical farm & lab masterclasses</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* 4 Main Footer Navigation Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-12">
+        {/* 2. Main Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8 pt-2">
           
-          {/* Column 1: Brand & Enterprise Info (4 Cols) */}
-          <div className="md:col-span-4 space-y-4">
+          {/* Brand & Enterprise Info (4 Columns) */}
+          <div className="lg:col-span-4 space-y-4">
             <Link to="/" aria-label="Sporekart Agritech Home" className="inline-flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-forest-800 group-hover:bg-forest-700 flex items-center justify-center text-white font-bold shadow-sm transition-colors">
-                <Sprout className="w-6 h-6 text-emerald-300" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 group-hover:border-emerald-400 flex items-center justify-center text-white transition-all shadow-sm">
+                <Sprout className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
               </div>
               <div>
-                <span className="font-display font-bold text-xl text-white group-hover:text-emerald-300 transition-colors">
+                <span className="font-display font-bold text-xl text-white group-hover:text-emerald-300 transition-colors tracking-tight">
                   Spore<span className="text-emerald-400">kart</span>
                 </span>
-                <span className="block text-[9px] text-sage font-semibold tracking-wider uppercase">
+                <span className="block text-[10px] text-emerald-400/90 font-medium tracking-wider uppercase">
                   Smart Farming. Healthy Living.
                 </span>
               </div>
             </Link>
-            
-            <p className="text-xs text-sage/90 leading-relaxed max-w-sm">
-              India’s mushroom agritech platform managed by <strong>Shriyap Enterprise</strong>. Dedicated to fresh organic mushrooms, high-yield grain spawn seeds, and commercial grower training.
-            </p>
 
-            <div className="text-xs space-y-2 text-surface-cream/80 pt-1">
+            
+
+            {/* Enterprise Details Card */}
+            <div className="p-3.5 rounded-xl bg-forest-900/30 border border-forest-800/60 space-y-2.5 text-xs text-surface-cream/80 max-w-sm">
               <div className="flex items-start gap-2.5">
-                <Building2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span><strong>Shriyap Enterprise</strong></span>
+                <Building2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span className="text-white font-medium">Shriyap Enterprise</span>
               </div>
               <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <a 
                   href="https://maps.google.com/?q=Basapura+village,+Behind+Taralabalu+school,+Davangere-577001,+Karnataka" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="hover:text-white transition-colors"
+                  className="hover:text-emerald-300 transition-colors leading-snug"
                 >
                   Basapura village, Behind Taralabalu school, Davangere-577001, Karnataka ↗
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <a href="tel:+917204709870" className="hover:text-white transition-colors">+91 7204709870</a>
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                <a href="tel:+917204709870" className="hover:text-emerald-300 transition-colors">+91 7204709870</a>
               </div>
               <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <a href="mailto:support@sporekart.in" className="hover:text-white transition-colors">support@sporekart.in</a>
+                <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
+                <a href="mailto:support@sporekart.in" className="hover:text-emerald-300 transition-colors">support@sporekart.in</a>
               </div>
             </div>
+          </div>
+
+          
+          
+
+          {/* Quick Action Badges & Newsletter Subscription (3 Columns) */}
+          <div className="lg:col-span-3 space-y-5">
+            {/* Quick Action Badges */}
+            <div className="space-y-2.5">
+              <h3 className="font-semibold text-white text-xs uppercase tracking-wider text-emerald-400/90">
+                Quick Action Badges
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <a
+                  href="https://wa.me/917204709870"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-medium text-xs shadow-sm transition-all duration-200 group"
+                >
+                  <span className="flex items-center gap-2">
+                    <WhatsAppIcon className="w-4 h-4 text-white" />
+                    <span>Chat on WhatsApp</span>
+                  </span>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Active</span>
+                </a>
+
+                <a
+                  href="https://www.instagram.com/sporekart"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-amber-600 hover:opacity-95 text-white font-medium text-xs shadow-sm transition-all duration-200 group"
+                >
+                  <span className="flex items-center gap-2">
+                    <InstagramIcon className="w-4 h-4 text-white" />
+                    <span>Instagram @sporekart</span>
+                  </span>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Farm Updates</span>
+                </a>
+              </div>
+
+                          </div>
 
             {/* Newsletter Subscription */}
-            <div className="pt-2 max-w-sm">
-              <p className="text-xs text-sage/90 font-medium mb-2">
-                Stay Connected — updates, offers & farm stories:
+            <div className="space-y-2 pt-2 border-t border-forest-800/60">
+              <h3 className="font-semibold text-white text-xs uppercase tracking-wider text-emerald-400/90">
+                Newsletter Subscription
+              </h3>
+              <p className="text-[11px] text-sage/75">
+                Seasonal harvest drops, lab alerts & farm stories.
               </p>
-              <form onSubmit={handleNewsletterSubmit} className="relative">
+              <form onSubmit={handleNewsletterSubmit} className="relative pt-1">
                 <div className="relative flex items-center">
                   <input
                     type="email"
@@ -162,119 +194,158 @@ export default function Footer() {
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     placeholder="Your email address"
                     required
-                    className="w-full px-4 py-2 rounded-full bg-forest-800/80 border border-forest-700 text-xs text-white placeholder-sage/60 focus:outline-none focus:border-emerald-400 pr-10 transition-colors"
+                    className="w-full px-3.5 py-2 rounded-xl bg-forest-900/60 border border-forest-700/60 text-xs text-white placeholder-sage/50 focus:outline-none focus:border-emerald-400 pr-9 transition-colors"
                   />
                   <button
                     type="submit"
                     aria-label="Subscribe to newsletter"
-                    className="absolute right-1 w-7 h-7 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-colors button-press"
+                    className="absolute right-1 w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-colors shadow-sm"
                   >
                     {newsletterSubmitted ? <Check className="w-3.5 h-3.5" /> : <Send className="w-3 h-3" />}
                   </button>
                 </div>
                 {newsletterSubmitted && (
-                  <p className="text-[11px] text-emerald-400 mt-1 font-medium animate-fade-in">
-                    ✓ Subscribed successfully!
+                  <p className="text-[11px] text-emerald-400 mt-1.5 font-medium flex items-center gap-1 animate-fade-in">
+                    <Check className="w-3 h-3" /> Subscribed successfully!
                   </p>
                 )}
               </form>
             </div>
           </div>
 
-          {/* Column 2: Product Categories (3 Cols) */}
-          <div className="md:col-span-3 space-y-3">
-            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
-              E-Commerce Catalog
-            </h3>
-            <ul className="space-y-2.5 text-xs text-sage">
-              <li><Link to="/products" className="hover:text-white transition-colors font-medium text-surface-cream">All Mushroom Products</Link></li>
-              <li><Link to="/products/fresh-mushrooms" className="hover:text-white transition-colors">Fresh Button & Oyster Mushrooms</Link></li>
-              <li><Link to="/products/dry-mushrooms" className="hover:text-white transition-colors">Dehydrated Gourmet Mushrooms</Link></li>
-              <li><Link to="/products/spawn-seeds" className="hover:text-white transition-colors">Milky & Oyster Grain Spawn Seeds</Link></li>
-              <li><Link to="/products/growing-kits" className="hover:text-white transition-colors">Indoor DIY Mushroom Growing Kits</Link></li>
-              <li><Link to="/products/equipment-supplies" className="hover:text-white transition-colors">Cultivation Equipment & Supplies</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 3: Training & Guides (2.5 Cols) */}
-          <div className="md:col-span-2 space-y-3">
-            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
-              Training & Guides
-            </h3>
-            <ul className="space-y-2.5 text-xs text-sage">
-              <li><Link to="/training" className="hover:text-white transition-colors font-medium text-surface-cream">All Training Masterclasses</Link></li>
-              <li><Link to="/training/commercial-mushroom-cultivation-masterclass" className="hover:text-white transition-colors">Commercial Cultivation Masterclass</Link></li>
-              <li><Link to="/training/spawn-production-tissue-culture-masterclass" className="hover:text-white transition-colors">Spawn Production & Lab Setup</Link></li>
-              <li><Link to="/mushroom-cultivation-guide" className="hover:text-white transition-colors">Mushroom Cultivation Handbook</Link></li>
-              <li><Link to="/mushroom-spawn-guide" className="hover:text-white transition-colors">Mushroom Spawn Technical Guide</Link></li>
-              <li><Link to="/blog" className="hover:text-white transition-colors">Agritech Knowledge Blog</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 4: Connect & Quick Access (2.5 Cols) */}
-          <div className="md:col-span-3 space-y-3">
-            <h3 className="font-display font-bold text-white text-sm uppercase tracking-wider">
-              Connect & Quick Links
-            </h3>
-            <p className="text-xs text-sage/90 leading-relaxed mb-3">
-              Instant WhatsApp support and regular farm updates on Instagram.
-            </p>
-            
-            {/* Quick Action Badges */}
-            <div className="space-y-2 mb-3">
-              <a
-                href="https://wa.me/917204709870"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all button-press"
-              >
-                <WhatsAppIcon className="w-4 h-4 text-white" />
-                <span>Chat on WhatsApp</span>
-              </a>
-
-              <a
-                href="https://www.instagram.com/sporekart"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full px-3.5 py-2 bg-gradient-to-r from-pink-600 via-purple-600 to-amber-600 hover:opacity-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all button-press"
-              >
-                <InstagramIcon className="w-4 h-4 text-white" />
-                <span>Instagram @sporekart</span>
-              </a>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              <Link to="/about" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">About Us</Link>
-              <Link to="/sustainability" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Sustainability</Link>
-              <Link to="/contact" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Contact Us</Link>
-              <Link to="/orders" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Track Orders</Link>
-              <Link to="/cart" className="px-2.5 py-1 bg-forest-800 border border-forest-700 rounded-input text-xs text-white hover:bg-forest-700 transition-colors">Cart</Link>
-            </div>
-          </div>
-
         </div>
 
-        {/* Bottom Bar: Quick Navigation Links + Copyright */}
-        <div className="pt-8 border-t border-forest-800/80 flex flex-col lg:flex-row items-center justify-between text-xs text-sage/70 gap-4">
-          <p>© {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-sage/80">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span>•</span>
-            <Link to="/products" className="hover:text-white transition-colors">Catalog</Link>
-            <span>•</span>
-            <Link to="/training" className="hover:text-white transition-colors">Training</Link>
-            <span>•</span>
-            <Link to="/blog" className="hover:text-white transition-colors">Blog</Link>
-            <span>•</span>
-            <Link to="/mushroom-cultivation-guide" className="hover:text-white transition-colors">Cultivation Guide</Link>
-            <span>•</span>
-            <Link to="/mushroom-spawn-guide" className="hover:text-white transition-colors">Spawn Guide</Link>
-            <span>•</span>
-            <Link to="/sustainability" className="hover:text-white transition-colors">Sustainability</Link>
-            <span>•</span>
-            <Link to="/about" className="hover:text-white transition-colors">About</Link>
-            <span>•</span>
-            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+        {/* 3. Statutory Legal & Compliance Bar */}
+        <div className="pt-4 border-t border-forest-800/60 flex flex-wrap items-center justify-center gap-3 sm:gap-5 text-[11px] text-sage/80 font-medium">
+          <Link to="/privacy-policy" className="hover:text-emerald-300 transition-colors">Privacy Policy</Link>
+          <span className="text-emerald-800">•</span>
+          <Link to="/terms" className="hover:text-emerald-300 transition-colors">Terms of Service</Link>
+          <span className="text-emerald-800">•</span>
+          <Link to="/refund-policy" className="hover:text-emerald-300 transition-colors">Refund & Return Policy</Link>
+          <span className="text-emerald-800">•</span>
+          <Link to="/shipping-policy" className="hover:text-emerald-300 transition-colors">Shipping & Cold-Chain Policy</Link>
+          <span className="text-emerald-800">•</span>
+          <Link to="/cookie-policy" className="hover:text-emerald-300 transition-colors">Cookie & Cache Policy</Link>
+          <span className="text-emerald-800">•</span>
+          <Link to="/policies/grievance" className="hover:text-emerald-300 transition-colors">Grievance Redressal</Link>
+
+          <p className="text-center xl:text-left">
+            © {new Date().getFullYear()} Sporekart — <strong>Shriyap Enterprise</strong>, Davangere-577001. All rights reserved.
+          </p>
+        </div>
+
+        {/* 4. Bottom Bar: Copyright, Quick Navigation Links, and Clickable PravaraMedia Attribution */}
+        <div className="pt-4 border-t border-forest-800/80 flex flex-col xl:flex-row items-center justify-between text-xs text-sage/70 gap-4">
+          
+
+          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs text-sage/80">
+                     </div>
+
+          {/* Clickable PravaraMedia Bottom Attribution with Creative Actionable Popover */}
+          <div ref={pravaraRef} className="relative inline-block">
+            <button
+              type="button"
+              onClick={() => setPravaraModalOpen((prev) => !prev)}
+              aria-expanded={pravaraModalOpen}
+              aria-haspopup="dialog"
+              aria-label="Design & Developed By PravaraMedia, Davangere, Karnataka - Click for official links"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-900/60 border border-emerald-500/25 text-[11px] text-emerald-300 font-medium tracking-wide shadow-sm hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all cursor-pointer group focus:outline-none focus:ring-1 focus:ring-emerald-400"
+            >
+              <span>Design &amp; Developed By PravaraMedia, Davangere, Karnataka.</span>
+              <Sparkles className="w-3 h-3 text-emerald-400 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
+            </button>
+
+            {/* Modern Creative Popover */}
+            {pravaraModalOpen && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="PravaraMedia Agency Information and Links"
+                className="absolute bottom-full mb-3 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-72 sm:w-80 bg-forest-950/95 border border-emerald-500/40 rounded-2xl shadow-level-3 p-4 backdrop-blur-xl z-50 text-left animate-slide-up"
+              >
+                {/* Downward pointing arrow */}
+                <div className="absolute -bottom-1.5 right-6 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 bg-forest-950 border-r border-b border-emerald-500/40 rotate-45" />
+
+                {/* Popover Header */}
+                <div className="flex items-start justify-between pb-3 border-b border-forest-800/80 mb-3">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-display font-bold text-white text-sm">PravaraMedia</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold uppercase tracking-wider">Agency</span>
+                    </div>
+                    <p className="text-[10px] text-sage/75">Design, Development &amp; Media · Davangere, Karnataka</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPravaraModalOpen(false)}
+                    aria-label="Close PravaraMedia popover"
+                    className="text-sage/60 hover:text-white p-1 rounded-md transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Popover Actionable Links */}
+                <div className="space-y-2">
+                  {/* 1. Website */}
+                  <a
+                    href="https://pravaramedia.framer.website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-forest-900/60 hover:bg-forest-800/70 border border-forest-700/50 hover:border-emerald-500/40 transition-all duration-200 group/link"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 group-hover/link:bg-emerald-500/20 text-emerald-400 transition-colors">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white truncate group-hover/link:text-emerald-300 transition-colors">pravaramedia.framer.website</p>
+                        <p className="text-[10px] text-sage/70 truncate">Official Portfolio &amp; Agency</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-sage/60 group-hover/link:text-emerald-300 shrink-0 ml-2" />
+                  </a>
+
+                  {/* 2. WhatsApp */}
+                  <a
+                    href="https://wa.me/918277559093?text=Hi%20PravaraMedia%2C%20I%20visited%20Sporekart%20and%20would%20like%20to%20connect%21"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/40 hover:border-emerald-500/40 transition-all duration-200 group/link"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-300 transition-colors">
+                        <WhatsAppIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white truncate group-hover/link:text-emerald-300 transition-colors">+91 8277559093</p>
+                        <p className="text-[10px] text-sage/70 truncate">Chat on WhatsApp</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold uppercase tracking-wider shrink-0">Direct</span>
+                  </a>
+
+                  {/* 3. Instagram */}
+                  <a
+                    href="https://www.instagram.com/pravaramedia.marketing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-forest-900/60 hover:bg-forest-800/70 border border-forest-700/50 hover:border-pink-500/40 transition-all duration-200 group/link"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0 text-pink-400 group-hover/link:bg-pink-500/20 transition-colors">
+                        <InstagramIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white truncate group-hover/link:text-pink-300 transition-colors">@pravaramedia.marketing</p>
+                        <p className="text-[10px] text-sage/70 truncate">Instagram Creative Showcase</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-sage/60 group-hover/link:text-pink-300 shrink-0 ml-2" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

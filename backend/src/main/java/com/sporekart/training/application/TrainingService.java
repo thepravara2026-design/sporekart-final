@@ -10,9 +10,13 @@ import com.sporekart.shared.application.ResourceNotFoundException;
 import com.sporekart.training.api.TrainingDtos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sporekart.shared.infrastructure.CacheConfig;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -76,11 +80,16 @@ public class TrainingService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.CACHE_CATEGORIES, key = "'allTrainingCategories'")
     public List<CourseCategory> getAllCategories() {
         return categoryRepository.findAll();
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.CACHE_COURSES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_CATEGORIES, allEntries = true)
+    })
     public Course createCourse(UUID categoryId, String title, String slug, String description, Integer durationDays, BigDecimal feeInr) {
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("Course title is required");
@@ -111,6 +120,7 @@ public class TrainingService {
     }
 
     @Transactional
+    @Cacheable(value = CacheConfig.CACHE_COURSES, key = "'allActive'")
     public List<Course> getAllActiveCourses() {
         List<Course> courses = courseRepository.findByIsActiveTrue();
         if (courses.isEmpty()) {

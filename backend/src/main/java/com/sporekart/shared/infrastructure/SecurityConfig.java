@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.ShallowEtagHeaderFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 import java.util.List;
 
@@ -81,7 +83,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
                 auth.requestMatchers("/auth/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/products/**", "/categories/**", "/categories", "/reviews/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/catalog/**", "/catalog", "/products/**", "/products", "/categories/**", "/categories", "/reviews/**", "/activities/**", "/activities").permitAll()
                     .requestMatchers(HttpMethod.GET, "/search", "/search/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/training/courses/**", "/training/courses", "/training/glimpses").permitAll()
@@ -90,7 +92,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/seo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/promotions/available", "/promotions/**").permitAll()
-                    .requestMatchers("/cart/**").permitAll()
+                    .requestMatchers("/cart", "/cart/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
                     .requestMatchers(HttpMethod.POST,
@@ -131,7 +133,8 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://*.trycloudflare.com"
             ));
         } else {
             configuration.setAllowedOrigins(allowedOrigins);
@@ -144,5 +147,14 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public FilterRegistrationBean<ShallowEtagHeaderFilter> shallowEtagHeaderFilter() {
+        FilterRegistrationBean<ShallowEtagHeaderFilter> filter =
+                new FilterRegistrationBean<>(new ShallowEtagHeaderFilter());
+        filter.addUrlPatterns("/catalog/*", "/products/*", "/training/*", "/content/*", "/categories/*");
+        filter.setName("shallowEtagHeaderFilter");
+        return filter;
     }
 }

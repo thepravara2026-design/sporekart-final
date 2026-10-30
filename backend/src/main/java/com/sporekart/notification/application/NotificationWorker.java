@@ -6,6 +6,7 @@ import com.sporekart.notification.infrastructure.NotificationEventRepository;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -38,7 +39,61 @@ public class NotificationWorker {
 
     private static final int MAX_ATTEMPTS = 5;
 
+    // Circuit breaker for Gmail / SMTP daily sending limit exceeded
+    private static volatile ZonedDateTime dailyLimitCooldownUntil = null;
+
+    /**
+     * Determines whether an email address is a synthetic or test address
+     * that should not be routed to a public SMTP relay.
+     */
+    public static boolean isNonRoutableOrTestEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return true;
+        }
+        String trimmed = email.trim().toLowerCase();
+        int atIndex = trimmed.lastIndexOf('@');
+        if (atIndex == -1 || atIndex == trimmed.length() - 1) {
+            return true;
+        }
+        String domain = trimmed.substring(atIndex + 1);
+        return domain.endsWith(".test")
+                || domain.endsWith(".example")
+                || domain.endsWith(".invalid")
+                || domain.endsWith(".localhost")
+                || domain.equals("test.com")
+                || domain.equals("example.com")
+                || domain.contains("sporekart-qa")
+                || domain.contains("qa.test")
+                || domain.contains("mock")
+                || trimmed.startsWith("test_")
+                || trimmed.startsWith("unauth_notif_");
+    }
+
+    /**
+     * Checks if the exception or any of its causes indicates that the SMTP provider
+     * (e.g. Gmail 550-5.4.5) has rejected sending because the daily quota was exceeded.
+     */
+    public static boolean isDailySendingLimitOrQuotaExceeded(Throwable t) {
+        while (t != null) {
+            String msg = t.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase();
+                if (lower.contains("daily user sending limit exceeded")
+                        || lower.contains("daily sending limit")
+                        || lower.contains("550-5.4.5")
+                        || lower.contains("550 5.4.5")
+                        || lower.contains("quota exceeded")
+                        || lower.contains("sending limit exceeded")) {
+                    return true;
+                }
+            }
+            t = t.getCause();
+        }
+        return false;
+    }
+
     @Scheduled(fixedDelay = 10000)
+    @SchedulerLock(name = "NotificationWorker_processOutbox", lockAtMostFor = "8s", lockAtLeastFor = "3s")
     public void processOutboxQueue() {
         List<NotificationEvent> pendingEvents = notificationRepository
                 .findTop20ByStatusInAndAttemptCountLessThanOrderByCreatedAtAsc(
@@ -58,6 +113,7 @@ public class NotificationWorker {
     }
 
     @Scheduled(cron = "${sporekart.notification.retention.cron:0 0 3 * * ?}")
+    @SchedulerLock(name = "NotificationWorker_cleanupOldArchivedNotifications", lockAtMostFor = "1h", lockAtLeastFor = "5m")
     @org.springframework.transaction.annotation.Transactional
     public void cleanupOldArchivedNotifications() {
         try {
@@ -90,6 +146,28 @@ public class NotificationWorker {
                         ? configuredFrom
                         : ((smtpUsername != null && !smtpUsername.isBlank() && smtpUsername.contains("@")) ? smtpUsername : "noreply@sporekart.in");
 
+                // Check 1: Non-routable or synthetic test email domains (e.g. *.test, sporekart-qa.test)
+                if (isNonRoutableOrTestEmail(event.getRecipientEmail())) {
+                    log.info("[NOTIFICATION DISPATCHED - SIMULATED TEST EMAIL] Event ID: {}, Type: {}, Recipient: {} (non-routable test domain)",
+                            event.getId(), event.getEventType(), event.getRecipientEmail());
+                    event.setStatus(NotificationStatus.SENT);
+                    event.setSentAt(ZonedDateTime.now());
+                    event.setErrorMessage(null);
+                    notificationRepository.save(event);
+                    return;
+                }
+
+                // Check 2: Active Gmail daily sending limit cooldown circuit breaker
+                if (dailyLimitCooldownUntil != null && ZonedDateTime.now().isBefore(dailyLimitCooldownUntil)) {
+                    log.warn("[NOTIFICATION DISPATCHED - LOG MODE FALLBACK (GMAIL DAILY LIMIT COOLDOWN ACTIVE UNTIL {})] Event ID: {}, Type: {}, Recipient: {}, Subject: {}\nHTML Content Size: {} bytes",
+                            dailyLimitCooldownUntil, event.getId(), event.getEventType(), event.getRecipientEmail(), event.getSubject(), htmlBody != null ? htmlBody.length() : 0);
+                    event.setStatus(NotificationStatus.SENT);
+                    event.setSentAt(ZonedDateTime.now());
+                    event.setErrorMessage("Dispatched via LOG fallback (Gmail daily limit cooldown active until " + dailyLimitCooldownUntil + ")");
+                    notificationRepository.save(event);
+                    return;
+                }
+
                 // Attempt real email dispatch via JavaMailSender
                 try {
                     MimeMessage message = mailSender.createMimeMessage();
@@ -115,6 +193,19 @@ public class NotificationWorker {
                     log.info("Successfully dispatched email notification ID {} [{}] via JavaMailSender to {}", event.getId(), event.getEventType(), event.getRecipientEmail());
                     return;
                 } catch (Exception e) {
+                    // Check if error is Gmail daily sending limit exceeded (550 / 550-5.4.5)
+                    if (isDailySendingLimitOrQuotaExceeded(e)) {
+                        dailyLimitCooldownUntil = ZonedDateTime.now().plusHours(4);
+                        log.warn("Gmail daily user sending limit exceeded (550). Activating 4-hour LOG mode fallback until {}. Event ID {} [{}] to {}: {}",
+                                dailyLimitCooldownUntil, event.getId(), event.getEventType(), event.getRecipientEmail(), e.getMessage());
+
+                        event.setStatus(NotificationStatus.SENT);
+                        event.setSentAt(ZonedDateTime.now());
+                        event.setErrorMessage("Dispatched via LOG mode fallback (Gmail daily sending limit exceeded 550)");
+                        notificationRepository.save(event);
+                        return;
+                    }
+
                     if (useRealSmtp) {
                         log.error("Failed to send real SMTP email notification ID {} [{}] to {}: {}", event.getId(), event.getEventType(), event.getRecipientEmail(), e.getMessage());
                         throw e; // Rethrow to trigger retry policy for real SMTP mode

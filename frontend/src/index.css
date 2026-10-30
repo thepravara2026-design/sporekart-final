@@ -319,3 +319,274 @@
   --tw-gradient-stops: var(--tw-gradient-from), #0B1F14 var(--tw-gradient-via-position, ), var(--tw-gradient-to) !important;
 }
 
+/* =========================================================
+   CINEMATIC HERO SEQUENTIAL REVEAL MOTION SYSTEM
+   ========================================================= */
+
+@keyframes heroRevealContainer {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Step 8: Final hero image reveal: BLURRED TO CRYSTAL CLEAR (2,600ms - 4,000ms) */
+@keyframes heroRevealImageBlurToClear {
+  0% {
+    filter: blur(24px) saturate(0.85);
+    opacity: 0.45;
+    transform: scale(1.06);
+  }
+  40% {
+    filter: blur(14px) saturate(0.92);
+    opacity: 0.8;
+  }
+  75% {
+    filter: blur(4px) saturate(0.98);
+    opacity: 0.95;
+  }
+  100% {
+    filter: blur(0px) saturate(1);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroAtmosphereSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.65;
+  }
+  80% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes heroMaskRevealUp {
+  0% {
+    transform: translateY(115%);
+    opacity: 0;
+    filter: blur(3px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes heroFadeUp {
+  0% {
+    transform: translateY(18px);
+    opacity: 0;
+    filter: blur(3px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes heroCtaEntrance {
+  0% {
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes heroAmbientFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(14px, -10px) scale(1.08);
+  }
+}
+
+@keyframes heroPrimaryShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.hero-reveal-container {
+  animation: heroRevealContainer 1200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-reveal-image-blur {
+  animation: heroRevealImageBlurToClear 1400ms cubic-bezier(0.16, 1, 0.3, 1) 2600ms both;
+}
+
+.hero-sweep-light {
+  animation: heroAtmosphereSweep 2600ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+}
+
+.hero-reveal-mask-item {
+  animation: heroMaskRevealUp 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-reveal-item {
+  animation: heroFadeUp 950ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-reveal-cta {
+  animation: heroCtaEntrance 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-ambient-glow {
+  animation: heroAmbientFloat 9s ease-in-out infinite alternate;
+}
+
+.hero-btn-shimmer {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    120deg,
+    #173B2A 0%,
+    #1F4D35 40%,
+    #2F6B45 50%,
+    #1F4D35 60%,
+    #173B2A 100%
+  );
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-btn-shimmer:hover {
+  animation: heroPrimaryShimmer 2.4s infinite linear;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal-container,
+  .hero-reveal-image-blur,
+  .hero-sweep-light,
+  .hero-reveal-mask-item,
+  .hero-reveal-item,
+  .hero-reveal-cta,
+  .hero-ambient-glow,
+  .hero-btn-shimmer {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
+
+/* =========================================================
+   LANDING PAGE SCOPED SMOOTH SCROLL & REVEAL SYSTEM
+   ========================================================= */
+
+/* Scoped smooth scrolling active only when landing page is mounted */
+html.landing-page-scroll-active {
+  scroll-behavior: smooth !important;
+}
+
+/* Scroll reveal sections for smooth viewport entry */
+.landing-scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.landing-scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  html.landing-page-scroll-active {
+    scroll-behavior: auto !important;
+  }
+  .landing-scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+   FARM TECHNOLOGY SECTION SCOPED ANIMATION SYSTEM
+   ========================================================= */
+
+@keyframes farmSporeDrift {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.85);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translateY(-38px) translateX(10px) scale(1.15);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-75px) translateX(-6px) scale(0.9);
+    opacity: 0.1;
+  }
+}
+
+@keyframes farmBadgeDrift {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes farmBeaconRadar {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.farm-spore-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.75) 0%, rgba(16, 185, 129, 0) 70%);
+  pointer-events: none;
+  animation: farmSporeDrift 8s ease-in-out infinite alternate;
+}
+
+.farm-badge-float {
+  animation: farmBadgeDrift 5s ease-in-out infinite;
+}
+
+.farm-beacon-radar {
+  animation: farmBeaconRadar 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .farm-spore-particle,
+  .farm-badge-float,
+  .farm-beacon-radar {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+
+

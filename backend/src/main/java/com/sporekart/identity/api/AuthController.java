@@ -17,6 +17,7 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
+    private final org.springframework.core.env.Environment environment;
 
     @PostMapping("/otp/request")
     public ResponseEntity<ApiResponse<String>> requestOtp(@RequestBody(required = false) AuthDtos.OtpRequest request) {
@@ -35,7 +36,7 @@ public class AuthController {
         AuthDtos.AuthResponse response = authService.loginWithGoogle(request);
         org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(environment == null || !environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test")))
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .sameSite("Lax")

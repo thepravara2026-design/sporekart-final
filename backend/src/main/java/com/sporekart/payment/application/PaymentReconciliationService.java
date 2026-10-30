@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,7 @@ public class PaymentReconciliationService {
     }
 
     @Scheduled(fixedDelayString = "${sporekart.payment.reconciliation.interval-ms:600000}", initialDelay = 120000)
+    @SchedulerLock(name = "PaymentReconciliationService_reconcile", lockAtMostFor = "9m", lockAtLeastFor = "2m")
     public void runScheduledReconciliation() {
         log.info("Starting background payment and refund reconciliation job...");
         try {

@@ -94,6 +94,8 @@ public class PromotionService {
             try {
                 userRepository.findAll().stream()
                         .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                        .filter(u -> u.getEmail() != null && !u.getEmail().isBlank())
+                        .filter(u -> !com.sporekart.notification.application.NotificationWorker.isNonRoutableOrTestEmail(u.getEmail()))
                         .forEach(user -> {
                             notificationEventService.recordEvent(
                                     com.sporekart.notification.domain.NotificationEventType.PROMOTION_PUBLISHED,

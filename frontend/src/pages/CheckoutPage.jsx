@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, MapPin, CheckCircle2, ArrowRight, AlertTriangle, PlusCircle, CreditCard, Lock, User, Loader2, Tag, Smartphone, Building2 } from 'lucide-react';
 import { customerApi, orderApi, authApi } from '../api';
 import { useCart } from '../context/CartContext';
@@ -636,6 +636,13 @@ export default function CheckoutPage({ user, setUser }) {
               <ShieldCheck className="w-4 h-4 text-forest-700" />
               <span>PCI-DSS Razorpay Gateway Secured</span>
             </div>
+
+            <p className="text-[11px] text-center text-typography-muted leading-relaxed pt-1">
+              By placing your order, you agree to Sporekart’s{' '}
+              <Link to="/terms" target="_blank" className="underline hover:text-forest-700 font-medium">Terms</Link>,{' '}
+              <Link to="/privacy-policy" target="_blank" className="underline hover:text-forest-700 font-medium">Privacy</Link> &amp;{' '}
+              <Link to="/refund-policy" target="_blank" className="underline hover:text-forest-700 font-medium">Refund Policy</Link>.
+            </p>
           </div>
         </div>
       </div>

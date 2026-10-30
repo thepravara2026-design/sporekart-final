@@ -7,12 +7,15 @@ import com.sporekart.catalog.infrastructure.ProductRepository;
 import com.sporekart.catalog.infrastructure.ProductVariantRepository;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sporekart.shared.infrastructure.CacheConfig;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -44,6 +47,7 @@ public class CatalogApplicationService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.CACHE_PRODUCTS, key = "#typeFilter + '-' + #categorySlug + '-' + #page + '-' + #size")
     public List<CatalogDtos.ProductDto> getAllActiveProducts(ProductType typeFilter, String categorySlug, int page, int size) {
         String cleanCategory = resolveCategorySlug(categorySlug);
         ProductType cleanType = typeFilter != null ? typeFilter : resolveProductType(categorySlug);
@@ -212,6 +216,7 @@ public class CatalogApplicationService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.CACHE_CATEGORIES, key = "'allCatalogCategories'")
     public List<CatalogDtos.CategoryDto> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .filter(Category::isActive)

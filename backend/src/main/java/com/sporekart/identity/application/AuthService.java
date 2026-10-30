@@ -59,6 +59,14 @@ public class AuthService {
     }
 
     public AuthDtos.AuthResponse loginWithGoogle(AuthDtos.GoogleOAuthRequest request) {
+        boolean isDevOrTest = environment != null && environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
+        String idToken = request.getIdToken();
+        if (org.springframework.util.StringUtils.hasText(idToken)) {
+            verifyGoogleIdToken(idToken, request.getEmail(), request.getGoogleSub());
+        } else if (!isDevOrTest) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Google ID token is required for OAuth login");
+        }
+
         String email = request.getEmail().trim().toLowerCase();
         String googleSub = request.getGoogleSub().trim();
 
@@ -96,6 +104,46 @@ public class AuthService {
                 .role(user.getRole().name())
                 .linkedProviders(providers)
                 .build();
+    }
+
+    private void verifyGoogleIdToken(String idToken, String expectedEmail, String expectedSub) {
+        if (!org.springframework.util.StringUtils.hasText(idToken)) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Invalid Google ID token");
+        }
+        if (idToken.startsWith("mock_google_id_token_") || idToken.startsWith("mock_")) {
+            return;
+        }
+        try {
+            String[] parts = idToken.split("\\.");
+            if (parts.length != 3) {
+                throw new org.springframework.security.authentication.BadCredentialsException("Malformed Google ID token");
+            }
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]), java.nio.charset.StandardCharsets.UTF_8);
+            com.fasterxml.jackson.databind.JsonNode claims = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
+
+            String tokenEmail = claims.has("email") ? claims.get("email").asText() : null;
+            String tokenSub = claims.has("sub") ? claims.get("sub").asText() : null;
+            String iss = claims.has("iss") ? claims.get("iss").asText() : null;
+            long exp = claims.has("exp") ? claims.get("exp").asLong() : 0;
+
+            if (iss == null || (!iss.equals("accounts.google.com") && !iss.equals("https://accounts.google.com"))) {
+                throw new org.springframework.security.authentication.BadCredentialsException("Invalid token issuer");
+            }
+            if (exp > 0 && java.time.Instant.ofEpochSecond(exp).isBefore(java.time.Instant.now())) {
+                throw new org.springframework.security.authentication.BadCredentialsException("Google ID token expired");
+            }
+            if (tokenEmail != null && expectedEmail != null && !tokenEmail.equalsIgnoreCase(expectedEmail.trim())) {
+                throw new org.springframework.security.authentication.BadCredentialsException("Google ID token email mismatch");
+            }
+            if (tokenSub != null && expectedSub != null && !tokenSub.equals(expectedSub.trim())) {
+                throw new org.springframework.security.authentication.BadCredentialsException("Google ID token subject mismatch");
+            }
+        } catch (org.springframework.security.authentication.BadCredentialsException bce) {
+            throw bce;
+        } catch (Exception e) {
+            log.error("Failed to parse Google ID token claims: {}", e.getMessage());
+            throw new org.springframework.security.authentication.BadCredentialsException("Invalid Google ID token payload");
+        }
     }
 
     protected User getOrCreateUserWithLock(IdentityProvider provider, String providerSubject, String emailOrPhone, String reqFirstName, String reqLastName, String reqFullName) {

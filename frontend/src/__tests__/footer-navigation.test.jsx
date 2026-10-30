@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Footer from '../components/Footer';
 
@@ -94,5 +94,67 @@ describe('Footer Navigation & Routing Validation Tests', () => {
       expect(match).toBeDefined();
       expect(match.getAttribute('href')).toBe(path);
     });
+  });
+
+  it('renders enterprise details, quick action badges, newsletter, and PravaraMedia design credit', () => {
+    renderFooter();
+
+    // Enterprise details
+    expect(screen.getByText(/Basapura village, Behind Taralabalu school, Davangere-577001, Karnataka/i)).toBeInTheDocument();
+    expect(screen.getByText('+91 7204709870')).toBeInTheDocument();
+    expect(screen.getByText('support@sporekart.in')).toBeInTheDocument();
+
+    // Quick action badges
+    const whatsappBadge = screen.getByRole('link', { name: /Chat on WhatsApp/i });
+    expect(whatsappBadge.getAttribute('href')).toContain('wa.me/917204709870');
+
+    const instaBadge = screen.getByRole('link', { name: /Instagram @sporekart/i });
+    expect(instaBadge.getAttribute('href')).toContain('instagram.com/sporekart');
+
+    // Newsletter input & submission
+    const emailInput = screen.getByPlaceholderText('Your email address');
+    expect(emailInput).toBeInTheDocument();
+    fireEvent.change(emailInput, { target: { value: 'farmer@example.com' } });
+    const subscribeBtn = screen.getByLabelText('Subscribe to newsletter');
+    fireEvent.click(subscribeBtn);
+    expect(screen.getByText(/Subscribed successfully!/i)).toBeInTheDocument();
+
+    // Exact bottom bar attribution
+    expect(screen.getByText(/Design & Developed By PravaraMedia, Davangere, Karnataka/i)).toBeInTheDocument();
+  });
+
+  it('handles clicking PravaraMedia bottom credit and opens popup with actionable website, WhatsApp, and Instagram links', () => {
+    renderFooter();
+
+    // The attribution pill button is clickable
+    const pravaraBtn = screen.getByRole('button', { name: /Design & Developed By PravaraMedia, Davangere, Karnataka/i });
+    expect(pravaraBtn).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /PravaraMedia Agency Information/i })).not.toBeInTheDocument();
+
+    // Click to open popup
+    fireEvent.click(pravaraBtn);
+
+    const dialog = screen.getByRole('dialog', { name: /PravaraMedia Agency Information/i });
+    expect(dialog).toBeInTheDocument();
+
+    // Website link
+    const websiteLink = screen.getByRole('link', { name: /pravaramedia.framer.website/i });
+    expect(websiteLink).toHaveAttribute('href', 'https://pravaramedia.framer.website');
+    expect(websiteLink).toHaveAttribute('target', '_blank');
+
+    // WhatsApp link
+    const whatsappLink = screen.getByRole('link', { name: /\+91 8277559093/i });
+    expect(whatsappLink.getAttribute('href')).toContain('wa.me/918277559093');
+    expect(whatsappLink).toHaveAttribute('target', '_blank');
+
+    // Instagram link
+    const instaLink = screen.getByRole('link', { name: /@pravaramedia.marketing/i });
+    expect(instaLink).toHaveAttribute('href', 'https://www.instagram.com/pravaramedia.marketing');
+    expect(instaLink).toHaveAttribute('target', '_blank');
+
+    // Close button dismisses popup
+    const closeBtn = screen.getByRole('button', { name: /Close PravaraMedia popover/i });
+    fireEvent.click(closeBtn);
+    expect(screen.queryByRole('dialog', { name: /PravaraMedia Agency Information/i })).not.toBeInTheDocument();
   });
 });

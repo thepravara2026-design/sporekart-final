@@ -32,9 +32,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
                 SecurityContextHolder.clearContext();
+                clearAuthCookies(response);
+
+                // For public endpoints (e.g. browsing products, catalog, cart), allow guests through even if an expired/stale token was sent
+                if (isPublicEndpoint(request)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
+
                 String json = objectMapper.writeValueAsString(
                         com.sporekart.shared.api.ApiResponse.error("UNAUTHORIZED", "Authentication required or token expired"));
                 response.getWriter().write(json);
@@ -43,6 +52,84 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void clearAuthCookies(HttpServletResponse response) {
+        org.springframework.http.ResponseCookie clearCookie = org.springframework.http.ResponseCookie.from("sporekart_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, clearCookie.toString());
+
+        org.springframework.http.ResponseCookie clearJwtCookie = org.springframework.http.ResponseCookie.from("JWT_TOKEN", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, clearJwtCookie.toString());
+    }
+
+    private boolean isPublicEndpoint(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if (!StringUtils.hasText(path)) {
+            path = request.getRequestURI();
+        }
+        if (StringUtils.hasText(path)) {
+            if (path.startsWith("/api/v1")) {
+                path = path.substring(7);
+            }
+        }
+        if (!StringUtils.hasText(path)) {
+            return false;
+        }
+
+        String method = request.getMethod() != null ? request.getMethod().toUpperCase() : "GET";
+
+        if (path.startsWith("/auth/") || path.startsWith("/admin/auth/")) {
+            return true;
+        }
+        if (path.startsWith("/actuator/health") || path.startsWith("/actuator/info")
+                || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
+            return true;
+        }
+        if (path.equals("/cart") || path.startsWith("/cart/")) {
+            return true;
+        }
+        if ("GET".equals(method)) {
+            if (path.equals("/catalog") || path.startsWith("/catalog")
+                    || path.equals("/products") || path.startsWith("/products")
+                    || path.equals("/categories") || path.startsWith("/categories")
+                    || path.equals("/reviews") || path.startsWith("/reviews")
+                    || path.equals("/activities") || path.startsWith("/activities")
+                    || path.equals("/search") || path.startsWith("/search")
+                    || path.startsWith("/content")
+                    || path.startsWith("/training/courses") || path.startsWith("/training/glimpses")
+                    || path.startsWith("/shipping/check-pincode")
+                    || path.startsWith("/seo")
+                    || path.startsWith("/media")
+                    || path.startsWith("/promotions")
+                    || path.equals("/payment/summary")
+                    || (path.startsWith("/orders/") && !path.startsWith("/orders/admin"))) {
+                return true;
+            }
+        }
+        if ("POST".equals(method)) {
+            if (path.equals("/orders") || path.equals("/orders/")
+                    || path.startsWith("/payment/webhook") || path.startsWith("/shipping/webhook")
+                    || path.startsWith("/analytics/track-")
+                    || path.equals("/create-order") || path.equals("/verify-payment")
+                    || path.equals("/payment/create-order") || path.equals("/payment/verify-payment")
+                    || path.equals("/payment/initiate") || path.equals("/payment/verify")
+                    || path.equals("/training/enroll") || path.equals("/training/bookings")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

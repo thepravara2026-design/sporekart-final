@@ -27,6 +27,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.id = :id")
     Optional<Order> findByIdWithItems(@Param("id") UUID id);
 
+    List<Order> findTop20ByOrderByCreatedAtDesc();
+
     List<Order> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
     List<Order> findBySessionIdAndUserIdIsNull(String sessionId);

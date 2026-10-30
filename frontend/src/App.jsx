@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProductAddedPopupDrawer from './components/ProductAddedPopupDrawer';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import PageSkeleton from './components/PageSkeleton';
 import { authApi } from './api';
 import { reportWebVitals } from './reportWebVitals';
@@ -39,6 +40,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const LegalPolicyPage = lazy(() => import('./pages/LegalPolicyPage'));
 
 // Deep-link helper redirect for notification email links
 function OrderRedirect() {
@@ -144,6 +146,22 @@ export default function App() {
                   <Route path="/mushroom-cultivation-guide" element={<CultivationGuidePage />} />
                   <Route path="/mushroom-spawn-guide" element={<SpawnGuidePage />} />
 
+                  {/* Legal, Statutory & E-Commerce Compliance Routes */}
+                  <Route path="/policies" element={<LegalPolicyPage />} />
+                  <Route path="/policies/:policySlug" element={<LegalPolicyPage />} />
+                  <Route path="/privacy-policy" element={<LegalPolicyPage />} />
+                  <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+                  <Route path="/terms" element={<LegalPolicyPage />} />
+                  <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
+                  <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+                  <Route path="/refund-policy" element={<LegalPolicyPage />} />
+                  <Route path="/return-policy" element={<Navigate to="/refund-policy" replace />} />
+                  <Route path="/cancellation-policy" element={<Navigate to="/refund-policy" replace />} />
+                  <Route path="/shipping-policy" element={<LegalPolicyPage />} />
+                  <Route path="/cookie-policy" element={<LegalPolicyPage />} />
+                  <Route path="/cache-policy" element={<Navigate to="/cookie-policy" replace />} />
+                  <Route path="/cache-policies" element={<Navigate to="/cookie-policy" replace />} />
+
                   {/* User Account */}
                   <Route path="/dashboard" element={<DashboardPage user={user} setUser={setUser} />} />
 
@@ -194,6 +212,7 @@ export default function App() {
             )}
 
             <Footer />
+            <CookieConsentBanner />
             <WhatsAppFloatingButton />
             <CartDrawer />
             <ProductAddedPopupDrawer />

@@ -5,6 +5,7 @@ import com.sporekart.shipping.domain.Shipment;
 import com.sporekart.shipping.domain.ShipmentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ public class ShipmentTrackingSyncTask {
      * Defaults to every 4 hours, configurable via sporekart.shipping.tracking-sync.cron.
      */
     @Scheduled(cron = "${sporekart.shipping.tracking-sync.cron:0 0 */4 * * *}")
+    @SchedulerLock(name = "ShipmentTrackingSyncTask_sync", lockAtMostFor = "3h", lockAtLeastFor = "10m")
     public void syncActiveShipmentTracking() {
         log.info("Starting scheduled background tracking synchronization for active shipments...");
         try {

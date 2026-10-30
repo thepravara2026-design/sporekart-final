@@ -499,7 +499,7 @@ public class OrderServiceUnitTest {
                 .shippingAddressJson("{}")
                 .build();
 
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
 
         OrderResponse cancelled = orderService.cancelOrder(orderId, userId, "Customer request");
@@ -525,6 +525,7 @@ public class OrderServiceUnitTest {
                 .shippingAddressJson("{}")
                 .build();
 
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -535,18 +536,16 @@ public class OrderServiceUnitTest {
     }
 
     @Test
-    @DisplayName("ORD-22: cancelOrder on already CANCELLED or REFUNDED order throws IllegalStateException")
+    @DisplayName("ORD-22: cancelOrder on already CANCELLED or REFUNDED order returns existing state idempotently")
     void ORD_22_cancel_order_already_cancelled_or_refunded_fails() {
         UUID orderId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
         Order order = Order.builder().id(orderId).userId(userId).status(OrderStatus.CANCELLED).shippingAddressJson("{}").build();
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
-                orderService.cancelOrder(orderId, userId, "Repeat cancel")
-        );
-        assertTrue(ex.getMessage().contains("already CANCELLED"));
+        OrderResponse res = orderService.cancelOrder(orderId, userId, "Repeat cancel");
+        assertEquals(OrderStatus.CANCELLED, res.getStatus());
     }
 
     @Test
@@ -556,7 +555,7 @@ public class OrderServiceUnitTest {
         UUID userId = UUID.randomUUID();
 
         Order order = Order.builder().id(orderId).userId(userId).status(OrderStatus.SHIPPED).shippingAddressJson("{}").build();
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
                 orderService.cancelOrder(orderId, userId, "Cancel shipped")

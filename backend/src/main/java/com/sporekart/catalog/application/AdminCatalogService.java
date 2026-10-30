@@ -5,8 +5,11 @@ import com.sporekart.catalog.domain.*;
 import com.sporekart.catalog.infrastructure.*;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sporekart.shared.infrastructure.CacheConfig;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -71,6 +74,10 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_CATEGORIES, allEntries = true)
+    })
     public Product createProduct(CatalogDtos.CreateProductRequest request) {
         if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new IllegalArgumentException("Product title cannot be empty");
@@ -118,6 +125,7 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, allEntries = true)
     public Product updateProduct(UUID productId, CatalogDtos.UpdateProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
@@ -175,6 +183,7 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, allEntries = true)
     public Product updateProductStatus(UUID productId, ProductStatus status, Boolean isActive) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
@@ -244,6 +253,7 @@ public class AdminCatalogService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, allEntries = true)
     public Product publishProduct(UUID productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));

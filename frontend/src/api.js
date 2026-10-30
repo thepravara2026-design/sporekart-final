@@ -16,15 +16,46 @@ export const getOrCreateSessionId = () => {
   return sessionId;
 };
 
+// Helper to check if a JWT token is expired before sending it
+export const isTokenExpired = (token) => {
+  if (!token || typeof token !== 'string') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return false;
+    // Add 10-second buffer for clock skew
+    return Date.now() >= (payload.exp * 1000 - 10000);
+  } catch (e) {
+    return true;
+  }
+};
+
 // Helper to clear token only on 401 unauthorized without wiping guest session cart
 export const clearTokenOnly = () => {
   localStorage.removeItem('sporekart_token');
+  if (typeof document !== 'undefined') {
+    document.cookie = 'sporekart_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
+    document.cookie = 'JWT_TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
+  }
 };
 
 // Helper to completely clear authentication tokens & session ID on explicit logout
 export const clearSessionAndTokens = () => {
   localStorage.removeItem('sporekart_token');
   localStorage.removeItem('sporekart_session_id');
+  if (typeof document !== 'undefined') {
+    document.cookie = 'sporekart_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
+    document.cookie = 'JWT_TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
+  }
   return getOrCreateSessionId();
 };
 
@@ -39,7 +70,11 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('sporekart_token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (isTokenExpired(token)) {
+      clearTokenOnly();
+    } else {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   
   const sessionId = getOrCreateSessionId();
@@ -50,7 +85,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response) {
       if (error.response.status === 401) {
         clearTokenOnly();
@@ -59,6 +94,22 @@ api.interceptors.response.use(
           const currentPath = window.location.pathname;
           if (currentPath.startsWith('/admin') && currentPath !== '/admin/login') {
             window.location.href = '/admin/login';
+          }
+        }
+
+        // Auto self-healing for guest/public endpoints (cart, products, categories, etc.):
+        // If an expired or invalid token caused a 401 on a non-admin request, retry once without Authorization header
+        const originalRequest = error.config;
+        if (originalRequest && !originalRequest._retryWithoutAuth) {
+          const url = originalRequest.url || '';
+          const isAdminReq = url.includes('/admin');
+          if (!isAdminReq) {
+            originalRequest._retryWithoutAuth = true;
+            if (originalRequest.headers) {
+              delete originalRequest.headers.Authorization;
+              delete originalRequest.headers.authorization;
+            }
+            return api(originalRequest);
           }
         }
       }
@@ -90,6 +141,10 @@ export const catalogApi = {
   searchProducts: (params) => api.get('/products/search', { params }),
   getProductBySlug: (slug) => api.get(`/catalog/products/${slug}`),
   getCategories: () => api.get('/catalog/categories'),
+};
+
+export const activityApi = {
+  getRecentActivities: (limit = 10) => api.get('/activities/recent', { params: { limit } }),
 };
 
 export const searchApi = {

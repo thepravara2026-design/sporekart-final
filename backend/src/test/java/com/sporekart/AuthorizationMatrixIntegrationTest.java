@@ -291,6 +291,7 @@ public class AuthorizationMatrixIntegrationTest {
         if ("GET".equalsIgnoreCase(httpMethod)) {
             if (path.startsWith("/catalog/") || path.startsWith("/products") ||
                 path.startsWith("/categories") || path.startsWith("/reviews") ||
+                path.startsWith("/activities") ||
                 path.startsWith("/search") || path.startsWith("/content/") ||
                 path.startsWith("/training/courses") || path.equals("/training/glimpses") ||
                 path.startsWith("/shipping/check-pincode") ||

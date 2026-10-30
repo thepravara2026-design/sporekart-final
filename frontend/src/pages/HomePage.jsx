@@ -17,6 +17,7 @@ import SustainabilitySection from '../components/SustainabilitySection';
 import CustomerTestimonialsSection from '../components/CustomerTestimonialsSection';
 import CategoryCarousel from '../components/CategoryCarousel';
 import ContactSection from '../components/ContactSection';
+import LandingPageScrollExperience from '../components/LandingPageScrollExperience';
 import { useCart } from '../context/CartContext';
 
 const PRESET_CAT_MAP = {
@@ -131,7 +132,9 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       const element = document.getElementById(targetId);
       if (element) {
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const yOffset = -76;
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
         }, 120);
       }
     }
@@ -214,7 +217,8 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
   };
 
   return (
-    <div className="space-y-12 sm:space-y-16 pb-20 animate-fade-in text-typography-primary">
+    <div className="space-y-12 sm:space-y-16 pb-20 animate-fade-in text-typography-primary relative">
+      <LandingPageScrollExperience />
       <SeoHead
         title="Sporekart — Fresh Mushrooms, Pure Grain Spawn & Certified Training in India"
         description="India's leading platform for organic fresh button & oyster mushrooms, 1st generation grain spawn seeds, indoor DIY growing kits, and certified commercial grower workshops."
@@ -223,41 +227,53 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       />
 
       {/* SECTION B: HERO SECTION */}
-      <HeroSection />
+      <div id="hero" className="scroll-mt-20">
+        <HeroSection />
+      </div>
 
       {/* SECTION B2: AGRITECH TRUST BAR */}
-      <AgriTechTrustBar />
+      <div id="trust-standards" className="landing-scroll-reveal scroll-mt-24">
+        <AgriTechTrustBar />
+      </div>
 
       {/* SECTION C: MUSHROOM VARIETIES SHOWCASE */}
-      <MushroomVarietiesSection />
+      <div id="varieties-container" className="landing-scroll-reveal scroll-mt-24">
+        <MushroomVarietiesSection />
+      </div>
 
       {/* SECTION D: OUR FARM AND TECHNOLOGY */}
-      <div id="about">
+      <div id="about" className="landing-scroll-reveal scroll-mt-24">
         <FarmTechnologySection />
       </div>
 
       {/* SECTION E: WHY CHOOSE SPOREKART */}
-      <WhyChooseUsSection />
+      <div id="why-choose-us-container" className="landing-scroll-reveal scroll-mt-24">
+        <WhyChooseUsSection />
+      </div>
 
       {/* SECTION F: TRAINING AND EDUCATION */}
-      <div id="training">
+      <div id="training" className="landing-scroll-reveal scroll-mt-24">
         <TrainingEducationSection />
       </div>
 
       {/* SECTION G: SUSTAINABILITY COMMITMENT */}
-      <SustainabilitySection />
+      <div id="sustainability-container" className="landing-scroll-reveal scroll-mt-24">
+        <SustainabilitySection />
+      </div>
 
       {/* SECTION H: CUSTOMER TESTIMONIALS */}
-      <CustomerTestimonialsSection />
+      <div id="testimonials-container" className="landing-scroll-reveal scroll-mt-24">
+        <CustomerTestimonialsSection />
+      </div>
 
       {/* CATEGORY EXPLORATION & LIVE CATALOG SECTION */}
-      <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 landing-scroll-reveal scroll-mt-24">
         <CategoryCarousel categories={displayCategories} />
       </section>
 
 
       {/* FAQ SECTION WITH 80% VISIBILITY MUSHROOM GILL TEXTURE BACKGROUND */}
-      <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8" aria-label="Frequently Asked Questions">
+      <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 landing-scroll-reveal scroll-mt-24" aria-label="Frequently Asked Questions">
         <div className="relative rounded-[26px] sm:rounded-[36px] overflow-hidden border border-surface-border shadow-2xl bg-surface-cream text-forest-950">
           
           {/* Background Image: 80% Clearly Visible Fitted into Entire Section */}
@@ -464,7 +480,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       </section>
 
       {/* CONTACT & ENTERPRISE SECTION */}
-      <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 landing-scroll-reveal scroll-mt-24">
         <ContactSection />
       </section>
     </div>

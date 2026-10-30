@@ -101,7 +101,7 @@ public class TrainingServiceUnitTest {
         Course course = Course.builder().id(courseId).title("Oyster Mushroom").slug("oyster-mushroom").durationDays(7).feeInr(new BigDecimal("500.00")).isActive(true).build();
 
         when(courseRepository.findByIsActiveTrue()).thenReturn(List.of(course));
-        when(batchRepository.findByCourseId(courseId)).thenReturn(Collections.emptyList());
+        when(batchRepository.findByCourseIdIn(List.of(courseId))).thenReturn(Collections.emptyList());
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
         when(batchRepository.save(any(Batch.class))).thenAnswer(i -> i.getArgument(0));
 

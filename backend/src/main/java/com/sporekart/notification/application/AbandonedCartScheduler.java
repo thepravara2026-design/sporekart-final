@@ -12,6 +12,7 @@ import com.sporekart.training.domain.EnrollmentStatus;
 import com.sporekart.training.infrastructure.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class AbandonedCartScheduler {
     private final NotificationEventService notificationEventService;
 
     @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
+    @SchedulerLock(name = "AbandonedCartScheduler_scan", lockAtMostFor = "14m", lockAtLeastFor = "2m")
     public void scanAbandonedCartsAndCheckouts() {
         log.info("Scanning for abandoned carts and incomplete checkouts...");
         scanAbandonedCarts();

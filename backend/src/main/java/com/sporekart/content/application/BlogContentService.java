@@ -4,6 +4,7 @@ import com.sporekart.content.domain.*;
 import com.sporekart.content.infrastructure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -205,6 +206,8 @@ public class BlogContentService {
                 try {
                     userRepository.findAll().stream()
                         .filter(u -> u.getRole() != com.sporekart.identity.domain.UserRole.ROLE_ADMIN)
+                        .filter(u -> u.getEmail() != null && !u.getEmail().isBlank())
+                        .filter(u -> !com.sporekart.notification.application.NotificationWorker.isNonRoutableOrTestEmail(u.getEmail()))
                         .forEach(user -> {
                             try {
                                 notificationEventService.recordEvent(
@@ -256,6 +259,7 @@ public class BlogContentService {
 
     // Scheduled Publisher background runner
     @Scheduled(fixedRate = 60000)
+    @SchedulerLock(name = "BlogContentService_processScheduledPosts", lockAtMostFor = "50s", lockAtLeastFor = "10s")
     public void processScheduledPosts() {
         ZonedDateTime now = ZonedDateTime.now();
         List<BlogPost> duePosts = postRepository.findDueScheduledPosts(now);

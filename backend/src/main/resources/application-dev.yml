@@ -29,7 +29,7 @@ logging:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dGVzdF9kZXZfc2VjcmV0X2tleV9mb3JfbG9jYWxfZGV2ZWxvcG1lbnRfb25seV8zMmJ5dGVz}
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971}
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_Tqs0MmdXUl8FRk}
     key-secret: ${RAZORPAY_KEY_SECRET:dFrgcYKVv0wBEtGgogcZpFHT}

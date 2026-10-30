@@ -49,3 +49,9 @@ test-results/
 **/.temp/
 
 
+
+.vite/
+**/.vite/
+
+tunnel-logs/
+**/tunnel-logs/
