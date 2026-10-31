@@ -69,8 +69,8 @@ export default function ContactSection({
             </p>
           </div>
 
-          <div className="space-y-3.5 text-xs text-typography-secondary">
-            <div className="p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 flex items-start gap-3">
+          <div className="space-y-3.5 text-xs text-typography-secondary landing-stagger-parent">
+            <div className="stagger-item card-interactive p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex items-start gap-3">
               <Building2 className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-typography-primary text-sm">Enterprise Entity</h4>
@@ -78,7 +78,7 @@ export default function ContactSection({
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 flex items-start gap-3">
+            <div className="stagger-item card-interactive p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex items-start gap-3">
               <MapPin className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-typography-primary text-sm">Registered Location & Agritech Hub</h4>
@@ -86,7 +86,7 @@ export default function ContactSection({
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 flex items-start gap-3">
+            <div className="stagger-item card-interactive p-4 rounded-2xl bg-surface-white border border-surface-border shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex items-start gap-3">
               <Phone className="w-5 h-5 text-forest-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-typography-primary text-sm">Phone Helpline</h4>

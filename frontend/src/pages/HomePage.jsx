@@ -309,8 +309,8 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             </div>
 
             {/* 3 Minimal Descriptive Trust Badges */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-4xl mx-auto">
-              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/90 backdrop-blur-md border border-white/70 shadow-xs transition-all flex items-center gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-4xl mx-auto landing-stagger-parent">
+              <div className="stagger-item card-interactive p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/95 backdrop-blur-md border border-white/70 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-forest-900/10 text-forest-800 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-5 h-5 text-forest-800" />
                 </div>
@@ -324,7 +324,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                 </div>
               </div>
 
-              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/90 backdrop-blur-md border border-white/70 shadow-xs transition-all flex items-center gap-3">
+              <div className="stagger-item card-interactive p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/95 backdrop-blur-md border border-white/70 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-forest-900/10 text-forest-800 flex items-center justify-center shrink-0">
                   <Truck className="w-5 h-5 text-forest-800" />
                 </div>
@@ -338,7 +338,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                 </div>
               </div>
 
-              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/90 backdrop-blur-md border border-white/70 shadow-xs transition-all flex items-center gap-3">
+              <div className="stagger-item card-interactive p-3 sm:p-3.5 rounded-2xl bg-white/75 hover:bg-white/95 backdrop-blur-md border border-white/70 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-forest-900/10 text-forest-800 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-5 h-5 text-forest-800" />
                 </div>

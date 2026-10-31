@@ -50,19 +50,19 @@ export default function LandingPageScrollExperience() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 3. Scroll reveal observer for elements with .landing-scroll-reveal
+  // 3. Scroll reveal observer for elements with .landing-scroll-reveal and .landing-stagger-parent
   useEffect(() => {
     // Respect reduced motion settings
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mediaQuery.matches) {
-      document.querySelectorAll('.landing-scroll-reveal').forEach((el) => {
+      document.querySelectorAll('.landing-scroll-reveal, .landing-stagger-parent').forEach((el) => {
         el.classList.add('is-revealed');
       });
       return;
     }
 
     if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll('.landing-scroll-reveal').forEach((el) => {
+      document.querySelectorAll('.landing-scroll-reveal, .landing-stagger-parent').forEach((el) => {
         el.classList.add('is-revealed');
       });
       return;
@@ -78,16 +78,42 @@ export default function LandingPageScrollExperience() {
         });
       },
       {
-        threshold: 0.12,
+        threshold: 0.10,
         rootMargin: '0px 0px -40px 0px',
       }
     );
 
-    const revealElements = document.querySelectorAll('.landing-scroll-reveal');
+    const revealElements = document.querySelectorAll('.landing-scroll-reveal, .landing-stagger-parent');
     revealElements.forEach((el) => observer.observe(el));
+
+    // Optional subtle parallax tracking on non-mobile devices
+    let parallaxTicking = false;
+    const isMobile = window.innerWidth < 768;
+
+    const handleParallaxScroll = () => {
+      if (isMobile || parallaxTicking) return;
+      parallaxTicking = true;
+      window.requestAnimationFrame(() => {
+        const scrolled = window.scrollY || window.pageYOffset || 0;
+        const parallaxElements = document.querySelectorAll('[data-parallax-speed]');
+        parallaxElements.forEach((elem) => {
+          const speed = parseFloat(elem.getAttribute('data-parallax-speed') || '0.04');
+          const offset = (scrolled * speed * 0.4).toFixed(1);
+          elem.style.transform = `translate3d(0, ${offset}px, 0)`;
+        });
+        parallaxTicking = false;
+      });
+    };
+
+    if (!isMobile) {
+      window.addEventListener('scroll', handleParallaxScroll, { passive: true });
+    }
 
     return () => {
       observer.disconnect();
+      if (!isMobile) {
+        window.removeEventListener('scroll', handleParallaxScroll);
+      }
     };
   }, []);
 

@@ -48,9 +48,9 @@ export default function TrainingEducationSection() {
           </div>
 
           {/* 4 Checkmarks */}
-          <div className="space-y-3 pt-1">
+          <div className="space-y-3 pt-1 landing-stagger-parent">
             {TRAINING_POINTS.map((pt) => (
-              <div key={pt} className="flex items-center gap-3">
+              <div key={pt} className="stagger-item flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-forest-800 shrink-0" />
                 <span className="text-xs sm:text-sm font-semibold text-forest-900">
                   {pt}

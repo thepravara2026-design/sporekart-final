@@ -63,7 +63,7 @@ export default function CategoryCarousel({ categories = [], className = '' }) {
       {/* Creative Circular Category Track */}
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-4 sm:gap-6 md:gap-8 pb-4 pt-2 -mx-4 px-4 sm:mx-0 sm:px-2 items-start"
+        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-4 sm:gap-6 md:gap-8 pb-4 pt-2 -mx-4 px-4 sm:mx-0 sm:px-2 items-start landing-stagger-parent"
       >
         {categories.map((cat, idx) => {
           const IconComp = cat.IconComp || Layers;
@@ -80,7 +80,7 @@ export default function CategoryCarousel({ categories = [], className = '' }) {
             <Link
               key={cat.id || cat.slug}
               to={`/products/${cat.slug}`}
-              className="w-[120px] sm:w-[150px] md:w-[170px] shrink-0 snap-start flex flex-col items-center text-center group focus:outline-none transition-transform duration-300"
+              className="stagger-item w-[120px] sm:w-[150px] md:w-[170px] shrink-0 snap-start flex flex-col items-center text-center group focus:outline-none transition-transform duration-300 card-interactive"
             >
               {/* Circular Card Graphic with Concentric Rings */}
               <div className="relative">

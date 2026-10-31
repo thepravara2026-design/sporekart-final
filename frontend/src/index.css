@@ -490,7 +490,7 @@
 }
 
 /* =========================================================
-   LANDING PAGE SCOPED SMOOTH SCROLL & REVEAL SYSTEM
+   LANDING PAGE SCOPED SMOOTH SCROLL & ADVANCED REVEAL SYSTEM
    ========================================================= */
 
 /* Scoped smooth scrolling active only when landing page is mounted */
@@ -498,18 +498,116 @@ html.landing-page-scroll-active {
   scroll-behavior: smooth !important;
 }
 
-/* Scroll reveal sections for smooth viewport entry */
+/* Base scroll reveal container */
 .landing-scroll-reveal {
   opacity: 0;
-  transform: translateY(28px) scale(0.985);
-  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(26px);
+  transition: opacity 750ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 750ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .landing-scroll-reveal.is-revealed {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
+}
+
+/* Directional entrance variations */
+.landing-scroll-reveal.reveal-left {
+  transform: translateX(-32px);
+}
+.landing-scroll-reveal.reveal-left.is-revealed {
+  transform: translateX(0);
+}
+
+.landing-scroll-reveal.reveal-right {
+  transform: translateX(32px);
+}
+.landing-scroll-reveal.reveal-right.is-revealed {
+  transform: translateX(0);
+}
+
+.landing-scroll-reveal.reveal-scale {
+  transform: scale(0.94);
+}
+.landing-scroll-reveal.reveal-scale.is-revealed {
+  transform: scale(1);
+}
+
+/* Staggered Children Animation System */
+.landing-stagger-parent .stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-stagger-parent.is-revealed .stagger-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(1) { transition-delay: 50ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(2) { transition-delay: 110ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(3) { transition-delay: 170ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(4) { transition-delay: 230ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(5) { transition-delay: 290ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(6) { transition-delay: 350ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(7) { transition-delay: 410ms; }
+.landing-stagger-parent.is-revealed .stagger-item:nth-child(8) { transition-delay: 470ms; }
+
+/* Micro-interactions: Premium Card Lift & Subtle Border Glow */
+.card-interactive {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-interactive:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 32px -8px rgba(11, 31, 20, 0.12), 0 0 0 1px rgba(52, 211, 153, 0.25);
+}
+
+/* Organic Mycelium Floating Elements */
+@keyframes myceliumFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+.animate-mycelium-float {
+  animation: myceliumFloat 7s ease-in-out infinite;
+}
+
+@keyframes subtlePulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
+}
+
+.animate-subtle-glow {
+  animation: subtlePulseGlow 6s ease-in-out infinite;
+}
+
+/* Section Ambient Visual Transition Divider */
+.section-transition-divider {
+  position: relative;
+  height: 48px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.section-transition-divider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(47, 107, 69, 0.08), transparent 70%);
 }
 
 /* Reduced motion accessibility */
@@ -517,10 +615,14 @@ html.landing-page-scroll-active {
   html.landing-page-scroll-active {
     scroll-behavior: auto !important;
   }
-  .landing-scroll-reveal {
+  .landing-scroll-reveal,
+  .landing-stagger-parent .stagger-item,
+  .animate-mycelium-float,
+  .animate-subtle-glow {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+    animation: none !important;
   }
 }
 

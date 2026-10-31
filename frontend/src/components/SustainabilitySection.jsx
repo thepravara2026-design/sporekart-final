@@ -81,13 +81,13 @@ export default function SustainabilitySection() {
           </div>
 
           {/* Right Verified Practices: 2-Column Grid with Glassmorphic Translucency */}
-          <div className="lg:col-span-6 grid grid-cols-2 gap-2.5 sm:gap-4">
+          <div className="lg:col-span-6 grid grid-cols-2 gap-2.5 sm:gap-4 landing-stagger-parent">
             {PRACTICES.map((p) => {
               const Icon = p.icon;
               return (
                 <div
                   key={p.title}
-                  className="group p-3.5 sm:p-5 rounded-2xl bg-forest-950/65 hover:bg-forest-950/85 backdrop-blur-md border border-white/20 hover:border-emerald-400/60 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between gap-2.5"
+                  className="stagger-item card-interactive group p-3.5 sm:p-5 rounded-2xl bg-forest-950/65 hover:bg-forest-950/85 backdrop-blur-md border border-white/20 hover:border-emerald-400/60 shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between gap-2.5"
                 >
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 group-hover:bg-emerald-500 border border-emerald-400/40 flex items-center justify-center shrink-0 transition-all duration-300">
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300 group-hover:text-white transition-colors" />

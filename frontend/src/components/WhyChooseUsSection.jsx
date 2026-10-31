@@ -91,15 +91,15 @@ export default function WhyChooseUsSection() {
           </div>
 
           {/* Right Column: 2-Column Grid of 6 Trust Cards with Blurred Forest Green Background & White Text */}
-          <div className="lg:col-span-7 grid grid-cols-2 gap-2.5 sm:gap-4">
+          <div className="lg:col-span-7 grid grid-cols-2 gap-2.5 sm:gap-4 landing-stagger-parent">
             {FEATURES.map((feat) => {
               const Icon = feat.icon;
               return (
                 <div
                   key={feat.title}
-                  className="group p-3.5 sm:p-5 rounded-2xl bg-forest-950/65 hover:bg-forest-950/80 backdrop-blur-md border border-white/20 hover:border-emerald-400/50 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 space-y-2 sm:space-y-2.5 flex flex-col justify-between"
+                  className="stagger-item group p-3.5 sm:p-5 rounded-2xl bg-forest-950/65 hover:bg-forest-950/85 backdrop-blur-md border border-white/20 hover:border-emerald-400/50 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 space-y-2 sm:space-y-2.5 flex flex-col justify-between card-interactive"
                 >
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 group-hover:bg-emerald-500/30 border border-emerald-400/35 text-emerald-300 flex items-center justify-center shrink-0 transition-colors">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 group-hover:bg-emerald-500/30 border border-emerald-400/35 text-emerald-300 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300 group-hover:text-emerald-200 transition-colors" strokeWidth={2} />
                   </div>
                   <div className="space-y-0.5 sm:space-y-1">

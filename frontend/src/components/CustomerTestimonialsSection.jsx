@@ -97,11 +97,11 @@ export default function CustomerTestimonialsSection() {
         </div>
 
         {/* 3 Testimonial Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 landing-stagger-parent">
           {reviews.map((story) => (
             <div
               key={story.id}
-              className="p-6 sm:p-7 rounded-[24px] bg-surface-white border border-surface-border shadow-sm hover:shadow-level-2 hover:border-forest-700/30 transition-all duration-300 flex flex-col justify-between space-y-5"
+              className="stagger-item card-interactive p-6 sm:p-7 rounded-[24px] bg-surface-white border border-surface-border shadow-sm hover:shadow-level-2 hover:border-forest-700/30 transition-all duration-300 flex flex-col justify-between space-y-5"
             >
               {/* Top Quote */}
               <div className="space-y-3">

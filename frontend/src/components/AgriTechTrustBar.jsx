@@ -170,7 +170,7 @@ export default function AgriTechTrustBar() {
         </div>
 
         {/* 5 Modular Metric Cards Grid with Blurred Backgrounds */}
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 pt-4 sm:pt-6">
+        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 pt-4 sm:pt-6 landing-stagger-parent">
           {TRUST_METRICS.map((item, idx) => {
             const Icon = item.icon;
             const isLast = idx === TRUST_METRICS.length - 1;
@@ -183,7 +183,7 @@ export default function AgriTechTrustBar() {
                 onClick={() => setActiveCard(isSelected ? null : item.id)}
                 onMouseEnter={() => setHoveredCard(item.id)}
                 onMouseLeave={() => setHoveredCard(null)}
-                className={`group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[24px] cursor-pointer transition-all duration-300 flex flex-col justify-between gap-3 overflow-hidden select-none ${
+                className={`stagger-item group relative p-3.5 sm:p-5 rounded-2xl sm:rounded-[24px] cursor-pointer transition-all duration-300 flex flex-col justify-between gap-3 overflow-hidden select-none card-interactive ${
                   isLast ? 'col-span-2 sm:col-span-1' : ''
                 } ${
                   isSelected 

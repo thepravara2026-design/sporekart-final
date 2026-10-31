@@ -17,10 +17,12 @@ function Stop-SafeProcessById([int]$pidToStop, [string]$name) {
         if ($proc) {
             Write-Host "[+] Stopping $name (PID: $pidToStop)..." -ForegroundColor Yellow
             try {
-                Stop-Process -Id $pidToStop -Force -ErrorAction Stop
-                Write-Host "[✓] Stopped $name (PID: $pidToStop)" -ForegroundColor Green
+                taskkill /PID $pidToStop /T /F 2>$null | Out-Null
+                Write-Host "[OK] Stopped $name (PID: $pidToStop)" -ForegroundColor Green
             } catch {
-                Write-Warning "Could not stop $name: $_"
+                try {
+                    Stop-Process -Id $pidToStop -Force -ErrorAction SilentlyContinue
+                } catch {}
             }
         } else {
             Write-Host "[i] $name (PID: $pidToStop) is not currently running." -ForegroundColor Gray
