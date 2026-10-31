@@ -14,27 +14,6 @@ public class AuthDtos {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class OtpRequest {
-        @NotBlank(message = "Phone or email identifier is required")
-        private String identifier;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class VerifyOtpRequest {
-        @NotBlank(message = "Identifier is required")
-        private String identifier;
-        @NotBlank(message = "OTP code is required")
-        private String otpCode;
-        private String firstName;
-        private String lastName;
-        private String fullName;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class GoogleOAuthRequest {
         private String googleSub;

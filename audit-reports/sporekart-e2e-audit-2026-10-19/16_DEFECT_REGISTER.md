@@ -27,7 +27,7 @@
 - **Reproduction Steps:**
 ```
 1. Open application-supabase.yml.
-2. Observe datasource URL, username (postgres.irwiiyowpppdynbmwwuz), and password (MyDbSporekart@123#) committed in source.
+2. Observe datasource URL, username (postgres.irwiiyowpppdynbmwwuz), and password (***REDACTED***) committed in source.
 ```
 - **Expected Result:** Database credentials must be supplied via environment variables (e.g. ${SUPABASE_DB_PASSWORD}) or cloud secrets manager.
 - **Actual Result:** Direct production database connection strings and plain passwords are committed to the code repository.

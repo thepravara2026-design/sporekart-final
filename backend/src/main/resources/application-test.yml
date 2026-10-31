@@ -7,27 +7,40 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 app:
   jwt:
-    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971}
+    secret: ${JWT_SECRET:dGVzdF9mYWtlX2p3dF9zZWNyZXRfa2V5XzMyYnl0ZXMh}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   razorpay:
-    key-id: ${RAZORPAY_KEY_ID:rzp_test_mockkey123}
-    key-secret: ${RAZORPAY_KEY_SECRET:mocksecret123}
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_fake_test_key_id}
+    key-secret: ${RAZORPAY_KEY_SECRET:fake_test_key_secret}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:fake_test_webhook_secret}
+    mock-mode: false
+  supabase:
+    url: ${SUPABASE_URL:https://fake-test-supabase.sporekart.in}
+    bucket: ${SUPABASE_BUCKET:sporekart-media}
+    anon-key: ${SUPABASE_ANON_KEY:fake_test_anon_key}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:fake_test_service_role_key}
 
 sporekart:
   mail:
     use-real-smtp: false
   shiprocket:
     use-real-shiprocket: false
-    webhook-token: test_secret_token_12345
+    webhook-token: ${SHIPROCKET_WEBHOOK_TOKEN:fake_test_shiprocket_webhook_token}
     pickup-location: Primary
     pickup-pincode: 411001
     tracking-base-url: https://track.shiprocket.in/

@@ -1,7 +1,6 @@
 package com.sporekart.identity.api;
 
 import com.sporekart.identity.application.AuthService;
-import com.sporekart.identity.domain.OtpType;
 import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +17,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final org.springframework.core.env.Environment environment;
-
-    @PostMapping("/otp/request")
-    public ResponseEntity<ApiResponse<String>> requestOtp(@RequestBody(required = false) AuthDtos.OtpRequest request) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
-                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Email and Phone OTP authentication have been retired. Please sign in with Google."));
-    }
-
-    @PostMapping("/otp/verify")
-    public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> verifyOtp(@RequestBody(required = false) AuthDtos.VerifyOtpRequest request) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
-                .body(ApiResponse.error("AUTH_METHOD_RETIRED", "Email and Phone OTP authentication have been retired. Please sign in with Google."));
-    }
 
     @PostMapping("/oauth/google")
     public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> loginWithGoogle(@Valid @RequestBody AuthDtos.GoogleOAuthRequest request) {

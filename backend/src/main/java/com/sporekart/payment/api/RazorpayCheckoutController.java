@@ -41,7 +41,7 @@ public class RazorpayCheckoutController {
      * Return: { order_id, amount, currency, key_id }
      * Minimum amount: 100 paise
      */
-    @PostMapping({"/create-order", "/api/create-order", "/payment/create-order"})
+    @PostMapping("/create-order")
     public ResponseEntity<?> createOrder(@RequestBody(required = false) RazorpayOrderDtos.CreateOrderRequest request) {
         if (request == null || request.getAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -172,7 +172,7 @@ public class RazorpayCheckoutController {
      * Signature mismatch: return 400, do NOT mark as paid
      * Missing fields: return 400
      */
-    @PostMapping({"/verify-payment", "/api/verify-payment", "/payment/verify-payment"})
+    @PostMapping("/verify-payment")
     public ResponseEntity<?> verifyPayment(@RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request) {
         if (request == null) {
             return ResponseEntity.badRequest().body(Map.of(

@@ -91,7 +91,7 @@ In `MediaService.java`:
 ## 6. Secret Hygiene and Environment Isolation
 
 - Scanned all JSON API responses across all 14 suites for sensitive environment variables:
-  - Database passwords (`MyDbSporekart@123#`) -> **0 occurrences**.
+  - Database passwords (`***REDACTED***`) -> **0 occurrences**.
   - Razorpay Key Secret (`dFrgcYKVv0wBEtGgogcZpFHT`) -> **0 occurrences**.
   - Razorpay Webhook Secret (`mockwebhooksecret123`) -> **0 occurrences**.
   - SMTP Credentials -> **0 occurrences**.

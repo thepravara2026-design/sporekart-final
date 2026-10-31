@@ -22,6 +22,14 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
 logging:
   level:
     com.sporekart: INFO
@@ -29,15 +37,20 @@ logging:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971}
+    secret: ${JWT_SECRET:ZGV2X2Zha2Vfand0X3NlY3JldF9rZXlfMzJieXRlcyE=}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   razorpay:
-    key-id: ${RAZORPAY_KEY_ID:rzp_test_Tqs0MmdXUl8FRk}
-    key-secret: ${RAZORPAY_KEY_SECRET:dFrgcYKVv0wBEtGgogcZpFHT}
-    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:mockwebhooksecret123}
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_fake_dev_key_id}
+    key-secret: ${RAZORPAY_KEY_SECRET:fake_dev_key_secret}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:fake_dev_webhook_secret}
     mock-mode: ${RAZORPAY_MOCK_MODE:false}
+  supabase:
+    url: ${SUPABASE_URL:https://fake-dev-supabase.sporekart.in}
+    bucket: ${SUPABASE_BUCKET:sporekart-media}
+    anon-key: ${SUPABASE_ANON_KEY:fake_dev_anon_key}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:fake_dev_service_role_key}
 
 sporekart:
   shiprocket:
     use-real-shiprocket: false
-
-
+    webhook-token: ${SHIPROCKET_WEBHOOK_TOKEN:fake_dev_shiprocket_webhook_token}

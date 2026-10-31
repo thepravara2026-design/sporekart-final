@@ -64,14 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .build();
         response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, clearCookie.toString());
 
-        org.springframework.http.ResponseCookie clearJwtCookie = org.springframework.http.ResponseCookie.from("JWT_TOKEN", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Lax")
-                .build();
-        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, clearJwtCookie.toString());
+
     }
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
@@ -139,7 +132,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         if (request.getCookies() != null) {
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-                if ("sporekart_token".equals(cookie.getName()) || "JWT_TOKEN".equals(cookie.getName())) {
+                if ("sporekart_token".equals(cookie.getName())) {
                     if (StringUtils.hasText(cookie.getValue())) {
                         return cookie.getValue();
                     }

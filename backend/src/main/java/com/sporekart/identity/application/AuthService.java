@@ -3,7 +3,6 @@ package com.sporekart.identity.application;
 import com.sporekart.identity.api.AuthDtos;
 import com.sporekart.identity.domain.*;
 import com.sporekart.identity.infrastructure.CustomerIdentityRepository;
-import com.sporekart.identity.infrastructure.OtpRepository;
 import com.sporekart.identity.infrastructure.UserRepository;
 import com.sporekart.shared.infrastructure.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;

@@ -81,26 +81,26 @@ public class IdentitySecurityTest {
     }
 
     @Test
-    void testRetiredOtpEndpointsReturn410Gone() throws Exception {
+    void testRetiredOtpEndpointsAreNotExposed() throws Exception {
         mockMvc.perform(post("/auth/otp/request")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"identifier\":\"user@example.com\"}"))
-                .andExpect(status().isGone());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/auth/otp/verify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"identifier\":\"user@example.com\",\"otpCode\":\"123456\"}"))
-                .andExpect(status().isGone());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/admin/auth/otp/request")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"identifier\":\"admin@sporekart.in\"}"))
-                .andExpect(status().isGone());
+                .andExpect(status().is4xxClientError());
 
         mockMvc.perform(post("/admin/auth/otp/verify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"identifier\":\"admin@sporekart.in\",\"otpCode\":\"123456\"}"))
-                .andExpect(status().isGone());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class IdentitySecurityTest {
 
         var mvcResult = mockMvc.perform(post("/auth/oauth/google")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"googleSub\":\"google_sub_2002\",\"email\":\"cookietest@example.com\",\"fullName\":\"Cookie User\"}"))
+                        .content("{\"googleSub\":\"google_sub_2002\",\"email\":\"cookietest@example.com\",\"fullName\":\"Cookie User\",\"idToken\":\"test_token_cookietest@example.com\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
 

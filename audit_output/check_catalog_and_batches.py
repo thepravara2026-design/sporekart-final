@@ -1,3 +1,4 @@
+import os
 import pg8000.native, ssl
 
 ctx = ssl.create_default_context()
@@ -5,7 +6,7 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 con = pg8000.native.Connection(
     user='postgres.irwiiyowpppdynbmwwuz',
-    password='MyDbSporekart@123#',
+    password=os.environ.get('SUPABASE_DB_PASSWORD', ''),
     host='aws-0-ap-northeast-1.pooler.supabase.com',
     port=6543,
     database='postgres',

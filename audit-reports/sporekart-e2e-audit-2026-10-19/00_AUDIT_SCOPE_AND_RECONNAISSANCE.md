@@ -438,7 +438,7 @@ The Sporekart backend exposes **33 REST Controllers** encompassing **108 distinc
 - **CRITICAL:** `backend/src/main/resources/application-supabase.yml` contains hardcoded database credentials:
   - Database Host: `aws-0-ap-northeast-1.pooler.supabase.com:6543`
   - Username: `postgres.irwiiyowpppdynbmwwuz`
-  - Password: `MyDbSporekart@123#`
+  - Password: `***REDACTED***`
 - **HIGH:** `backend/src/main/resources/application-dev.yml` contains a static base64 JWT secret fallback:
   - `dGVzdF9kZXZfc2VjcmV0X2tleV9mb3JfbG9jYWxfZGV2ZWxvcG1lbnRfb25seV8zMmJ5dGVz`
 - **HIGH:** `backend/src/main/resources/application-test.yml` contains a static hex JWT secret fallback:

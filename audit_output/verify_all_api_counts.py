@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Verify UI/API vs Database Record Counts across all key domain models.
@@ -12,7 +13,7 @@ DB_HOST = "aws-0-ap-northeast-1.pooler.supabase.com"
 DB_PORT = 6543
 DB_NAME = "postgres"
 DB_USER = "postgres.irwiiyowpppdynbmwwuz"
-DB_PASS = "MyDbSporekart@123#"
+DB_PASS = os.environ.get("SUPABASE_DB_PASSWORD", "")
 API_BASE = "http://localhost:8080/api/v1"
 
 def run_counts_audit():

@@ -149,7 +149,7 @@ DEFECTS = [
         "confidence": "Confirmed",
         "affected_module": "Security & Infrastructure",
         "location": "backend/src/main/resources/application-supabase.yml:lines 3-6",
-        "reproduction_steps": "1. Open application-supabase.yml.\n2. Observe datasource URL, username (postgres.irwiiyowpppdynbmwwuz), and password (MyDbSporekart@123#) committed in source.",
+        "reproduction_steps": "1. Open application-supabase.yml.\n2. Observe datasource URL, username (postgres.irwiiyowpppdynbmwwuz), and password (***REDACTED***) committed in source.",
         "expected_result": "Database credentials must be supplied via environment variables (e.g. ${SUPABASE_DB_PASSWORD}) or cloud secrets manager.",
         "actual_result": "Direct production database connection strings and plain passwords are committed to the code repository.",
         "evidence": "application-supabase.yml lines 3-6: url: jdbc:postgresql://aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?prepareThreshold=0",

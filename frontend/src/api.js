@@ -44,7 +44,6 @@ export const clearTokenOnly = () => {
   localStorage.removeItem('sporekart_token');
   if (typeof document !== 'undefined') {
     document.cookie = 'sporekart_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
-    document.cookie = 'JWT_TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
   }
 };
 
@@ -54,7 +53,6 @@ export const clearSessionAndTokens = () => {
   localStorage.removeItem('sporekart_session_id');
   if (typeof document !== 'undefined') {
     document.cookie = 'sporekart_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
-    document.cookie = 'JWT_TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;';
   }
   return getOrCreateSessionId();
 };

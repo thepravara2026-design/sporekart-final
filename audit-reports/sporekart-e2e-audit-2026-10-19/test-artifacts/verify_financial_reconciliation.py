@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Deep Financial and Business Invariant Reconciliation.
@@ -22,7 +23,7 @@ DB_HOST = "aws-0-ap-northeast-1.pooler.supabase.com"
 DB_PORT = 6543
 DB_NAME = "postgres"
 DB_USER = "postgres.irwiiyowpppdynbmwwuz"
-DB_PASS = "MyDbSporekart@123#"
+DB_PASS = os.environ.get("SUPABASE_DB_PASSWORD", "")
 
 def get_connection():
     ctx = ssl.create_default_context()

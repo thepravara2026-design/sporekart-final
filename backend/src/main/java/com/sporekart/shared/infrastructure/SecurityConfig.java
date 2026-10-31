@@ -77,8 +77,12 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
+                auth.requestMatchers("/actuator/health", "/actuator/info").permitAll();
+                if (environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev"))) {
+                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
+                } else {
+                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").hasRole("ADMIN");
+                }
                 if (isDevOrTest) {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
@@ -96,14 +100,12 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/create-order", "/api/create-order",
-                        "/verify-payment", "/api/verify-payment",
-                        "/payment/create-order", "/payment/verify-payment",
+                        "/create-order",
+                        "/verify-payment",
                         "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
                     .requestMatchers(HttpMethod.POST, "/shipping/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()
-                    .requestMatchers("/admin/auth/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/shipping/create", "/shipping/cancel/**", "/shipping/simulate-event/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/shipping/label/**").hasRole("ADMIN")

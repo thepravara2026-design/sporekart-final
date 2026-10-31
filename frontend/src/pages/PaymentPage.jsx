@@ -193,7 +193,7 @@ export default function PaymentPage() {
       }
 
       const options = {
-        key: rzpData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Tqs0MmdXUl8FRk',
+        key: rzpData.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
         amount: Math.round((rzpData.amountInr || remainingGatewayAmount) * 100),
         currency: rzpData.currency || 'INR',
         name: 'Sporekart Agritech',
