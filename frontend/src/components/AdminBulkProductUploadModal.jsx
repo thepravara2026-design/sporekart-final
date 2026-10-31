@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { 
   Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, 
   AlertTriangle, Layers, ChevronDown, ChevronRight, Package, Sparkles, 
@@ -59,7 +59,9 @@ export default function AdminBulkProductUploadModal({
   // 1. EXCEL TEMPLATE GENERATION (Top E-Commerce Multi-Sheet Architecture)
   // =========================================================================
   const generateTemplateWorkbook = () => {
-    const wb = XLSX.utils.book_new();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Sporekart Agritech';
+    wb.created = new Date();
 
     // 1A. Products Sheet (Master rows with multi-variant examples)
     const productData = [
@@ -227,38 +229,10 @@ export default function AdminBulkProductUploadModal({
       }
     ];
 
-    const wsProducts = XLSX.utils.json_to_sheet(productData);
-
-    // Set professional column widths for optimal reading in Excel
-    wsProducts['!cols'] = [
-      { wch: 25 }, // Handle
-      { wch: 38 }, // Title
-      { wch: 20 }, // Category
-      { wch: 18 }, // Product_Type
-      { wch: 45 }, // Description
-      { wch: 20 }, // Brand_Name
-      { wch: 12 }, // HSN_Code
-      { wch: 10 }, // GST_Rate
-      { wch: 18 }, // FSSAI_License
-      { wch: 14 }, // Is_Vegetarian
-      { wch: 22 }, // Mushroom_Species
-      { wch: 24 }, // Strain_Variety
-      { wch: 14 }, // Net_Quantity
-      { wch: 16 }, // Country_Of_Origin
-      { wch: 28 }, // Recommended_Substrate
-      { wch: 30 }, // Storage_Instructions
-      { wch: 24 }, // Shelf_Life_Guidance
-      { wch: 35 }, // Primary_Image_URL
-      { wch: 35 }, // Gallery_Image_URLs
-      { wch: 26 }, // Variant_Name
-      { wch: 18 }, // Variant_SKU
-      { wch: 18 }, // Variant_Price_INR
-      { wch: 22 }, // Compare_At_Price_INR
-      { wch: 15 }, // Stock_Quantity
-      { wch: 12 }, // Status
-    ];
-
-    XLSX.utils.book_append_sheet(wb, wsProducts, 'Products');
+    const wsProducts = wb.addWorksheet('Products');
+    const productKeys = Object.keys(productData[0]);
+    wsProducts.columns = productKeys.map(k => ({ header: k, key: k, width: 25 }));
+    productData.forEach(row => wsProducts.addRow(row));
 
     // 1B. Live Store Categories Reference Sheet
     const categoryData = (categories && categories.length > 0)
@@ -276,15 +250,10 @@ export default function AdminBulkProductUploadModal({
           { 'Category Name': 'Growing Kits', 'Category Slug': 'growing-kits', 'Category UUID': '', 'Status': 'Active', 'Description': 'Ready-to-fruit indoor mushroom grow kits' }
         ];
 
-    const wsCategories = XLSX.utils.json_to_sheet(categoryData);
-    wsCategories['!cols'] = [
-      { wch: 26 },
-      { wch: 22 },
-      { wch: 38 },
-      { wch: 12 },
-      { wch: 45 }
-    ];
-    XLSX.utils.book_append_sheet(wb, wsCategories, 'Store_Categories_Reference');
+    const wsCategories = wb.addWorksheet('Store_Categories_Reference');
+    const catKeys = Object.keys(categoryData[0]);
+    wsCategories.columns = catKeys.map(k => ({ header: k, key: k, width: 25 }));
+    categoryData.forEach(row => wsCategories.addRow(row));
 
     // 1C. Instructions and Rules Sheet
     const instructionData = [
@@ -302,21 +271,30 @@ export default function AdminBulkProductUploadModal({
       { 'Rule / Column': 'Images', 'Requirement': 'Optional', 'Explanation': 'Provide accessible public HTTPS URLs. Primary image will be main card photo; gallery URLs will be secondary thumbnails.' }
     ];
 
-    const wsInstructions = XLSX.utils.json_to_sheet(instructionData);
-    wsInstructions['!cols'] = [
-      { wch: 25 },
-      { wch: 28 },
-      { wch: 75 }
+    const wsInstructions = wb.addWorksheet('Instructions_And_Rules');
+    wsInstructions.columns = [
+      { header: 'Rule / Column', key: 'Rule / Column', width: 25 },
+      { header: 'Requirement', key: 'Requirement', width: 28 },
+      { header: 'Explanation', key: 'Explanation', width: 75 }
     ];
-    XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions_And_Rules');
+    instructionData.forEach(row => wsInstructions.addRow(row));
 
     return wb;
   };
 
-  const handleDownloadExcelTemplate = () => {
+  const handleDownloadExcelTemplate = async () => {
     try {
       const wb = generateTemplateWorkbook();
-      XLSX.writeFile(wb, 'Sporekart_Bulk_Product_Upload_Template.xlsx');
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'Sporekart_Bulk_Product_Upload_Template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error generating Excel template:', err);
       setParseError('Failed to generate Excel template. Please try CSV download.');
@@ -326,8 +304,17 @@ export default function AdminBulkProductUploadModal({
   const handleDownloadCsvTemplate = () => {
     try {
       const wb = generateTemplateWorkbook();
-      const ws = wb.Sheets['Products'];
-      const csv = XLSX.utils.sheet_to_csv(ws);
+      const ws = wb.getWorksheet('Products');
+      const rows = [];
+      ws.eachRow((row) => {
+        const rowVals = [];
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          const val = cell.text !== undefined && cell.text !== null ? cell.text : (cell.value || '');
+          rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+        });
+        rows.push(rowVals.join(','));
+      });
+      const csv = rows.join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -336,6 +323,7 @@ export default function AdminBulkProductUploadModal({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error generating CSV template:', err);
       setParseError('Failed to generate CSV template.');
@@ -371,18 +359,99 @@ export default function AdminBulkProductUploadModal({
         });
       }
 
-      const workbook = XLSX.read(buffer, { type: 'array', cellFormula: false, cellHTML: false, cellStyles: false });
+      let rawJson = [];
+      const isCsv = file.name && file.name.toLowerCase().endsWith('.csv');
 
-        // Find primary products sheet
-        let sheetName = workbook.SheetNames.find(s => s.toLowerCase().includes('product')) || workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-        if (!rawJson || rawJson.length === 0) {
-          setParseError(`The uploaded file sheet "${sheetName}" contains no data rows.`);
+      if (isCsv) {
+        let text;
+        if (typeof file.text === 'function') {
+          text = await file.text();
+        } else {
+          text = new TextDecoder('utf-8').decode(buffer);
+        }
+        const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+        if (lines.length <= 1) {
+          setParseError('The uploaded CSV file contains no data rows.');
           setParsing(false);
           return;
         }
+        const parseCsvLine = (line) => {
+          const result = [];
+          let current = '';
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result;
+        };
+
+        const headers = parseCsvLine(lines[0]);
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCsvLine(lines[i]);
+          const rowObj = {};
+          headers.forEach((h, idx) => {
+            rowObj[h] = values[idx] !== undefined ? values[idx] : '';
+          });
+          if (Object.values(rowObj).some(v => v !== '')) {
+            rawJson.push(rowObj);
+          }
+        }
+      } else {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+
+        const worksheet = workbook.worksheets.find(s => s.name.toLowerCase().includes('product')) || workbook.worksheets[0];
+
+        if (!worksheet || worksheet.rowCount <= 1) {
+          setParseError(`The uploaded file sheet "${worksheet ? worksheet.name : 'Unknown'}" contains no data rows.`);
+          setParsing(false);
+          return;
+        }
+
+        const headerRow = worksheet.getRow(1);
+        const headers = [];
+        headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          headers[colNumber] = cell.text ? cell.text.trim() : '';
+        });
+
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+          const rowObj = {};
+          row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            const header = headers[colNumber];
+            if (header) {
+              let val = cell.text;
+              if (val === undefined || val === null) {
+                val = cell.value !== undefined && cell.value !== null ? String(cell.value) : '';
+              }
+              rowObj[header] = val;
+            }
+          });
+          if (Object.keys(rowObj).length > 0 && Object.values(rowObj).some(v => v !== '')) {
+            rawJson.push(rowObj);
+          }
+        });
+      }
+
+      if (!rawJson || rawJson.length === 0) {
+        setParseError('The uploaded file contains no data rows.');
+        setParsing(false);
+        return;
+      }
 
         // Process rows and group multi-variants by Handle or Title
         const groupedProducts = {};

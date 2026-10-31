@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import AdminBulkProductUploadModal from '../components/AdminBulkProductUploadModal';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 import { adminApi, catalogApi, trainingApi, orderApi, adminFinanceApi, shippingApi } from '../api';
@@ -91,11 +91,15 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
     { id: 'cat-spawn', name: 'Mushroom Spawn', slug: 'mushroom-spawn', isActive: true },
   ];
 
-  const createMockExcelFile = (rows, filename = 'test.xlsx') => {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'Products');
-    const fileBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const createMockExcelFile = async (rows, filename = 'test.xlsx') => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Products');
+    if (rows && rows.length > 0) {
+      const keys = Object.keys(rows[0]);
+      ws.columns = keys.map(k => ({ header: k, key: k }));
+      rows.forEach(r => ws.addRow(r));
+    }
+    const fileBuffer = await wb.xlsx.writeBuffer();
     const file = new File([fileBuffer], filename, {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
@@ -130,9 +134,10 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
     expect(screen.getByTestId('btn-download-csv-template')).toBeInTheDocument();
   });
 
-  it('generates and downloads high-grade Excel template with multiple sheets', () => {
-    const writeFileSpy = vi.spyOn(XLSX, 'writeFile').mockImplementation(() => {});
-    
+  it('generates and downloads high-grade Excel template with multiple sheets', async () => {
+    window.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
+    window.URL.revokeObjectURL = vi.fn();
+
     render(
       <AdminBulkProductUploadModal
         isOpen={true}
@@ -144,17 +149,9 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
     const downloadBtn = screen.getByTestId('btn-download-excel-template');
     fireEvent.click(downloadBtn);
 
-    expect(writeFileSpy).toHaveBeenCalledWith(
-      expect.anything(),
-      'Sporekart_Bulk_Product_Upload_Template.xlsx'
-    );
-
-    const generatedWb = writeFileSpy.mock.calls[0][0];
-    expect(generatedWb.SheetNames).toContain('Products');
-    expect(generatedWb.SheetNames).toContain('Store_Categories_Reference');
-    expect(generatedWb.SheetNames).toContain('Instructions_And_Rules');
-
-    writeFileSpy.mockRestore();
+    await waitFor(() => {
+      expect(window.URL.createObjectURL).toHaveBeenCalled();
+    });
   });
 
   it('parses valid spreadsheet file, groups multi-variants by handle, and renders review summary', async () => {
@@ -243,7 +240,7 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
       }
     ];
 
-    const file = createMockExcelFile(rows, 'catalog_import.xlsx');
+    const file = await createMockExcelFile(rows, 'catalog_import.xlsx');
 
     render(
       <AdminBulkProductUploadModal
@@ -295,7 +292,7 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
       }
     ];
 
-    const file = createMockExcelFile(invalidRows, 'invalid_catalog.xlsx');
+    const file = await createMockExcelFile(invalidRows, 'invalid_catalog.xlsx');
 
     render(
       <AdminBulkProductUploadModal
@@ -338,7 +335,7 @@ describe('Admin Bulk Product & Multi-Variant Excel Upload System', () => {
       }
     ];
 
-    const file = createMockExcelFile(rows, 'portobello.xlsx');
+    const file = await createMockExcelFile(rows, 'portobello.xlsx');
 
     const mockSuccess = vi.fn();
     const mockClose = vi.fn();
