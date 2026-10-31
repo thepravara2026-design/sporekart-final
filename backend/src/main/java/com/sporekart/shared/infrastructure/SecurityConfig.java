@@ -1,8 +1,11 @@
 package com.sporekart.shared.infrastructure;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,11 +16,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.ShallowEtagHeaderFilter;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 import java.util.List;
 
@@ -30,12 +33,12 @@ public class SecurityConfig {
     private final RequestIdFilter requestIdFilter;
     private final RateLimitingFilter rateLimitingFilter;
     private final CsrfOriginValidationFilter csrfOriginValidationFilter;
-    private final org.springframework.core.env.Environment environment;
+    private final Environment environment;
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080}")
+    @Value("${app.cors.allowed-origins:${CORS_ALLOWED_ORIGINS:https://sporekart.in,https://www.sporekart.in,https://sporekart.com,https://www.sporekart.com,https://sporekart.vercel.app}}")
     private List<String> allowedOrigins;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter, RateLimitingFilter rateLimitingFilter, CsrfOriginValidationFilter csrfOriginValidationFilter, org.springframework.core.env.Environment environment) {
+    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter, RateLimitingFilter rateLimitingFilter, CsrfOriginValidationFilter csrfOriginValidationFilter, Environment environment) {
         this.tokenProvider = tokenProvider;
         this.requestIdFilter = requestIdFilter;
         this.rateLimitingFilter = rateLimitingFilter;
@@ -45,7 +48,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        boolean isDevOrTest = environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
+        boolean isDevOrTest = environment.acceptsProfiles(Profiles.of("dev", "test"));
         http
             .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> {
@@ -56,7 +59,10 @@ public class SecurityConfig {
                 headers.permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"));
                 headers.contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'self'; object-src 'none';"));
                 if (!isDevOrTest) {
-                    headers.httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000));
+                    headers.httpStrictTransportSecurity(hsts -> hsts
+                            .includeSubDomains(true)
+                            .maxAgeInSeconds(31536000)
+                            .requestMatcher(AnyRequestMatcher.INSTANCE));
                 }
             });
         http
@@ -80,7 +86,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers("/actuator/health", "/actuator/info").permitAll();
-                if (environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev"))) {
+                if (environment.acceptsProfiles(Profiles.of("dev"))) {
                     auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll();
                 } else {
                     auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").hasRole("ADMIN");
@@ -119,7 +125,7 @@ public class SecurityConfig {
             .addFilterBefore(csrfOriginValidationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, environment), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -132,7 +138,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        boolean isDevOrTest = environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test"));
+        boolean isDevOrTest = environment.acceptsProfiles(Profiles.of("dev", "test"));
         if (isDevOrTest) {
             configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
@@ -142,7 +148,16 @@ public class SecurityConfig {
                 "https://*.trycloudflare.com"
             ));
         } else {
-            configuration.setAllowedOrigins(allowedOrigins);
+            // Strictly exclude localhost, 127.0.0.1, or wildcard in production
+            List<String> prodOrigins = (allowedOrigins != null ? allowedOrigins : List.<String>of()).stream()
+                    .filter(origin -> origin != null && !origin.isBlank())
+                    .map(String::trim)
+                    .filter(origin -> !origin.contains("localhost") && !origin.contains("127.0.0.1") && !origin.equals("*"))
+                    .toList();
+            if (prodOrigins.isEmpty()) {
+                prodOrigins = List.of("https://sporekart.in", "https://www.sporekart.in", "https://sporekart.com", "https://www.sporekart.com", "https://sporekart.vercel.app");
+            }
+            configuration.setAllowedOrigins(prodOrigins);
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));

@@ -4,6 +4,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -14,11 +18,17 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final Environment environment;
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+        this(tokenProvider, null);
+    }
+
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, Environment environment) {
         this.tokenProvider = tokenProvider;
+        this.environment = environment;
     }
 
     @Override
@@ -55,16 +65,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void clearAuthCookies(HttpServletResponse response) {
-        org.springframework.http.ResponseCookie clearCookie = org.springframework.http.ResponseCookie.from("sporekart_token", "")
+        boolean isDevOrTest = environment != null && environment.acceptsProfiles(Profiles.of("dev", "test"));
+        ResponseCookie clearCookie = ResponseCookie.from("sporekart_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(!isDevOrTest)
                 .path("/")
                 .maxAge(0)
                 .sameSite("Lax")
                 .build();
-        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, clearCookie.toString());
-
-
+        response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
     }
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
