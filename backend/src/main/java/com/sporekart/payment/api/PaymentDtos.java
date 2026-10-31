@@ -2,6 +2,7 @@ package com.sporekart.payment.api;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,12 +43,15 @@ public class PaymentDtos {
         private UUID orderId;
 
         @NotBlank(message = "Razorpay Order ID is required")
+        @Size(max = 100, message = "Razorpay Order ID cannot exceed 100 characters")
         private String razorpayOrderId;
 
         @NotBlank(message = "Razorpay Payment ID is required")
+        @Size(max = 100, message = "Razorpay Payment ID cannot exceed 100 characters")
         private String razorpayPaymentId;
 
         @NotBlank(message = "Razorpay Signature is required")
+        @Size(max = 255, message = "Razorpay Signature cannot exceed 255 characters")
         private String razorpaySignature;
     }
 
@@ -95,14 +99,19 @@ public class PaymentDtos {
         private UUID enrollmentId;
 
         @NotBlank(message = "Payment method is required")
+        @Size(max = 50, message = "Payment method cannot exceed 50 characters")
         private String paymentMethod;
 
+        @Size(max = 100, message = "Razorpay Order ID cannot exceed 100 characters")
         private String razorpayOrderId;
 
+        @Size(max = 100, message = "Razorpay Payment ID cannot exceed 100 characters")
         private String razorpayPaymentId;
 
+        @Size(max = 255, message = "Razorpay Signature cannot exceed 255 characters")
         private String razorpaySignature;
 
+        @Size(max = 100, message = "Transaction reference cannot exceed 100 characters")
         private String transactionReference;
     }
 
@@ -115,5 +124,7 @@ public class PaymentDtos {
         private String message;
         private UUID enrollmentId;
         private String paymentReference;
+        private String courseTitle;
+        private String batchSchedule;
     }
 }

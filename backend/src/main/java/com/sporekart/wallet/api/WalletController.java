@@ -65,7 +65,7 @@ public class WalletController {
     @PostMapping("/withdraw")
     public ResponseEntity<ApiResponse<WalletDtos.WithdrawalResponse>> requestWithdrawal(
             Authentication authentication,
-            @RequestBody(required = false) WalletDtos.WithdrawRequest request
+            @Valid @RequestBody(required = false) WalletDtos.WithdrawRequest request
     ) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
                 .body(ApiResponse.error("WALLET_RETIRED", "Wallet withdrawals have been permanently retired. All merchant and customer funds settle directly via official banking channels."));
@@ -84,7 +84,7 @@ public class WalletController {
     @PostMapping("/add-money")
     public ResponseEntity<ApiResponse<WalletDtos.AddMoneyResponse>> addMoney(
             Authentication authentication,
-            @RequestBody(required = false) WalletDtos.AddMoneyRequest request
+            @Valid @RequestBody(required = false) WalletDtos.AddMoneyRequest request
     ) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
                 .body(ApiResponse.error("WALLET_RETIRED", "Wallet top-ups have been permanently retired. All payments are processed directly via Razorpay."));
@@ -93,7 +93,7 @@ public class WalletController {
     @PostMapping("/verify-add-money")
     public ResponseEntity<ApiResponse<WalletDtos.WalletTransactionResponse>> verifyAddMoney(
             Authentication authentication,
-            @RequestBody(required = false) WalletDtos.VerifyAddMoneyRequest request,
+            @Valid @RequestBody(required = false) WalletDtos.VerifyAddMoneyRequest request,
             @RequestParam(required = false) BigDecimal amount
     ) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
@@ -103,7 +103,7 @@ public class WalletController {
     @PostMapping("/checkout-pay")
     public ResponseEntity<ApiResponse<WalletDtos.WalletCheckoutPayResponse>> processCheckoutWalletPay(
             Authentication authentication,
-            @RequestBody(required = false) WalletDtos.WalletCheckoutPayRequest request
+            @Valid @RequestBody(required = false) WalletDtos.WalletCheckoutPayRequest request
     ) {
         return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
                 .body(ApiResponse.error("WALLET_RETIRED", "Wallet payments at checkout have been permanently retired. Please pay via Razorpay (UPI, Cards, NetBanking, QR)."));

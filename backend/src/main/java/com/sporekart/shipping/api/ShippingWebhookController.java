@@ -25,7 +25,7 @@ public class ShippingWebhookController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> handleShiprocketWebhook(
-            @RequestBody ShippingDtos.ShiprocketWebhookPayload payload,
+            @jakarta.validation.Valid @RequestBody ShippingDtos.ShiprocketWebhookPayload payload,
             @RequestHeader(value = "X-Shiprocket-Signature", required = false) String signature,
             @RequestHeader(value = "X-Shiprocket-Token", required = false) String token) {
 

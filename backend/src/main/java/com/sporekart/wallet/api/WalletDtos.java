@@ -63,13 +63,18 @@ public class WalletDtos {
     @Builder
     public static class WithdrawRequest {
         @NotNull(message = "Withdrawal amount is required")
+        @Positive(message = "Withdrawal amount must be strictly positive")
         @DecimalMin(value = "1.00", message = "Withdrawal amount must be at least ₹1.00")
+        @DecimalMax(value = "500000.00", message = "Withdrawal amount cannot exceed ₹500,000")
         private BigDecimal amount;
 
         @NotBlank(message = "Bank name is required")
+        @Size(min = 2, max = 100, message = "Bank name must be between 2 and 100 characters")
         private String bankName;
 
         @NotBlank(message = "Account number is required")
+        @Size(min = 8, max = 34, message = "Account number must be between 8 and 34 characters")
+        @Pattern(regexp = "^[0-9A-Za-z]+$", message = "Invalid account number format")
         private String accountNumber;
 
         @NotBlank(message = "IFSC code is required")
@@ -77,6 +82,7 @@ public class WalletDtos {
         private String ifscCode;
 
         @NotBlank(message = "Account holder name is required")
+        @Size(min = 2, max = 150, message = "Account holder name must be between 2 and 150 characters")
         private String accountHolderName;
     }
 
@@ -109,7 +115,9 @@ public class WalletDtos {
     @Builder
     public static class AddMoneyRequest {
         @NotNull(message = "Top-up amount is required")
+        @Positive(message = "Top-up amount must be strictly positive")
         @DecimalMin(value = "1.00", message = "Top-up amount must be at least ₹1.00")
+        @DecimalMax(value = "200000.00", message = "Top-up amount cannot exceed ₹200,000")
         private BigDecimal amount;
     }
 
@@ -133,12 +141,15 @@ public class WalletDtos {
     @Builder
     public static class VerifyAddMoneyRequest {
         @NotBlank(message = "Razorpay order ID is required")
+        @Size(max = 100, message = "Razorpay order ID cannot exceed 100 characters")
         private String razorpayOrderId;
 
         @NotBlank(message = "Razorpay payment ID is required")
+        @Size(max = 100, message = "Razorpay payment ID cannot exceed 100 characters")
         private String razorpayPaymentId;
 
         @NotBlank(message = "Razorpay signature is required")
+        @Size(max = 255, message = "Razorpay signature cannot exceed 255 characters")
         private String razorpaySignature;
     }
 
@@ -152,12 +163,16 @@ public class WalletDtos {
         private UUID enrollmentId;
 
         @NotBlank(message = "Payment target type is required (ORDER or ENROLLMENT)")
+        @Pattern(regexp = "^(ORDER|ENROLLMENT)$", message = "Type must be ORDER or ENROLLMENT")
         private String type; // "ORDER" or "ENROLLMENT"
 
         @NotNull(message = "Wallet deduction amount is required")
         @DecimalMin(value = "0.00", message = "Wallet amount cannot be negative")
+        @DecimalMax(value = "1000000.00", message = "Wallet deduction cannot exceed ₹1,000,000")
         private BigDecimal amountFromWallet;
 
+        @DecimalMin(value = "0.00", message = "Gateway amount cannot be negative")
+        @DecimalMax(value = "1000000.00", message = "Gateway amount cannot exceed ₹1,000,000")
         private BigDecimal amountFromGateway;
     }
 
@@ -205,7 +220,9 @@ public class WalletDtos {
         private UUID userId;
 
         @NotNull(message = "Adjustment amount is required")
+        @Positive(message = "Adjustment amount must be positive")
         @DecimalMin(value = "0.01", message = "Adjustment amount must be at least ₹0.01")
+        @DecimalMax(value = "1000000.00", message = "Adjustment amount cannot exceed ₹1,000,000")
         private BigDecimal amount;
 
         @NotBlank(message = "Direction is required (CREDIT or DEBIT)")
@@ -213,6 +230,7 @@ public class WalletDtos {
         private String direction; // "CREDIT" or "DEBIT"
 
         @NotBlank(message = "Adjustment reason is required")
+        @Size(min = 3, max = 500, message = "Reason must be between 3 and 500 characters")
         private String reason;
     }
 
@@ -222,8 +240,14 @@ public class WalletDtos {
     @AllArgsConstructor
     @Builder
     public static class AdminWithdrawalActionRequest {
+        @NotBlank(message = "Action is required")
+        @Pattern(regexp = "^(APPROVE|REJECT)$", message = "Action must be APPROVE or REJECT")
         private String action; // "APPROVE" or "REJECT"
+
+        @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
         private String notes;
+
+        @Size(max = 1000, message = "Rejection reason cannot exceed 1000 characters")
         private String rejectionReason;
     }
 }

@@ -42,7 +42,7 @@ public class RazorpayCheckoutController {
      * Minimum amount: 100 paise
      */
     @PostMapping("/create-order")
-    public ResponseEntity<?> createOrder(@RequestBody(required = false) RazorpayOrderDtos.CreateOrderRequest request) {
+    public ResponseEntity<?> createOrder(@jakarta.validation.Valid @RequestBody(required = false) RazorpayOrderDtos.CreateOrderRequest request) {
         if (request == null || request.getAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "failure",
@@ -174,7 +174,7 @@ public class RazorpayCheckoutController {
      */
     @PostMapping("/verify-payment")
     public ResponseEntity<?> verifyPayment(
-            @RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request,
+            @jakarta.validation.Valid @RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request,
             @org.springframework.web.bind.annotation.RequestHeader(name = "X-Session-ID", required = false) String sessionId,
             org.springframework.security.core.Authentication authentication) {
         if (request == null) {
