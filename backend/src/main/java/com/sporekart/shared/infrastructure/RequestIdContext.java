@@ -19,4 +19,16 @@ public class RequestIdContext {
         String requestId = MDC.get(MDC_KEY);
         return requestId != null ? requestId : "system-internal";
     }
+
+    public static void setCurrentRequestId(String id) {
+        if (id != null) {
+            MDC.put(MDC_KEY, id);
+        } else {
+            MDC.remove(MDC_KEY);
+        }
+    }
+
+    public static void clear() {
+        MDC.remove(MDC_KEY);
+    }
 }

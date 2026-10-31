@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,18 +33,23 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> success(T data) {
+        String reqId = RequestIdContext.getCurrentRequestId();
         return ApiResponse.<T>builder()
                 .success(true)
                 .data(data)
-                .requestId(RequestIdContext.getCurrentRequestId())
+                .requestId(reqId)
                 .build();
     }
 
     public static <T> ApiResponse<T> error(String code, String message) {
         String reqId = RequestIdContext.getCurrentRequestId();
+        if (reqId == null || reqId.isBlank()) {
+            reqId = UUID.randomUUID().toString();
+        }
         return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
+                .requestId(reqId)
                 .error(ErrorDetail.builder()
                         .code(code)
                         .message(message)

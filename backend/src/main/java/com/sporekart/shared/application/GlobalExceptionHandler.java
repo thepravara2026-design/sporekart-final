@@ -1,7 +1,10 @@
 package com.sporekart.shared.application;
 
 import com.sporekart.shared.api.ApiResponse;
+import com.sporekart.shared.infrastructure.RequestIdContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,14 +67,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("ACCESS_DENIED", "Access Denied: " + ex.getMessage()));
+                .body(ApiResponse.error("ACCESS_DENIED", "Access Denied"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("UNAUTHORIZED", "Authentication failed: " + ex.getMessage()));
+                .body(ApiResponse.error("UNAUTHORIZED", "Authentication failed"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -93,7 +97,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
         log.warn("Resource not found: {}", ex.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("NOT_FOUND", "Resource not found: " + ex.getResourcePath()));
+                .body(ApiResponse.error("NOT_FOUND", "Resource not found"));
     }
 
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
@@ -144,25 +148,39 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("CONSTRAINT_VIOLATION", details));
     }
 
-    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.warn("Database data integrity violation: {}", ex.getMostSpecificCause().getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error("DATA_INTEGRITY_VIOLATION", "The operation could not be completed due to a data integrity constraint conflict."));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataAccessException(DataAccessException ex) {
+        String correlationId = RequestIdContext.getCurrentRequestId();
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = UUID.randomUUID().toString();
+        }
+        log.error("Database access error [correlationId={}]: {}", correlationId, ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("DATABASE_ERROR", "Internal server error (Reference ID: " + correlationId + ")"));
     }
 
     @ExceptionHandler(com.sporekart.shipping.infrastructure.shiprocket.ShiprocketApiException.class)
     public ResponseEntity<ApiResponse<Void>> handleShiprocketApiException(com.sporekart.shipping.infrastructure.shiprocket.ShiprocketApiException ex) {
         log.error("Shiprocket integration error: {} (Endpoint: {})", ex.getMessage(), ex.getEndpoint());
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(ApiResponse.error("SHIPPING_GATEWAY_ERROR", "Logistics gateway communication failure: " + ex.getMessage()));
+                .body(ApiResponse.error("SHIPPING_GATEWAY_ERROR", "Logistics gateway communication failure"));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
-        log.error("Unhandled internal server error", ex);
-        // Production-safe exception response: Never leak stack traces to client
+        String correlationId = RequestIdContext.getCurrentRequestId();
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = UUID.randomUUID().toString();
+        }
+        log.error("Unhandled internal server error [correlationId={}]: {}", correlationId, ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "An unexpected internal error occurred. Please contact support with the request ID."));
+                .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "Internal server error (Reference ID: " + correlationId + ")"));
     }
 }
