@@ -36,6 +36,8 @@ class AuthServiceUnitTest {
     private JwtTokenProvider jwtTokenProvider;
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private GoogleIdTokenVerifier googleTokenVerifier;
 
     @InjectMocks
     private AuthService authService;
@@ -68,18 +70,24 @@ class AuthServiceUnitTest {
         realJwtTokenProvider = new JwtTokenProvider();
         ReflectionTestUtils.setField(realJwtTokenProvider, "jwtSecret", VALID_BASE64_SECRET);
         ReflectionTestUtils.setField(realJwtTokenProvider, "jwtExpirationMs", 3600000L);
+        ReflectionTestUtils.setField(authService, "adminEmails", "thepravara2026@gmail.com,admin@sporekart.in");
     }
 
     @Test
     @DisplayName("AUTH-9: Login with Google OAuth returns AuthResponse")
     void AUTH_9_loginWithGoogle_success() {
         AuthDtos.GoogleOAuthRequest request = new AuthDtos.GoogleOAuthRequest();
+        request.setIdToken("test-google-id-token");
         request.setEmail(emailIdentifier);
         request.setGoogleSub("google-sub-123");
         request.setFirstName("Google");
         request.setLastName("User");
 
+        when(googleTokenVerifier.verify("test-google-id-token")).thenReturn(
+                new GoogleTokenClaims("google-sub-123", emailIdentifier, true, "Google User", "Google", "User", null)
+        );
         when(userRepository.findByEmail(emailIdentifier)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(jwtTokenProvider.generateToken(any(), any(), any())).thenReturn("google-jwt-token");
         when(customerIdentityRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
