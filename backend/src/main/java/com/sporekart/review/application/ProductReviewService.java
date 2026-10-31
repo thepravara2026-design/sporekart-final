@@ -111,6 +111,12 @@ public class ProductReviewService {
                     .limit(5)
                     .toList();
 
+            for (String url : validUrls) {
+                if (!isValidReviewImageUrl(url)) {
+                    throw new IllegalArgumentException("Untrusted review image URL domain: " + url + ". Images must be hosted on trusted storage (e.g. Supabase, Sporekart).");
+                }
+            }
+
             for (int i = 0; i < validUrls.size(); i++) {
                 ProductReviewImage img = ProductReviewImage.builder()
                         .imageUrl(validUrls.get(i))
@@ -311,6 +317,12 @@ public class ProductReviewService {
                     .limit(5)
                     .toList();
 
+            for (String url : validUrls) {
+                if (!isValidReviewImageUrl(url)) {
+                    throw new IllegalArgumentException("Untrusted review image URL domain: " + url + ". Images must be hosted on trusted storage (e.g. Supabase, Sporekart).");
+                }
+            }
+
             for (int i = 0; i < validUrls.size(); i++) {
                 ProductReviewImage img = ProductReviewImage.builder()
                         .imageUrl(validUrls.get(i))
@@ -485,5 +497,53 @@ public class ProductReviewService {
         String firstName = parts[0];
         String lastInitial = parts[parts.length - 1].substring(0, 1).toUpperCase();
         return firstName + " " + lastInitial + ".";
+    }
+
+    public boolean isValidReviewImageUrl(String urlString) {
+        if (urlString == null || urlString.isBlank()) {
+            return false;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(urlString.trim());
+            String scheme = uri.getScheme();
+            if (scheme == null || !scheme.equalsIgnoreCase("https")) {
+                return false;
+            }
+            String host = uri.getHost();
+            if (host == null || host.isBlank()) {
+                return false;
+            }
+            String lowerHost = host.toLowerCase();
+
+            // Block loopback, private ranges, metadata services, internal hosts
+            if (lowerHost.equals("localhost") || lowerHost.equals("127.0.0.1") || lowerHost.equals("::1")
+                    || lowerHost.startsWith("169.254.") || lowerHost.contains("metadata.google.internal")
+                    || lowerHost.endsWith(".internal") || lowerHost.endsWith(".local")
+                    || lowerHost.startsWith("10.") || lowerHost.startsWith("192.168.")
+                    || (lowerHost.startsWith("172.") && isPrivate172(lowerHost))) {
+                return false;
+            }
+
+            // Allow trusted storage & CDN domains
+            return lowerHost.endsWith(".supabase.co")
+                    || lowerHost.endsWith(".supabase.in")
+                    || lowerHost.equals("sporekart.in") || lowerHost.endsWith(".sporekart.in")
+                    || lowerHost.equals("sporekart.com") || lowerHost.endsWith(".sporekart.com")
+                    || lowerHost.endsWith(".vercel.app")
+                    || lowerHost.equals("images.unsplash.com");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isPrivate172(String host) {
+        String[] parts = host.split("\\.");
+        if (parts.length >= 2) {
+            try {
+                int second = Integer.parseInt(parts[1]);
+                return second >= 16 && second <= 31;
+            } catch (NumberFormatException ignored) {}
+        }
+        return false;
     }
 }

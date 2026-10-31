@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -27,15 +29,87 @@ public class MediaService {
     @Value("${app.supabase.bucket:sporekart-media}")
     private String defaultBucket;
 
-    private static final long MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024L; // 25 MB max
-    private static final java.util.Set<String> ALLOWED_EXTENSIONS = java.util.Set.of(
+    public static final long MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024L; // 25 MB max
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
             "jpg", "jpeg", "png", "webp", "gif", "mp4", "mov", "pdf"
     );
+
+    public static String detectMimeTypeFromMagicBytes(byte[] bytes) {
+        if (bytes == null || bytes.length < 3) {
+            throw new IllegalArgumentException("File content is too small or missing to verify magic bytes");
+        }
+
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (bytes.length >= 8 &&
+                (bytes[0] & 0xFF) == 0x89 && (bytes[1] & 0xFF) == 0x50 && (bytes[2] & 0xFF) == 0x4E && (bytes[3] & 0xFF) == 0x47 &&
+                (bytes[4] & 0xFF) == 0x0D && (bytes[5] & 0xFF) == 0x0A && (bytes[6] & 0xFF) == 0x1A && (bytes[7] & 0xFF) == 0x0A) {
+            return "image/png";
+        }
+
+        // JPEG: FF D8 FF
+        if (bytes.length >= 3 &&
+                (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) {
+            return "image/jpeg";
+        }
+
+        // PDF: %PDF (25 50 44 46)
+        if (bytes.length >= 4 &&
+                bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46) {
+            return "application/pdf";
+        }
+
+        // GIF: GIF87a or GIF89a (47 49 46 38 37 61 or 47 49 46 38 39 61)
+        if (bytes.length >= 6 &&
+                bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x38 &&
+                (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61) {
+            return "image/gif";
+        }
+
+        // WEBP: RIFF (bytes 0-3) and WEBP (bytes 8-11)
+        if (bytes.length >= 12 &&
+                bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 &&
+                bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50) {
+            return "image/webp";
+        }
+
+        throw new IllegalArgumentException("Unrecognized or disallowed file format based on magic bytes");
+    }
+
+    public static void validateMagicBytes(byte[] bytes, String declaredMimeType) {
+        String detected = detectMimeTypeFromMagicBytes(bytes);
+        if (declaredMimeType != null && !declaredMimeType.isBlank()) {
+            String normDeclared = declaredMimeType.trim().toLowerCase();
+            if (normDeclared.equals("image/jpg")) {
+                normDeclared = "image/jpeg";
+            }
+            if (!detected.equalsIgnoreCase(normDeclared)) {
+                throw new IllegalArgumentException("MIME type spoofing detected: Declared " + declaredMimeType + " but magic bytes indicate " + detected);
+            }
+        }
+    }
+
+    public void validateDirectUpload(byte[] fileBytes, String declaredMimeType, long sizeBytes) {
+        if (sizeBytes > MAX_FILE_SIZE_BYTES || (fileBytes != null && fileBytes.length > MAX_FILE_SIZE_BYTES)) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed limit of 25MB");
+        }
+        if (fileBytes != null) {
+            validateMagicBytes(fileBytes, declaredMimeType);
+        }
+    }
 
     @Transactional
     public MediaDtos.InitiateUploadResponse initiateUpload(MediaDtos.InitiateUploadRequest request, UUID userId) {
         if (request.getSizeBytes() > MAX_FILE_SIZE_BYTES) {
             throw new IllegalArgumentException("File size exceeds maximum allowed limit of 25MB");
+        }
+
+        if (request.getMagicBytesSample() != null && !request.getMagicBytesSample().isBlank()) {
+            try {
+                byte[] sample = Base64.getDecoder().decode(request.getMagicBytesSample().trim());
+                validateMagicBytes(sample, request.getMimeType());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid file magic bytes: " + e.getMessage());
+            }
         }
 
         String filename = request.getOriginalFilename() != null ? request.getOriginalFilename().toLowerCase() : "";

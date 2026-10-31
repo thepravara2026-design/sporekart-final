@@ -29,6 +29,11 @@ public class MediaDtos {
         private String altText;
         @JsonProperty("isPublic")
         private boolean isPublic = true;
+        private String magicBytesSample;
+
+        public InitiateUploadRequest(String originalFilename, String mimeType, long sizeBytes, MediaType mediaType, String altText, boolean isPublic) {
+            this(originalFilename, mimeType, sizeBytes, mediaType, altText, isPublic, null);
+        }
     }
 
     @Data
