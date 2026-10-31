@@ -29,15 +29,17 @@ public class SecurityConfig {
     private final JwtTokenProvider tokenProvider;
     private final RequestIdFilter requestIdFilter;
     private final RateLimitingFilter rateLimitingFilter;
+    private final CsrfOriginValidationFilter csrfOriginValidationFilter;
     private final org.springframework.core.env.Environment environment;
 
     @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080}")
     private List<String> allowedOrigins;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter, RateLimitingFilter rateLimitingFilter, org.springframework.core.env.Environment environment) {
+    public SecurityConfig(JwtTokenProvider tokenProvider, RequestIdFilter requestIdFilter, RateLimitingFilter rateLimitingFilter, CsrfOriginValidationFilter csrfOriginValidationFilter, org.springframework.core.env.Environment environment) {
         this.tokenProvider = tokenProvider;
         this.requestIdFilter = requestIdFilter;
         this.rateLimitingFilter = rateLimitingFilter;
+        this.csrfOriginValidationFilter = csrfOriginValidationFilter;
         this.environment = environment;
     }
 
@@ -114,6 +116,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated();
 
             })
+            .addFilterBefore(csrfOriginValidationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);

@@ -494,8 +494,7 @@ export default function DashboardPage({ user, setUser }) {
 
   // FAANG-Grade Session Verification & Auth Guard for Notification Email Deep-Links
   if (!user) {
-    const hasToken = !!localStorage.getItem('sporekart_token');
-    if (hasToken && loading) {
+    if (loading) {
       return (
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
           <PageSkeleton type="cards" count={2} />
@@ -567,8 +566,11 @@ export default function DashboardPage({ user, setUser }) {
               <span>Go to Admin Console</span>
             </button>
             <button
-              onClick={() => {
-                localStorage.removeItem('sporekart_token');
+              onClick={async () => {
+                try {
+                  await authApi.logout();
+                } catch (e) {}
+                clearSessionAndTokens();
                 if (setUser) setUser(null);
                 navigate('/');
               }}

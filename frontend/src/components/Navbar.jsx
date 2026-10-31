@@ -5,7 +5,7 @@ import { Sprout, ShoppingBag, User, X, Menu, ShieldCheck, Search, ArrowRight } f
 import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
 import NotificationCenter from './NotificationCenter';
-import { clearSessionAndTokens } from '../api';
+import { clearSessionAndTokens, authApi } from '../api';
 
 export default function Navbar({ user, setUser }) {
   const { cart, openDrawer } = useCart();
@@ -39,9 +39,12 @@ export default function Navbar({ user, setUser }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (e) {}
     clearSessionAndTokens();
-    setUser(null);
+    if (setUser) setUser(null);
     navigate('/');
   };
 

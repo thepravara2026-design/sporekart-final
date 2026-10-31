@@ -44,7 +44,7 @@ export default function AuthForm({
 
       const res = await authApi.loginWithGoogle(finalPayload);
       const authData = res.data.data;
-      localStorage.setItem('sporekart_token', authData.token);
+      // sporekart_token set via HttpOnly cookie
       if (mergeGuestCart && authData.role !== 'ROLE_ADMIN') await mergeGuestCart();
       if (setUser) setUser(authData);
       if (onSuccess) onSuccess(authData);
@@ -79,7 +79,7 @@ export default function AuthForm({
 
       const res = await authApi.loginWithGoogle(finalPayload);
       const authData = res.data.data;
-      localStorage.setItem('sporekart_token', authData.token);
+      // sporekart_token set via HttpOnly cookie
       if (mergeGuestCart && authData.role !== 'ROLE_ADMIN') await mergeGuestCart();
       if (setUser) setUser(authData);
       if (onSuccess) onSuccess(authData);
@@ -120,7 +120,7 @@ export default function AuthForm({
 
       const res = await authApi.loginWithGoogle(finalPayload);
       const authData = res.data.data;
-      localStorage.setItem('sporekart_token', authData.token);
+      // sporekart_token set via HttpOnly cookie
       if (mergeGuestCart && authData.role !== 'ROLE_ADMIN') await mergeGuestCart();
       if (setUser) setUser(authData);
       if (onSuccess) onSuccess(authData);

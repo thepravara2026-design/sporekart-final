@@ -4,6 +4,10 @@ import com.sporekart.identity.application.AuthService;
 import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,21 +20,36 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
-    private final org.springframework.core.env.Environment environment;
+    private final Environment environment;
 
     @PostMapping("/oauth/google")
     public ResponseEntity<ApiResponse<AuthDtos.AuthResponse>> loginWithGoogle(@Valid @RequestBody AuthDtos.GoogleOAuthRequest request) {
         AuthDtos.AuthResponse response = authService.loginWithGoogle(request);
-        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("sporekart_token", response.getToken())
+        // Align cookie max-age (24h) with JWT expiration (24h = 86400 seconds)
+        ResponseCookie cookie = ResponseCookie.from("sporekart_token", response.getToken())
                 .httpOnly(true)
-                .secure(environment == null || !environment.acceptsProfiles(org.springframework.core.env.Profiles.of("dev", "test")))
+                .secure(environment == null || !environment.acceptsProfiles(Profiles.of("dev", "test")))
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
+                .maxAge(24 * 60 * 60)
                 .sameSite("Lax")
                 .build();
         return ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(ApiResponse.success(response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout() {
+        ResponseCookie cookie = ResponseCookie.from("sporekart_token", "")
+                .httpOnly(true)
+                .secure(environment == null || !environment.acceptsProfiles(Profiles.of("dev", "test")))
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success("Logged out successfully"));
     }
 
     @GetMapping("/me")

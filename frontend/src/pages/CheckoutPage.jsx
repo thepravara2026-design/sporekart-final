@@ -104,8 +104,7 @@ export default function CheckoutPage({ user, setUser }) {
       return false;
     }
 
-    const token = localStorage.getItem('sporekart_token');
-    if (!token) {
+    if (!user) {
       // Unauthenticated guest user: validate form and pass inline address object
       setIsAddingAddress(false);
       setSelectedAddressId('guest_inline');

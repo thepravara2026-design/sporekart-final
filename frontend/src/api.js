@@ -130,6 +130,7 @@ api.interceptors.response.use(
 export const authApi = {
   loginWithGoogle: (googleData) => api.post('/auth/oauth/google', googleData),
   getCurrentUser: () => api.get('/auth/me'),
+  logout: () => api.post('/auth/logout'),
 };
 
 export const catalogApi = {

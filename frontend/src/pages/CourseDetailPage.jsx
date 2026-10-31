@@ -21,7 +21,7 @@ export default function CourseDetailPage({ user, setUser }) {
   const [pendingReviewItem, setPendingReviewItem] = useState(null);
 
   const fetchPendingReviews = async (courseId) => {
-    if (!user && !localStorage.getItem('sporekart_token')) return;
+    if (!user) return;
     try {
       const res = await trainingApi.getPendingReviews();
       const list = res.data?.data || [];
@@ -61,7 +61,7 @@ export default function CourseDetailPage({ user, setUser }) {
 
   const handleBookSlot = (slotId) => {
     const targetSlot = (course?.slots || []).find((s) => s.id === slotId) || { id: slotId };
-    if (!user && !localStorage.getItem('sporekart_token')) {
+    if (!user) {
       setPendingSlotId(slotId);
       setShowAuthModal(true);
       return;

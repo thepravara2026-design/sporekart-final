@@ -50,25 +50,19 @@ function OrderRedirect() {
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(() => Boolean(localStorage.getItem('sporekart_token')));
+  const [authLoading, setAuthLoading] = useState(true);
   const [globalReviewModalItem, setGlobalReviewModalItem] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('sporekart_token');
-    if (token) {
-      setAuthLoading(true);
-      authApi.getCurrentUser()
-        .then((res) => setUser(res.data.data))
-        .catch(() => {
-          localStorage.removeItem('sporekart_token');
-          setUser(null);
-        })
-        .finally(() => {
-          setAuthLoading(false);
-        });
-    } else {
-      setAuthLoading(false);
-    }
+    setAuthLoading(true);
+    authApi.getCurrentUser()
+      .then((res) => setUser(res.data.data))
+      .catch(() => {
+        setUser(null);
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
 
     // Report Core Web Vitals (LCP, INP, CLS, TTFB)
     reportWebVitals((metric) => {
