@@ -11,10 +11,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +32,17 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private static final int MAX_GENERAL_REQUESTS_PER_MINUTE = 500;
     private static final int MAX_SENSITIVE_REQUESTS_PER_MINUTE = 30;
 
+    private static final Pattern IPV4_PATTERN = Pattern.compile(
+            "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\." +
+             "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\." +
+             "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\." +
+             "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    );
+
+    private static final Pattern IPV6_PATTERN = Pattern.compile(
+            "^[0-9a-fA-F:]{2,39}$"
+    );
+
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
     private final Set<String> trustedProxies;
 
@@ -39,6 +53,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             @Value("${app.rate-limiting.trusted-proxies:}") List<String> trustedProxies) {
         this.trustedProxies = trustedProxies != null ? trustedProxies.stream()
                 .filter(s -> !s.isBlank())
+                .map(String::trim)
                 .collect(Collectors.toSet()) : Set.of();
     }
 
@@ -64,20 +79,32 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         String clientIp = getClientIp(request);
         String uri = request.getRequestURI();
-        String method = request.getMethod();
         long now = System.currentTimeMillis();
 
         boolean isAuth = uri.startsWith("/auth") || uri.startsWith("/api/v1/auth") || uri.startsWith("/admin/auth");
-        boolean isSensitiveAction = uri.startsWith("/analytics/track-")
-                || uri.startsWith("/training/enroll")
-                || uri.startsWith("/training/bookings")
-                || (uri.startsWith("/support/tickets") && "POST".equalsIgnoreCase(method))
-                || uri.startsWith("/cart/apply-promotion")
-                || uri.startsWith("/promotions/validate-batch")
-                || uri.startsWith("/promocode");
+        boolean isSupport = uri.startsWith("/support");
+        boolean isTrainingEnroll = uri.startsWith("/training/enroll") || uri.startsWith("/training/bookings");
+        boolean isPromoCode = uri.startsWith("/promocode") || uri.startsWith("/cart/apply-promotion") || uri.startsWith("/promotions/validate-batch");
+        boolean isOtherSensitive = uri.startsWith("/analytics/track-");
 
-        int maxAllowed = (isAuth || isSensitiveAction) ? MAX_SENSITIVE_REQUESTS_PER_MINUTE : MAX_GENERAL_REQUESTS_PER_MINUTE;
-        String category = isAuth ? "AUTH" : (isSensitiveAction ? "SENSITIVE" : "GENERAL");
+        boolean isSensitive = isAuth || isSupport || isTrainingEnroll || isPromoCode || isOtherSensitive;
+        int maxAllowed = isSensitive ? MAX_SENSITIVE_REQUESTS_PER_MINUTE : MAX_GENERAL_REQUESTS_PER_MINUTE;
+
+        String category;
+        if (isAuth) {
+            category = "AUTH";
+        } else if (isSupport) {
+            category = "SUPPORT";
+        } else if (isTrainingEnroll) {
+            category = "TRAINING";
+        } else if (isPromoCode) {
+            category = "PROMO";
+        } else if (isOtherSensitive) {
+            category = "SENSITIVE";
+        } else {
+            category = "GENERAL";
+        }
+
         String key = clientIp + ":" + category;
 
         RequestCounter counter = requestCounts.compute(key, (k, existing) -> {
@@ -113,24 +140,68 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         requestCounts.clear();
     }
 
+    public static boolean isValidIp(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return false;
+        }
+        String trimmed = ip.trim();
+        if (IPV4_PATTERN.matcher(trimmed).matches()) {
+            return true;
+        }
+        if (IPV6_PATTERN.matcher(trimmed).matches() && trimmed.contains(":")) {
+            try {
+                InetAddress addr = InetAddress.getByName(trimmed);
+                return addr instanceof Inet6Address;
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private boolean isTrustedProxy(String remoteAddr) {
+        if (remoteAddr == null || remoteAddr.isBlank()) {
+            return false;
+        }
+        String trimmed = remoteAddr.trim();
+        if (trustedProxies.contains("*") || trustedProxies.contains("ALL")) {
+            return true;
+        }
+        return trustedProxies.contains(trimmed);
+    }
+
     private String getClientIp(HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
+        String fallback = (remoteAddr != null && !remoteAddr.isBlank() && isValidIp(remoteAddr.trim()))
+                ? remoteAddr.trim()
+                : "127.0.0.1";
+
+        // Only parse forwarded proxy headers if the request directly connects from a trusted proxy
+        if (!isTrustedProxy(remoteAddr)) {
+            return fallback;
+        }
+
+        // 1. CF-Connecting-IP (Cloudflare)
         String cfConnectingIp = request.getHeader("CF-Connecting-IP");
-        if (cfConnectingIp != null && !cfConnectingIp.isBlank()) {
+        if (isValidIp(cfConnectingIp)) {
             return cfConnectingIp.trim();
         }
 
+        // 2. True-Client-IP (Cloudflare Enterprise / Akamai)
         String trueClientIp = request.getHeader("True-Client-IP");
-        if (trueClientIp != null && !trueClientIp.isBlank()) {
+        if (isValidIp(trueClientIp)) {
             return trueClientIp.trim();
         }
 
-        String remoteAddr = request.getRemoteAddr();
-        if (remoteAddr != null && (trustedProxies.contains(remoteAddr) || trustedProxies.isEmpty())) {
-            String xfHeader = request.getHeader("X-Forwarded-For");
-            if (xfHeader != null && !xfHeader.isBlank()) {
-                return xfHeader.split(",")[0].trim();
+        // 3. X-Forwarded-For (standard reverse proxy)
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader != null && !xfHeader.isBlank()) {
+            String firstEntry = xfHeader.split(",")[0].trim();
+            if (isValidIp(firstEntry)) {
+                return firstEntry;
             }
         }
-        return (remoteAddr != null && !remoteAddr.isBlank()) ? remoteAddr.trim() : "127.0.0.1";
+
+        return fallback;
     }
 }
