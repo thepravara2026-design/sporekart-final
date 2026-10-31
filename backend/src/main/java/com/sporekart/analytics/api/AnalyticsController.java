@@ -4,9 +4,11 @@ import com.sporekart.analytics.application.AnalyticsApplicationService;
 import com.sporekart.analytics.domain.AnalyticsEvent;
 import com.sporekart.shared.api.ApiResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,11 +33,13 @@ public class AnalyticsController {
     }
 
     @GetMapping("/funnel")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AnalyticsApplicationService.AnalyticsSummaryResponse>> getFunnelSummary() {
         return ResponseEntity.ok(ApiResponse.success(analyticsService.getFunnelSummary()));
     }
 
     @GetMapping("/events")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AnalyticsEvent>>> getRecentEvents() {
         return ResponseEntity.ok(ApiResponse.success(analyticsService.getRecentEvents()));
     }
@@ -52,7 +56,9 @@ public class AnalyticsController {
     @Data
     public static class TrackProductViewRequest {
         private UUID productId;
+        @Size(max = 150)
         private String productSlug;
+        @Size(max = 255)
         private String productTitle;
     }
 }

@@ -75,9 +75,14 @@ public class MediaService {
     }
 
     @Transactional
-    public MediaDtos.MediaAssetDto completeUpload(MediaDtos.CompleteUploadRequest request) {
+    public MediaDtos.MediaAssetDto completeUpload(MediaDtos.CompleteUploadRequest request, UUID userId, boolean isAdmin) {
         MediaAsset asset = mediaAssetRepository.findById(request.getMediaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + request.getMediaId()));
+
+        // Verification: User must own the media row or be an ADMIN
+        if (!isAdmin && (userId == null || asset.getCreatedBy() == null || !asset.getCreatedBy().equals(userId))) {
+            throw new com.sporekart.shared.application.ForbiddenOperationException("You do not have permission to modify this media asset");
+        }
 
         if (request.getWidth() != null) asset.setWidth(request.getWidth());
         if (request.getHeight() != null) asset.setHeight(request.getHeight());
@@ -89,20 +94,49 @@ public class MediaService {
         return mapToDto(updated);
     }
 
+    @Transactional
+    public MediaDtos.MediaAssetDto completeUpload(MediaDtos.CompleteUploadRequest request) {
+        return completeUpload(request, null, true);
+    }
+
     @Transactional(readOnly = true)
-    public MediaDtos.MediaAssetDto getMediaAsset(UUID mediaId) {
+    public MediaDtos.MediaAssetDto getMediaAsset(UUID mediaId, UUID userId, boolean isAdmin) {
         MediaAsset asset = mediaAssetRepository.findByIdAndIsDeletedFalse(mediaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset not found or deleted: " + mediaId));
+
+        if (!asset.isPublic()) {
+            if (!isAdmin && (userId == null || asset.getCreatedBy() == null || !asset.getCreatedBy().equals(userId))) {
+                throw new com.sporekart.shared.application.ForbiddenOperationException("Access denied: Private media asset requires ownership or administrator privileges");
+            }
+        }
+
         return mapToDto(asset);
     }
 
     @Transactional(readOnly = true)
-    public String getSignedUrl(UUID mediaId, int expirationSeconds) {
+    public MediaDtos.MediaAssetDto getMediaAsset(UUID mediaId) {
+        return getMediaAsset(mediaId, null, true);
+    }
+
+    @Transactional(readOnly = true)
+    public String getSignedUrl(UUID mediaId, int expirationSeconds, UUID userId, boolean isAdmin) {
         MediaAsset asset = mediaAssetRepository.findByIdAndIsDeletedFalse(mediaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset not found or deleted: " + mediaId));
 
+        // Honour isPublic and require ownership or admin for private assets
+        if (!asset.isPublic()) {
+            if (!isAdmin && (userId == null || asset.getCreatedBy() == null || !asset.getCreatedBy().equals(userId))) {
+                throw new com.sporekart.shared.application.ForbiddenOperationException("Access denied: Private media asset requires ownership or administrator privileges");
+            }
+        }
+
         int exp = expirationSeconds > 0 ? expirationSeconds : 3600; // default 1 hour
         return supabaseStorageService.generateSignedDownloadUrl(asset.getBucket(), asset.getStorageKey(), exp);
+    }
+
+    @Transactional(readOnly = true)
+    public String getSignedUrl(UUID mediaId, int expirationSeconds) {
+        return getSignedUrl(mediaId, expirationSeconds, null, true);
     }
 
     @Transactional

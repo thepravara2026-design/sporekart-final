@@ -43,6 +43,7 @@ public class MediaDtos {
     }
 
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CompleteUploadRequest {

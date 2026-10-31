@@ -72,32 +72,19 @@ public class PublicActivityController {
                     } catch (Exception ignored) {}
 
                     if (order.getStatus() == OrderStatus.DELIVERED) {
-                        String message = String.format("🚚 Order #%s delivered to %s in %s (%s)",
-                                order.getOrderNumber() != null ? order.getOrderNumber() : "SK-DELIV",
-                                name,
-                                city,
-                                timeAgo);
+                        String message = String.format("🚚 Order delivered via Cold-Chain Express (%s)", timeAgo);
                         activities.add(LiveActivityDto.builder()
-                                .id("ord-deliv-" + (order.getId() != null ? order.getId() : order.getOrderNumber()))
+                                .id("ord-deliv-" + (order.getId() != null ? order.getId() : "item"))
                                 .type("ORDER_DELIVERED")
                                 .message(message)
-                                .actor(name)
-                                .city(city)
-                                .orderNumber(order.getOrderNumber())
                                 .timeAgo(timeAgo)
                                 .build());
                     } else {
-                        String message = String.format("⚡ %s from %s placed an order for %s (%s)",
-                                name,
-                                city,
-                                productTitle,
-                                timeAgo);
+                        String message = String.format("⚡ A grower placed an order for %s (%s)", productTitle, timeAgo);
                         activities.add(LiveActivityDto.builder()
-                                .id("ord-placed-" + (order.getId() != null ? order.getId() : order.getOrderNumber()))
+                                .id("ord-placed-" + (order.getId() != null ? order.getId() : "item"))
                                 .type("ORDER_PLACED")
                                 .message(message)
-                                .actor(name)
-                                .city(city)
                                 .details(productTitle)
                                 .timeAgo(timeAgo)
                                 .build());
@@ -258,71 +245,55 @@ public class PublicActivityController {
             LiveActivityDto.builder()
                     .id("fallback-1")
                     .type("ORDER_PLACED")
-                    .message("⚡ Amit K. from Bengaluru placed an order for Lion's Mane Liquid Culture (2m ago)")
-                    .actor("Amit K.")
-                    .city("Bengaluru")
+                    .message("⚡ A grower placed an order for Lion's Mane Liquid Culture (2m ago)")
                     .timeAgo("2m ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-2")
                     .type("ORDER_DELIVERED")
-                    .message("🚚 Order #SK-8492 delivered to Priya M. in Pune via Cold-Chain Express (12m ago)")
-                    .actor("Priya M.")
-                    .orderNumber("SK-8492")
-                    .city("Pune")
+                    .message("🚚 Order delivered via Cold-Chain Express (12m ago)")
                     .timeAgo("12m ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-3")
                     .type("ADMIN_BATCH")
-                    .message("🔬 Sporekart added new batch #BAT-902: 1st Gen Milky Spawn with 99.9% purity (1h ago)")
-                    .resourceId("BAT-902")
+                    .message("🔬 Sporekart added new batch: 1st Gen Milky Spawn with 99.9% purity (1h ago)")
                     .timeAgo("1h ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-4")
                     .type("ADMIN_PRODUCT")
-                    .message("🍄 Sporekart added new product #PRD-104: Fresh King Oyster Mushroom Spawn (2h ago)")
-                    .resourceId("PRD-104")
+                    .message("🍄 Sporekart added new product: Fresh King Oyster Mushroom Spawn (2h ago)")
                     .timeAgo("2h ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-5")
                     .type("TRAINING_ENROLLMENT")
-                    .message("🎓 Pooja from Pune enrolled in Commercial Mushroom Masterclass (9m ago)")
-                    .actor("Pooja")
-                    .city("Pune")
+                    .message("🎓 Trainee enrolled in Commercial Mushroom Masterclass (9m ago)")
                     .timeAgo("9m ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-6")
                     .type("ORDER_DELIVERED")
-                    .message("🚚 Order #SK-8104 delivered to Rajesh H. in Belagavi under Buyback Guarantee (28m ago)")
-                    .actor("Rajesh H.")
-                    .orderNumber("SK-8104")
-                    .city("Belagavi")
+                    .message("🚚 Order delivered under Buyback Guarantee (28m ago)")
                     .timeAgo("28m ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-7")
                     .type("ADMIN_BLOG")
-                    .message("📝 Sporekart published new blog #BLG-58: \"Advanced Sterilization Protocols for Commercial Farms\" (3h ago)")
-                    .resourceId("BLG-58")
+                    .message("📝 Sporekart published new blog: \"Advanced Sterilization Protocols for Commercial Farms\" (3h ago)")
                     .timeAgo("3h ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-8")
                     .type("ADMIN_CATEGORY")
-                    .message("🌿 Sporekart added new category #CAT-16: Medicinal & Functional Mushroom Extracts (5h ago)")
-                    .resourceId("CAT-16")
+                    .message("🌿 Sporekart added new category: Medicinal & Functional Mushroom Extracts (5h ago)")
                     .timeAgo("5h ago")
                     .build(),
             LiveActivityDto.builder()
                     .id("fallback-9")
                     .type("ORDER_PLACED")
-                    .message("⚡ Aarav S. from Pune placed an order for 20kg 1st-Gen Oyster Spawn (18m ago)")
-                    .actor("Aarav S.")
-                    .city("Pune")
+                    .message("⚡ A grower placed an order for 20kg 1st-Gen Oyster Spawn (18m ago)")
                     .timeAgo("18m ago")
                     .build(),
             LiveActivityDto.builder()
