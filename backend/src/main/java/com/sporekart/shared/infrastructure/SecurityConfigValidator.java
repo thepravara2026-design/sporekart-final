@@ -27,7 +27,7 @@ public class SecurityConfigValidator {
             "MyDbSporekart@123#",
             "dev_fake_jwt_secret_key_needs_to_be_at_least_32_bytes_long_12345",
             "ZGV2X2Zha2Vfand0X3NlY3JldF9rZXlfMzJieXRlcyE=",
-            "dGVzdF9mYWtlX2p3dF9zZWNyZXRfa2V5XzMyYnl0ZXMh",
+            "dGVzdF9mYWtlX2p3dF9zZWNyZXRfa2V5XzMyYnl0ZQ==",
             "rzp_test_fake_dev_key_id",
             "fake_dev_key_secret",
             "fake_dev_webhook_secret",

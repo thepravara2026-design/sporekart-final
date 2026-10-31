@@ -156,3 +156,4 @@ class GoogleLoginSecurityTest {
         assertEquals("ROLE_CUSTOMER", userResp.getRole());
     }
 }
+

@@ -173,7 +173,10 @@ public class RazorpayCheckoutController {
      * Missing fields: return 400
      */
     @PostMapping("/verify-payment")
-    public ResponseEntity<?> verifyPayment(@RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request) {
+    public ResponseEntity<?> verifyPayment(
+            @RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request,
+            @org.springframework.web.bind.annotation.RequestHeader(name = "X-Session-ID", required = false) String sessionId,
+            org.springframework.security.core.Authentication authentication) {
         if (request == null) {
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "failure",
@@ -248,6 +251,58 @@ public class RazorpayCheckoutController {
                         "message", ex.getMessage(),
                         "verified", false
                 ));
+            }
+        }
+
+        // Mandatory Caller ownership verification
+        Optional<Payment> paymentOpt = paymentRepository.findByRazorpayOrderId(orderId);
+        if (paymentOpt.isPresent()) {
+            Payment payment = paymentOpt.get();
+            UUID targetOrderId = request.getSporekartOrderId() != null ? request.getSporekartOrderId() : payment.getOrderId();
+            if (targetOrderId != null) {
+                try {
+                    com.sporekart.order.api.dto.OrderResponse order = orderService.getOrderById(targetOrderId);
+                    if (order != null) {
+                        UUID callerUserId = null;
+                        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+                            try {
+                                callerUserId = UUID.fromString(authentication.getName());
+                            } catch (Exception ignored) {}
+                        }
+                        if (order.getUserId() != null) {
+                            if (callerUserId == null || !callerUserId.equals(order.getUserId())) {
+                                log.warn("Standard verify payment ownership rejected: user {} is not owner of order {}", callerUserId, targetOrderId);
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                                        "status", "failure",
+                                        "error", "Forbidden: You are not authorized to verify payment for this order",
+                                        "message", "Forbidden",
+                                        "verified", false
+                                ));
+                            }
+                        } else if (order.getSessionId() != null) {
+                            if (sessionId == null || !sessionId.equals(order.getSessionId())) {
+                                log.warn("Standard verify payment ownership rejected: session {} does not match order session {}", sessionId, order.getSessionId());
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                                        "status", "failure",
+                                        "error", "Forbidden: You are not authorized to verify payment for this order",
+                                        "message", "Forbidden",
+                                        "verified", false
+                                ));
+                            }
+                        } else {
+                            if (callerUserId == null && (sessionId == null || sessionId.isBlank())) {
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                                        "status", "failure",
+                                        "error", "Forbidden: Ownership context is required to verify payment",
+                                        "message", "Forbidden",
+                                        "verified", false
+                                ));
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not load order {} for ownership validation: {}", targetOrderId, e.getMessage());
+                }
             }
         }
 

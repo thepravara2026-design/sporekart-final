@@ -10,3 +10,4 @@ public record GoogleTokenClaims(
         String picture
 ) {
 }
+

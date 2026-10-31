@@ -121,19 +121,29 @@ public class PaymentService {
             throw new IllegalArgumentException("Payment verification failed: Mismatched order reference");
         }
 
-        // Caller ownership verification (if caller context provided)
-        if (callerUserId != null || callerSessionId != null) {
-            OrderResponse order = orderService.getOrderById(targetOrderId);
+        // Mandatory Caller ownership verification: NEVER skip even if caller context is omitted
+        OrderResponse order = orderService.getOrderById(targetOrderId);
+        if (order != null) {
             if (order.getUserId() != null) {
                 if (callerUserId == null || !callerUserId.equals(order.getUserId())) {
                     log.warn("Payment verification denied: Authenticated user {} is not owner of order {}", callerUserId, targetOrderId);
                     throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
                 }
             } else if (order.getSessionId() != null) {
-                if (callerSessionId != null && !callerSessionId.equals(order.getSessionId())) {
+                if (callerSessionId == null || !callerSessionId.equals(order.getSessionId())) {
                     log.warn("Payment verification denied: Guest session {} does not match order session {}", callerSessionId, order.getSessionId());
                     throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
                 }
+            } else {
+                if (callerUserId == null && (callerSessionId == null || callerSessionId.isBlank())) {
+                    log.warn("Payment verification denied: Caller context is required to verify payment for order {}", targetOrderId);
+                    throw new com.sporekart.shared.application.ForbiddenOperationException("Caller ownership context is required to verify payment");
+                }
+            }
+        } else {
+            if (callerUserId == null && (callerSessionId == null || callerSessionId.isBlank())) {
+                log.warn("Payment verification denied: No caller ownership context sent for target order {}", targetOrderId);
+                throw new com.sporekart.shared.application.ForbiddenOperationException("Caller ownership context is required to verify payment");
             }
         }
 
@@ -309,6 +319,34 @@ public class PaymentService {
             }
 
             if ("payment.captured".equalsIgnoreCase(eventType) || "order.paid".equalsIgnoreCase(eventType)) {
+                // Authoritative Gateway Re-fetch and Validation before marking PAID
+                PaymentGateway.GatewayPaymentDetails gatewayDetails = paymentGateway.fetchPayment(razorpayPaymentId);
+                if (gatewayDetails == null) {
+                    log.error("Webhook gateway re-fetch failed: payment details null for {}", razorpayPaymentId);
+                    throw new IllegalStateException("Payment details could not be retrieved from Razorpay gateway");
+                }
+                if (gatewayDetails != null) {
+                    if (gatewayDetails.getStatus() != null && !"captured".equalsIgnoreCase(gatewayDetails.getStatus()) && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                        log.error("Webhook gateway status mismatch: status={} for paymentId={}", gatewayDetails.getStatus(), razorpayPaymentId);
+                        throw new IllegalArgumentException("Gateway payment status is not captured: " + gatewayDetails.getStatus());
+                    }
+                    if (gatewayDetails.getAmountPaise() != null && payment != null && payment.getAmountInr() != null) {
+                        long expectedPaise = payment.getAmountInr().multiply(new BigDecimal("100")).longValue();
+                        if (gatewayDetails.getAmountPaise() != expectedPaise) {
+                            log.error("Webhook gateway amount mismatch: received {} paise, expected {} paise", gatewayDetails.getAmountPaise(), expectedPaise);
+                            throw new IllegalArgumentException("Gateway payment amount does not match stored payment amount");
+                        }
+                    }
+                    if (gatewayDetails.getCurrency() != null && !"INR".equalsIgnoreCase(gatewayDetails.getCurrency())) {
+                        log.error("Webhook gateway currency mismatch: received {}, expected INR", gatewayDetails.getCurrency());
+                        throw new IllegalArgumentException("Gateway payment currency is not INR");
+                    }
+                    if (gatewayDetails.getOrderId() != null && razorpayOrderId != null && !razorpayOrderId.isBlank() && !gatewayDetails.getOrderId().equals(razorpayOrderId)) {
+                        log.error("Webhook gateway order ID mismatch: gateway order {} != webhook order {}", gatewayDetails.getOrderId(), razorpayOrderId);
+                        throw new IllegalArgumentException("Gateway payment order ID does not match webhook order ID");
+                    }
+                }
+
                 if (payment != null) {
                     if (payment.getStatus() == PaymentStatus.CAPTURED) {
                         log.info("Payment for Razorpay order {} is already CAPTURED. Idempotent ignore.", razorpayOrderId);
@@ -501,6 +539,9 @@ public class PaymentService {
             }
 
             return "Webhook processed successfully: " + eventType;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error processing Razorpay webhook: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Error processing Razorpay webhook: {}", e.getMessage(), e);
             throw new RuntimeException("Error processing Razorpay webhook: " + e.getMessage(), e);
@@ -922,33 +963,20 @@ public class PaymentService {
                     .build();
         }
 
-        // Paid course enrollment:
-        if (paymentGateway.isMockMode()) {
-            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Transaction reference is required for payment verification");
-            }
-            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
-                rzpOrderId = "ENROLLMENT-" + enrollment.getId();
-            }
-            if (signature == null || signature.trim().isEmpty()) {
-                signature = "mock_signature";
-            }
-        } else {
-            // Production / non-mock mode: strictly require all Razorpay parameters
-            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Razorpay Order ID is required for paid enrollment verification");
-            }
-            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Razorpay Payment ID is required for paid enrollment verification");
-            }
-            if (signature == null || signature.trim().isEmpty()) {
-                throw new IllegalArgumentException("Razorpay Signature is required for paid enrollment verification");
-            }
-            boolean validSig = paymentGateway.verifySignature(rzpOrderId, rzpPaymentId, signature);
-            if (!validSig) {
-                log.error("Invalid signature on enrollment payment. Order: {}, Payment: {}", rzpOrderId, rzpPaymentId);
-                throw new IllegalArgumentException("Invalid Razorpay payment signature for training enrollment");
-            }
+        // Paid course enrollment: strictly require all Razorpay parameters and verify signature
+        if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Razorpay Order ID is required for paid enrollment verification");
+        }
+        if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Razorpay Payment ID is required for paid enrollment verification");
+        }
+        if (signature == null || signature.trim().isEmpty()) {
+            throw new IllegalArgumentException("Razorpay Signature is required for paid enrollment verification");
+        }
+        boolean validSig = paymentGateway.verifySignature(rzpOrderId, rzpPaymentId, signature);
+        if (!validSig) {
+            log.error("Invalid signature on enrollment payment. Order: {}, Payment: {}", rzpOrderId, rzpPaymentId);
+            throw new IllegalArgumentException("Invalid Razorpay payment signature for training enrollment");
         }
 
         // Look up or link the Payment entity

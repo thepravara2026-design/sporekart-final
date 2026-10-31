@@ -70,3 +70,4 @@ class SecurityConfigValidatorTest {
         assertDoesNotThrow(validator::validateOnStartup);
     }
 }
+

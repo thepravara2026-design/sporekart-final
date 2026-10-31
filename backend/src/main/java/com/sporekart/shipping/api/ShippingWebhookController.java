@@ -20,7 +20,7 @@ public class ShippingWebhookController {
 
     private final ShippingService shippingService;
 
-    @Value("${sporekart.shiprocket.webhook-token:sporekart_shiprocket_webhook_secret_key_2026}")
+    @Value("${sporekart.shiprocket.webhook-token:}")
     private String configuredWebhookToken;
 
     @PostMapping
@@ -31,15 +31,20 @@ public class ShippingWebhookController {
 
         String suppliedToken = (token != null && !token.isBlank()) ? token : signature;
 
-        if (configuredWebhookToken != null && !configuredWebhookToken.isBlank()) {
-            if (suppliedToken == null || !MessageDigest.isEqual(
-                    suppliedToken.trim().getBytes(StandardCharsets.UTF_8),
-                    configuredWebhookToken.trim().getBytes(StandardCharsets.UTF_8))) {
-                log.warn("Unauthorized Shiprocket webhook rejection: missing or invalid signature/token");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("UNAUTHORIZED", "Unauthorized: invalid or missing Shiprocket webhook token"));
+        // Fail-closed: If token is unconfigured, reject immediately with 500 rather than open access
+        if (configuredWebhookToken == null || configuredWebhookToken.isBlank()) {
+            log.error("Shiprocket webhook token is not configured on the server. Rejecting request fail-closed.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("WEBHOOK_CONFIGURATION_ERROR", "Webhook service is unconfigured"));
+        }
 
-            }
+        // Constant-time comparison
+        if (suppliedToken == null || suppliedToken.isBlank() || !MessageDigest.isEqual(
+                suppliedToken.trim().getBytes(StandardCharsets.UTF_8),
+                configuredWebhookToken.trim().getBytes(StandardCharsets.UTF_8))) {
+            log.warn("Unauthorized Shiprocket webhook rejection: missing or invalid signature/token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "Unauthorized: invalid or missing Shiprocket webhook token"));
         }
 
         log.info("Received authenticated Shiprocket webhook for AWB: {}", payload != null ? payload.getAwb() : "null");
@@ -57,4 +62,3 @@ public class ShippingWebhookController {
         return ResponseEntity.ok(ApiResponse.success("Webhook processed successfully"));
     }
 }
-
