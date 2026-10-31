@@ -7,9 +7,9 @@ services:
     environment:
       POSTGRES_DB: ${SUPABASE_DB_NAME:-sporekart}
       POSTGRES_USER: ${SUPABASE_DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${SUPABASE_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD is required and must not be empty}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d sporekart"]
       interval: 10s
@@ -29,7 +29,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${SUPABASE_DB_NAME:-sporekart}
       SPRING_DATASOURCE_USERNAME: ${SUPABASE_DB_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${SUPABASE_DB_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD is required and must not be empty}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8080:8080"
@@ -39,4 +39,3 @@ services:
 
 volumes:
   pgdata:
-
