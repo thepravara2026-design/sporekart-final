@@ -33,6 +33,8 @@ public class RazorpayCheckoutController {
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
     private final ApplicationEventPublisher eventPublisher;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.sporekart.shared.infrastructure.SecurityAuditService securityAuditService;
 
     /**
      * Standard Razorpay Order Creation Endpoint
@@ -209,6 +211,9 @@ public class RazorpayCheckoutController {
 
         if (!isValid) {
             log.warn("Razorpay payment signature verification failed for order_id={}, payment_id={}", orderId, paymentId);
+            if (securityAuditService != null) {
+                securityAuditService.recordPaymentFailure(paymentId, "Signature mismatch", "checkout");
+            }
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "failure",
                     "error", "Signature mismatch",

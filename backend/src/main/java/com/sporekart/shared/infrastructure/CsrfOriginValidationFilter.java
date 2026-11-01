@@ -35,17 +35,28 @@ public class CsrfOriginValidationFilter extends OncePerRequestFilter {
     private final Set<String> allowedOrigins;
     private final boolean isDevOrTest;
     private final ObjectMapper objectMapper;
+    private final SecurityAuditService securityAuditService;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public CsrfOriginValidationFilter(
             @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080}") List<String> allowedOrigins,
             Environment environment,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) SecurityAuditService securityAuditService) {
         this.allowedOrigins = allowedOrigins != null ? allowedOrigins.stream()
                 .filter(s -> !s.isBlank())
                 .map(this::normalizeOrigin)
                 .collect(Collectors.toSet()) : Set.of();
         this.isDevOrTest = environment != null && environment.acceptsProfiles(Profiles.of("dev", "test"));
         this.objectMapper = objectMapper;
+        this.securityAuditService = securityAuditService;
+    }
+
+    public CsrfOriginValidationFilter(
+            List<String> allowedOrigins,
+            Environment environment,
+            ObjectMapper objectMapper) {
+        this(allowedOrigins, environment, objectMapper, null);
     }
 
     @Override
@@ -84,6 +95,9 @@ public class CsrfOriginValidationFilter extends OncePerRequestFilter {
             // Missing Origin and Referer on a mutating request carrying session cookie
             if (!isDevOrTest) {
                 log.warn("CSRF_REJECTED: Mutating request {} {} carrying auth cookie missing both Origin and Referer headers", method, request.getRequestURI());
+                if (securityAuditService != null) {
+                    securityAuditService.recordCsrfRejection(request.getRemoteAddr(), request.getRequestURI(), "NONE", "NONE");
+                }
                 rejectCsrf(response, "Cross-site request forgery check failed: Missing Origin/Referer");
                 return;
             }
@@ -91,6 +105,9 @@ public class CsrfOriginValidationFilter extends OncePerRequestFilter {
             boolean isAllowed = isOriginAllowed(sourceOrigin);
             if (!isAllowed) {
                 log.warn("CSRF_REJECTED: Origin {} is not in allowed origins for {} {}", sourceOrigin, method, request.getRequestURI());
+                if (securityAuditService != null) {
+                    securityAuditService.recordCsrfRejection(request.getRemoteAddr(), request.getRequestURI(), origin, referer);
+                }
                 rejectCsrf(response, "Cross-site request forgery check failed: Untrusted Origin");
                 return;
             }

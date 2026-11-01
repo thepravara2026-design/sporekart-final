@@ -45,16 +45,24 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
     private final Set<String> trustedProxies;
+    private final SecurityAuditService securityAuditService;
 
     @Value("${spring.profiles.active:}")
     private String activeProfile;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public RateLimitingFilter(
-            @Value("${app.rate-limiting.trusted-proxies:}") List<String> trustedProxies) {
+            @Value("${app.rate-limiting.trusted-proxies:}") List<String> trustedProxies,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) SecurityAuditService securityAuditService) {
         this.trustedProxies = trustedProxies != null ? trustedProxies.stream()
                 .filter(s -> !s.isBlank())
                 .map(String::trim)
                 .collect(Collectors.toSet()) : Set.of();
+        this.securityAuditService = securityAuditService;
+    }
+
+    public RateLimitingFilter(List<String> trustedProxies) {
+        this(trustedProxies, null);
     }
 
     static class RequestCounter {
@@ -118,6 +126,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         if (counter.count > maxAllowed) {
             long retryAfterSeconds = Math.max(1, (counter.resetTime - now) / 1000L);
+            if (securityAuditService != null) {
+                securityAuditService.recordRateLimitTrip(clientIp, request.getRequestURI(), counter.count);
+            }
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));

@@ -19,6 +19,8 @@ import java.security.MessageDigest;
 public class ShippingWebhookController {
 
     private final ShippingService shippingService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.sporekart.shared.infrastructure.SecurityAuditService securityAuditService;
 
     @Value("${sporekart.shiprocket.webhook-token:}")
     private String configuredWebhookToken;
@@ -43,6 +45,9 @@ public class ShippingWebhookController {
                 suppliedToken.trim().getBytes(StandardCharsets.UTF_8),
                 configuredWebhookToken.trim().getBytes(StandardCharsets.UTF_8))) {
             log.warn("Unauthorized Shiprocket webhook rejection: missing or invalid signature/token");
+            if (securityAuditService != null) {
+                securityAuditService.recordSuspiciousWebhook("Shiprocket", "remote", "Unauthorized: invalid or missing Shiprocket webhook token");
+            }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("UNAUTHORIZED", "Unauthorized: invalid or missing Shiprocket webhook token"));
         }

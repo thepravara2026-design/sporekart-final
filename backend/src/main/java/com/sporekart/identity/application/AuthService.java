@@ -35,6 +35,9 @@ public class AuthService {
     private String adminEmails;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.sporekart.shared.infrastructure.SecurityAuditService securityAuditService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private org.springframework.transaction.PlatformTransactionManager transactionManager;
     private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
@@ -63,57 +66,80 @@ public class AuthService {
     }
 
     public AuthDtos.AuthResponse loginWithGoogle(AuthDtos.GoogleOAuthRequest request) {
-        if (request == null || !org.springframework.util.StringUtils.hasText(request.getIdToken())) {
-            throw new org.springframework.security.authentication.BadCredentialsException("Google ID token is required for OAuth login");
-        }
-
-        GoogleTokenClaims claims = googleTokenVerifier.verify(request.getIdToken());
-        if (!claims.emailVerified()) {
-            throw new org.springframework.security.authentication.BadCredentialsException("Google account email is not verified");
-        }
-
-        // Take email and subject from the VERIFIED token only, never from the request body
-        String email = claims.email().trim().toLowerCase();
-        String googleSub = claims.subject().trim();
-
-        String firstName = org.springframework.util.StringUtils.hasText(claims.givenName()) ? claims.givenName() : request.getFirstName();
-        String lastName = org.springframework.util.StringUtils.hasText(claims.familyName()) ? claims.familyName() : request.getLastName();
-        String fullName = org.springframework.util.StringUtils.hasText(claims.name()) ? claims.name() : request.getFullName();
-
-        User user = getOrCreateUserWithLock(IdentityProvider.GOOGLE, googleSub, email, firstName, lastName, fullName);
-
-        Set<String> configuredAdminEmails = parseAdminEmails(adminEmails);
-        if (configuredAdminEmails.contains(email)) {
-            if (user.getRole() != UserRole.ROLE_ADMIN) {
-                user.setRole(UserRole.ROLE_ADMIN);
-                user = userRepository.save(user);
+        try {
+            if (request == null || !org.springframework.util.StringUtils.hasText(request.getIdToken())) {
+                if (securityAuditService != null) {
+                    securityAuditService.recordFailedLogin("UNKNOWN", "oauth", "Google ID token is required for OAuth login");
+                }
+                throw new org.springframework.security.authentication.BadCredentialsException("Google ID token is required for OAuth login");
             }
-        } else {
-            // Any other Google user can NEVER hold ROLE_ADMIN
-            if (user.getRole() == UserRole.ROLE_ADMIN) {
-                user.setRole(UserRole.ROLE_CUSTOMER);
-                user = userRepository.save(user);
+
+            GoogleTokenClaims claims = googleTokenVerifier.verify(request.getIdToken());
+            if (!claims.emailVerified()) {
+                if (securityAuditService != null) {
+                    securityAuditService.recordFailedLogin(claims.email(), "oauth", "Google account email is not verified");
+                }
+                throw new org.springframework.security.authentication.BadCredentialsException("Google account email is not verified");
             }
+
+            // Take email and subject from the VERIFIED token only, never from the request body
+            String email = claims.email().trim().toLowerCase();
+            String googleSub = claims.subject().trim();
+
+            String firstName = org.springframework.util.StringUtils.hasText(claims.givenName()) ? claims.givenName() : request.getFirstName();
+            String lastName = org.springframework.util.StringUtils.hasText(claims.familyName()) ? claims.familyName() : request.getLastName();
+            String fullName = org.springframework.util.StringUtils.hasText(claims.name()) ? claims.name() : request.getFullName();
+
+            User user = getOrCreateUserWithLock(IdentityProvider.GOOGLE, googleSub, email, firstName, lastName, fullName);
+
+            Set<String> configuredAdminEmails = parseAdminEmails(adminEmails);
+            if (configuredAdminEmails.contains(email)) {
+                if (user.getRole() != UserRole.ROLE_ADMIN) {
+                    UserRole oldRole = user.getRole();
+                    user.setRole(UserRole.ROLE_ADMIN);
+                    user = userRepository.save(user);
+                    if (securityAuditService != null) {
+                        securityAuditService.recordRoleChange(email, "ADMIN_EMAILS_CONFIG", oldRole.name(), UserRole.ROLE_ADMIN.name());
+                    }
+                }
+                if (securityAuditService != null) {
+                    securityAuditService.recordSuccessfulAdminLogin(email, "oauth");
+                }
+            } else {
+                // Any other Google user can NEVER hold ROLE_ADMIN
+                if (user.getRole() == UserRole.ROLE_ADMIN) {
+                    user.setRole(UserRole.ROLE_CUSTOMER);
+                    user = userRepository.save(user);
+                    if (securityAuditService != null) {
+                        securityAuditService.recordRoleChange(email, "NON_ADMIN_POLICY", "ROLE_ADMIN", "ROLE_CUSTOMER");
+                    }
+                }
+            }
+
+            String token = jwtTokenProvider.generateToken(user.getId(), email, user.getRole().name());
+
+            List<String> providers = customerIdentityRepository.findByUserId(user.getId())
+                    .stream()
+                    .map(ci -> ci.getProvider().name())
+                    .collect(Collectors.toList());
+
+            return AuthDtos.AuthResponse.builder()
+                    .token(token)
+                    .userId(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .role(user.getRole().name())
+                    .linkedProviders(providers)
+                    .build();
+        } catch (org.springframework.security.authentication.BadCredentialsException ex) {
+            if (securityAuditService != null) {
+                securityAuditService.recordFailedLogin("OAUTH_ATTEMPT", "oauth", ex.getMessage());
+            }
+            throw ex;
         }
-
-        String token = jwtTokenProvider.generateToken(user.getId(), email, user.getRole().name());
-
-        List<String> providers = customerIdentityRepository.findByUserId(user.getId())
-                .stream()
-                .map(ci -> ci.getProvider().name())
-                .collect(Collectors.toList());
-
-        return AuthDtos.AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole().name())
-                .linkedProviders(providers)
-                .build();
     }
 
     private Set<String> parseAdminEmails(String raw) {
