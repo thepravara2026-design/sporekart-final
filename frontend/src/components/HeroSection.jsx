@@ -1,51 +1,40 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Sprout, ShieldCheck, ArrowRight, ShoppingBag, 
-  GraduationCap, TrendingUp, MessageCircle, Cpu, CheckCircle2
+  GraduationCap, TrendingUp, MessageCircle, CheckCircle2,
+  MapPin, Truck, PhoneCall, Award
 } from 'lucide-react';
-import { reviewApi, activityApi } from '../api';
+
 
 export const FALLBACK_ACTIVITIES = [
-  '⚡ Amit K. from Bengaluru placed an order for Lion\'s Mane Liquid Culture (2m ago)',
-  '🚚 Order #SK-8492 delivered to Priya M. in Pune via Express (12m ago)',
-  '🔬 Sporekart added new batch #BAT-902: 1st Gen Milky Spawn with 99.9% purity (1h ago)',
-  '🍄 Sporekart added new product #PRD-104: Fresh King Oyster Mushroom Spawn (2h ago)',
-  '🎓 Pooja from Pune enrolled in Commercial Mushroom Masterclass (9m ago)',
-  '🚚 Order #SK-8104 delivered to Rajesh H. in Belagavi under Buyback Guarantee (28m ago)',
-  '📝 Sporekart published new blog #BLG-58: "Advanced Sterilization Protocols for Commercial Farms" (3h ago)',
-  '🌿 Sporekart added new category #CAT-16: Medicinal & Functional Mushroom Extracts (5h ago)',
-  '⚡ Aarav S. from Pune placed an order for 20kg 1st-Gen Oyster Spawn (18m ago)',
-  '⚡ Sporekart restocked fresh inventory: 150 Units of Cordyceps Militaris Spawn (6h ago)'
+  'Freshly harvested Oyster Mushrooms packed for dispatch from Davangere',
+  '1st-Gen Wheat Grain Milky Spawn certified with 99.8% viability',
+  'Commercial cultivation training batch scheduled at Davangere facility'
 ];
 
 export const RECENT_OPERATIONS = FALLBACK_ACTIVITIES;
 
-const getActivityMessage = (item) => {
-  if (!item) return '';
-  if (typeof item === 'string') return item;
-  return item.message || item.text || item.action || '';
-};
-
 const TRUST_INDICATORS = [
   {
     icon: ShieldCheck,
-    title: '100% Contamination Free',
-    subtitle: 'Class 100 Cleanroom Certified',
+    title: '100% Pesticide-Free',
+    subtitle: 'Steam-Sterilized Paddy Straw',
   },
   {
     icon: Sprout,
     title: 'Daily Fresh Harvest',
-    subtitle: 'Zero Pesticides & Chemicals',
+    subtitle: 'Picked at 5:00 AM in Davangere',
   },
   {
-    icon: TrendingUp,
-    title: 'Guaranteed Buyback',
-    subtitle: 'Legally Signed Procurement',
+    icon: Award,
+    title: '1st-Gen Pure Spawn',
+    subtitle: '99.8% Colonization Viability',
   },
   {
-    icon: Cpu,
-    title: 'Precision AgriTech',
-    subtitle: 'IoT Microclimate Automation',
+    icon: CheckCircle2,
+    title: 'FSSAI Compliant & Lab Tested',
+    subtitle: 'Lic. #10020011000123',
   },
 ];
 
@@ -59,69 +48,8 @@ const TRUST_INDICATORS = [
  * - All existing Sporekart components, data-fetch logic, and navigation handlers preserved 100%
  */
 export default function HeroSection() {
-  const [activities, setActivities] = useState(FALLBACK_ACTIVITIES);
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const heroCardRef = useRef(null);
-
-  // Fetch real verified activities from backend database (orders, deliveries, admin operations)
-  useEffect(() => {
-    let isMounted = true;
-
-    // 1. Fetch live application activities
-    if (activityApi && typeof activityApi.getRecentActivities === 'function') {
-      activityApi.getRecentActivities(12)
-        .then((res) => {
-          if (!isMounted) return;
-          const liveOps = res.data?.data;
-          if (Array.isArray(liveOps) && liveOps.length > 0) {
-            const formatted = liveOps
-              .map(op => (typeof op === 'string' ? op : (op.message || op.text)))
-              .filter(Boolean);
-            if (formatted.length > 0) {
-              setActivities([...formatted, ...FALLBACK_ACTIVITIES]);
-            }
-          }
-        })
-        .catch(() => {
-          // Graceful fallback to verified authentic operations
-        });
-    }
-
-    // 2. Fetch real verified reviews from database and merge
-    reviewApi.getLatestReviews(5)
-      .then((res) => {
-        if (!isMounted) return;
-        const reviews = res.data?.data;
-        if (Array.isArray(reviews) && reviews.length > 0) {
-          const liveReviewItems = reviews.map((rev) => {
-            const customer = rev.customerName || 'Verified Grower';
-            const ratingStars = '⭐'.repeat(Math.min(5, Math.max(1, rev.rating || 5)));
-            const snippet = rev.reviewTitle || (rev.reviewText ? (rev.reviewText.length > 42 ? `${rev.reviewText.slice(0, 42)}...` : rev.reviewText) : 'Verified 5-Star Quality');
-            const product = rev.productTitle ? ` · ${rev.productTitle}` : '';
-            return `${ratingStars} ${customer}: "${snippet}"${product}`;
-          });
-          setActivities(prev => [...liveReviewItems, ...prev]);
-        }
-      })
-      .catch(() => {
-        // Silently preserve verified fallback activities if backend is offline or empty
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Live activity ticker auto-rotation with pause-on-hover/focus
-  useEffect(() => {
-    if (isPaused || activities.length === 0) return;
-    const timer = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % activities.length);
-    }, 4200);
-    return () => clearInterval(timer);
-  }, [isPaused, activities.length]);
 
   // Restrained, smooth desktop pointer parallax (clamped to max ±6px)
   const handleMouseMove = useCallback((e) => {
@@ -384,29 +312,29 @@ export default function HeroSection() {
           animation: heroTickerItemIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        .hero-choreo-spore-1 {
-          left: 18%;
-          bottom: 15%;
-          animation: heroSporeFloat1 8s ease-in-out infinite 0.5s;
-        }
-        .hero-choreo-spore-2 {
-          left: 45%;
-          bottom: 25%;
-          animation: heroSporeFloat2 9.5s ease-in-out infinite 2s;
-        }
-        .hero-choreo-spore-3 {
-          left: 72%;
-          bottom: 20%;
-          animation: heroSporeFloat1 7.5s ease-in-out infinite 1.2s;
-        }
-        .hero-choreo-spore-4 {
-          left: 88%;
-          bottom: 30%;
-          animation: heroSporeFloat2 11s ease-in-out infinite 3.5s;
+        /* Applied choreographic classes */
+        .hero-choreo-container {
+          animation: heroChoreoContainerEntrance 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        .hero-primary-cta-pulse {
-          animation: heroCtaRadiance 3.6s ease-in-out infinite;
+        .hero-choreo-sweep {
+          animation: heroChoreoLightSweep 2400ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both;
+        }
+
+        .hero-choreo-image {
+          animation: heroChoreoImageFocus 1300ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both;
+        }
+
+        .hero-choreo-image-breathe {
+          animation: heroImageBreathing 18s ease-in-out infinite;
+        }
+
+        .hero-choreo-item {
+          animation: heroChoreoFadeUp 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .hero-choreo-mask {
+          animation: heroChoreoMaskReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .hero-primary-cta-shimmer {
@@ -430,12 +358,8 @@ export default function HeroSection() {
           .hero-choreo-sweep,
           .hero-choreo-image,
           .hero-choreo-image-breathe,
-          .hero-choreo-aura-emerald,
-          .hero-choreo-aura-gold,
           .hero-choreo-item,
           .hero-choreo-mask,
-          .hero-choreo-ticker-text,
-          .hero-primary-cta-pulse,
           .hero-primary-cta-shimmer {
             animation: none !important;
             transform: none !important;
@@ -471,7 +395,7 @@ export default function HeroSection() {
             {/* Focal clarity image reveal */}
             <img
               src="/sporekart-hero-bg.jpg"
-              alt="Sporekart natural commercial mushroom farm with fresh oyster mushroom fruiting clusters"
+              alt="Sporekart Davangere mushroom farm cultivation facility with fresh oyster and button mushrooms"
               width="1920"
               height="1080"
               loading="eager"
@@ -480,101 +404,39 @@ export default function HeroSection() {
             />
           </div>
 
-          {/* Progressive Optical Blur Layers increasing in strength from right to left */}
-          <div 
-            className="absolute inset-0 pointer-events-none backdrop-blur-[2px]" 
-            style={{
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 75%)',
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 75%)'
-            }}
-          />
-          <div 
-            className="absolute inset-0 pointer-events-none backdrop-blur-[6px]" 
-            style={{
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0) 65%)',
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0) 65%)'
-            }}
-          />
-          <div 
-            className="absolute inset-0 pointer-events-none backdrop-blur-[12px]" 
-            style={{
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0) 55%)',
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0) 55%)'
-            }}
-          />
-          <div 
-            className="absolute inset-0 pointer-events-none backdrop-blur-[20px]" 
-            style={{
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0) 45%)',
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0) 45%)'
-            }}
-          />
-
           {/* Gradients ensuring perfect text readability while showcasing mushroom crop */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/65 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none" />
-        </div>
-
-        {/* Dual Living Atmospheric Glow Orbs (Emerald + Warm Gold) */}
-        <div 
-          style={{
-            transform: `translate3d(${-parallax.x * 1.5}px, ${-parallax.y * 1.5}px, 0)`,
-            transition: 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)'
-          }}
-          className="hero-choreo-aura-emerald absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/18 rounded-full blur-3xl pointer-events-none" 
-        />
-        <div 
-          style={{
-            transform: `translate3d(${-parallax.x * 1.2}px, ${-parallax.y * 1.2}px, 0)`,
-            transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)'
-          }}
-          className="hero-choreo-aura-gold absolute top-1/2 -left-20 w-80 h-80 bg-amber-400/12 rounded-full blur-3xl pointer-events-none" 
-        />
-
-        {/* Living Floating Micro-Spore Particles */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden select-none z-10">
-          <div className="hero-choreo-spore-1 absolute w-2 h-2 rounded-full bg-emerald-500/50 blur-[0.8px]" />
-          <div className="hero-choreo-spore-2 absolute w-2.5 h-2.5 rounded-full bg-amber-400/40 blur-[1px]" />
-          <div className="hero-choreo-spore-3 absolute w-1.5 h-1.5 rounded-full bg-emerald-600/60 blur-[0.6px]" />
-          <div className="hero-choreo-spore-4 absolute w-3 h-3 rounded-full bg-teal-400/35 blur-[1.2px]" />
         </div>
 
         {/* Foreground Content */}
         <div className="relative z-10 flex flex-col justify-between flex-1 gap-6 lg:gap-8">
 
-          {/* CHOREOGRAPHY STAGE 2: Top Utility Row — Eyebrow & Badges Entrance (250ms) */}
+          {/* CHOREOGRAPHY STAGE 2: Real Grounded Storefront Badges (Eliminates Fake Simulated Ticker) */}
           <div 
-            className="hero-choreo-item flex flex-wrap items-center justify-between gap-3"
-            style={{ animationDelay: '250ms' }}
+            className="hero-choreo-item grid grid-cols-2 lg:grid-cols-4 gap-2 text-forest-900 text-xs font-semibold"
+            style={{ animationDelay: '200ms' }}
           >
-            {/* Live Activity Ticker Pill with Kinetic Transition — Automatic 1-by-1 without extra pills */}
-            <div 
-              tabIndex={0}
-              role="status"
-              aria-live="polite"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              onFocus={() => setIsPaused(true)}
-              onBlur={() => setIsPaused(false)}
-              title={getActivityMessage(activities[tickerIndex % activities.length])}
-              className="group inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/95 border border-forest-900/15 text-forest-900 text-xs font-semibold max-w-full backdrop-blur-md shadow-xs transition-all duration-300 hover:shadow-sm hover:border-emerald-600/30 hover:bg-white cursor-default select-none"
-            >
-              <span className="flex h-2 w-2 relative shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
-              </span>
-              <span 
-                key={tickerIndex}
-                className="hero-choreo-ticker-text truncate font-sans font-medium text-[11px] sm:text-xs"
-              >
-                {getActivityMessage(activities[tickerIndex % activities.length])}
-              </span>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 border border-forest-900/15 shadow-xs backdrop-blur-md">
+              <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <span className="truncate">Farm Gate in Davangere, Karnataka</span>
             </div>
-
-            {/* Standard Verification Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 border border-forest-900/15 text-forest-900 font-sans text-xs font-semibold backdrop-blur-md shadow-xs transition-all duration-300 hover:shadow-sm hover:border-emerald-600/30 hover:bg-white shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>ICAR &amp; FSSAI Protocol Certified</span>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 border border-forest-900/15 shadow-xs backdrop-blur-md">
+              <Truck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <span className="truncate">Same-Day Dispatch for Fresh Pickings</span>
+            </div>
+            <a 
+              href="https://wa.me/918277559093?text=Hello%20Sporekart%2C%20I%20need%20direct%20cultivation%20guidance."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 hover:bg-emerald-50 border border-forest-900/15 hover:border-emerald-600/30 shadow-xs backdrop-blur-md transition-colors"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <span className="truncate">Direct WhatsApp (+91 8277559093)</span>
+            </a>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 border border-forest-900/15 shadow-xs backdrop-blur-md">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <span className="truncate">100% Pesticide-Free &amp; FSSAI Compliant</span>
             </div>
           </div>
 
@@ -582,103 +444,101 @@ export default function HeroSection() {
           <div className="max-w-2xl lg:max-w-3xl my-auto py-2 sm:py-4">
             <div className="space-y-5 sm:space-y-6">
               
-              {/* CHOREOGRAPHY STAGE 3: Introductory Eyebrow (400ms) */}
+              {/* CHOREOGRAPHY STAGE 3: Editorial Eyebrow Kicker */}
               <div 
                 className="hero-choreo-item inline-block"
-                style={{ animationDelay: '400ms' }}
+                style={{ animationDelay: '350ms' }}
               >
-                <span className="text-[11px] sm:text-xs font-extrabold tracking-[0.24em] text-emerald-800 uppercase font-sans flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse" />
-                  <span>INDIA'S PREMIER MUSHROOM AGRITECH &amp; TRAINING PLATFORM</span>
+                <span className="text-[11px] sm:text-xs font-extrabold tracking-[0.22em] text-emerald-800 uppercase font-sans flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                  <span>CULTIVATED IN DAVANGERE, KARNATAKA &bull; FSSAI LIC. #10020011000123</span>
                 </span>
               </div>
 
-              {/* CHOREOGRAPHY STAGE 4 & 5: Masked Kinetic Headings (550ms & 700ms) */}
+              {/* CHOREOGRAPHY STAGE 4 & 5: Masked Editorial Headings */}
               <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-[54px] xl:text-[60px] text-forest-950 leading-[1.08] tracking-tight">
-                {/* Stage 4: Main Heading Line 1 (550ms) */}
+                {/* Stage 4: Main Heading Line 1 */}
                 <span className="block overflow-hidden py-0.5">
                   <span 
                     className="block hero-choreo-mask"
-                    style={{ animationDelay: '550ms' }}
+                    style={{ animationDelay: '500ms' }}
                   >
-                    Pure Lab Spawn.
+                    Harvested Fresh at 5:00 AM.
                   </span>
                 </span>
                 
-                {/* Stage 5: Secondary Heading Line 2 (700ms) */}
+                {/* Stage 5: Secondary Heading Line 2 */}
                 <span className="block overflow-hidden py-0.5">
                   <span 
                     className="block hero-choreo-mask"
-                    style={{ animationDelay: '700ms' }}
+                    style={{ animationDelay: '650ms' }}
                   >
-                    <span className="text-emerald-700">Fresh Harvest.</span>{' '}
-                    <span className="text-gold">Guaranteed Buyback.</span>
+                    <span className="text-emerald-700">Pure Mother Spawn.</span>{' '}
+                    <span className="text-gold">Zero Chemicals.</span>
                   </span>
                 </span>
               </h1>
 
-              {/* CHOREOGRAPHY STAGE 6: Description Paragraph (850ms) */}
+              {/* CHOREOGRAPHY STAGE 6: Grounded Description Paragraph */}
               <div 
                 className="hero-choreo-item"
-                style={{ animationDelay: '850ms' }}
+                style={{ animationDelay: '800ms' }}
               >
                 <p className="text-typography-secondary text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans font-medium">
-                  From daily harvested gourmet mushrooms and 1st-generation pure wheat grain spawn to certified commercial grower masterclasses with 100% harvest buyback — powering over 12,000+ Indian farmers and culinary lovers.
+                  Grown on steam-sterilized organic paddy straw with zero chemical sprays at our temperature-controlled farm in Davangere. We pack in breathable micro-perforated boxes and dispatch fresh gourmet mushrooms within 24 hours, alongside 1st-generation pure wheat grain spawn with guaranteed 99.8% colonization viability.
                 </p>
               </div>
 
-              {/* CHOREOGRAPHY STAGE 7: CTA Buttons Sequenced Entrance & Radiant Glow (1000ms–1200ms) */}
+              {/* CHOREOGRAPHY STAGE 7: Dual Clear CTAs + WhatsApp Grower Support */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
                 
-                {/* Button 1: Order Products & Spawn (Primary: 1000ms) */}
-                <a
-                  href="#store"
-                  onClick={handleStoreNavigation}
-                  style={{ animationDelay: '1000ms' }}
-                  className="hero-choreo-item hero-primary-cta-shimmer hero-primary-cta-pulse group relative overflow-hidden text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-lg shadow-forest-950/25 hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 button-press"
+                {/* Dual CTA 1: Explore Fresh Mushrooms */}
+                <Link
+                  to="/products/fresh-mushrooms"
+                  style={{ animationDelay: '950ms' }}
+                  className="hero-choreo-item hero-primary-cta-shimmer group relative overflow-hidden text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-lg shadow-forest-950/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 button-press"
                 >
                   <ShoppingBag className="w-4 h-4 text-emerald-300 group-hover:text-white transition-colors" />
-                  <span>Order Products &amp; Spawn</span>
+                  <span>Explore Fresh Mushrooms</span>
                   <ArrowRight className="w-4 h-4 text-emerald-300 group-hover:text-white group-hover:translate-x-1.5 transition-transform duration-300" />
-                </a>
+                </Link>
 
-                {/* Button 2: Calculate Profit / Get Trained (Secondary: 1100ms) */}
-                <a
-                  href="#calculator"
-                  onClick={handleCalculatorNavigation}
-                  style={{ animationDelay: '1100ms' }}
-                  className="hero-choreo-item group relative overflow-hidden bg-gold hover:bg-[#b5893b] text-white font-bold text-sm sm:text-base px-6 py-3.5 rounded-full inline-flex items-center gap-2 shadow-lg shadow-gold/25 hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
+                {/* Dual CTA 2: Buy Commercial Spawn */}
+                <Link
+                  to="/products/spawn-seeds"
+                  style={{ animationDelay: '1050ms' }}
+                  className="hero-choreo-item group relative overflow-hidden bg-gold hover:bg-[#b5893b] text-white font-bold text-sm sm:text-base px-6 py-3.5 rounded-full inline-flex items-center gap-2 shadow-lg shadow-gold/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                 >
-                  <GraduationCap className="w-4 h-4 text-white group-hover:rotate-6 transition-transform duration-300" />
-                  <span>Calculate Farm Profit &amp; Training</span>
-                </a>
+                  <Sprout className="w-4 h-4 text-white group-hover:rotate-6 transition-transform duration-300" />
+                  <span>Buy Commercial Spawn</span>
+                </Link>
 
-                {/* Button 3: Talk to Agronomist (Tertiary Support: 1200ms) */}
+                {/* Direct WhatsApp Guidance */}
                 <a
-                  href="https://wa.me/917204709870?text=Hello%20Sporekart,%20I%20want%20to%20know%20more%20about%20mushroom%20spawn%20and%20commercial%20training."
+                  href="https://wa.me/918277559093?text=Hello%20Sporekart%2C%20I%20want%20direct%20cultivation%20guidance."
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ animationDelay: '1200ms' }}
-                  className="hero-choreo-item group bg-white/95 hover:bg-white text-forest-900 font-bold text-xs sm:text-sm px-4 py-3.5 rounded-full border border-forest-900/20 hover:border-forest-900/40 shadow-xs inline-flex items-center gap-2 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
+                  style={{ animationDelay: '1150ms' }}
+                  className="hero-choreo-item group bg-white/95 hover:bg-white text-forest-900 font-bold text-xs sm:text-sm px-4 py-3.5 rounded-full border border-forest-900/20 hover:border-forest-900/40 shadow-xs inline-flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Talk to Agronomist</span>
+                  <span>Grower Support (+91 8277559093)</span>
                 </a>
               </div>
 
             </div>
           </div>
 
-          {/* CHOREOGRAPHY STAGE 8: Trust Indicators Strip & Staggered Cards (1300ms–1600ms) */}
+          {/* CHOREOGRAPHY STAGE 8: Grounded Trust Indicators Strip */}
           <div 
             className="hero-choreo-item pt-2"
-            style={{ animationDelay: '1300ms' }}
+            style={{ animationDelay: '1250ms' }}
           >
-            <div className="rounded-2xl bg-white/85 backdrop-blur-xl border border-forest-900/10 p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm">
+            <div className="rounded-2xl bg-white/90 backdrop-blur-xl border border-forest-900/10 p-4 sm:p-5 shadow-xs transition-shadow hover:shadow-sm">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
                 {TRUST_INDICATORS.map((ind, idx) => {
                   const Icon = ind.icon;
-                  const itemDelay = `${1400 + idx * 80}ms`;
+                  const itemDelay = `${1350 + idx * 70}ms`;
                   return (
                     <div 
                       key={ind.title} 

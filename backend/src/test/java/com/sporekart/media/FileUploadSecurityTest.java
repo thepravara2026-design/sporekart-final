@@ -114,3 +114,4 @@ class FileUploadSecurityTest {
         assertTrue(reviewService.isValidReviewImageUrl("https://images.unsplash.com/photo-1543362906-acfc16c67564"));
     }
 }
+

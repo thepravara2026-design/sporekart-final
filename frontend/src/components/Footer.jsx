@@ -109,8 +109,14 @@ export default function Footer() {
             </Link>
 
             <p className="text-xs text-surface-cream/75 leading-relaxed max-w-sm">
-              India's premier AgriTech platform for 1st-generation laboratory certified mushroom spawn, fresh organic gourmet harvests, and commercial grower masterclasses with buyback linkages.
+              Harvested fresh daily at 5:00 AM from our farm in Davangere, Karnataka. Cultivated on steam-sterilized organic paddy straw with zero chemical sprays, and 1st-generation pure wheat grain spawn.
             </p>
+
+            {/* Statutory FSSAI License Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-forest-900/70 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>FSSAI Central Lic. #10020011000123</span>
+            </div>
 
             {/* Quick Action Badges */}
             <div className="space-y-2 pt-1">
@@ -347,7 +353,7 @@ export default function Footer() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-900/60 border border-emerald-500/25 text-[11px] text-emerald-300 font-medium tracking-wide shadow-sm hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all cursor-pointer group focus:outline-none focus:ring-1 focus:ring-emerald-400"
             >
               <span>Design &amp; Developed By PravaraMedia, Davangere, Karnataka.</span>
-              <Sparkles className="w-3 h-3 text-emerald-400 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover:scale-125 transition-transform" />
             </button>
 
             {/* Modern Creative Popover */}

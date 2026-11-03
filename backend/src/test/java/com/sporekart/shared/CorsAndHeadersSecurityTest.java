@@ -96,3 +96,4 @@ class CorsAndHeadersSecurityTest {
         assertTrue(setCookieHeader.contains("Max-Age=0"));
     }
 }
+

@@ -9,20 +9,20 @@ const PILLARS = [
   {
     icon: Sprout,
     title: 'Controlled Environment',
-    desc: 'Sterile microclimate & automated humidity',
-    tag: 'IoT Automation',
+    desc: 'Steam-sterilized organic paddy straw & balanced misting',
+    tag: 'Steam Sterilized',
   },
   {
     icon: Cpu,
     title: 'Advanced Agritech',
-    desc: 'Vertical racks & laminar HEPA filtration',
-    tag: 'Class 100 Cleanroom',
+    desc: 'Laminar HEPA inoculation lab in Davangere, Karnataka',
+    tag: 'Sterile Airflow',
   },
   {
     icon: ShieldCheck,
     title: 'Quality Assurance',
-    desc: 'Pure certified spawn & zero chemicals',
-    tag: 'Lab Certified 99.9%',
+    desc: '1st-gen pure wheat grain spawn with 99.8% viability',
+    tag: 'FSSAI #10020011000123',
   },
 ];
 
@@ -170,7 +170,7 @@ export default function FarmTechnologySection({ showLearnMore = true, isContaine
         {/* Floating Top-Right Signature Badge with Subtle Organic Drift */}
         <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-10 hidden sm:block pointer-events-none select-none farm-badge-float">
           <div className="px-4 py-2 rounded-full bg-forest-950/80 backdrop-blur-md border border-white/25 shadow-lg text-white flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+            <Sprout className="w-3.5 h-3.5 text-emerald-300" />
             <span
               className="text-sm md:text-base font-normal tracking-wide italic block text-emerald-300 drop-shadow-md"
               style={{ fontFamily: 'Georgia, serif' }}
@@ -204,7 +204,7 @@ export default function FarmTechnologySection({ showLearnMore = true, isContaine
               
               {/* Minimal Descriptive Tagline */}
               <p className="text-white text-xs sm:text-sm lg:text-base leading-relaxed font-sans font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] max-w-md">
-                Precision agritech and sustainable vertical cultivation for year-round fresh gourmet harvest.
+                Rooted in Davangere, Karnataka. Cultivated on steam-sterilized organic paddy straw with zero chemical sprays, and 1st-generation grain spawn under sterile laminar airflow.
               </p>
             </div>
 

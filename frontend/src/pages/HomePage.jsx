@@ -1,21 +1,19 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, Sparkles, 
+  Sprout, GraduationCap, ArrowRight, Award, Zap, CheckCircle2, 
   Layers, ShieldCheck, HeartHandshake, Phone, Mail, MapPin, Send, MessageSquare, 
-  Wrench, ChevronRight, HelpCircle, ChevronDown, Truck
+  Wrench, ChevronRight, HelpCircle, ChevronDown, Truck, PackageCheck
 } from 'lucide-react';
 import { catalogApi, trainingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import HeroSection from '../components/HeroSection';
 import AgriTechTrustBar from '../components/AgriTechTrustBar';
-import MushroomVarietiesSection from '../components/MushroomVarietiesSection';
 import FarmTechnologySection from '../components/FarmTechnologySection';
-import WhyChooseUsSection from '../components/WhyChooseUsSection';
 import TrainingEducationSection from '../components/TrainingEducationSection';
-import SustainabilitySection from '../components/SustainabilitySection';
 import CustomerTestimonialsSection from '../components/CustomerTestimonialsSection';
 import CategoryCarousel from '../components/CategoryCarousel';
+import ProductCard from '../components/ProductCard';
 import ContactSection from '../components/ContactSection';
 import LandingPageScrollExperience from '../components/LandingPageScrollExperience';
 import { useCart } from '../context/CartContext';
@@ -23,32 +21,32 @@ import { useCart } from '../context/CartContext';
 const PRESET_CAT_MAP = {
   'fresh-mushrooms': {
     defaultDesc: 'Daily harvested Button, Oyster & Milky varieties.',
-    defaultImg: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80',
+    defaultImg: '/sporekart-white-button.jpg',
     icon: Sprout
   },
-  'dry-mushrooms': {
-    defaultDesc: 'Sun-dried & dehydrated rich umami mushroom slices.',
-    defaultImg: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80',
-    icon: Layers
-  },
   'spawn-seeds': {
-    defaultDesc: '1st gen pure wheat grain master spawn for growers.',
-    defaultImg: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
+    defaultDesc: '1st-gen pure wheat grain spawn with guaranteed 99.8% viability.',
+    defaultImg: '/sporekart-cultivation-stage1-lab.jpg',
     icon: Zap
   },
   'growing-kits': {
-    defaultDesc: 'Harvest mushrooms at home in 10-14 days.',
-    defaultImg: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+    defaultDesc: 'Ready-to-fruit indoor kits — harvest fresh in 10-14 days.',
+    defaultImg: '/sporekart-oyster-cluster.jpg',
     icon: Award
   },
   'equipment-supplies': {
-    defaultDesc: 'Autoclave bags, PP bags, sprayers & lab tools.',
-    defaultImg: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+    defaultDesc: 'Steam-sterilized paddy straw, PP bags, sprayers & lab tools.',
+    defaultImg: '/sporekart-farm-scientist.jpg',
     icon: Wrench
+  },
+  'dry-mushrooms': {
+    defaultDesc: 'Naturally dried mushroom slices rich in aroma and umami.',
+    defaultImg: '/sporekart-shiitake.jpg',
+    icon: Layers
   }
 };
 
-const DEFAULT_CATEGORY_IMG = 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=800&q=80';
+const DEFAULT_CATEGORY_IMG = '/sporekart-white-button.jpg';
 
 const getCategoryIcon = (slug = '', name = '') => {
   const norm = (slug + ' ' + name).toLowerCase();
@@ -147,26 +145,35 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       category: 'Spawn & Quality',
       topic: 'Cold-Chain Logistics',
       question: "How is Sporekart grain spawn packaged and shipped across India?",
-      takeaway: "Shipped within 24-48 hours in sterile filter-patch bags with insulated cold-chain packaging.",
-      answer: "Cultured on 1st generation sterile wheat grains under laminar air flow. Every batch is sealed in breathable filter-patch bags with temperature insulation to maintain 100% mycelial viability throughout transit.",
+      takeaway: "Shipped within 24-48 hours in breathable microporous filter bags with insulated cold-chain boxes.",
+      answer: "Cultured on 1st-generation sterile wheat grains under sterile laminar air flow in Davangere. Every batch is sealed in breathable filter-patch bags with temperature insulation to maintain 99.8% mycelial viability throughout transit.",
       specs: ['24-48h Express Dispatch', 'Breathable Filter Bags', 'Temperature Insulated'],
-      trustBadge: "100% Viability Guaranteed"
+      trustBadge: "99.8% Viability Guaranteed"
+    },
+    {
+      category: 'Cultivation',
+      topic: 'Farm Gate & Substrate',
+      question: "Where are Sporekart fresh mushrooms grown and what substrate is used?",
+      takeaway: "Harvested fresh at 5:00 AM in Davangere on steam-sterilized organic paddy straw with zero chemical sprays.",
+      answer: "Our fruiting chambers are located in Davangere, Karnataka. We cultivate Button, Oyster, and Milky mushrooms exclusively on high-pressure steam-sterilized organic paddy straw, guaranteeing 100% pesticide-free, chemical-free produce.",
+      specs: ['Harvested at 5:00 AM', 'Steam-Sterilized Straw', 'Zero Pesticides'],
+      trustBadge: "FSSAI Lic. #10020011000123"
     },
     {
       category: 'Training & Buyback',
       topic: 'Commercial Linkage',
       question: "Do you offer direct market buyback linkages for trained growers?",
-      takeaway: "Direct market buyback network connecting certified graduates with verified buyers.",
-      answer: "Commercial growers who complete our certified masterclasses gain access to our buyback network, connecting them with wholesale hotel chains, supermarket suppliers, and dry mushroom processing units.",
+      takeaway: "Direct contractual buyback network connecting certified graduates with verified buyers.",
+      answer: "Commercial growers who complete our certified masterclasses gain access to our buyback network, connecting them with wholesale hotel chains, supermarket suppliers, and dry mushroom processing units with transparent floor pricing.",
       specs: ['Verified Hotel Chains', 'Supermarket Linkages', 'Dry Processing Buyback'],
-      trustBadge: "Certified Grower Network"
+      trustBadge: "Contractual Buyback"
     },
     {
       category: 'Cultivation',
       topic: 'Beginner Growing',
       question: "Can beginners start mushroom cultivation at home without specialized equipment?",
       takeaway: "Zero specialized gear required — ready-to-fruit kits yield harvest in 10-14 days.",
-      answer: "Our DIY Mushroom Growing Kits come fully colonized and ready to fruit. Simply place the kit in a humid indoor spot, spray with water twice daily, and harvest your first fresh gourmet mushrooms.",
+      answer: "Our DIY Mushroom Growing Kits come fully colonized and ready to fruit. Simply place the kit in a humid indoor spot away from direct sunlight, mist with water twice daily, and harvest your first fresh gourmet mushrooms.",
       specs: ['10-14 Days to Harvest', 'No Machinery Needed', 'Twice-Daily Misting Only'],
       trustBadge: "Beginner Friendly"
     },
@@ -175,7 +182,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       topic: 'Storage & Shelf Life',
       question: "What is the shelf life and storage requirement for mushroom spawn?",
       takeaway: "Remains 100% viable for up to 60 days when refrigerated at 4°C–8°C.",
-      answer: "Store in a cool, dark room between 15°C–20°C, or refrigerate at 4°C–8°C. Our sterile packaging prevents moisture loss and bacterial contamination, preserving mycelium vigor.",
+      answer: "Store in a cool, dark room between 15°C–20°C for up to 20 days, or refrigerate at 4°C–8°C for up to 60 days. Our sterile packaging prevents moisture loss and contamination, preserving pure mycelium vigor.",
       specs: ['Up to 60 Days Storage', 'Ideal Temp: 4°C–8°C', 'Contamination-Proof Seal'],
       trustBadge: "Lab-Tested Viability"
     },
@@ -183,17 +190,17 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       category: 'Training & Buyback',
       topic: 'Practical Workshops',
       question: "Where are your hands-on practical training workshops conducted?",
-      takeaway: "Pune AgriTech Innovation Hub + Interactive Weekend Online Masterclasses.",
-      answer: "Practical hands-on lab training is hosted at our Innovation Hub in Pune, Maharashtra. Online growers across India receive live video coaching with a physical hands-on kit delivered beforehand.",
-      specs: ['Pune Innovation Hub', 'Weekend Online Batches', 'Free Kit Included'],
+      takeaway: "Davangere Farm & Culture Laboratory in Karnataka + Interactive Online Masterclasses.",
+      answer: "Practical hands-on training is hosted at our commercial farm and laboratory in Davangere, Karnataka. Trainees receive direct guidance on paddy straw sterilization, cleanroom inoculation, and climate management with assured buyback support.",
+      specs: ['Davangere Farm Facility', 'Hands-On Lab Training', 'Assured Buyback Linkage'],
       trustBadge: "Certified Mycology Faculty"
     },
     {
       category: 'Payment',
       topic: 'Secure Checkout',
       question: "What payment options are accepted on Sporekart?",
-      takeaway: "100% secure 256-bit encrypted checkout via Razorpay with instant digital invoice.",
-      answer: "We support UPI (Google Pay, PhonePe, Paytm), NetBanking, and Credit/Debit Cards via Razorpay with real-time order tracking and GST-compliant invoicing.",
+      takeaway: "100% secure 256-bit encrypted checkout via Razorpay with instant digital GST invoice.",
+      answer: "We support UPI (Google Pay, PhonePe, Paytm), NetBanking, and all major Credit/Debit Cards via Razorpay with real-time order tracking and GST-compliant invoicing.",
       specs: ['Instant UPI & Cards', 'Razorpay 256-Bit SSL', 'Instant Digital GST Invoice'],
       trustBadge: "100% Safe Payments"
     }
@@ -221,58 +228,84 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
       <LandingPageScrollExperience />
       <SeoHead
         title="Sporekart — Fresh Mushrooms, Pure Grain Spawn & Certified Training in India"
-        description="India's leading platform for organic fresh button & oyster mushrooms, 1st generation grain spawn seeds, indoor DIY growing kits, and certified commercial grower workshops."
+        description="Fresh gourmet button & oyster mushrooms harvested daily at 5:00 AM, 1st-generation pure wheat grain spawn, and certified grower training in Davangere, Karnataka."
         canonicalUrl="https://sporekart.in"
         structuredData={websiteSchema}
       />
 
-      {/* SECTION B: HERO SECTION */}
+      {/* 1. HERO SECTION */}
       <div id="hero" className="scroll-mt-20">
         <HeroSection />
       </div>
 
-      {/* SECTION B2: AGRITECH TRUST BAR */}
+      {/* 2. AGRI-TRUST STRIP */}
       <div id="trust-standards" className="landing-scroll-reveal scroll-mt-24">
         <AgriTechTrustBar />
       </div>
 
-      {/* SECTION C: MUSHROOM VARIETIES SHOWCASE */}
-      <div id="varieties-container" className="landing-scroll-reveal scroll-mt-24">
-        <MushroomVarietiesSection />
-      </div>
+      {/* 3. FEATURED CATEGORIES & FRESH HARVEST CATALOG */}
+      <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 landing-scroll-reveal scroll-mt-24">
+        <div id="store" className="scroll-mt-24" />
+        <div id="varieties" className="scroll-mt-24" />
+        <CategoryCarousel categories={displayCategories} />
 
-      {/* SECTION D: OUR FARM AND TECHNOLOGY */}
+        {/* Fresh Harvest & Spawn Products Grid */}
+        {products && products.length > 0 && (
+          <div className="pt-10 sm:pt-14 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b border-surface-border/60">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-forest-800 font-sans mb-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                  <span>HARVESTED FRESH DAILY &bull; DAVANGERE FARM</span>
+                </div>
+                <h3 className="font-display font-bold text-2xl sm:text-3xl text-forest-900">
+                  Fresh Pickings &amp; Laboratory Pure Spawn
+                </h3>
+                <p className="text-typography-secondary text-xs sm:text-sm mt-0.5">
+                  Hand-picked at 5:00 AM today and freshly inoculated 1st-generation wheat grain cultures.
+                </p>
+              </div>
+              <Link
+                to="/products"
+                className="text-xs font-bold text-forest-700 hover:text-forest-900 flex items-center gap-1 hover-lift shrink-0 bg-surface-cream px-3 py-2 rounded-xl border border-surface-border shadow-level-1"
+              >
+                <span>View Full Storefront ({products.length})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              {products.slice(0, 8).map((prod) => (
+                <ProductCard key={prod.id} product={prod} onAddToCart={propOnAddToCart} />
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 4. THE FARM & HYGIENE STORY (CONCISE) */}
       <div id="about" className="landing-scroll-reveal scroll-mt-24">
-        <FarmTechnologySection />
+        <div id="farm" className="scroll-mt-24" />
+        <FarmTechnologySection showLearnMore={true} />
       </div>
 
-      {/* SECTION E: WHY CHOOSE SPOREKART */}
-      <div id="why-choose-us-container" className="landing-scroll-reveal scroll-mt-24">
-        <WhyChooseUsSection />
-      </div>
-
-      {/* SECTION F: TRAINING AND EDUCATION */}
+      {/* 5. COMMERCIAL GROWER & TRAINING SPOTLIGHT */}
       <div id="training" className="landing-scroll-reveal scroll-mt-24">
+        <div id="calculator" className="scroll-mt-24" />
         <TrainingEducationSection />
       </div>
 
-      {/* SECTION G: SUSTAINABILITY COMMITMENT */}
-      <div id="sustainability-container" className="landing-scroll-reveal scroll-mt-24">
-        <SustainabilitySection />
-      </div>
-
-      {/* SECTION H: CUSTOMER TESTIMONIALS */}
-      <div id="testimonials-container" className="landing-scroll-reveal scroll-mt-24">
+      {/* 6. VERIFIED CUSTOMER & FARMER FEEDBACK */}
+      <div id="testimonials" className="landing-scroll-reveal scroll-mt-24">
+        <div id="testimonials-container" className="scroll-mt-24" />
         <CustomerTestimonialsSection />
       </div>
 
-      {/* CATEGORY EXPLORATION & LIVE CATALOG SECTION */}
-      <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 landing-scroll-reveal scroll-mt-24">
-        <CategoryCarousel categories={displayCategories} />
-      </section>
+      {/* Navigation Anchor aliases for legacy bookmarks */}
+      <div id="why-choose-us" className="scroll-mt-24" />
+      <div id="sustainability" className="scroll-mt-24" />
 
-
-      {/* FAQ SECTION WITH 80% VISIBILITY MUSHROOM GILL TEXTURE BACKGROUND */}
+      {/* 7. TRANSPARENT FAQ SECTION */}
       <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 landing-scroll-reveal scroll-mt-24" aria-label="Frequently Asked Questions">
         <div className="relative rounded-[26px] sm:rounded-[36px] overflow-hidden border border-surface-border shadow-2xl bg-surface-cream text-forest-950">
           
@@ -296,15 +329,15 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             
             {/* Header Titles */}
             <div className="text-center max-w-2xl mx-auto space-y-2.5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-900/90 border border-emerald-400/40 text-emerald-300 text-xs font-bold tracking-wider uppercase backdrop-blur-md shadow-sm">
-                <HelpCircle className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Got Questions? We Have Answers</span>
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-forest-800 font-sans flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                <span>TRANSPARENT FARM DIRECT ANSWERS</span>
               </div>
               <h2 className="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-forest-950 leading-tight">
                 Frequently Asked Questions
               </h2>
               <p className="text-forest-900/80 text-xs sm:text-sm md:text-base font-medium max-w-lg mx-auto">
-                Transparent answers on sterile spawn quality, cold-chain transit, and commercial grower buyback.
+                Honest answers on daily harvest timing, sterile wheat spawn viability, and commercial buyback.
               </p>
             </div>
 
@@ -319,7 +352,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
                     100% Pure Spawn
                   </div>
                   <div className="text-[11px] text-forest-800/80 leading-tight truncate">
-                    Lab-certified 1st gen wheat grain
+                    1st gen wheat grain &bull; 99.8% viability
                   </div>
                 </div>
               </div>
@@ -458,20 +491,20 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
             <div className="max-w-2xl mx-auto p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
               <div className="space-y-0.5">
                 <div className="font-bold text-xs sm:text-sm text-forest-950">
-                  Still have questions about spawn or commercial cultivation?
+                  Have questions about spawn viability or commercial cultivation?
                 </div>
                 <div className="text-[11px] text-forest-800/80">
-                  Our certified mycology specialists are available for custom grower advice.
+                  Our Davangere farm agronomists are available for direct grower advice.
                 </div>
               </div>
               <a
-                href="https://wa.me/919881174768?text=Hi%20Sporekart%20Team%2C%20I%20have%20a%20question%20about%20your%20spawn%20and%20cultivation."
+                href="https://wa.me/918277559093?text=Hi%20Sporekart%20Team%2C%20I%20have%20a%20question%20about%20your%20spawn%20and%20cultivation."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-forest-900 hover:bg-forest-800 text-emerald-300 hover:text-emerald-200 text-xs font-bold shadow-sm transition-all shrink-0 button-press"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                <span>Chat on WhatsApp</span>
+                <span>Chat on WhatsApp (+91 8277559093)</span>
               </a>
             </div>
 
@@ -479,7 +512,7 @@ export default function HomePage({ onAddToCart: propOnAddToCart }) {
         </div>
       </section>
 
-      {/* CONTACT & ENTERPRISE SECTION */}
+      {/* 8. CONTACT & ENTERPRISE SECTION */}
       <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 landing-scroll-reveal scroll-mt-24">
         <ContactSection />
       </section>

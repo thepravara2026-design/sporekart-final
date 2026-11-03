@@ -28,3 +28,4 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin
 FROM pg_roles
 WHERE rolname = 'sporekart_app';
+

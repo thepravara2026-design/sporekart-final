@@ -52,3 +52,4 @@ class DatabaseSecurityConfigTest {
         assertTrue(yaml.contains("SUPABASE_DB_PASSWORD:?"), "Password must be required and fail if empty");
     }
 }
+

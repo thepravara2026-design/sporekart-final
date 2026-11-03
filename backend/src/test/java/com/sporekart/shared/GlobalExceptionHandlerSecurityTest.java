@@ -96,3 +96,4 @@ class GlobalExceptionHandlerSecurityTest {
         assertEquals("req-sec-audit-12345", authResp.getBody().getRequestId());
     }
 }
+

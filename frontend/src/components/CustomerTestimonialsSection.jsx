@@ -6,33 +6,33 @@ import { reviewApi } from '../api';
 const DEFAULT_STORIES = [
   {
     id: 'story-1',
-    name: 'Priya Sharma',
-    role: 'Home Cook',
-    city: 'Bengaluru',
+    name: 'Gururaj Kulkarni',
+    role: 'Commercial Cultivator (800-Bag Unit)',
+    city: 'Hubballi, Karnataka',
     rating: 5,
     avatarColor: 'bg-emerald-700',
-    quote: 'The quality of mushrooms is outstanding. You can really taste the freshness and care in every bite!',
-    initials: 'PS',
+    quote: 'Switched to Sporekart 1st-Gen wheat grain spawn for my 800-bag oyster unit. Complete colonization was reached in just 14 days with zero mold contamination across all bags. The buyback support gave us dependable cash flow from our very first flush.',
+    initials: 'GK',
   },
   {
     id: 'story-2',
-    name: 'Rohan Mehta',
-    role: 'Restaurant Owner',
-    city: 'Mumbai',
+    name: 'Chef Radhika Menon',
+    role: 'Head Chef & Restaurateur',
+    city: 'Indiranagar, Bengaluru',
     rating: 5,
     avatarColor: 'bg-amber-700',
-    quote: 'Reliable supply, great taste and a brand that truly cares about sustainability. Highly recommended!',
+    quote: 'We receive fresh grey oyster and milky mushrooms within 24 hours of morning harvest from Davangere. The cap firmness, clean moisture balance, and nutty aroma remain unmatched. Real farm-gate freshness on our plates.',
     initials: 'RM',
   },
   {
     id: 'story-3',
-    name: 'Anjali Verma',
-    role: 'Aspiring Farmer',
-    city: 'Pune',
+    name: 'Mahesh Patil',
+    role: 'Certified Commercial Grower',
+    city: 'Belagavi, Karnataka',
     rating: 5,
     avatarColor: 'bg-forest-800',
-    quote: 'The training program gave me practical skills and confidence to start my own mushroom farm. Excellent experience!',
-    initials: 'AV',
+    quote: 'Attended the practical training session at the Davangere farm. The hands-on steam sterilization and cleanroom inoculation guidance were game changers. Harvested over 420 kg in our first cycle with direct agronomist guidance on WhatsApp.',
+    initials: 'MP',
   },
 ];
 
@@ -85,14 +85,15 @@ export default function CustomerTestimonialsSection() {
         
         {/* Section Heading */}
         <div className="text-center max-w-2xl mx-auto space-y-2.5">
-          <span className="text-[11px] sm:text-xs font-bold tracking-[0.2em] text-forest-800 uppercase font-sans">
-            REAL STORIES
+          <span className="text-[11px] sm:text-xs font-bold tracking-[0.2em] text-forest-800 uppercase font-sans flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+            <span>VERIFIED GROWER &amp; CHEF REVIEWS</span>
           </span>
           <h2 className="font-display font-bold text-3xl sm:text-4xl text-forest-900 leading-[1.15]">
-            What Our Customers Say
+            From Davangere Farm to Indian Kitchens &amp; Commercial Sheds
           </h2>
           <p className="text-typography-secondary text-sm sm:text-base leading-relaxed">
-            Freshness, quality and sustainability — that’s what our customers love about us.
+            Real experiences from commercial mushroom cultivators, professional chefs, and home kitchen growers.
           </p>
         </div>
 

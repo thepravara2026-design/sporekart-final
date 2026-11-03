@@ -121,3 +121,4 @@ class SecurityAuditMetricsTest {
         assertThat(standalone.getFailedLoginCounter()).isNull();
     }
 }
+

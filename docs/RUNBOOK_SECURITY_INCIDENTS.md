@@ -205,3 +205,4 @@ SporeKart emits structured audit log lines with prefix `[SECURITY_AUDIT]` and ex
 - **Lead DevOps Engineer:** `thepravara2026@gmail.com`
 - **Payment Gateway Escalation:** [Razorpay Merchant Support](https://razorpay.com/support/)
 - **Infrastructure Escalation:** [Railway Platform Status](https://status.railway.app/) | [Supabase Support](https://supabase.com/dashboard/support)
+

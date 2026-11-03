@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Truck, ShieldCheck, Zap, Award, PhoneCall, 
-  CheckCircle2, Sparkles, ArrowUpRight, ChevronRight, X, MessageSquare, Users, Activity
+  CheckCircle2, ArrowUpRight, ChevronRight, X, MessageSquare, Users, Activity, Sprout
 } from 'lucide-react';
 
 /**
@@ -48,23 +48,23 @@ const TRUST_METRICS = [
     highlight: 'Insulated Packaging',
     metricPercent: 98,
     benchmarkBadge: '99.2% On-Time SLA',
-    details: 'Temperature-controlled insulated boxes tested to preserve mycelium viability across all 28 Indian states.',
-    spec: 'Cold-chain dispatch within 24 hours of autoclave sterilization'
+    details: 'Temperature-controlled breathable insulated boxes tested to preserve mycelium viability across all 28 Indian states.',
+    spec: 'Cold-chain dispatch within 24 hours of harvest & sterile packaging'
   },
   {
     id: 'purity',
     icon: ShieldCheck,
-    num: 99.9,
+    num: 99.8,
     prefix: '',
     suffix: '%',
     decimals: 1,
     label: 'Viability Rate',
     title: 'Pure Mother Spawn',
-    subtitle: 'Class-100 laminar sterile cleanroom cultured',
-    highlight: 'Zero Contamination',
-    metricPercent: 99.9,
-    benchmarkBadge: 'Class-100 Cleanroom',
-    details: '1st-generation grain mother cultures certified free from trichoderma, bacterial blotch, or competing fungi.',
+    subtitle: '1st-Gen wheat grain cultured under sterile laminar airflow',
+    highlight: 'Zero Chemical Sprays',
+    metricPercent: 99.8,
+    benchmarkBadge: 'Laminar Sterile Flow',
+    details: '1st-generation grain mother cultures cultured under sterile laminar airflow in Davangere, certified free from trichoderma, bacterial blotch, or competing molds.',
     spec: 'Sub-cultured only up to G1 stage on whole autoclaved wheat grains'
   },
   {
@@ -96,8 +96,8 @@ const TRUST_METRICS = [
     highlight: 'Pan-India Network',
     metricPercent: 95,
     benchmarkBadge: 'ICAR Protocol Trained',
-    details: 'Empowering smallholder agripreneurs and commercial mushroom units with state-of-the-art sterile protocols.',
-    spec: 'Lifetime grower advisory and access to Sporekart wholesale buyer portal'
+    details: 'Empowering smallholder agripreneurs and commercial mushroom units with state-of-the-art sterile protocols and Davangere farm training.',
+    spec: 'Lifetime grower advisory and direct wholesale buyer linkages'
   },
   {
     id: 'support',
@@ -109,11 +109,11 @@ const TRUST_METRICS = [
     label: 'Direct Care',
     title: 'Mycologist Advisory',
     subtitle: 'Direct agronomist WhatsApp assistance',
-    highlight: 'Hindi • Marathi • English',
+    highlight: 'Kannada • Hindi • English',
     metricPercent: 100,
     benchmarkBadge: 'Instant WhatsApp Desk',
-    details: 'On-demand technical guidance for temperature, humidity, contamination diagnosis, and optimal pinhead fruiting.',
-    spec: 'Direct WhatsApp helpline: +91 98811 74768 manned by certified mycology agronomists'
+    details: 'On-demand technical guidance for temperature, humidity, contamination diagnosis, and optimal pinhead fruiting directly from our Davangere specialists.',
+    spec: 'Direct WhatsApp helpline: +91 8277559093 manned by experienced cultivation agronomists'
   }
 ];
 
@@ -145,8 +145,8 @@ export default function AgriTechTrustBar() {
             </span>
             
             {/* Dynamic Counting Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-900/5 border border-forest-900/15 text-forest-900 font-mono text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-xs animate-pulse">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-900/5 border border-forest-900/15 text-forest-900 font-mono text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-xs">
+              <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>Live Deliveries: <AnimatedCounter end={19480} suffix="+" /> Units Shipped</span>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function AgriTechTrustBar() {
 
             <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto justify-end">
               <a
-                href="https://wa.me/919881174768?text=Hi%20Sporekart%20Team%2C%20I%20want%20to%20know%20more%20about%20your%20agritech%20standards."
+                href="https://wa.me/918277559093?text=Hi%20Sporekart%20Team%2C%20I%20want%20to%20know%20more%20about%20your%20farm%20standards."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-forest-900 hover:bg-forest-800 text-emerald-300 text-xs font-bold shadow-md transition-all button-press"

@@ -24,9 +24,9 @@ const FEATURES = [
     description: 'Shorter supply chain delivering harvest directly to your doorstep.',
   },
   {
-    icon: Cpu,
-    title: 'Innovation Focused',
-    description: 'Smarter farming solutions combining biological science and IoT tech.',
+    icon: ShieldCheck,
+    title: 'Steam Sterilization Purity',
+    description: 'Substrates steam-sterilized at 121°C on organic paddy straw with zero chemical sprays.',
   },
   {
     icon: Heart,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Star, Flame, Sparkles, Check, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Star, Flame, Check, ChevronRight, CheckCircle2 } from 'lucide-react';
 import MediaImage from './MediaImage';
 import AvailabilityBadge from './AvailabilityBadge';
 import { useCart } from '../context/CartContext';
@@ -58,7 +58,7 @@ export default function ProductCard({
         >
           <MediaImage
             src={primaryImage}
-            alt={`${product.title} - Fresh mushroom & spawn supply India`}
+            alt={`${product.title} - Cultivated fresh in Davangere, Karnataka`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
@@ -70,8 +70,8 @@ export default function ProductCard({
               </span>
             )}
             {product.isPopular && (
-              <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-black rounded-md uppercase tracking-wider shadow-level-2 flex items-center gap-1 border border-amber-300">
-                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-200" /> MOST POPULAR
+              <span className="px-2 py-0.5 bg-amber-600 text-white text-[9px] sm:text-[10px] font-black rounded-md uppercase tracking-wider shadow-level-2 flex items-center gap-1 border border-amber-300/40">
+                <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-200 text-amber-200" /> MOST POPULAR
               </span>
             )}
             {!product.isBestSeller && !product.isPopular && product.categoryName && (
@@ -111,7 +111,7 @@ export default function ProductCard({
             </div>
           ) : (
             <div className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold tracking-wide flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-emerald-600" /> Lab Certified
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Lab Tested
             </div>
           )}
 
