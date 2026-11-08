@@ -89,6 +89,26 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
     }
   };
 
+  const availabilityInfo = selectedVariant?.availability || {
+    status: (selectedVariant?.stockQuantity > 0 || !selectedVariant) ? 'AVAILABLE' : 'OUT_OF_STOCK',
+    label: (selectedVariant?.stockQuantity > 0 || !selectedVariant) ? 'In Stock' : 'Out of Stock'
+  };
+
+  const isAvailable = availabilityInfo.status !== 'OUT_OF_STOCK';
+  const currentInCart = cart?.items?.find((i) => i.variantId === selectedVariant?.id)?.quantity || 0;
+  const availableStock = selectedVariant?.stockQuantity !== undefined ? selectedVariant.stockQuantity : 999;
+  const remainingStock = Math.max(0, availableStock - currentInCart);
+  const isOutOfStock = availableStock <= 0 || !isAvailable;
+  const isMaxInCart = currentInCart >= availableStock && availableStock > 0;
+
+  useEffect(() => {
+    if (selectedVariant && remainingStock > 0 && quantity > remainingStock) {
+      setQuantity(remainingStock);
+    } else if (selectedVariant && remainingStock === 0 && !isOutOfStock) {
+      setQuantity(1);
+    }
+  }, [remainingStock, quantity, isOutOfStock, selectedVariant]);
+
   if (loading) {
     return <PageSkeleton type="detail" />;
   }
@@ -129,27 +149,7 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
   const price = selectedVariant?.priceInr || 0;
   const canonicalUrl = `https://sporekart.in/product/${product.slug}`;
 
-  const availabilityInfo = selectedVariant?.availability || {
-    status: (selectedVariant?.stockQuantity > 0 || !selectedVariant) ? 'AVAILABLE' : 'OUT_OF_STOCK',
-    label: (selectedVariant?.stockQuantity > 0 || !selectedVariant) ? 'In Stock' : 'Out of Stock'
-  };
-
-  const isAvailable = availabilityInfo.status !== 'OUT_OF_STOCK';
   const info = product ? (product.productInformation || {}) : {};
-
-  const currentInCart = cart?.items?.find((i) => i.variantId === selectedVariant?.id)?.quantity || 0;
-  const availableStock = selectedVariant?.stockQuantity !== undefined ? selectedVariant.stockQuantity : 999;
-  const remainingStock = Math.max(0, availableStock - currentInCart);
-  const isOutOfStock = availableStock <= 0 || !isAvailable;
-  const isMaxInCart = currentInCart >= availableStock && availableStock > 0;
-
-  useEffect(() => {
-    if (remainingStock > 0 && quantity > remainingStock) {
-      setQuantity(remainingStock);
-    } else if (remainingStock === 0 && !isOutOfStock) {
-      setQuantity(1);
-    }
-  }, [remainingStock]);
 
   const productSchema = {
     "@context": "https://schema.org/",

@@ -58,3 +58,4 @@ export function useBestSellers(limit = 10) {
 
   return { bestsellers, loading, error };
 }
+

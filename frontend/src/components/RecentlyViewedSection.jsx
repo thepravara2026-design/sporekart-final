@@ -183,3 +183,4 @@ export default function RecentlyViewedSection({ user = null }) {
     </section>
   );
 }
+
