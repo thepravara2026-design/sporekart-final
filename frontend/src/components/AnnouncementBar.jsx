@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, MessageSquare, Truck, ShieldCheck, Sparkles, Tag } from 'lucide-react';
-import { cartApi } from '../api';
+import * as api from '../api';
 
 const DEFAULT_ANNOUNCEMENTS = [
   { id: 'a1', text: 'Daily Fresh Harvest at 5:00 AM • Davangere Commercial Farm Direct', icon: Sparkles },
@@ -15,6 +15,7 @@ export default function AnnouncementBar() {
 
   useEffect(() => {
     let isMounted = true;
+    const cartApi = api?.cartApi;
     if (typeof cartApi?.getAvailablePromotions === 'function') {
       try {
         const promise = cartApi.getAvailablePromotions('CUSTOMER');

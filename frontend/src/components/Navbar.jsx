@@ -6,6 +6,7 @@ import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
 import NotificationCenter from './NotificationCenter';
 import AnnouncementBar from './AnnouncementBar';
+import CircularCategoryNav from './CircularCategoryNav';
 import { clearSessionAndTokens, authApi } from '../api';
 
 export default function Navbar({ user, setUser }) {
@@ -346,6 +347,9 @@ export default function Navbar({ user, setUser }) {
             )}
           </div>
         )}
+
+        {/* Layer 3: Circular Product Category Navigation (Sticky with Header on Homepage) */}
+        {isHomePage && <CircularCategoryNav />}
       </header>
 
       {/* Auth Modal (Phone / Email OTP) */}

@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CartProvider } from '../context/CartContext';
 import { HelmetProvider } from 'react-helmet-async';
 import HomePage from '../pages/HomePage';
+import Navbar from '../components/Navbar';
 import AnnouncementBar from '../components/AnnouncementBar';
 import CircularCategoryNav from '../components/CircularCategoryNav';
 import HeroCarousel, { HERO_SLIDES } from '../components/HeroCarousel';
@@ -336,11 +337,20 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
   });
 
   describe('8. Integrated HomePage Complete Architecture', () => {
-    it('renders all architectural sections without errors', async () => {
-      renderWithProviders(<HomePage user={null} onAddToCart={vi.fn()} />);
+    it('renders all architectural sections without errors with 3-layer sticky navigation', async () => {
+      renderWithProviders(
+        <>
+          <Navbar user={null} setUser={vi.fn()} />
+          <HomePage user={null} onAddToCart={vi.fn()} />
+        </>
+      );
 
       await waitFor(() => {
-        // 1. Circular Category Nav
+        // Layer 1: Announcement Bar
+        expect(screen.getByRole('region', { name: /Promotional announcements/i })).toBeInTheDocument();
+        // Layer 2: Main Navigation Header
+        expect(screen.getAllByRole('navigation', { name: /Primary Navigation/i }).length).toBeGreaterThan(0);
+        // Layer 3: Circular Category Nav
         expect(screen.getByLabelText(/Product categories navigation/i)).toBeInTheDocument();
         // 2. Hero Carousel
         expect(screen.getByLabelText(/Sporekart Featured Agricultural Showcase/i)).toBeInTheDocument();

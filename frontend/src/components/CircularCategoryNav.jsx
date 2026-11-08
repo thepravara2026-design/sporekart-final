@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Sprout, Layers, Zap, Award, Wrench } from 'lucide-react';
-import { catalogApi } from '../api';
+import * as api from '../api';
 
 const CATEGORY_FALLBACK_MAP = {
   'fresh-mushrooms': {
@@ -43,24 +43,42 @@ export default function CircularCategoryNav() {
 
   useEffect(() => {
     let isMounted = true;
-    catalogApi.getCategories()
-      .then((res) => {
-        if (isMounted && res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-          const mapped = res.data.data.map((cat) => {
-            const fallback = CATEGORY_FALLBACK_MAP[cat.slug] || {};
-            return {
-              id: cat.id || cat.slug,
-              slug: cat.slug,
-              name: cat.name || fallback.name || cat.slug,
-              imageUrl: cat.imageUrl || fallback.image || '/sporekart-white-button.jpg',
-            };
-          });
-          setCategories(mapped);
+    let catalogApi = null;
+    try {
+      if (api && 'catalogApi' in api) {
+        catalogApi = api.catalogApi;
+      }
+    } catch (e) {
+      catalogApi = null;
+    }
+
+    if (catalogApi && typeof catalogApi.getCategories === 'function') {
+      try {
+        const promise = catalogApi.getCategories();
+        if (promise && typeof promise.then === 'function') {
+          promise
+            .then((res) => {
+              if (isMounted && res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+                const mapped = res.data.data.map((cat) => {
+                  const fallback = CATEGORY_FALLBACK_MAP[cat.slug] || {};
+                  return {
+                    id: cat.id || cat.slug,
+                    slug: cat.slug,
+                    name: cat.name || fallback.name || cat.slug,
+                    imageUrl: cat.imageUrl || fallback.image || '/sporekart-white-button.jpg',
+                  };
+                });
+                setCategories(mapped);
+              }
+            })
+            .catch(() => {
+              // Retain verified fallback categories
+            });
         }
-      })
-      .catch(() => {
-        // Retain verified fallback categories
-      });
+      } catch (e) {
+        // Fallback cleanly
+      }
+    }
 
     return () => {
       isMounted = false;
@@ -92,7 +110,7 @@ export default function CircularCategoryNav() {
   return (
     <nav 
       aria-label="Product categories navigation" 
-      className="w-full bg-surface-white/80 border-b border-surface-border/70 backdrop-blur-sm py-3 sm:py-4 px-3 sm:px-6 relative z-30 shadow-xs"
+      className="w-full bg-surface-white/95 sm:bg-surface-white/90 border-t border-surface-border/50 border-b border-surface-border/70 backdrop-blur-md py-2 sm:py-2.5 px-3 sm:px-6 relative z-30 shadow-xs transition-colors"
     >
       <div className="max-w-7xl mx-auto relative flex items-center">
         {/* Left Scroll Button (Desktop) */}
@@ -101,9 +119,9 @@ export default function CircularCategoryNav() {
             type="button"
             onClick={() => scroll('left')}
             aria-label="Scroll categories left"
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-surface-border shadow-level-2 items-center justify-center text-forest-800 hover:text-forest-950 hover:scale-105 transition-all duration-200 cursor-pointer -ml-2"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 border border-surface-border shadow-level-2 items-center justify-center text-forest-800 hover:text-forest-950 hover:scale-105 transition-all duration-200 cursor-pointer -ml-2"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         )}
 
@@ -111,7 +129,7 @@ export default function CircularCategoryNav() {
         <div
           ref={scrollRef}
           onScroll={updateScrollButtons}
-          className="flex items-center gap-4 sm:gap-8 overflow-x-auto scrollbar-none py-1 px-1 w-full scroll-smooth justify-start md:justify-center"
+          className="flex items-center gap-3.5 sm:gap-7 overflow-x-auto scrollbar-none py-0.5 px-1 w-full scroll-smooth justify-start md:justify-center"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {categories.map((cat) => (
@@ -122,13 +140,13 @@ export default function CircularCategoryNav() {
               title={`Explore ${cat.name}`}
             >
               {/* Circular Image Container */}
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600/30 via-forest-700/20 to-emerald-400/40 group-hover:from-emerald-600 group-hover:to-forest-800 transition-all duration-300 shadow-sm group-hover:shadow-level-2 group-hover:scale-105">
+              <div className="relative w-12 h-12 min-[420px]:w-14 min-[420px]:h-14 sm:w-16 sm:h-16 rounded-full p-0.5 sm:p-1 bg-gradient-to-tr from-emerald-600/30 via-forest-700/20 to-emerald-400/40 group-hover:from-emerald-600 group-hover:to-forest-800 transition-all duration-300 shadow-sm group-hover:shadow-level-2 group-hover:scale-105 shrink-0">
                 <div className="w-full h-full rounded-full overflow-hidden bg-surface-cream border-2 border-white shadow-inner flex items-center justify-center">
                   <img
                     src={cat.imageUrl}
                     alt={cat.name}
-                    width="80"
-                    height="80"
+                    width="64"
+                    height="64"
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500"
@@ -141,7 +159,7 @@ export default function CircularCategoryNav() {
               </div>
 
               {/* Category Name Label */}
-              <span className="text-[11px] sm:text-xs font-bold text-forest-900 group-hover:text-emerald-700 mt-2 text-center max-w-[85px] sm:max-w-[105px] truncate transition-colors">
+              <span className="text-[10px] sm:text-xs font-bold text-forest-900 group-hover:text-emerald-700 mt-1 sm:mt-1.5 text-center max-w-[70px] min-[420px]:max-w-[80px] sm:max-w-[100px] truncate transition-colors leading-tight">
                 {cat.name}
               </span>
             </Link>

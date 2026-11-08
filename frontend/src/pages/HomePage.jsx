@@ -11,7 +11,7 @@ import FloatingOrderBar from '../components/FloatingOrderBar';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useCart } from '../context/CartContext';
 
-export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart }) {
+export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart, showCategoryNav = false }) {
   const { addToCart } = useCart();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(propUser || null);
@@ -42,7 +42,7 @@ export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart 
       const element = document.getElementById(targetId);
       if (element) {
         setTimeout(() => {
-          const yOffset = -80;
+          const yOffset = -190;
           const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
           window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
         }, 120);
@@ -87,11 +87,11 @@ export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart 
         structuredData={websiteSchema}
       />
 
-      {/* Layer 3 Navigation: Circular Product Category Discovery */}
-      <CircularCategoryNav />
+      {/* Layer 3 Navigation: Rendered conditionally if standalone; otherwise mounted within sticky Navbar header */}
+      {showCategoryNav && <CircularCategoryNav />}
 
       {/* 1. Four-Slide Automatic Hero Carousel */}
-      <div id="hero" className="scroll-mt-20">
+      <div id="hero" className="scroll-mt-36 sm:scroll-mt-48">
         <HeroCarousel />
       </div>
 
@@ -99,7 +99,7 @@ export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart 
       <RecentlyViewedSection user={currentUser} />
 
       {/* 3. Best Sellers Section (6-10 Products from Actual Completed Orders) */}
-      <div id="bestsellers" className="scroll-mt-24">
+      <div id="bestsellers" className="scroll-mt-40 sm:scroll-mt-52">
         <BestSellersSection 
           onAddToCart={handleAddToCart}
           onTrackView={handleTrackView}
@@ -107,7 +107,7 @@ export default function HomePage({ user: propUser, onAddToCart: propOnAddToCart 
       </div>
 
       {/* 4. All Products Discovery Grid with Functional Pagination */}
-      <div id="all-products" className="scroll-mt-24">
+      <div id="all-products" className="scroll-mt-40 sm:scroll-mt-52">
         <AllProductsSection 
           onAddToCart={handleAddToCart}
           onTrackView={handleTrackView}
