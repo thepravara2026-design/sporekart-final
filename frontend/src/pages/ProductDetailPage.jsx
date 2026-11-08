@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Sprout, ShoppingBag, CheckCircle2, Truck, ShieldCheck, MapPin, 
-  ChevronDown, HelpCircle, Package, Layers, GraduationCap, ChevronLeft, 
-  ChevronRight, Info, AlertTriangle, Thermometer, Award
+  ChevronDown, HelpCircle, Package, Layers, ChevronLeft, 
+  ChevronRight, Info, AlertTriangle, Thermometer, Award,
+  ZoomIn, Star, MessageSquare, Sparkles, Image as ImageIcon, X
 } from 'lucide-react';
-import { catalogApi, shippingApi, analyticsApi } from '../api';
+import { catalogApi, shippingApi, analyticsApi, reviewApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import Breadcrumbs from '../components/Breadcrumbs';
 import AvailabilityBadge from '../components/AvailabilityBadge';
 import PageSkeleton from '../components/PageSkeleton';
 import EmptyState from '../components/EmptyState';
 import MediaImage from '../components/MediaImage';
-import ProductReviewsSection from '../components/ProductReviewsSection';
+import StarRatingInput from '../components/StarRatingInput';
+import ProductReviewFormModal from '../components/ProductReviewFormModal';
 import ProductCarousel from '../components/ProductCarousel';
 
 import { useCart } from '../context/CartContext';
@@ -31,6 +33,19 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
   const [pincodeResult, setPincodeResult] = useState(null);
   const [checkingPincode, setCheckingPincode] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  // Hover zoom lens state
+  const [zoomStyle, setZoomStyle] = useState({ transformOrigin: 'center center', transform: 'scale(1)' });
+  const [isZooming, setIsZooming] = useState(false);
+  const imageContainerRef = useRef(null);
+
+  // Reviews state
+  const [reviewSummary, setReviewSummary] = useState(null);
+  const [reviewsList, setReviewsList] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [activeImageModal, setActiveImageModal] = useState(null);
+  const [showLocalReviewModal, setShowLocalReviewModal] = useState(false);
 
   useEffect(() => {
     if (selectedVariant) {
@@ -69,6 +84,35 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
     };
     fetchProductData();
   }, [slug]);
+
+  // Fetch reviews and review summary for this specific product
+  const fetchReviewsData = async () => {
+    if (!product?.id) return;
+    setLoadingReviews(true);
+    try {
+      const [summaryRes, reviewsRes] = await Promise.allSettled([
+        reviewApi.getProductReviewSummary(product.id),
+        reviewApi.getProductReviews(product.id, 0, 10),
+      ]);
+
+      if (summaryRes.status === 'fulfilled' && summaryRes.value?.data?.data) {
+        setReviewSummary(summaryRes.value.data.data);
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value?.data?.data) {
+        setReviewsList(reviewsRes.value.data.data.content || []);
+      }
+    } catch (err) {
+      console.warn('Failed to load product reviews:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    if (product?.id) {
+      fetchReviewsData();
+    }
+  }, [product?.id]);
 
   const handlePincodeCheck = async (e) => {
     e.preventDefault();
@@ -109,6 +153,50 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
     }
   }, [remainingStock, quantity, isOutOfStock, selectedVariant]);
 
+  // Hover Zoom Event Handlers
+  const handleMouseMove = (e) => {
+    if (!imageContainerRef.current) return;
+    const { left, top, width, height } = imageContainerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
+
+    setZoomStyle({
+      transformOrigin: `${clampedX}% ${clampedY}%`,
+      transform: 'scale(2.2)',
+    });
+  };
+
+  const handleMouseEnter = () => {
+    setIsZooming(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsZooming(false);
+    setZoomStyle({
+      transformOrigin: 'center center',
+      transform: 'scale(1)',
+    });
+  };
+
+  const handleOpenReviewModal = () => {
+    const itemData = {
+      productId: product?.id,
+      productTitle: product?.title,
+      orderId: 'direct-order',
+      orderItemId: 'item-1',
+      imageUrl: images?.[0],
+    };
+
+    if (onOpenReviewModal) {
+      onOpenReviewModal(itemData);
+    } else {
+      setShowLocalReviewModal(true);
+    }
+  };
+
   if (loading) {
     return <PageSkeleton type="detail" />;
   }
@@ -135,10 +223,12 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
 
   const handlePrevImage = () => {
     setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setIsZooming(false);
   };
 
   const handleNextImage = () => {
     setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setIsZooming(false);
   };
 
   const handleKeyDown = (e) => {
@@ -195,8 +285,14 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
     }
   ];
 
+  // Review calculations
+  const ratingDistribution = reviewSummary?.ratingDistribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  const totalReviewsCount = reviewSummary?.totalReviews || reviewsList.length || 0;
+  const averageRating = reviewSummary?.averageRating || (totalReviewsCount > 0 ? (reviewsList.reduce((acc, r) => acc + (r.rating || 0), 0) / reviewsList.length) : 0);
+  const recentReviews = showAllReviews ? reviewsList : reviewsList.slice(0, 3);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 md:pb-16 space-y-8 sm:space-y-10 animate-fade-in" data-testid="product-detail">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 md:pb-16 space-y-10 sm:space-y-12 animate-fade-in" data-testid="product-detail">
       <SeoHead
         title={`${product.title} (${selectedVariant?.variantName || ''}) — Buy Online in India | Sporekart`}
         description={product.description?.substring(0, 160)}
@@ -214,20 +310,45 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
         ]}
       />
 
-      {/* Main Product Hero Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      {/* Main Product Hero Split Layout:
+          Left side pinned/static on desktop (sticky top-28 self-start)
+          Right side scrolling smoothly with all product details & specifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start relative">
         
-        {/* Multi-Image Product Gallery Column */}
-        <div className="lg:col-span-6 space-y-4" data-testid="product-gallery" tabIndex={0} onKeyDown={handleKeyDown}>
-          
-          {/* Main Primary Image Viewport */}
-          <div className="relative bg-surface-cream p-3 rounded-container border border-surface-border overflow-hidden shadow-level-2 group">
-            <MediaImage
-              src={currentImage}
-              alt={`${product.title} view ${activeImageIndex + 1}`}
-              data-testid="product-primary-image"
-              className="w-full h-80 sm:h-96 object-cover rounded-feature transition-all duration-300"
-            />
+        {/* Left Column: Static / Sticky Product Media Gallery with Hover Zoom Effect */}
+        <div 
+          className="lg:col-span-6 space-y-4 lg:sticky lg:top-28 lg:self-start transition-all"
+          data-testid="product-gallery" 
+          tabIndex={0} 
+          onKeyDown={handleKeyDown}
+        >
+          {/* Main Primary Image with Smooth Hover Zoom Effect */}
+          <div 
+            ref={imageContainerRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="relative bg-surface-cream p-3 rounded-container border border-surface-border overflow-hidden shadow-level-2 group cursor-crosshair select-none"
+          >
+            <div className="w-full h-80 sm:h-96 lg:h-[450px] overflow-hidden rounded-feature relative">
+              <MediaImage
+                src={currentImage}
+                alt={`${product.title} view ${activeImageIndex + 1}`}
+                data-testid="product-primary-image"
+                className="w-full h-full object-cover rounded-feature transition-transform duration-200 ease-out will-change-transform"
+                style={isZooming ? zoomStyle : { transform: 'scale(1)', transformOrigin: 'center center' }}
+              />
+            </div>
+
+            {/* Hover Zoom Hint Badge (Fades when actively zooming) */}
+            <div 
+              className={`absolute bottom-5 left-5 z-10 px-3 py-1.5 bg-forest-950/75 backdrop-blur-md text-white text-xs font-semibold rounded-full flex items-center gap-1.5 pointer-events-none transition-opacity duration-200 shadow-md ${
+                isZooming ? 'opacity-0' : 'opacity-90'
+              }`}
+            >
+              <ZoomIn className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Hover over image to zoom</span>
+            </div>
 
             {/* Gallery Navigation Overlay Controls */}
             {images.length > 1 && (
@@ -237,7 +358,7 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                   onClick={handlePrevImage}
                   data-testid="gallery-previous"
                   aria-label="Previous image"
-                  className="absolute left-5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-surface-white/90 text-forest-900 border border-surface-border hover:bg-forest-700 hover:text-white transition-all shadow-level-1 button-press"
+                  className="absolute left-5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-surface-white/90 text-forest-900 border border-surface-border hover:bg-forest-700 hover:text-white transition-all shadow-level-1 button-press z-20"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -246,14 +367,14 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                   onClick={handleNextImage}
                   data-testid="gallery-next"
                   aria-label="Next image"
-                  className="absolute right-5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-surface-white/90 text-forest-900 border border-surface-border hover:bg-forest-700 hover:text-white transition-all shadow-level-1 button-press"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-surface-white/90 text-forest-900 border border-surface-border hover:bg-forest-700 hover:text-white transition-all shadow-level-1 button-press z-20"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
                 
                 {/* Image Counter Badge */}
                 <div 
-                  className="absolute bottom-5 right-5 px-3 py-1 bg-surface-white/90 text-forest-900 font-mono text-xs font-bold rounded-input border border-surface-border shadow-level-1 backdrop-blur-md"
+                  className="absolute bottom-5 right-5 px-3 py-1 bg-surface-white/90 text-forest-900 font-mono text-xs font-bold rounded-input border border-surface-border shadow-level-1 backdrop-blur-md z-10"
                   data-testid="gallery-counter"
                 >
                   {activeImageIndex + 1} / {images.length}
@@ -269,13 +390,16 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setActiveImageIndex(idx)}
+                  onClick={() => {
+                    setActiveImageIndex(idx);
+                    setIsZooming(false);
+                  }}
                   data-testid="product-thumbnail"
                   aria-label={`Select product image ${idx + 1}`}
-                  className={`w-20 h-20 rounded-input overflow-hidden border-2 transition-all shrink-0 ${
+                  className={`w-20 h-20 rounded-input overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
                     activeImageIndex === idx 
-                      ? 'border-forest-700 scale-105 shadow-level-1' 
-                      : 'border-surface-border opacity-70 hover:opacity-100'
+                      ? 'border-forest-700 scale-105 shadow-level-1 ring-2 ring-forest-700/20' 
+                      : 'border-surface-border opacity-70 hover:opacity-100 hover:border-forest-400'
                   }`}
                 >
                   <MediaImage
@@ -289,9 +413,10 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
           )}
         </div>
 
-        {/* Product Details & Purchase Section */}
-        <div className="lg:col-span-6 space-y-6">
+        {/* Right Column: Complete Product Information Scrolling Smoothly Alongside Static Gallery */}
+        <div className="lg:col-span-6 space-y-6 sm:space-y-8 scroll-smooth">
           
+          {/* Header Title & Tags */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-3 py-1 bg-surface-cream text-forest-800 text-xs font-bold rounded-pill border border-surface-border uppercase tracking-wider">
@@ -303,6 +428,18 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                   <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block"></span>
                   100% Vegetarian
                 </span>
+              )}
+
+              {/* Jump to Reviews Link */}
+              {totalReviewsCount > 0 && (
+                <a 
+                  href="#reviews-section" 
+                  className="inline-flex items-center gap-1 text-xs text-amber-600 font-bold hover:underline ml-1"
+                >
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                  <span>{averageRating ? averageRating.toFixed(1) : '5.0'}</span>
+                  <span className="text-typography-muted font-normal">({totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'})</span>
+                </a>
               )}
             </div>
 
@@ -514,13 +651,236 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
               </div>
             )}
           </div>
+
+          {/* Structured Key Product Information & Highlights */}
+          <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-5 shadow-level-1" data-testid="product-information">
+            <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+              <Info className="w-5 h-5 text-forest-700" /> Key Consumer & Product Details
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              {info.brandName && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Brand</span>
+                  <p className="text-forest-900 font-bold text-sm">{info.brandName}</p>
+                </div>
+              )}
+
+              {info.countryOfOrigin && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Country of Origin</span>
+                  <p className="text-forest-900 font-bold text-sm">{info.countryOfOrigin}</p>
+                </div>
+              )}
+
+              {info.netQuantity && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Net Quantity</span>
+                  <p className="text-forest-900 font-bold text-sm">{info.netQuantity} {info.unitOfMeasure || ''}</p>
+                </div>
+              )}
+
+              {info.mushroomSpecies && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Mushroom Species</span>
+                  <p className="text-forest-700 font-bold font-mono text-sm">{info.mushroomSpecies}</p>
+                </div>
+              )}
+
+              {info.strainVariety && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Strain / Variety</span>
+                  <p className="text-forest-900 font-bold text-sm">{info.strainVariety}</p>
+                </div>
+              )}
+
+              {info.foodCategory && (
+                <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                  <span className="text-typography-muted font-medium">Food Category</span>
+                  <p className="text-forest-900 font-bold text-sm">{info.foodCategory}</p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Technical Specifications Section */}
+          <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="product-specifications">
+            <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+              <Package className="w-5 h-5 text-forest-700" /> Technical & Tax Specifications
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+              <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                <span className="text-typography-muted font-medium">HSN Classification</span>
+                <p className="text-forest-900 font-bold">{product.hsnCode || '07095900'}</p>
+              </div>
+              <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                <span className="text-typography-muted font-medium">GST Rate</span>
+                <p className="text-forest-900 font-bold">{product.gstRatePercent || 5}% Tax Included</p>
+              </div>
+              <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                <span className="text-typography-muted font-medium">Storage Requirement</span>
+                <p className="text-forest-900 font-bold">{info.storageTemperatureGuidance || '2°C - 4°C Cold Storage'}</p>
+              </div>
+              <div className="p-3.5 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                <span className="text-typography-muted font-medium">Shelf Life</span>
+                <p className="text-forest-900 font-bold">{info.shelfLifeGuidance || '30 Days from dispatch'}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Food & FSSAI Compliance Section */}
+          {(info.fssaiLicenseNumber || info.ingredients || info.allergenInfo) && (
+            <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="compliance-information">
+              <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-forest-700" /> Food Safety & FSSAI Disclosures
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {info.fssaiLicenseNumber && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border flex items-center gap-3">
+                    <div className="px-2.5 py-1 bg-surface-white text-forest-900 font-bold border border-surface-border rounded-compact">
+                      FSSAI
+                    </div>
+                    <div>
+                      <span className="text-typography-muted block font-medium">FSSAI License Number</span>
+                      <span className="text-forest-900 font-mono font-bold">{info.fssaiLicenseNumber}</span>
+                    </div>
+                  </div>
+                )}
+
+                {info.ingredients && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                    <span className="text-typography-muted font-medium">Ingredients</span>
+                    <p className="text-forest-900">{info.ingredients}</p>
+                  </div>
+                )}
+
+                {info.allergenInfo && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1 md:col-span-2">
+                    <span className="text-soil font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Allergen Information
+                    </span>
+                    <p className="text-typography-secondary">{info.allergenInfo}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Storage & Handling Instructions */}
+          {(info.storageInstructions || info.handlingInstructions || info.safetyWarnings) && (
+            <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="storage-information">
+              <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+                <Thermometer className="w-5 h-5 text-forest-700" /> Storage, Handling & Care Guidance
+              </h2>
+              <div className="space-y-3 text-xs sm:text-sm text-typography-secondary leading-relaxed">
+                {info.storageInstructions && (
+                  <p><strong className="text-forest-900">Storage Instructions:</strong> {info.storageInstructions}</p>
+                )}
+                {info.handlingInstructions && (
+                  <p data-testid="handling-information"><strong className="text-forest-900">Handling Guidance:</strong> {info.handlingInstructions}</p>
+                )}
+                {info.safetyWarnings && (
+                  <p className="text-soil font-medium"><strong>Safety & Cautions:</strong> {info.safetyWarnings}</p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Agricultural & Cultivation Disclosures */}
+          {(info.recommendedSubstrate || info.inoculationGuidance || info.kitContents || info.environmentRequirements) && (
+            <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1">
+              <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+                <Sprout className="w-5 h-5 text-forest-700" /> Agricultural & Cultivation Disclosures
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {info.recommendedSubstrate && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                    <span className="text-typography-muted font-medium">Recommended Substrate</span>
+                    <p className="text-forest-900 font-bold">{info.recommendedSubstrate}</p>
+                  </div>
+                )}
+                {info.kitContents && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                    <span className="text-typography-muted font-medium">Kit Contents</span>
+                    <p className="text-forest-900">{info.kitContents}</p>
+                  </div>
+                )}
+                {info.inoculationGuidance && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1 md:col-span-2">
+                    <span className="text-typography-muted font-medium">Inoculation & Preparation Guidance</span>
+                    <p className="text-typography-secondary leading-relaxed">{info.inoculationGuidance}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Manufacturer & Customer Care Disclosures */}
+          {(info.manufacturerDetails || info.customerCareDetails) && (
+            <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1">
+              <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-forest-700" /> Manufacturer & Consumer Care Contact
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-typography-secondary">
+                {info.manufacturerDetails && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                    <span className="text-typography-muted font-medium block">Manufacturer / Packer Details</span>
+                    <p className="text-forest-900">{info.manufacturerDetails}</p>
+                  </div>
+                )}
+                {info.customerCareDetails && (
+                  <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
+                    <span className="text-typography-muted font-medium block">Customer Care Contact</span>
+                    <p className="text-forest-900">{info.customerCareDetails}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Insulated Cold-Chain Logistics Details */}
+          <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-3 shadow-level-1">
+            <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+              <Truck className="w-5 h-5 text-forest-700" /> Insulated Cold-Chain Logistics Details
+            </h2>
+            <p className="text-xs sm:text-sm text-typography-secondary leading-relaxed">
+              Sporekart utilizes temperature-controlled, multi-layer insulated cold-chain packaging for fresh mushrooms and high-grade spawn seeds. All shipments are dispatched via Shiprocket integration with real-time AWB courier tracking.
+            </p>
+          </section>
+
+          {/* Product FAQ Section */}
+          <section className="bg-surface-white p-6 sm:p-7 rounded-container border border-surface-border space-y-4 shadow-level-1">
+            <h2 className="font-display font-bold text-lg sm:text-xl text-forest-900 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-forest-700" /> Frequently Asked Questions
+            </h2>
+            <div className="space-y-3">
+              {productFaqs.map((faq, idx) => (
+                <div key={idx} className="bg-surface-cream rounded-card border border-surface-border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
+                    className="w-full text-left p-4 flex items-center justify-between text-xs sm:text-sm font-bold text-forest-900 hover:text-forest-700 transition-colors"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown className={`w-4 h-4 text-forest-700 transition-transform duration-200 ${openFaqIndex === idx ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openFaqIndex === idx && (
+                    <div className="px-4 pb-4 text-xs text-typography-secondary leading-relaxed border-t border-surface-border pt-3 animate-fade-in">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
 
       {/* Sticky Mobile Purchase Controls Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-white/95 backdrop-blur-xl border-t border-surface-border p-3 flex items-center justify-between gap-3 shadow-level-3">
         <div>
-          <span className="text-[10px] text-typography-muted block">{selectedVariant?.variantName}</span>
+          <span className="text-[10px] text-typography-muted block truncate max-w-[120px]">{selectedVariant?.variantName}</span>
           <span className="text-lg font-bold text-forest-900 font-display">₹{selectedVariant?.priceInr || price}</span>
         </div>
         <button
@@ -547,237 +907,245 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
         </button>
       </div>
 
-      {/* Structured Key Product Information & Highlights */}
-      <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-6 shadow-level-1" data-testid="product-information">
-        <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-          <Info className="w-5 h-5 text-forest-700" /> Key Consumer & Product Details
-        </h2>
+      {/* Product Ratings & Reviews Experience Section:
+          1. Total reviews on the particular product with score breakdown
+          2. Display the recent 3 reviews with customer details & photos
+          3. At the last: High-conversion "Ask for a Review" card */}
+      <section id="reviews-section" className="pt-8 border-t border-surface-border space-y-8 animate-fade-in" data-testid="product-reviews-container">
+        {/* Total Reviews Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest-900 tracking-tight flex items-center gap-2.5">
+              <MessageSquare className="w-7 h-7 text-forest-700 shrink-0" />
+              <span>Customer Ratings & Verified Reviews</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-typography-secondary mt-1">
+              Authentic cultivation feedback and culinary insights from verified buyers of {product.title}.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
-          
-          {info.brandName && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Brand</span>
-              <p className="text-forest-900 font-bold text-sm">{info.brandName}</p>
-            </div>
-          )}
-
-          {info.countryOfOrigin && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Country of Origin</span>
-              <p className="text-forest-900 font-bold text-sm">{info.countryOfOrigin}</p>
-            </div>
-          )}
-
-          {info.netQuantity && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Net Quantity</span>
-              <p className="text-forest-900 font-bold text-sm">{info.netQuantity} {info.unitOfMeasure || ''}</p>
-            </div>
-          )}
-
-          {info.mushroomSpecies && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Mushroom Species</span>
-              <p className="text-forest-700 font-bold font-mono text-sm">{info.mushroomSpecies}</p>
-            </div>
-          )}
-
-          {info.strainVariety && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Strain / Variety</span>
-              <p className="text-forest-900 font-bold text-sm">{info.strainVariety}</p>
-            </div>
-          )}
-
-          {info.foodCategory && (
-            <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-              <span className="text-typography-muted font-medium">Food Category</span>
-              <p className="text-forest-900 font-bold text-sm">{info.foodCategory}</p>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={handleOpenReviewModal}
+            className="btn-primary text-xs sm:text-sm font-bold px-5 py-2.5 flex items-center gap-2 shadow-sm rounded-xl shrink-0"
+          >
+            <Star className="w-4 h-4 fill-amber-300 text-amber-300" />
+            <span>Write a Review</span>
+          </button>
         </div>
-      </section>
 
-      {/* Technical Specifications Section */}
-      <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="product-specifications">
-        <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-          <Package className="w-5 h-5 text-forest-700" /> Technical & Tax Specifications
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-            <span className="text-typography-muted font-medium">HSN Classification</span>
-            <p className="text-forest-900 font-bold">{product.hsnCode || '07095900'}</p>
+        {/* Rating Breakdown & Total Reviews Summary Card */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface-cream p-6 sm:p-8 rounded-3xl border border-surface-border shadow-level-1">
+          {/* Average Rating Score */}
+          <div className="flex flex-col items-center justify-center text-center p-6 bg-surface-white rounded-2xl border border-surface-border space-y-2.5 shadow-xs">
+            <div className="text-5xl font-extrabold text-forest-900 font-mono tracking-tight">
+              {averageRating ? averageRating.toFixed(1) : '0.0'}
+            </div>
+            <StarRatingInput value={Math.round(averageRating || 0)} readOnly size="md" showLabel={false} />
+            <div className="text-xs text-typography-secondary font-medium">
+              Based on <strong className="text-forest-900 font-bold">{totalReviewsCount}</strong> verified {totalReviewsCount === 1 ? 'review' : 'reviews'} for this product
+            </div>
           </div>
-          <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-            <span className="text-typography-muted font-medium">GST Rate</span>
-            <p className="text-forest-900 font-bold">{product.gstRatePercent || 5}% Tax Included</p>
-          </div>
-          <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-            <span className="text-typography-muted font-medium">Storage Requirement</span>
-            <p className="text-forest-900 font-bold">{info.storageTemperatureGuidance || '2°C - 4°C Cold Storage'}</p>
-          </div>
-          <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-            <span className="text-typography-muted font-medium">Shelf Life</span>
-            <p className="text-forest-900 font-bold">{info.shelfLifeGuidance || '30 Days from dispatch'}</p>
+
+          {/* Star Distribution Breakdown */}
+          <div className="md:col-span-2 space-y-2.5 flex flex-col justify-center">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = ratingDistribution[star] || 0;
+              const percentage = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
+              return (
+                <div key={star} className="flex items-center gap-3 text-xs">
+                  <span className="w-12 text-right font-bold text-typography-primary flex items-center justify-end gap-1">
+                    {star} <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+                  </span>
+                  <div className="flex-1 h-2.5 bg-surface-white rounded-full overflow-hidden border border-surface-border">
+                    <div
+                      className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="w-16 text-typography-muted font-mono text-[11px]">
+                    {count} ({percentage}%)
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </section>
 
-      {/* Food & FSSAI Compliance Section */}
-      {(info.fssaiLicenseNumber || info.ingredients || info.allergenInfo) && (
-        <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="compliance-information">
-          <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-            <Award className="w-5 h-5 text-forest-700" /> Food Safety & FSSAI Disclosures
-          </h2>
+        {/* Recent 3 Reviews Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
+            <h3 className="font-display font-bold text-lg text-forest-900 flex items-center gap-2">
+              <span>Recent Customer Reviews</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-forest-100 text-forest-800">
+                {showAllReviews ? `Showing All ${reviewsList.length}` : `Showing Recent ${Math.min(3, reviewsList.length)} of ${totalReviewsCount}`}
+              </span>
+            </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            {info.fssaiLicenseNumber && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border flex items-center gap-3">
-                <div className="px-2.5 py-1 bg-surface-white text-forest-900 font-bold border border-surface-border rounded-compact">
-                  FSSAI
-                </div>
-                <div>
-                  <span className="text-typography-muted block font-medium">FSSAI License Number</span>
-                  <span className="text-forest-900 font-mono font-bold">{info.fssaiLicenseNumber}</span>
-                </div>
-              </div>
-            )}
-
-            {info.ingredients && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-                <span className="text-typography-muted font-medium">Ingredients</span>
-                <p className="text-forest-900">{info.ingredients}</p>
-              </div>
-            )}
-
-            {info.allergenInfo && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1 md:col-span-2">
-                <span className="text-soil font-medium flex items-center gap-1">
-                  <AlertTriangle className="w-3.5 h-3.5" /> Allergen Information
-                </span>
-                <p className="text-typography-secondary">{info.allergenInfo}</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Storage & Handling Instructions */}
-      {(info.storageInstructions || info.handlingInstructions || info.safetyWarnings) && (
-        <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1" data-testid="storage-information">
-          <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-            <Thermometer className="w-5 h-5 text-forest-700" /> Storage, Handling & Care Guidance
-          </h2>
-          <div className="space-y-3 text-xs sm:text-sm text-typography-secondary leading-relaxed">
-            {info.storageInstructions && (
-              <p><strong className="text-forest-900">Storage Instructions:</strong> {info.storageInstructions}</p>
-            )}
-            {info.handlingInstructions && (
-              <p data-testid="handling-information"><strong className="text-forest-900">Handling Guidance:</strong> {info.handlingInstructions}</p>
-            )}
-            {info.safetyWarnings && (
-              <p className="text-soil font-medium"><strong>Safety & Cautions:</strong> {info.safetyWarnings}</p>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Agricultural & Cultivation Disclosures */}
-      {(info.recommendedSubstrate || info.inoculationGuidance || info.kitContents || info.environmentRequirements) && (
-        <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1">
-          <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-            <Sprout className="w-5 h-5 text-forest-700" /> Agricultural & Cultivation Disclosures
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            {info.recommendedSubstrate && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-                <span className="text-typography-muted font-medium">Recommended Substrate</span>
-                <p className="text-forest-900 font-bold">{info.recommendedSubstrate}</p>
-              </div>
-            )}
-            {info.kitContents && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-                <span className="text-typography-muted font-medium">Kit Contents</span>
-                <p className="text-forest-900">{info.kitContents}</p>
-              </div>
-            )}
-            {info.inoculationGuidance && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1 md:col-span-2">
-                <span className="text-typography-muted font-medium">Inoculation & Preparation Guidance</span>
-                <p className="text-typography-secondary leading-relaxed">{info.inoculationGuidance}</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Manufacturer & Customer Care Disclosures */}
-      {(info.manufacturerDetails || info.customerCareDetails) && (
-        <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1">
-          <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-forest-700" /> Manufacturer & Consumer Care Contact
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-typography-secondary">
-            {info.manufacturerDetails && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-                <span className="text-typography-muted font-medium block">Manufacturer / Packer Details</span>
-                <p className="text-forest-900">{info.manufacturerDetails}</p>
-              </div>
-            )}
-            {info.customerCareDetails && (
-              <div className="p-4 bg-surface-cream rounded-card border border-surface-border space-y-1">
-                <span className="text-typography-muted font-medium block">Customer Care Contact</span>
-                <p className="text-forest-900">{info.customerCareDetails}</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Insulated Cold-Chain Logistics Details */}
-      <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1">
-        <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-          <Truck className="w-5 h-5 text-forest-700" /> Insulated Cold-Chain Logistics Details
-        </h2>
-        <p className="text-xs sm:text-sm text-typography-secondary leading-relaxed">
-          Sporekart utilizes temperature-controlled, multi-layer insulated cold-chain packaging for fresh mushrooms and high-grade spawn seeds. All shipments are dispatched via Shiprocket integration with real-time AWB courier tracking.
-        </p>
-      </section>
-
-      {/* Product FAQ Section */}
-      <section className="bg-surface-white p-6 sm:p-8 rounded-container border border-surface-border space-y-4 shadow-level-1">
-        <h2 className="font-display font-bold text-xl text-forest-900 flex items-center gap-2">
-          <HelpCircle className="w-5 h-5 text-forest-700" /> Frequently Asked Questions
-        </h2>
-        <div className="space-y-3">
-          {productFaqs.map((faq, idx) => (
-            <div key={idx} className="bg-surface-cream rounded-card border border-surface-border overflow-hidden">
+            {reviewsList.length > 3 && (
               <button
                 type="button"
-                onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
-                className="w-full text-left p-4 flex items-center justify-between text-xs sm:text-sm font-bold text-forest-900 hover:text-forest-700 transition-colors"
+                onClick={() => setShowAllReviews(!showAllReviews)}
+                className="text-xs font-bold text-forest-700 hover:text-forest-900 hover:underline transition-all"
               >
-                <span>{faq.q}</span>
-                <ChevronDown className={`w-4 h-4 text-forest-700 transition-transform ${openFaqIndex === idx ? 'rotate-180' : ''}`} />
+                {showAllReviews ? 'Show Recent 3 Only' : `View All (${reviewsList.length})`}
               </button>
-              {openFaqIndex === idx && (
-                <div className="px-4 pb-4 text-xs text-typography-secondary leading-relaxed border-t border-surface-border pt-3">
-                  {faq.a}
-                </div>
-              )}
+            )}
+          </div>
+
+          {loadingReviews ? (
+            <div className="py-8 text-center text-xs text-typography-muted animate-pulse">
+              Loading customer reviews for {product.title}...
             </div>
-          ))}
+          ) : recentReviews.length > 0 ? (
+            <div className="space-y-4">
+              {recentReviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="p-5 sm:p-6 bg-surface-white rounded-2xl border border-surface-border shadow-sm hover:shadow-md transition-shadow space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-sm text-forest-900">{rev.customerName || 'Verified Cultivator'}</span>
+                        {rev.isVerifiedPurchase && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Purchase
+                          </span>
+                        )}
+                        {rev.variantName && (
+                          <span className="text-[10px] text-typography-muted font-medium bg-surface-cream px-2 py-0.5 rounded border border-surface-border">
+                            {rev.variantName}
+                          </span>
+                        )}
+                      </div>
+                      <StarRatingInput value={rev.rating} readOnly size="sm" showLabel={false} />
+                    </div>
+
+                    <span className="text-[11px] text-typography-muted font-mono shrink-0">
+                      {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      }) : 'Recent'}
+                    </span>
+                  </div>
+
+                  {rev.reviewTitle && (
+                    <h4 className="font-bold text-sm text-forest-900">{rev.reviewTitle}</h4>
+                  )}
+
+                  <p className="text-xs sm:text-sm text-typography-secondary leading-relaxed whitespace-pre-line">
+                    {rev.reviewText}
+                  </p>
+
+                  {/* Customer Uploaded Photos */}
+                  {rev.hasCustomerImages && rev.customerImages?.length > 0 && (
+                    <div className="pt-2">
+                      <div className="text-[11px] font-semibold text-typography-secondary mb-1.5 flex items-center gap-1">
+                        <ImageIcon className="w-3.5 h-3.5 text-forest-700" /> Customer Photos ({rev.customerImages.length})
+                      </div>
+                      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+                        {rev.customerImages.map((img, idx) => (
+                          <img
+                            key={img.id || idx}
+                            src={img.imageUrl}
+                            alt="Customer harvest photo"
+                            onClick={() => setActiveImageModal({ images: rev.customerImages, activeIndex: idx })}
+                            className="w-16 h-16 object-cover rounded-xl border border-surface-border cursor-pointer hover:scale-105 transition-transform"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-surface-cream/50 rounded-2xl border border-surface-border space-y-2">
+              <Star className="w-8 h-8 text-typography-muted mx-auto opacity-40" />
+              <h4 className="text-sm font-bold text-typography-primary">No published reviews yet</h4>
+              <p className="text-xs text-typography-secondary">
+                Be the first verified customer to share your cultivation or culinary experience!
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* At the last: Ask for a Review Card */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-forest-900 via-forest-900 to-forest-950 text-white border border-forest-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-left">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>Have You Grown or Tasted This Variety?</span>
+            </div>
+            <h4 className="text-xl sm:text-2xl font-display font-bold">Share Your Experience & Help the Grower Community</h4>
+            <p className="text-xs sm:text-sm text-surface-neutral/80 max-w-xl leading-relaxed">
+              Your verified review and cultivation photos help fellow growers across India choose the highest-yielding spawn and freshest mushrooms.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenReviewModal}
+            className="btn-primary bg-amber-400 hover:bg-amber-300 text-forest-950 font-bold px-6 py-3.5 rounded-xl shadow-lg flex items-center gap-2 shrink-0 transition-transform active:scale-95 text-xs sm:text-sm"
+          >
+            <Star className="w-4 h-4 fill-forest-950 text-forest-950" />
+            <span>Write a Product Review</span>
+          </button>
         </div>
       </section>
 
-      {/* Product Ratings & Reviews Section */}
-      <ProductReviewsSection
-        productId={product.id}
-        productTitle={product.title}
-        user={user}
-        onOpenReviewModal={onOpenReviewModal}
-      />
+      {/* Lightbox Photo Modal for Reviews */}
+      {activeImageModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-2xl w-full bg-surface-white rounded-3xl overflow-hidden p-4 space-y-3">
+            <button
+              onClick={() => setActiveImageModal(null)}
+              className="absolute top-3 right-3 p-2 text-white bg-black/60 rounded-full hover:bg-black transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="h-96 bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+              <img
+                src={activeImageModal.images[activeImageModal.activeIndex]?.imageUrl}
+                alt="Enlarged customer photo"
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+            <div className="flex items-center justify-center gap-2 overflow-x-auto">
+              {activeImageModal.images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img.imageUrl}
+                  alt="thumbnail"
+                  onClick={() => setActiveImageModal({ ...activeImageModal, activeIndex: idx })}
+                  className={`w-12 h-12 object-cover rounded-lg cursor-pointer border-2 ${
+                    activeImageModal.activeIndex === idx ? 'border-forest-700 scale-105' : 'border-transparent opacity-70'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Standalone Fallback Review Submission Modal */}
+      {showLocalReviewModal && (
+        <ProductReviewFormModal
+          item={{
+            productId: product?.id,
+            productTitle: product?.title,
+            orderId: 'direct-order',
+            orderItemId: 'item-1',
+            imageUrl: currentImage,
+          }}
+          onClose={() => setShowLocalReviewModal(false)}
+          onSuccess={() => {
+            setShowLocalReviewModal(false);
+            fetchReviewsData();
+          }}
+        />
+      )}
 
       {/* Related Products Carousel */}
       {relatedProducts.length > 0 && (
