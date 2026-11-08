@@ -543,7 +543,7 @@ export default function HeroSection() {
                 <span className="truncate">Same-Day Dispatch for Fresh Pickings</span>
               </div>
               <a 
-                href="https://wa.me/917204709870?text=Hello%20Sporekart%2C%20I%20need%20direct%20cultivation%20guidance."
+                href="https://wa.me/918277559093?text=Hello%20Sporekart%2C%20I%20need%20direct%20cultivation%20guidance."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-white/95 hover:bg-emerald-50 border border-forest-900/15 hover:border-emerald-600/30 shadow-xs backdrop-blur-md transition-colors"
@@ -632,7 +632,7 @@ export default function HeroSection() {
                   </Link>
 
                   <a
-                    href="https://wa.me/917204709870?text=Hello%20Sporekart%2C%20I%20want%20direct%20cultivation%20guidance."
+                    href="https://wa.me/918277559093?text=Hello%20Sporekart%2C%20I%20want%20direct%20cultivation%20guidance."
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ animationDelay: '1000ms' }}

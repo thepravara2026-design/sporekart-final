@@ -665,6 +665,20 @@ html.landing-page-scroll-active {
   }
 }
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 35s linear infinite;
+}
+
 .farm-spore-particle {
   position: absolute;
   border-radius: 9999px;
@@ -684,7 +698,8 @@ html.landing-page-scroll-active {
 @media (prefers-reduced-motion: reduce) {
   .farm-spore-particle,
   .farm-badge-float,
-  .farm-beacon-radar {
+  .farm-beacon-radar,
+  .animate-marquee {
     animation: none !important;
     transform: none !important;
   }

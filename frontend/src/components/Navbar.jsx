@@ -5,6 +5,7 @@ import { Sprout, ShoppingBag, User, X, Menu, ShieldCheck, Search, ArrowRight } f
 import GlobalSearch from './GlobalSearch';
 import AuthForm from './AuthForm';
 import NotificationCenter from './NotificationCenter';
+import AnnouncementBar from './AnnouncementBar';
 import { clearSessionAndTokens, authApi } from '../api';
 
 export default function Navbar({ user, setUser }) {
@@ -14,6 +15,7 @@ export default function Navbar({ user, setUser }) {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const isHomePage = location.pathname === '/' || location.pathname === '/landing';
 
   // Prevent background scroll when mobile menu is open
   useEffect(() => {
@@ -91,6 +93,9 @@ export default function Navbar({ user, setUser }) {
             : 'bg-surface-white/90 backdrop-blur-md border-b border-surface-border/80 shadow-sm'
         }`}
       >
+        {/* Layer 1: Announcement & Customer Contact Marquee Bar */}
+        {isHomePage && <AnnouncementBar />}
+
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between min-h-[3.5rem] sm:min-h-[4.25rem] py-1.5 sm:py-2 gap-2 sm:gap-4">
             {/* Logo */}

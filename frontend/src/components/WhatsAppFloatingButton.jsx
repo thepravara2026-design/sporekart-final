@@ -1,6 +1,15 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function WhatsAppFloatingButton() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/' || location.pathname === '/landing';
+
+  // Controlled by homepage's FloatingOrderBar to prevent dual overlapping buttons
+  if (isHomePage) {
+    return null;
+  }
+
   return (
     <a
       href="https://wa.me/917204709870?text=Hello%20Sporekart%2C%20I%20have%20an%20inquiry%20regarding%20mushroom%20products%2Ftraining."
