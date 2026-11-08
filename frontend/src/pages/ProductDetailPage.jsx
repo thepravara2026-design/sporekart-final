@@ -143,6 +143,14 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
   const isOutOfStock = availableStock <= 0 || !isAvailable;
   const isMaxInCart = currentInCart >= availableStock && availableStock > 0;
 
+  useEffect(() => {
+    if (remainingStock > 0 && quantity > remainingStock) {
+      setQuantity(remainingStock);
+    } else if (remainingStock === 0 && !isOutOfStock) {
+      setQuantity(1);
+    }
+  }, [remainingStock]);
+
   const productSchema = {
     "@context": "https://schema.org/",
     "@type": "Product",
@@ -428,6 +436,8 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                     const res = await addToCart(selectedVariant.id, quantity, availableStock);
                     if (res && !res.success) {
                       setCartError(res.message);
+                    } else {
+                      setQuantity(1);
                     }
                   }
                 }
@@ -454,15 +464,20 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
             <button
               type="button"
               onClick={() => {
-                if (selectedVariant) {
+                if (selectedVariant && !isMaxInCart) {
                   if (propOnAddToCart) propOnAddToCart(product, selectedVariant, quantity);
-                  else addToCart(selectedVariant.id, quantity);
+                  else addToCart(selectedVariant.id, quantity, availableStock);
                 }
               }}
+              disabled={isOutOfStock || isMaxInCart}
               data-testid="buy-now"
-              className="w-full btn-secondary text-xs py-3.5 shadow-level-1 flex items-center justify-center gap-2"
+              className={`w-full text-xs py-3.5 shadow-level-1 flex items-center justify-center gap-2 ${
+                isOutOfStock || isMaxInCart
+                  ? 'bg-surface-neutral text-typography-muted cursor-not-allowed border border-surface-border'
+                  : 'btn-secondary'
+              }`}
             >
-              Buy Now with Instant Express Shipping ➔
+              {isMaxInCart ? `Max Stock In Cart (${currentInCart})` : 'Buy Now with Instant Express Shipping ➔'}
             </button>
           )}
 
@@ -511,20 +526,24 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
         <button
           type="button"
           onClick={() => {
-            if (isAvailable && selectedVariant) {
+            if (isAvailable && selectedVariant && !isMaxInCart) {
               if (propOnAddToCart) propOnAddToCart(product, selectedVariant, quantity);
-              else addToCart(selectedVariant.id, quantity);
+              else addToCart(selectedVariant.id, quantity, availableStock);
             }
           }}
-          disabled={!isAvailable}
+          disabled={!isAvailable || isOutOfStock || isMaxInCart}
           className={`flex-1 font-bold text-xs py-3 rounded-input shadow-level-1 flex items-center justify-center gap-2 ${
-            !isAvailable
-              ? 'bg-surface-neutral text-typography-muted'
+            !isAvailable || isOutOfStock || isMaxInCart
+              ? 'bg-surface-neutral text-typography-muted cursor-not-allowed border border-surface-border'
               : 'btn-primary'
           }`}
         >
           <ShoppingBag className="w-4 h-4" />
-          {!isAvailable ? 'Out of Stock' : 'Add to Cart'}
+          {!isAvailable || isOutOfStock
+            ? 'Out of Stock'
+            : isMaxInCart
+              ? `Max Stock (${currentInCart})`
+              : 'Add to Cart'}
         </button>
       </div>
 

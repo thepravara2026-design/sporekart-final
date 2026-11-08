@@ -80,17 +80,20 @@ export default function CartPage() {
                   <div className="flex items-center justify-between w-full sm:w-auto gap-6 border-t sm:border-t-0 border-surface-border pt-3 sm:pt-0">
                     <div className="flex items-center gap-2 bg-surface-neutral border border-surface-border rounded-input px-3 py-1.5">
                       <button
-                        onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                        disabled={loading}
+                        onClick={() => updateQuantity(item.variantId, item.quantity - 1, item.availableStock)}
+                        disabled={item.quantity <= 1}
                         className="text-typography-secondary hover:text-forest-900 disabled:opacity-40 transition-colors"
+                        aria-label="Decrease quantity"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
                       <span className="text-sm font-bold text-forest-900 px-2">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                        disabled={loading || item.quantity >= item.availableStock}
+                        onClick={() => updateQuantity(item.variantId, item.quantity + 1, item.availableStock)}
+                        disabled={item.availableStock !== undefined && item.availableStock !== null && item.quantity >= item.availableStock}
                         className="text-typography-secondary hover:text-forest-900 disabled:opacity-40 transition-colors"
+                        aria-label="Increase quantity"
+                        title={item.availableStock !== undefined && item.availableStock !== null && item.quantity >= item.availableStock ? `Max stock reached (${item.availableStock})` : 'Add one more'}
                       >
                         <Plus className="w-4 h-4" />
                       </button>

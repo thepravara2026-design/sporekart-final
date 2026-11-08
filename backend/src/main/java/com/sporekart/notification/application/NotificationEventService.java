@@ -10,6 +10,7 @@ import com.sporekart.notification.infrastructure.NotificationEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
@@ -30,7 +31,7 @@ public class NotificationEventService {
 
     private final org.springframework.beans.factory.ObjectProvider<NotificationWorker> notificationWorkerProvider;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<NotificationEvent> recordEvent(
             NotificationEventType eventType,
             String entityType,
@@ -45,7 +46,7 @@ public class NotificationEventService {
         return recordEvent(eventType, entityType, entityId, userId, recipientEmail, null, recipientName, subject, payload, deduplicationKey);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<NotificationEvent> recordEvent(
             NotificationEventType eventType,
             String entityType,
@@ -319,7 +320,7 @@ public class NotificationEventService {
         return notificationRepository.markAllAsReadForAdmin(java.time.ZonedDateTime.now());
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordAdminNotification(
             NotificationEventType eventType,
             String entityType,

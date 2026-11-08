@@ -6,7 +6,7 @@ import MediaImage from './MediaImage';
 import PromoCodeSection from './PromoCodeSection';
 
 export default function CartDrawer() {
-  const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeFromCart, clearCart, loading } = useCart();
+  const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeFromCart, clearCart, loading, error } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,6 +74,16 @@ export default function CartDrawer() {
             </button>
           </div>
 
+          {/* Error Banner */}
+          {error && (
+            <div className="mx-6 mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between gap-2 animate-fade-in">
+              <span className="flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                {error}
+              </span>
+            </div>
+          )}
+
           {/* Delivery Incentive Progress */}
           {cart.items.length > 0 && (
             <div className="px-6 py-3 bg-surface-cream border-b border-surface-border">
@@ -116,73 +126,86 @@ export default function CartDrawer() {
                 </button>
               </div>
             ) : (
-              cart.items.map((item) => (
-                <div
-                  key={item.variantId || item.id}
-                  className="p-4 rounded-card bg-surface-white border border-surface-border flex gap-4 relative group hover:border-forest-700/40 shadow-level-1 transition-all"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-20 h-20 rounded-input overflow-hidden bg-surface-cream border border-surface-border flex-shrink-0 relative">
-                    <MediaImage
-                      src={item.imageUrl}
-                      alt={item.productTitle}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
+              cart.items.map((item) => {
+                const stockLimit = item.availableStock !== undefined && item.availableStock !== null ? item.availableStock : 999;
+                const isExceedingStock = item.inStock === false || item.quantity > stockLimit;
+                const isAtMaxStock = item.quantity >= stockLimit;
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-semibold text-forest-900 truncate pr-2">{item.productTitle}</h4>
-                      <button
-                        onClick={() => removeFromCart(item.variantId)}
-                        className="text-typography-muted hover:text-rose-600 p-1 transition-colors"
-                        title="Remove item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <span className="inline-block text-[11px] text-forest-700 font-medium mt-0.5">
-                      {item.variantName}
-                    </span>
-
-                    <div className="text-sm font-bold text-forest-900 mt-1">
-                      ₹{item.unitPriceInr} <span className="text-[10px] text-typography-muted font-normal">/ unit</span>
+                return (
+                  <div
+                    key={item.variantId || item.id}
+                    className="p-4 rounded-card bg-surface-white border border-surface-border flex gap-4 relative group hover:border-forest-700/40 shadow-level-1 transition-all"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-20 h-20 rounded-input overflow-hidden bg-surface-cream border border-surface-border flex-shrink-0 relative">
+                      <MediaImage
+                        src={item.imageUrl}
+                        alt={item.productTitle}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
 
-                    {!item.inStock && (
-                      <span className="text-[10px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
-                        <AlertTriangle className="w-3 h-3" /> Exceeds Stock ({item.availableStock} available)
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-sm font-semibold text-forest-900 truncate pr-2">{item.productTitle}</h4>
+                        <button
+                          onClick={() => removeFromCart(item.variantId)}
+                          className="text-typography-muted hover:text-rose-600 p-1 transition-colors"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <span className="inline-block text-[11px] text-forest-700 font-medium mt-0.5">
+                        {item.variantName}
                       </span>
-                    )}
 
-                    {/* Quantity Controls */}
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-2 bg-surface-neutral border border-surface-border rounded-input px-2.5 py-1">
-                        <button
-                          onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                          disabled={loading}
-                          className="text-typography-secondary hover:text-forest-900 p-1 disabled:opacity-40 transition-colors"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="text-xs font-bold text-forest-900 px-1.5">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                          disabled={loading || item.quantity >= item.availableStock}
-                          className="text-typography-secondary hover:text-forest-900 p-1 disabled:opacity-40 transition-colors"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="text-sm font-bold text-forest-900 mt-1">
+                        ₹{item.unitPriceInr} <span className="text-[10px] text-typography-muted font-normal">/ unit</span>
                       </div>
 
-                      <div className="text-xs font-bold text-forest-700">
-                        ₹{(item.unitPriceInr * item.quantity).toFixed(2)}
+                      {isExceedingStock ? (
+                        <span className="text-[10px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
+                          <AlertTriangle className="w-3 h-3" /> Exceeds Stock ({item.availableStock} available)
+                        </span>
+                      ) : isAtMaxStock && item.availableStock !== undefined && item.availableStock !== null ? (
+                        <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1 mt-1">
+                          <span>Max stock reached ({item.availableStock} available)</span>
+                        </span>
+                      ) : null}
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-2 bg-surface-neutral border border-surface-border rounded-input px-2.5 py-1">
+                          <button
+                            onClick={() => updateQuantity(item.variantId, item.quantity - 1, item.availableStock)}
+                            disabled={item.quantity <= 1}
+                            className="text-typography-secondary hover:text-forest-900 p-1 disabled:opacity-40 transition-colors"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-xs font-bold text-forest-900 px-1.5">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.variantId, item.quantity + 1, item.availableStock)}
+                            disabled={isAtMaxStock}
+                            className="text-typography-secondary hover:text-forest-900 p-1 disabled:opacity-40 transition-colors"
+                            aria-label="Increase quantity"
+                            title={isAtMaxStock ? `Max stock reached (${item.availableStock})` : 'Add one more'}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="text-xs font-bold text-forest-700">
+                          ₹{(item.unitPriceInr * item.quantity).toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

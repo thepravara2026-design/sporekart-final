@@ -22,7 +22,8 @@ export default function ProductAddedPopupDrawer() {
     closePopupDrawer, 
     openDrawer, 
     updateQuantity, 
-    loading 
+    loading,
+    error 
   } = useCart();
   
   const navigate = useNavigate();
@@ -71,6 +72,14 @@ export default function ProductAddedPopupDrawer() {
   const { item, quantityAdded } = addedProductPopup;
 
   if (!item) return null;
+
+  // Derive live item from cart so multiple increments dynamically update in real time
+  const liveItem = cart.items?.find((i) => i.variantId === (item.variantId || item.id)) || item;
+  const currentQuantity = liveItem.quantity || item.quantity || 1;
+  const availableStock = liveItem.availableStock !== undefined && liveItem.availableStock !== null 
+    ? liveItem.availableStock 
+    : (item.availableStock !== undefined && item.availableStock !== null ? item.availableStock : 999);
+  const isMaxStock = currentQuantity >= availableStock;
 
   const freeDeliveryThreshold = 999;
   const currentTotal = cart.subtotalInr || 0;
@@ -142,8 +151,8 @@ export default function ProductAddedPopupDrawer() {
             {/* Product Thumbnail */}
             <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface-white border border-surface-border shrink-0 relative">
               <MediaImage
-                src={item.imageUrl}
-                alt={item.productTitle}
+                src={liveItem.imageUrl || item.imageUrl}
+                alt={liveItem.productTitle || item.productTitle}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
@@ -151,11 +160,11 @@ export default function ProductAddedPopupDrawer() {
             {/* Title, Variant & Pricing */}
             <div className="flex-1 min-w-0">
               <h4 className="text-xs sm:text-sm font-bold text-forest-900 truncate">
-                {item.productTitle}
+                {liveItem.productTitle || item.productTitle}
               </h4>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[11px] text-forest-700 font-semibold bg-forest-700/10 px-1.5 py-0.5 rounded">
-                  {item.variantName}
+                  {liveItem.variantName || item.variantName}
                 </span>
                 {quantityAdded && (
                   <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded">
@@ -164,29 +173,36 @@ export default function ProductAddedPopupDrawer() {
                 )}
               </div>
 
+              {isMaxStock && (
+                <div className="text-[10px] text-amber-700 font-semibold mt-1">
+                  Max stock reached ({availableStock} available)
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs font-extrabold text-forest-900">
-                  ₹{item.unitPriceInr} <span className="text-[10px] text-typography-muted font-normal">/ unit</span>
+                  ₹{liveItem.unitPriceInr || item.unitPriceInr} <span className="text-[10px] text-typography-muted font-normal">/ unit</span>
                 </span>
 
                 {/* Inline Quick Quantity Tweaker */}
                 <div className="flex items-center gap-1.5 bg-surface-white border border-surface-border rounded-lg px-2 py-0.5">
                   <button
                     type="button"
-                    onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                    disabled={loading || item.quantity <= 1}
+                    onClick={() => updateQuantity(liveItem.variantId, currentQuantity - 1, availableStock)}
+                    disabled={currentQuantity <= 1}
                     className="text-typography-secondary hover:text-forest-900 disabled:opacity-30 transition-colors"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <span className="text-xs font-bold text-forest-900 px-1">{item.quantity}</span>
+                  <span className="text-xs font-bold text-forest-900 px-1">{currentQuantity}</span>
                   <button
                     type="button"
-                    onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                    disabled={loading || item.quantity >= item.availableStock}
+                    onClick={() => updateQuantity(liveItem.variantId, currentQuantity + 1, availableStock)}
+                    disabled={isMaxStock}
                     className="text-typography-secondary hover:text-forest-900 disabled:opacity-30 transition-colors"
                     aria-label="Increase quantity"
+                    title={isMaxStock ? `Max stock reached (${availableStock})` : 'Add one more'}
                   >
                     <Plus className="w-3 h-3" />
                   </button>

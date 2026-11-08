@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -33,6 +35,7 @@ public class NotificationEventListener {
     private final TrainingService trainingService;
     private final UserRepository userRepository;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleOrderCreated(com.sporekart.analytics.domain.events.OrderCreatedEvent event) {
         if (event.getOrderId() == null) return;
@@ -46,6 +49,7 @@ public class NotificationEventListener {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handlePaymentCaptured(PaymentCapturedEvent event) {
         if (event.getOrderId() == null) return;
@@ -135,6 +139,7 @@ public class NotificationEventListener {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleEnrollmentConfirmed(EnrollmentConfirmedEvent event) {
         if (event.getEnrollmentId() == null) return;
@@ -183,6 +188,7 @@ public class NotificationEventListener {
     }
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleOrderDelivered(OrderDeliveredEvent event) {
         if (event.getOrderId() == null) return;

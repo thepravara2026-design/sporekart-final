@@ -1,6 +1,19 @@
 import '@testing-library/jest-dom';
-import React from 'react';
 import { vi } from 'vitest';
+
+// Polyfill window.matchMedia for JSDOM test environments
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  });
+}
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }) => <>{children}</>,
@@ -19,4 +32,3 @@ console.warn = (...args) => {
   }
   originalWarn(...args);
 };
-

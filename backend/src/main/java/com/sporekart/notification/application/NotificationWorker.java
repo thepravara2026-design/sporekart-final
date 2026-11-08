@@ -157,7 +157,18 @@ public class NotificationWorker {
                     return;
                 }
 
-                // Check 2: Active Gmail daily sending limit cooldown circuit breaker
+                // Check 2: If real SMTP is disabled (e.g. test environment or local development), immediately dispatch via LOG
+                if (!useRealSmtp) {
+                    log.info("[NOTIFICATION DISPATCHED - LOG MODE (useRealSmtp=false)] Event ID: {}, Type: {}, Recipient: {}, Subject: {}\nHTML Content Size: {} bytes",
+                            event.getId(), event.getEventType(), event.getRecipientEmail(), event.getSubject(), htmlBody != null ? htmlBody.length() : 0);
+                    event.setStatus(NotificationStatus.SENT);
+                    event.setSentAt(ZonedDateTime.now());
+                    event.setErrorMessage(null);
+                    notificationRepository.save(event);
+                    return;
+                }
+
+                // Check 3: Active Gmail daily sending limit cooldown circuit breaker
                 if (dailyLimitCooldownUntil != null && ZonedDateTime.now().isBefore(dailyLimitCooldownUntil)) {
                     log.warn("[NOTIFICATION DISPATCHED - LOG MODE FALLBACK (GMAIL DAILY LIMIT COOLDOWN ACTIVE UNTIL {})] Event ID: {}, Type: {}, Recipient: {}, Subject: {}\nHTML Content Size: {} bytes",
                             dailyLimitCooldownUntil, event.getId(), event.getEventType(), event.getRecipientEmail(), event.getSubject(), htmlBody != null ? htmlBody.length() : 0);

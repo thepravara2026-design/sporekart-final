@@ -38,6 +38,9 @@ export default defineConfig({
           if (id.includes('node_modules/axios') || id.includes('node_modules/react-helmet-async')) {
             return 'vendor-utils';
           }
+          if (id.includes('node_modules/gsap')) {
+            return 'vendor-gsap';
+          }
         }
       }
     }
