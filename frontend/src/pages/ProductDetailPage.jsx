@@ -16,12 +16,14 @@ import MediaImage from '../components/MediaImage';
 import StarRatingInput from '../components/StarRatingInput';
 import ProductReviewFormModal from '../components/ProductReviewFormModal';
 import ProductCarousel from '../components/ProductCarousel';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 import { useCart } from '../context/CartContext';
 
 export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, onOpenReviewModal }) {
   const { addToCart, cart } = useCart();
   const { slug } = useParams();
+  const { addItem: trackRecentlyViewed } = useRecentlyViewed(user);
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -64,6 +66,11 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
         
         if (prod.id) {
           analyticsApi.trackProductView(prod.id, prod.slug, prod.title).catch((err) => console.warn('Failed to track product view:', err));
+          try {
+            trackRecentlyViewed(prod);
+          } catch (e) {
+            console.warn('Failed to track recently viewed product:', e);
+          }
         }
         
         if (prod.variants && prod.variants.length > 0) {
@@ -430,8 +437,8 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                 </span>
               )}
 
-              {/* Jump to Reviews Link */}
-              {totalReviewsCount > 0 && (
+              {/* Jump to Reviews Link / Write first review */}
+              {totalReviewsCount > 0 ? (
                 <a 
                   href="#reviews-section" 
                   className="inline-flex items-center gap-1 text-xs text-amber-600 font-bold hover:underline ml-1"
@@ -440,6 +447,15 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
                   <span>{averageRating ? averageRating.toFixed(1) : '5.0'}</span>
                   <span className="text-typography-muted font-normal">({totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'})</span>
                 </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleOpenReviewModal}
+                  className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-900 font-semibold hover:underline ml-1 cursor-pointer"
+                >
+                  <Star className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Be the first to write a review</span>
+                </button>
               )}
             </div>
 
@@ -642,11 +658,17 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
             </form>
 
             {pincodeResult && (
-              <div className="text-xs text-forest-700">
-                {pincodeResult.isServiceable ? (
-                  <p className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-forest-700" /> {pincodeResult.message} ({pincodeResult.estimatedDeliveryDays} Days)</p>
+              <div className="text-xs" data-testid="pincode-result">
+                {(pincodeResult.serviceable ?? pincodeResult.isServiceable) ? (
+                  <p className="flex items-center gap-1 text-green-600 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                    <span>
+                      {pincodeResult.message}
+                      {pincodeResult.estimatedDeliveryDays != null ? ` (${pincodeResult.estimatedDeliveryDays} Days)` : ''}
+                    </span>
+                  </p>
                 ) : (
-                  <p className="text-rose-600">{pincodeResult.message}</p>
+                  <p className="text-red-600 font-medium">{pincodeResult.message}</p>
                 )}
               </div>
             )}
@@ -910,190 +932,193 @@ export default function ProductDetailPage({ onAddToCart: propOnAddToCart, user, 
       {/* Product Ratings & Reviews Experience Section:
           1. Total reviews on the particular product with score breakdown
           2. Display the recent 3 reviews with customer details & photos
-          3. At the last: High-conversion "Ask for a Review" card */}
-      <section id="reviews-section" className="pt-8 border-t border-surface-border space-y-8 animate-fade-in" data-testid="product-reviews-container">
-        {/* Total Reviews Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest-900 tracking-tight flex items-center gap-2.5">
-              <MessageSquare className="w-7 h-7 text-forest-700 shrink-0" />
-              <span>Customer Ratings & Verified Reviews</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-typography-secondary mt-1">
-              Authentic cultivation feedback and culinary insights from verified buyers of {product.title}.
-            </p>
+          3. At the last: High-conversion "Ask for a Review" card
+          Hidden until and unless reviews have been given/written on the particular product */}
+      {totalReviewsCount > 0 && (
+        <section id="reviews-section" className="pt-8 border-t border-surface-border space-y-8 animate-fade-in" data-testid="product-reviews-container">
+          {/* Total Reviews Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest-900 tracking-tight flex items-center gap-2.5">
+                <MessageSquare className="w-7 h-7 text-forest-700 shrink-0" />
+                <span>Customer Ratings & Verified Reviews</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-typography-secondary mt-1">
+                Authentic cultivation feedback and culinary insights from verified buyers of {product.title}.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleOpenReviewModal}
+              className="btn-primary text-xs sm:text-sm font-bold px-5 py-2.5 flex items-center gap-2 shadow-sm rounded-xl shrink-0"
+            >
+              <Star className="w-4 h-4 fill-amber-300 text-amber-300" />
+              <span>Write a Review</span>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleOpenReviewModal}
-            className="btn-primary text-xs sm:text-sm font-bold px-5 py-2.5 flex items-center gap-2 shadow-sm rounded-xl shrink-0"
-          >
-            <Star className="w-4 h-4 fill-amber-300 text-amber-300" />
-            <span>Write a Review</span>
-          </button>
-        </div>
-
-        {/* Rating Breakdown & Total Reviews Summary Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface-cream p-6 sm:p-8 rounded-3xl border border-surface-border shadow-level-1">
-          {/* Average Rating Score */}
-          <div className="flex flex-col items-center justify-center text-center p-6 bg-surface-white rounded-2xl border border-surface-border space-y-2.5 shadow-xs">
-            <div className="text-5xl font-extrabold text-forest-900 font-mono tracking-tight">
-              {averageRating ? averageRating.toFixed(1) : '0.0'}
+          {/* Rating Breakdown & Total Reviews Summary Card */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface-cream p-6 sm:p-8 rounded-3xl border border-surface-border shadow-level-1">
+            {/* Average Rating Score */}
+            <div className="flex flex-col items-center justify-center text-center p-6 bg-surface-white rounded-2xl border border-surface-border space-y-2.5 shadow-xs">
+              <div className="text-5xl font-extrabold text-forest-900 font-mono tracking-tight">
+                {averageRating ? averageRating.toFixed(1) : '0.0'}
+              </div>
+              <StarRatingInput value={Math.round(averageRating || 0)} readOnly size="md" showLabel={false} />
+              <div className="text-xs text-typography-secondary font-medium">
+                Based on <strong className="text-forest-900 font-bold">{totalReviewsCount}</strong> verified {totalReviewsCount === 1 ? 'review' : 'reviews'} for this product
+              </div>
             </div>
-            <StarRatingInput value={Math.round(averageRating || 0)} readOnly size="md" showLabel={false} />
-            <div className="text-xs text-typography-secondary font-medium">
-              Based on <strong className="text-forest-900 font-bold">{totalReviewsCount}</strong> verified {totalReviewsCount === 1 ? 'review' : 'reviews'} for this product
-            </div>
-          </div>
 
-          {/* Star Distribution Breakdown */}
-          <div className="md:col-span-2 space-y-2.5 flex flex-col justify-center">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = ratingDistribution[star] || 0;
-              const percentage = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
-              return (
-                <div key={star} className="flex items-center gap-3 text-xs">
-                  <span className="w-12 text-right font-bold text-typography-primary flex items-center justify-end gap-1">
-                    {star} <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
-                  </span>
-                  <div className="flex-1 h-2.5 bg-surface-white rounded-full overflow-hidden border border-surface-border">
-                    <div
-                      className="h-full bg-amber-400 rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {/* Star Distribution Breakdown */}
+            <div className="md:col-span-2 space-y-2.5 flex flex-col justify-center">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = ratingDistribution[star] || 0;
+                const percentage = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3 text-xs">
+                    <span className="w-12 text-right font-bold text-typography-primary flex items-center justify-end gap-1">
+                      {star} <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+                    </span>
+                    <div className="flex-1 h-2.5 bg-surface-white rounded-full overflow-hidden border border-surface-border">
+                      <div
+                        className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="w-16 text-typography-muted font-mono text-[11px]">
+                      {count} ({percentage}%)
+                    </span>
                   </div>
-                  <span className="w-16 text-typography-muted font-mono text-[11px]">
-                    {count} ({percentage}%)
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Recent 3 Reviews Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
-            <h3 className="font-display font-bold text-lg text-forest-900 flex items-center gap-2">
-              <span>Recent Customer Reviews</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-forest-100 text-forest-800">
-                {showAllReviews ? `Showing All ${reviewsList.length}` : `Showing Recent ${Math.min(3, reviewsList.length)} of ${totalReviewsCount}`}
-              </span>
-            </h3>
+          {/* Recent 3 Reviews Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
+              <h3 className="font-display font-bold text-lg text-forest-900 flex items-center gap-2">
+                <span>Recent Customer Reviews</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-forest-100 text-forest-800">
+                  {showAllReviews ? `Showing All ${reviewsList.length}` : `Showing Recent ${Math.min(3, reviewsList.length)} of ${totalReviewsCount}`}
+                </span>
+              </h3>
 
-            {reviewsList.length > 3 && (
-              <button
-                type="button"
-                onClick={() => setShowAllReviews(!showAllReviews)}
-                className="text-xs font-bold text-forest-700 hover:text-forest-900 hover:underline transition-all"
-              >
-                {showAllReviews ? 'Show Recent 3 Only' : `View All (${reviewsList.length})`}
-              </button>
+              {reviewsList.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReviews(!showAllReviews)}
+                  className="text-xs font-bold text-forest-700 hover:text-forest-900 hover:underline transition-all"
+                >
+                  {showAllReviews ? 'Show Recent 3 Only' : `View All (${reviewsList.length})`}
+                </button>
+              )}
+            </div>
+
+            {loadingReviews ? (
+              <div className="py-8 text-center text-xs text-typography-muted animate-pulse">
+                Loading customer reviews for {product.title}...
+              </div>
+            ) : recentReviews.length > 0 ? (
+              <div className="space-y-4">
+                {recentReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="p-5 sm:p-6 bg-surface-white rounded-2xl border border-surface-border shadow-sm hover:shadow-md transition-shadow space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-forest-900">{rev.customerName || 'Verified Cultivator'}</span>
+                          {rev.isVerifiedPurchase && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Purchase
+                            </span>
+                          )}
+                          {rev.variantName && (
+                            <span className="text-[10px] text-typography-muted font-medium bg-surface-cream px-2 py-0.5 rounded border border-surface-border">
+                              {rev.variantName}
+                            </span>
+                          )}
+                        </div>
+                        <StarRatingInput value={rev.rating} readOnly size="sm" showLabel={false} />
+                      </div>
+
+                      <span className="text-[11px] text-typography-muted font-mono shrink-0">
+                        {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        }) : 'Recent'}
+                      </span>
+                    </div>
+
+                    {rev.reviewTitle && (
+                      <h4 className="font-bold text-sm text-forest-900">{rev.reviewTitle}</h4>
+                    )}
+
+                    <p className="text-xs sm:text-sm text-typography-secondary leading-relaxed whitespace-pre-line">
+                      {rev.reviewText}
+                    </p>
+
+                    {/* Customer Uploaded Photos */}
+                    {rev.hasCustomerImages && rev.customerImages?.length > 0 && (
+                      <div className="pt-2">
+                        <div className="text-[11px] font-semibold text-typography-secondary mb-1.5 flex items-center gap-1">
+                          <ImageIcon className="w-3.5 h-3.5 text-forest-700" /> Customer Photos ({rev.customerImages.length})
+                        </div>
+                        <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+                          {rev.customerImages.map((img, idx) => (
+                            <img
+                              key={img.id || idx}
+                              src={img.imageUrl}
+                              alt="Customer harvest photo"
+                              onClick={() => setActiveImageModal({ images: rev.customerImages, activeIndex: idx })}
+                              className="w-16 h-16 object-cover rounded-xl border border-surface-border cursor-pointer hover:scale-105 transition-transform"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center bg-surface-cream/50 rounded-2xl border border-surface-border space-y-2">
+                <Star className="w-8 h-8 text-typography-muted mx-auto opacity-40" />
+                <h4 className="text-sm font-bold text-typography-primary">No published reviews yet</h4>
+                <p className="text-xs text-typography-secondary">
+                  Be the first verified customer to share your cultivation or culinary experience!
+                </p>
+              </div>
             )}
           </div>
 
-          {loadingReviews ? (
-            <div className="py-8 text-center text-xs text-typography-muted animate-pulse">
-              Loading customer reviews for {product.title}...
-            </div>
-          ) : recentReviews.length > 0 ? (
-            <div className="space-y-4">
-              {recentReviews.map((rev) => (
-                <div
-                  key={rev.id}
-                  className="p-5 sm:p-6 bg-surface-white rounded-2xl border border-surface-border shadow-sm hover:shadow-md transition-shadow space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-sm text-forest-900">{rev.customerName || 'Verified Cultivator'}</span>
-                        {rev.isVerifiedPurchase && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Purchase
-                          </span>
-                        )}
-                        {rev.variantName && (
-                          <span className="text-[10px] text-typography-muted font-medium bg-surface-cream px-2 py-0.5 rounded border border-surface-border">
-                            {rev.variantName}
-                          </span>
-                        )}
-                      </div>
-                      <StarRatingInput value={rev.rating} readOnly size="sm" showLabel={false} />
-                    </div>
-
-                    <span className="text-[11px] text-typography-muted font-mono shrink-0">
-                      {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      }) : 'Recent'}
-                    </span>
-                  </div>
-
-                  {rev.reviewTitle && (
-                    <h4 className="font-bold text-sm text-forest-900">{rev.reviewTitle}</h4>
-                  )}
-
-                  <p className="text-xs sm:text-sm text-typography-secondary leading-relaxed whitespace-pre-line">
-                    {rev.reviewText}
-                  </p>
-
-                  {/* Customer Uploaded Photos */}
-                  {rev.hasCustomerImages && rev.customerImages?.length > 0 && (
-                    <div className="pt-2">
-                      <div className="text-[11px] font-semibold text-typography-secondary mb-1.5 flex items-center gap-1">
-                        <ImageIcon className="w-3.5 h-3.5 text-forest-700" /> Customer Photos ({rev.customerImages.length})
-                      </div>
-                      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
-                        {rev.customerImages.map((img, idx) => (
-                          <img
-                            key={img.id || idx}
-                            src={img.imageUrl}
-                            alt="Customer harvest photo"
-                            onClick={() => setActiveImageModal({ images: rev.customerImages, activeIndex: idx })}
-                            className="w-16 h-16 object-cover rounded-xl border border-surface-border cursor-pointer hover:scale-105 transition-transform"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center bg-surface-cream/50 rounded-2xl border border-surface-border space-y-2">
-              <Star className="w-8 h-8 text-typography-muted mx-auto opacity-40" />
-              <h4 className="text-sm font-bold text-typography-primary">No published reviews yet</h4>
-              <p className="text-xs text-typography-secondary">
-                Be the first verified customer to share your cultivation or culinary experience!
+          {/* At the last: Ask for a Review Card */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-forest-900 via-forest-900 to-forest-950 text-white border border-forest-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                <span>Have You Grown or Tasted This Variety?</span>
+              </div>
+              <h4 className="text-xl sm:text-2xl font-display font-bold">Share Your Experience & Help the Grower Community</h4>
+              <p className="text-xs sm:text-sm text-surface-neutral/80 max-w-xl leading-relaxed">
+                Your verified review and cultivation photos help fellow growers across India choose the highest-yielding spawn and freshest mushrooms.
               </p>
             </div>
-          )}
-        </div>
-
-        {/* At the last: Ask for a Review Card */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-forest-900 via-forest-900 to-forest-950 text-white border border-forest-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              <span>Have You Grown or Tasted This Variety?</span>
-            </div>
-            <h4 className="text-xl sm:text-2xl font-display font-bold">Share Your Experience & Help the Grower Community</h4>
-            <p className="text-xs sm:text-sm text-surface-neutral/80 max-w-xl leading-relaxed">
-              Your verified review and cultivation photos help fellow growers across India choose the highest-yielding spawn and freshest mushrooms.
-            </p>
+            <button
+              type="button"
+              onClick={handleOpenReviewModal}
+              className="btn-primary bg-amber-400 hover:bg-amber-300 text-forest-950 font-bold px-6 py-3.5 rounded-xl shadow-lg flex items-center gap-2 shrink-0 transition-transform active:scale-95 text-xs sm:text-sm"
+            >
+              <Star className="w-4 h-4 fill-forest-950 text-forest-950" />
+              <span>Write a Product Review</span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleOpenReviewModal}
-            className="btn-primary bg-amber-400 hover:bg-amber-300 text-forest-950 font-bold px-6 py-3.5 rounded-xl shadow-lg flex items-center gap-2 shrink-0 transition-transform active:scale-95 text-xs sm:text-sm"
-          >
-            <Star className="w-4 h-4 fill-forest-950 text-forest-950" />
-            <span>Write a Product Review</span>
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Lightbox Photo Modal for Reviews */}
       {activeImageModal && (

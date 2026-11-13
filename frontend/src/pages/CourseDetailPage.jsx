@@ -7,10 +7,12 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import AuthForm from '../components/AuthForm';
 import TrainingReviewsSection from '../components/TrainingReviewsSection';
 import TraineeProfileEnrollmentModal from '../components/TraineeProfileEnrollmentModal';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 export default function CourseDetailPage({ user, setUser }) {
   const { courseSlug } = useParams();
   const navigate = useNavigate();
+  const { addItem: trackRecentlyViewed } = useRecentlyViewed(user);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState(null);
@@ -49,6 +51,20 @@ export default function CourseDetailPage({ user, setUser }) {
         setCourse(found);
         if (found) {
           fetchPendingReviews(found.id);
+          try {
+            trackRecentlyViewed({
+              id: found.id,
+              slug: found.slug || courseSlug,
+              title: found.title || found.name,
+              imageUrl: found.imageUrl || found.thumbnailUrl || '/sporekart-white-button.jpg',
+              priceInr: found.priceInr || found.feeInr || null,
+              categoryName: 'Masterclass',
+              type: 'training',
+              rating: found.averageRating || 4.9,
+            });
+          } catch (e) {
+            console.warn('Failed to track recently viewed training course:', e);
+          }
         }
       } catch (err) {
         console.error('Failed to load course details', err);

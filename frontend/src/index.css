@@ -676,7 +676,7 @@ html.landing-page-scroll-active {
 
 .animate-marquee {
   display: inline-flex;
-  animation: marquee 35s linear infinite;
+  animation: marquee 70s linear infinite;
 }
 
 .farm-spore-particle {

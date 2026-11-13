@@ -105,5 +105,18 @@ public class SessionSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("SEC-CSRF-03: Mutating request with cookie from trycloudflare tunnel Origin succeeds in dev/test")
+    void testCsrfAllowsTrycloudflareInDev() throws Exception {
+        String token = tokenProvider.generateToken(UUID.randomUUID(), "csrf_tunnel@example.com", "ROLE_CUSTOMER");
+        Cookie authCookie = new Cookie("sporekart_token", token);
+
+        mockMvc.perform(post("/cart/clear")
+                        .cookie(authCookie)
+                        .header("Origin", "https://joyce-foam-ebony-inquire.trycloudflare.com")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
 }
 

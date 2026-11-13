@@ -207,11 +207,19 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
   });
 
   describe('4. Personalized Recently Viewed Section & Customer Isolation', () => {
-    it('renders clean empty state with discovery links when browsing history is empty', () => {
+    it('hides the recently viewed section completely when browsing history is empty for new/existing user', () => {
       renderWithProviders(<RecentlyViewedSection user={null} />);
-      expect(screen.getByText(/No Recently Viewed Items Yet/i)).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /Explore Products/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /Browse Masterclasses/i })).toBeInTheDocument();
+      expect(screen.queryByText(/Recently Viewed by You/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/No Recently Viewed Items Yet/i)).not.toBeInTheDocument();
+    });
+
+    it('shows the recently viewed section once the user has browsed products or training', () => {
+      const items = [{ id: 'prod-101', title: 'Fresh Shiitake Mushrooms', slug: 'fresh-shiitake', type: 'product', priceInr: 320 }];
+      localStorage.setItem('sporekart_recently_viewed_guest', JSON.stringify(items));
+
+      renderWithProviders(<RecentlyViewedSection user={null} />);
+      expect(screen.getByText(/Recently Viewed by You/i)).toBeInTheDocument();
+      expect(screen.getByText('Fresh Shiitake Mushrooms')).toBeInTheDocument();
     });
 
     it('isolates viewing history between customer accounts and guest browsing', () => {
@@ -235,17 +243,19 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
       expect(screen.queryByText('User A Viewed Mushroom')).not.toBeInTheDocument();
     });
 
-    it('clears viewing history when clear button is clicked', () => {
+    it('clears viewing history and hides section when clear button is clicked', () => {
       const items = [{ id: 'prod-1', title: 'Viewed Product', slug: 'viewed-product', type: 'product', priceInr: 100 }];
       localStorage.setItem('sporekart_recently_viewed_guest', JSON.stringify(items));
 
       renderWithProviders(<RecentlyViewedSection user={null} />);
       expect(screen.getByText('Viewed Product')).toBeInTheDocument();
+      expect(screen.getByText(/Recently Viewed by You/i)).toBeInTheDocument();
 
       const clearBtn = screen.getByRole('button', { name: /Clear/i });
       fireEvent.click(clearBtn);
 
-      expect(screen.getByText(/No Recently Viewed Items Yet/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Recently Viewed by You/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Viewed Product')).not.toBeInTheDocument();
     });
   });
 
@@ -354,12 +364,29 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
         expect(screen.getByLabelText(/Product categories navigation/i)).toBeInTheDocument();
         // 2. Hero Carousel
         expect(screen.getByLabelText(/Sporekart Featured Agricultural Showcase/i)).toBeInTheDocument();
-        // 3. Recently Viewed Section
-        expect(screen.getByLabelText(/Recently viewed products/i)).toBeInTheDocument();
+        // 3. Recently Viewed Section is cleanly hidden for users with no prior browsing history
+        expect(screen.queryByLabelText(/Recently viewed products/i)).not.toBeInTheDocument();
         // 4. Best Sellers
         expect(screen.getByLabelText(/Sporekart best selling agricultural products/i)).toBeInTheDocument();
         // 5. All Products
         expect(screen.getByLabelText(/All Sporekart Agricultural Products with Pagination/i)).toBeInTheDocument();
+      });
+    });
+
+    it('renders Recently Viewed section in full architecture once the user has browsing history', async () => {
+      const items = [{ id: 'prod-hist-1', title: 'Oyster Mushroom Spawn', slug: 'oyster-spawn', type: 'product', priceInr: 220 }];
+      localStorage.setItem('sporekart_recently_viewed_guest', JSON.stringify(items));
+
+      renderWithProviders(
+        <>
+          <Navbar user={null} setUser={vi.fn()} />
+          <HomePage user={null} onAddToCart={vi.fn()} />
+        </>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Recently viewed products/i)).toBeInTheDocument();
+        expect(screen.getByText('Oyster Mushroom Spawn')).toBeInTheDocument();
       });
     });
   });

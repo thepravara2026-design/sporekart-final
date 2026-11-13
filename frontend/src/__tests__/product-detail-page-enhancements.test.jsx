@@ -270,4 +270,129 @@ describe('ProductDetailPage Interactive Layout, Hover Zoom & Reviews Suite', () 
       })
     );
   });
+
+  it('hides the entire reviews section when no reviews have been given for the product', async () => {
+    // Mock zero reviews scenario
+    reviewApi.getProductReviewSummary.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          averageRating: 0,
+          totalReviews: 0,
+          ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        },
+      },
+    });
+    reviewApi.getProductReviews.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          content: [],
+          totalPages: 0,
+          totalElements: 0,
+        },
+      },
+    });
+
+    const mockOnOpenReviewModal = vi.fn();
+
+    render(
+      <MemoryRouter initialEntries={['/product/gourmet-shiitake-spawn']}>
+        <CartProvider>
+          <Routes>
+            <Route
+              path="/product/:slug"
+              element={<ProductDetailPage onOpenReviewModal={mockOnOpenReviewModal} />}
+            />
+          </Routes>
+        </CartProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('product-title')).toHaveTextContent('Gourmet Shiitake Mushroom Spawn');
+    });
+
+    // The review scorecard and review section must be hidden
+    expect(screen.queryByTestId('product-reviews-container')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Customer Ratings & Verified Reviews/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Based on 0 verified reviews/i)).not.toBeInTheDocument();
+
+    // The "Be the first to write a review" trigger should be present
+    const firstReviewBtn = screen.getByRole('button', { name: /Be the first to write a review/i });
+    expect(firstReviewBtn).toBeInTheDocument();
+
+    // Clicking it triggers the review workflow cleanly
+    fireEvent.click(firstReviewBtn);
+    expect(mockOnOpenReviewModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        productId: 'prod-001',
+        productTitle: 'Gourmet Shiitake Mushroom Spawn',
+      })
+    );
+  });
+
+  it('shows pincode delivery availability in green when serviceable and in red when not available', async () => {
+    shippingApi.checkPincode
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            pincode: '411001',
+            serviceable: true,
+            estimatedDeliveryDays: 4,
+            message: 'Delivery available to pincode 411001',
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            pincode: '999999',
+            serviceable: false,
+            message: 'Delivery currently not available to 999999',
+          },
+        },
+      });
+
+    render(
+      <MemoryRouter initialEntries={['/product/gourmet-shiitake-spawn']}>
+        <CartProvider>
+          <Routes>
+            <Route path="/product/:slug" element={<ProductDetailPage />} />
+          </Routes>
+        </CartProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('product-title')).toHaveTextContent('Gourmet Shiitake Mushroom Spawn');
+    });
+
+    const pincodeInput = screen.getByPlaceholderText('Enter 6-digit PIN code');
+    const checkBtn = screen.getByRole('button', { name: /Check Delivery/i });
+
+    // Serviceable pincode -> green
+    fireEvent.change(pincodeInput, { target: { value: '411001' } });
+    fireEvent.click(checkBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Delivery available to pincode 411001/i)).toBeInTheDocument();
+    });
+    const availableMsg = screen.getByTestId('pincode-result').querySelector('p');
+    expect(availableMsg).toHaveClass('text-green-600');
+    expect(availableMsg).not.toHaveClass('text-red-600');
+
+    // Non-serviceable pincode -> red
+    fireEvent.change(pincodeInput, { target: { value: '999999' } });
+    fireEvent.click(checkBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Delivery currently not available to 999999/i)).toBeInTheDocument();
+    });
+    const unavailableMsg = screen.getByTestId('pincode-result').querySelector('p');
+    expect(unavailableMsg).toHaveClass('text-red-600');
+    expect(unavailableMsg).not.toHaveClass('text-green-600');
+  });
 });

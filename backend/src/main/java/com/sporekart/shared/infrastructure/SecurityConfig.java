@@ -145,7 +145,8 @@ public class SecurityConfig {
                 "http://127.0.0.1:*",
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://*.trycloudflare.com"
+                "https://*.trycloudflare.com",
+                "http://*.trycloudflare.com"
             ));
         } else {
             // Strictly exclude localhost, 127.0.0.1, or wildcard in production

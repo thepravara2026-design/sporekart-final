@@ -127,7 +127,7 @@ public class CsrfOriginValidationFilter extends OncePerRequestFilter {
             return true;
         }
         if (isDevOrTest) {
-            if (origin.contains("localhost") || origin.contains("127.0.0.1")) {
+            if (origin.contains("localhost") || origin.contains("127.0.0.1") || origin.contains(".trycloudflare.com")) {
                 return true;
             }
         }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useParams, useLocation, Link } from 'react-router-dom';
+import { useSearchParams, useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { Sprout, Search, ShoppingBag, X, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles, Flame, Star } from 'lucide-react';
 import { catalogApi } from '../api';
 import SeoHead from '../components/SeoHead';
@@ -13,6 +13,7 @@ import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 
 export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
+  const navigate = useNavigate();
   const { addToCart, cart } = useCart();
   const location = useLocation();
   const { categorySlug } = useParams();
@@ -106,6 +107,22 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
     fetchCatalogProducts();
   }, [categoryParam, typeParam, searchQuery, sortBy, page, pageSize]);
 
+  // Clean active category display name derivation
+  const matchedCategory = categories.find((c) => {
+    const catSlugNorm = c.slug?.toLowerCase().replace('_', '-');
+    const paramNorm = categoryParam?.toLowerCase().replace('_', '-');
+    return catSlugNorm === paramNorm || c.name?.toLowerCase() === categoryParam?.toLowerCase();
+  });
+
+  const activeCategoryDisplayName = matchedCategory 
+    ? matchedCategory.name 
+    : (categoryParam || '')
+        .replace(/[-_]/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+
   const canonicalUrl = categorySlug
     ? `https://sporekart.in/products/${categorySlug}`
     : "https://sporekart.in/products";
@@ -118,24 +135,27 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
         canonicalUrl={canonicalUrl}
       />
 
+      {/* Breadcrumbs with clean Category Name */}
       <Breadcrumbs
         items={[
           { label: 'Products', path: '/products' },
-          ...(categoryParam ? [{ label: categoryParam.replace('-', ' '), path: `/products/${categoryParam}` }] : [])
+          ...(categoryParam ? [{ label: activeCategoryDisplayName, path: `/products/${categoryParam}` }] : [])
         ]}
       />
 
       {/* Catalog Header, Controls & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <h1 className="font-display font-bold text-3xl text-forest-900 flex items-center gap-3 capitalize">
-            <Sprout className="w-8 h-8 text-forest-700 shrink-0" />
-            {categoryParam
-              ? `${categoryParam.replace(/[-_]/g, ' ')} Catalog`
-              : 'Sporekart Product Catalog'}
+          <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest-900 flex items-center gap-2.5 sm:gap-3">
+            <Sprout className="w-7 h-7 sm:w-8 sm:h-8 text-forest-700 shrink-0" />
+            <span>
+              {categoryParam
+                ? `${activeCategoryDisplayName} Catalog`
+                : 'Sporekart Product Catalog'}
+            </span>
           </h1>
           <p className="text-typography-secondary text-xs sm:text-sm mt-1">
-            Showing <strong className="text-forest-700">{totalElements}</strong> {categoryParam ? categoryParam.replace(/[-_]/g, ' ') : 'laboratory-certified mushroom'} products
+            Showing <strong className="text-forest-700">{totalElements}</strong> {categoryParam ? activeCategoryDisplayName.toLowerCase() : 'laboratory-certified mushroom'} products
           </p>
         </div>
 
@@ -145,7 +165,7 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-surface-white border border-surface-border rounded-input px-3 py-2.5 text-xs text-forest-900 font-semibold focus:outline-none focus:border-forest-700 shadow-level-1"
+              className="bg-surface-white border border-surface-border rounded-input px-3 py-2.5 text-xs text-forest-900 font-semibold focus:outline-none focus:border-forest-700 shadow-level-1 cursor-pointer"
               aria-label="Sort products by price or date"
             >
               <option value="newest">Newest Arrivals</option>
@@ -176,101 +196,115 @@ export default function CatalogPage({ onAddToCart: propOnAddToCart }) {
         </div>
       </div>
 
-      {/* Category Filter Buttons */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Link
-          to="/products"
-          className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-            !categoryParam && !typeParam
-              ? 'btn-primary shadow-level-1'
-              : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-          }`}
-        >
-          All Products
-        </Link>
-        {categories.length > 0 ? (
-          categories.map((cat) => {
-            const catSlugNorm = cat.slug.toLowerCase().replace('_', '-');
-            const paramNorm = categoryParam.toLowerCase().replace('_', '-');
+      {/* Category Section: Focused Active Category Bar when a category is selected, or Discovery Pills when viewing all products */}
+      {categoryParam ? (
+        /* Modern Creative Active Category Bar (No other category pills shown) */
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:px-5 sm:py-3.5 rounded-2xl bg-surface-white border border-surface-border shadow-xs">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            <span className="text-typography-muted font-medium flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Active Category:</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-forest-900 text-white font-bold text-xs shadow-level-1">
+              <Sprout className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{activeCategoryDisplayName}</span>
+            </span>
+            <span className="px-2.5 py-1 rounded-full bg-surface-cream text-forest-800 text-[11px] font-bold border border-surface-border">
+              {totalElements} {totalElements === 1 ? 'Product' : 'Products'} Available
+            </span>
+          </div>
 
-            const isSelected = 
-              paramNorm === catSlugNorm || 
-              categoryParam.toLowerCase() === cat.name.toLowerCase() ||
-              (catSlugNorm === 'fresh-mushrooms' && (paramNorm === 'fresh-mushroom' || paramNorm === 'fresh_mushroom' || categoryParam === 'FRESH_MUSHROOM')) ||
-              (catSlugNorm === 'dry-mushrooms' && (paramNorm === 'dry-mushroom' || paramNorm === 'dry_mushroom' || categoryParam === 'DRY_MUSHROOM')) ||
-              (catSlugNorm === 'spawn-seeds' && (paramNorm === 'spawn-seed' || paramNorm === 'spawn_seed' || categoryParam === 'SPAWN_SEED' || paramNorm === 'mushroom-spawn')) ||
-              (catSlugNorm === 'growing-kits' && (paramNorm === 'growing-kit' || paramNorm === 'growing_kit' || categoryParam === 'GROWING_KIT')) ||
-              (catSlugNorm === 'equipment-supplies' && (paramNorm === 'equipment-supplies' || paramNorm === 'cultivation-supplies' || paramNorm === 'cultivation-equipment-supplies' || paramNorm === 'equipment_supplies' || categoryParam === 'EQUIPMENT_SUPPLIES'));
+          <div className="flex items-center gap-2.5">
+            {/* Quick Switch Category Dropdown */}
+            {categories.length > 1 && (
+              <select
+                value={categoryParam}
+                onChange={(e) => {
+                  if (e.target.value === 'all') {
+                    navigate('/products');
+                  } else {
+                    navigate(`/products/${e.target.value}`);
+                  }
+                }}
+                className="text-xs font-semibold bg-surface-cream border border-surface-border rounded-full px-3.5 py-1.5 text-forest-900 hover:border-forest-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-xs cursor-pointer"
+                aria-label="Switch to another category"
+              >
+                <option value={categoryParam}>Switch Category...</option>
+                <option value="all">All Products</option>
+                {categories.map((cat) => (
+                  <option key={cat.id || cat.slug} value={cat.slug}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
-            return (
+            {/* Clear Filter & View All Button */}
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-forest-800 bg-surface-cream hover:bg-forest-900 hover:text-white border border-surface-border transition-all shadow-xs group cursor-pointer"
+              title="Clear category filter and view all products"
+            >
+              <X className="w-3.5 h-3.5 text-forest-700 group-hover:text-white transition-colors" />
+              <span>View All Products</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        /* Discovery Category Pills when browsing All Products */
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 pb-2">
+          <Link
+            to="/products"
+            className="px-4 py-2 rounded-full text-xs font-bold transition-all btn-primary shadow-level-1 shrink-0"
+          >
+            All Products
+          </Link>
+          {categories.length > 0 ? (
+            categories.map((cat) => (
               <Link
-                key={cat.id}
+                key={cat.id || cat.slug}
                 to={`/products/${cat.slug}`}
-                className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                  isSelected
-                    ? 'btn-primary shadow-level-1'
-                    : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-                }`}
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
               >
                 {cat.name}
               </Link>
-            );
-          })
-        ) : (
-          <>
-            <Link
-              to="/products/fresh-mushrooms"
-              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                categoryParam === 'fresh-mushrooms' || categoryParam === 'FRESH_MUSHROOM'
-                  ? 'btn-primary shadow-level-1'
-                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-              }`}
-            >
-              Fresh Mushrooms
-            </Link>
-            <Link
-              to="/products/dry-mushrooms"
-              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                categoryParam === 'dry-mushrooms' || categoryParam === 'DRY_MUSHROOM'
-                  ? 'btn-primary shadow-level-1'
-                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-              }`}
-            >
-              Dry Mushrooms
-            </Link>
-            <Link
-              to="/products/spawn-seeds"
-              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                categoryParam === 'spawn-seeds' || categoryParam === 'mushroom-spawn' || categoryParam === 'SPAWN_SEED'
-                  ? 'btn-primary shadow-level-1'
-                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-              }`}
-            >
-              Grain Spawn Seeds
-            </Link>
-            <Link
-              to="/products/growing-kits"
-              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                categoryParam === 'growing-kits' || categoryParam === 'GROWING_KIT'
-                  ? 'btn-primary shadow-level-1'
-                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-              }`}
-            >
-              DIY Growing Kits
-            </Link>
-            <Link
-              to="/products/equipment-supplies"
-              className={`px-4 py-2 rounded-input text-xs font-bold transition-all button-press ${
-                categoryParam === 'equipment-supplies' || categoryParam === 'cultivation-supplies' || categoryParam === 'EQUIPMENT_SUPPLIES'
-                  ? 'btn-primary shadow-level-1'
-                  : 'bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900'
-              }`}
-            >
-              Cultivation Equipment & Supplies
-            </Link>
-          </>
-        )}
-      </div>
+            ))
+          ) : (
+            <>
+              <Link
+                to="/products/fresh-mushrooms"
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
+              >
+                Fresh Mushrooms
+              </Link>
+              <Link
+                to="/products/dry-mushrooms"
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
+              >
+                Dry Mushrooms
+              </Link>
+              <Link
+                to="/products/spawn-seeds"
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
+              >
+                Grain Spawn Seeds
+              </Link>
+              <Link
+                to="/products/growing-kits"
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
+              >
+                DIY Growing Kits
+              </Link>
+              <Link
+                to="/products/equipment-supplies"
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all bg-surface-white border border-surface-border text-typography-secondary hover:bg-surface-cream hover:text-forest-900 shadow-xs shrink-0"
+              >
+                Cultivation Equipment & Supplies
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Product Grid */}
       {loading ? (
