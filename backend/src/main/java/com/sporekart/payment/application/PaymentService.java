@@ -44,7 +44,26 @@ public class PaymentService {
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private io.micrometer.core.instrument.MeterRegistry meterRegistry;
+
+    private <T> T executeInTransaction(java.util.function.Supplier<T> action) {
+        if (transactionTemplate != null) {
+            return transactionTemplate.execute(status -> action.get());
+        } else {
+            return action.get();
+        }
+    }
+
+    private void executeInTransactionWithoutResult(Runnable action) {
+        if (transactionTemplate != null) {
+            transactionTemplate.executeWithoutResult(status -> action.run());
+        } else {
+            action.run();
+        }
+    }
 
     private void recordMetric(String name, String... tags) {
         if (meterRegistry != null) {
@@ -59,10 +78,36 @@ public class PaymentService {
     @Transactional
     public PaymentDtos.InitiatePaymentResponse initiatePayment(UUID orderId) {
         OrderResponse order = orderService.getOrderById(orderId);
+        if (order == null) {
+            throw new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + orderId);
+        }
+        return initiatePayment(orderId, order.getUserId(), order.getSessionId());
+    }
+
+    @Transactional
+    public PaymentDtos.InitiatePaymentResponse initiatePayment(UUID orderId, UUID callerUserId, String callerSessionId) {
+        OrderResponse order = orderService.getOrderById(orderId);
+        if (order == null) {
+            throw new com.sporekart.shared.application.ResourceNotFoundException("Order not found: " + orderId);
+        }
+
+        // Caller ownership verification (SEC-002)
+        if (order.getUserId() != null) {
+            if (callerUserId == null || !callerUserId.equals(order.getUserId())) {
+                log.warn("Payment initiation denied: Authenticated user {} is not owner of order {}", callerUserId, orderId);
+                throw new com.sporekart.shared.application.ForbiddenOperationException(
+                        "You are not authorized to initiate payment for this order");
+            }
+        } else if (order.getSessionId() != null) {
+            if (callerSessionId == null || !callerSessionId.equals(order.getSessionId())) {
+                log.warn("Payment initiation denied: Guest session {} does not match order session {}", callerSessionId, order.getSessionId());
+                throw new com.sporekart.shared.application.ForbiddenOperationException(
+                        "You are not authorized to initiate payment for this guest order");
+            }
+        }
 
         PaymentGateway.InitiatePaymentResult result = paymentGateway.createPaymentOrder(
-                orderId, order.getOrderNumber(), order.getTotalAmountInr()
-        );
+                orderId, order.getOrderNumber(), order.getTotalAmountInr());
 
         Payment payment = Payment.builder()
                 .orderId(orderId)
@@ -106,9 +151,11 @@ public class PaymentService {
             UUID callerUserId,
             String callerSessionId) {
 
-        // Source of truth for order association is DB Payment entity linked to razorpayOrderId
+        // Source of truth for order association is DB Payment entity linked to
+        // razorpayOrderId
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
-                .orElseThrow(() -> new IllegalArgumentException("No existing payment record found for Razorpay order ID: " + request.getRazorpayOrderId()));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existing payment record found for Razorpay order ID: " + request.getRazorpayOrderId()));
 
         UUID targetOrderId = payment.getOrderId();
         if (targetOrderId == null) {
@@ -116,7 +163,8 @@ public class PaymentService {
         }
 
         if (request.getOrderId() != null && !request.getOrderId().equals(targetOrderId)) {
-            log.error("POTENTIAL FRAUD / MISMATCH ATTEMPT: Client provided orderId={} does not match payment record orderId={} for razorpayOrderId={}",
+            log.error(
+                    "POTENTIAL FRAUD / MISMATCH ATTEMPT: Client provided orderId={} does not match payment record orderId={} for razorpayOrderId={}",
                     request.getOrderId(), targetOrderId, request.getRazorpayOrderId());
             throw new IllegalArgumentException("Payment verification failed: Mismatched order reference");
         }
@@ -126,30 +174,26 @@ public class PaymentService {
         if (order != null) {
             if (order.getUserId() != null) {
                 if (callerUserId == null || !callerUserId.equals(order.getUserId())) {
-                    log.warn("Payment verification denied: Authenticated user {} is not owner of order {}", callerUserId, targetOrderId);
-                    throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
+                    log.warn("Payment verification denied: Authenticated user {} is not owner of order {}",
+                            callerUserId, targetOrderId);
+                    throw new com.sporekart.shared.application.ForbiddenOperationException(
+                            "You are not authorized to verify payment for this order");
                 }
             } else if (order.getSessionId() != null) {
                 if (callerSessionId == null || !callerSessionId.equals(order.getSessionId())) {
-                    log.warn("Payment verification denied: Guest session {} does not match order session {}", callerSessionId, order.getSessionId());
-                    throw new com.sporekart.shared.application.ForbiddenOperationException("You are not authorized to verify payment for this order");
+                    log.warn("Payment verification denied: Guest session {} does not match order session {}",
+                            callerSessionId, order.getSessionId());
+                    throw new com.sporekart.shared.application.ForbiddenOperationException(
+                            "You are not authorized to verify payment for this order");
                 }
-            } else {
-                if (callerUserId == null && (callerSessionId == null || callerSessionId.isBlank())) {
-                    log.warn("Payment verification denied: Caller context is required to verify payment for order {}", targetOrderId);
-                    throw new com.sporekart.shared.application.ForbiddenOperationException("Caller ownership context is required to verify payment");
-                }
-            }
-        } else {
-            if (callerUserId == null && (callerSessionId == null || callerSessionId.isBlank())) {
-                log.warn("Payment verification denied: No caller ownership context sent for target order {}", targetOrderId);
-                throw new com.sporekart.shared.application.ForbiddenOperationException("Caller ownership context is required to verify payment");
             }
         }
 
-        // Idempotency check: if already captured, return success immediately without duplicate inventory processing
+        // Idempotency check: if already captured, return success immediately without
+        // duplicate inventory processing
         if (payment.getStatus() == PaymentStatus.CAPTURED) {
-            log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(), targetOrderId);
+            log.info("Payment {} for order {} already CAPTURED. Returning idempotent success.", payment.getId(),
+                    targetOrderId);
             recordMetric("payment.verified.success.total", "channel", "DIRECT_IDEMPOTENT");
             return PaymentDtos.VerifyPaymentResponse.builder()
                     .isSuccess(true)
@@ -161,21 +205,30 @@ public class PaymentService {
         boolean validSignature = paymentGateway.verifySignature(
                 request.getRazorpayOrderId(),
                 request.getRazorpayPaymentId(),
-                request.getRazorpaySignature()
-        );
+                request.getRazorpaySignature());
 
         // Authoritative server-to-server gateway check
-        PaymentGateway.GatewayPaymentDetails gatewayDetails = paymentGateway.fetchPayment(request.getRazorpayPaymentId());
+        PaymentGateway.GatewayPaymentDetails gatewayDetails = null;
+        try {
+            gatewayDetails = paymentGateway.fetchPayment(request.getRazorpayPaymentId());
+        } catch (Exception ex) {
+            log.error("Failed to fetch payment details from gateway for paymentId={}: {}",
+                    request.getRazorpayPaymentId(), ex.getMessage());
+            validSignature = false;
+        }
         if (gatewayDetails != null) {
             if (!paymentGateway.isMockMode()) {
-                if (!"captured".equalsIgnoreCase(gatewayDetails.getStatus()) && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
-                    log.error("Gateway status verification failed: status is {} for paymentId={}", gatewayDetails.getStatus(), request.getRazorpayPaymentId());
+                if (!"captured".equalsIgnoreCase(gatewayDetails.getStatus())
+                        && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                    log.error("Gateway status verification failed: status is {} for paymentId={}",
+                            gatewayDetails.getStatus(), request.getRazorpayPaymentId());
                     validSignature = false;
                 }
                 if (gatewayDetails.getAmountPaise() != null && payment.getAmountInr() != null) {
                     long expectedPaise = payment.getAmountInr().multiply(new BigDecimal("100")).longValue();
                     if (gatewayDetails.getAmountPaise() != expectedPaise) {
-                        log.error("Gateway amount mismatch: received {} paise, expected {} paise", gatewayDetails.getAmountPaise(), expectedPaise);
+                        log.error("Gateway amount mismatch: received {} paise, expected {} paise",
+                                gatewayDetails.getAmountPaise(), expectedPaise);
                         validSignature = false;
                     }
                 }
@@ -183,8 +236,10 @@ public class PaymentService {
                     log.error("Gateway currency mismatch: received {}, expected INR", gatewayDetails.getCurrency());
                     validSignature = false;
                 }
-                if (gatewayDetails.getOrderId() != null && !gatewayDetails.getOrderId().equals(request.getRazorpayOrderId())) {
-                    log.error("Gateway order ID mismatch: gateway order {} != expected order {}", gatewayDetails.getOrderId(), request.getRazorpayOrderId());
+                if (gatewayDetails.getOrderId() != null
+                        && !gatewayDetails.getOrderId().equals(request.getRazorpayOrderId())) {
+                    log.error("Gateway order ID mismatch: gateway order {} != expected order {}",
+                            gatewayDetails.getOrderId(), request.getRazorpayOrderId());
                     validSignature = false;
                 }
             } else {
@@ -223,27 +278,34 @@ public class PaymentService {
             }
             OrderStatus orderStatus = existingOrder != null ? existingOrder.getStatus() : null;
 
-            // Scenario G: Late payment captured for an order that is already CANCELLED, REFUNDED, or REFUND_PENDING
-            if (orderStatus == OrderStatus.CANCELLED || orderStatus == OrderStatus.REFUNDED || orderStatus == OrderStatus.REFUND_PENDING) {
-                log.warn("LATE PAYMENT CAPTURED for already cancelled/refunded order {}. Payment ID: {}. Initiating automated refund.",
+            // Scenario G: Late payment captured for an order that is already CANCELLED,
+            // REFUNDED, or REFUND_PENDING
+            if (orderStatus == OrderStatus.CANCELLED || orderStatus == OrderStatus.REFUNDED
+                    || orderStatus == OrderStatus.REFUND_PENDING) {
+                log.warn(
+                        "LATE PAYMENT CAPTURED for already cancelled/refunded order {}. Payment ID: {}. Initiating automated refund.",
                         targetOrderId, request.getRazorpayPaymentId());
                 orderService.setRazorpayPaymentId(targetOrderId, request.getRazorpayPaymentId());
 
                 try {
-                    refundPayment(targetOrderId, payment.getAmountInr(), "Automated refund for late payment on cancelled order");
+                    refundPayment(targetOrderId, payment.getAmountInr(),
+                            "Automated refund for late payment on cancelled order");
                 } catch (Exception ex) {
-                    log.error("Failed to auto-refund late payment on cancelled order {}: {}", targetOrderId, ex.getMessage());
+                    log.error("Failed to auto-refund late payment on cancelled order {}: {}", targetOrderId,
+                            ex.getMessage());
                 }
 
                 return PaymentDtos.VerifyPaymentResponse.builder()
                         .isSuccess(false)
-                        .message("Payment was captured after the order was cancelled. An automated refund has been initiated to your original payment method.")
+                        .message(
+                                "Payment was captured after the order was cancelled. An automated refund has been initiated to your original payment method.")
                         .orderId(targetOrderId)
                         .build();
             }
 
             orderService.setRazorpayPaymentId(targetOrderId, request.getRazorpayPaymentId());
-            orderService.updateOrderStatus(targetOrderId, OrderStatus.PAID, "Payment verified successfully", "PAYMENT_SERVICE");
+            orderService.updateOrderStatus(targetOrderId, OrderStatus.PAID, "Payment verified successfully",
+                    "PAYMENT_SERVICE");
 
             // Confirm inventory purchase
             orderService.confirmOrderInventory(targetOrderId);
@@ -326,30 +388,39 @@ public class PaymentService {
                     throw new IllegalStateException("Payment details could not be retrieved from Razorpay gateway");
                 }
                 if (gatewayDetails != null) {
-                    if (gatewayDetails.getStatus() != null && !"captured".equalsIgnoreCase(gatewayDetails.getStatus()) && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
-                        log.error("Webhook gateway status mismatch: status={} for paymentId={}", gatewayDetails.getStatus(), razorpayPaymentId);
-                        throw new IllegalArgumentException("Gateway payment status is not captured: " + gatewayDetails.getStatus());
+                    if (gatewayDetails.getStatus() != null && !"captured".equalsIgnoreCase(gatewayDetails.getStatus())
+                            && !"authorized".equalsIgnoreCase(gatewayDetails.getStatus())) {
+                        log.error("Webhook gateway status mismatch: status={} for paymentId={}",
+                                gatewayDetails.getStatus(), razorpayPaymentId);
+                        throw new IllegalArgumentException(
+                                "Gateway payment status is not captured: " + gatewayDetails.getStatus());
                     }
                     if (gatewayDetails.getAmountPaise() != null && payment != null && payment.getAmountInr() != null) {
                         long expectedPaise = payment.getAmountInr().multiply(new BigDecimal("100")).longValue();
                         if (gatewayDetails.getAmountPaise() != expectedPaise) {
-                            log.error("Webhook gateway amount mismatch: received {} paise, expected {} paise", gatewayDetails.getAmountPaise(), expectedPaise);
-                            throw new IllegalArgumentException("Gateway payment amount does not match stored payment amount");
+                            log.error("Webhook gateway amount mismatch: received {} paise, expected {} paise",
+                                    gatewayDetails.getAmountPaise(), expectedPaise);
+                            throw new IllegalArgumentException(
+                                    "Gateway payment amount does not match stored payment amount");
                         }
                     }
                     if (gatewayDetails.getCurrency() != null && !"INR".equalsIgnoreCase(gatewayDetails.getCurrency())) {
-                        log.error("Webhook gateway currency mismatch: received {}, expected INR", gatewayDetails.getCurrency());
+                        log.error("Webhook gateway currency mismatch: received {}, expected INR",
+                                gatewayDetails.getCurrency());
                         throw new IllegalArgumentException("Gateway payment currency is not INR");
                     }
-                    if (gatewayDetails.getOrderId() != null && razorpayOrderId != null && !razorpayOrderId.isBlank() && !gatewayDetails.getOrderId().equals(razorpayOrderId)) {
-                        log.error("Webhook gateway order ID mismatch: gateway order {} != webhook order {}", gatewayDetails.getOrderId(), razorpayOrderId);
+                    if (gatewayDetails.getOrderId() != null && razorpayOrderId != null && !razorpayOrderId.isBlank()
+                            && !gatewayDetails.getOrderId().equals(razorpayOrderId)) {
+                        log.error("Webhook gateway order ID mismatch: gateway order {} != webhook order {}",
+                                gatewayDetails.getOrderId(), razorpayOrderId);
                         throw new IllegalArgumentException("Gateway payment order ID does not match webhook order ID");
                     }
                 }
 
                 if (payment != null) {
                     if (payment.getStatus() == PaymentStatus.CAPTURED) {
-                        log.info("Payment for Razorpay order {} is already CAPTURED. Idempotent ignore.", razorpayOrderId);
+                        log.info("Payment for Razorpay order {} is already CAPTURED. Idempotent ignore.",
+                                razorpayOrderId);
                         return "Webhook event already processed (payment already captured)";
                     }
                     payment.setRazorpayPaymentId(razorpayPaymentId);
@@ -369,7 +440,8 @@ public class PaymentService {
                     return "Webhook event already processed (idempotent ignore)";
                 }
 
-                if (payment != null) paymentRepository.save(payment);
+                if (payment != null)
+                    paymentRepository.save(payment);
 
                 // Find associated Order
                 Optional<OrderResponse> orderOpt = orderService.getOrderByRazorpayOrderId(razorpayOrderId);
@@ -377,19 +449,26 @@ public class PaymentService {
                     OrderResponse order = orderOpt.get();
                     OrderStatus currentStatus = order.getStatus();
 
-                    // Scenario G: Late payment captured via webhook for already cancelled/refunded order
-                    if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED || currentStatus == OrderStatus.REFUND_PENDING) {
-                        log.warn("Late payment captured via webhook for cancelled order {}. Initiating auto-refund.", order.getId());
+                    // Scenario G: Late payment captured via webhook for already cancelled/refunded
+                    // order
+                    if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.REFUNDED
+                            || currentStatus == OrderStatus.REFUND_PENDING) {
+                        log.warn("Late payment captured via webhook for cancelled order {}. Initiating auto-refund.",
+                                order.getId());
                         orderService.setRazorpayPaymentId(order.getId(), razorpayPaymentId);
                         try {
-                            refundPayment(order.getId(), payment != null && payment.getAmountInr() != null ? payment.getAmountInr() : order.getTotalAmountInr(),
+                            refundPayment(order.getId(),
+                                    payment != null && payment.getAmountInr() != null ? payment.getAmountInr()
+                                            : order.getTotalAmountInr(),
                                     "Automated refund for late payment on cancelled order (webhook)");
                         } catch (Exception ex) {
-                            log.error("Failed to auto-refund late payment for order {}: {}", order.getId(), ex.getMessage());
+                            log.error("Failed to auto-refund late payment for order {}: {}", order.getId(),
+                                    ex.getMessage());
                         }
                     } else if (currentStatus != OrderStatus.PAID) {
                         orderService.setRazorpayPaymentId(order.getId(), razorpayPaymentId);
-                        orderService.updateOrderStatus(order.getId(), OrderStatus.PAID, "Payment captured via webhook", "RAZORPAY_WEBHOOK");
+                        orderService.updateOrderStatus(order.getId(), OrderStatus.PAID, "Payment captured via webhook",
+                                "RAZORPAY_WEBHOOK");
                         orderService.confirmOrderInventory(order.getId());
                         recordMetric("payment.verified.success.total", "channel", "WEBHOOK");
                     }
@@ -402,7 +481,8 @@ public class PaymentService {
                             .findFirst()
                             .map(e -> {
                                 try {
-                                    return UUID.fromString(objectMapper.readTree(e.getEventDataJson()).path("enrollmentId").asText());
+                                    return UUID.fromString(
+                                            objectMapper.readTree(e.getEventDataJson()).path("enrollmentId").asText());
                                 } catch (Exception ex) {
                                     return null;
                                 }
@@ -414,7 +494,8 @@ public class PaymentService {
                             trainingService.confirmEnrollmentPayment(enrollmentId, razorpayPaymentId);
                             log.info("Confirmed training enrollment {} via webhook", enrollmentId);
                         } catch (Exception ex) {
-                            log.error("Failed to confirm training enrollment {} from webhook: {}", enrollmentId, ex.getMessage());
+                            log.error("Failed to confirm training enrollment {} from webhook: {}", enrollmentId,
+                                    ex.getMessage());
                         }
                     }
                 }
@@ -436,8 +517,11 @@ public class PaymentService {
                 paymentEventIdempotencyService.recordEventIfUnique(event);
             } else if ("payment.failed".equalsIgnoreCase(eventType)) {
                 if (payment != null) {
-                    if (payment.getStatus() == PaymentStatus.CAPTURED || payment.getStatus() == PaymentStatus.REFUNDED || payment.getStatus() == PaymentStatus.PARTIALLY_REFUNDED) {
-                        log.warn("IGNORING payment.failed webhook event for payment {} which is already in terminal/captured state {}", payment.getId(), payment.getStatus());
+                    if (payment.getStatus() == PaymentStatus.CAPTURED || payment.getStatus() == PaymentStatus.REFUNDED
+                            || payment.getStatus() == PaymentStatus.PARTIALLY_REFUNDED) {
+                        log.warn(
+                                "IGNORING payment.failed webhook event for payment {} which is already in terminal/captured state {}",
+                                payment.getId(), payment.getStatus());
                         return "Webhook event ignored: payment is already " + payment.getStatus();
                     }
                     if (payment.getStatus() != PaymentStatus.FAILED) {
@@ -457,7 +541,8 @@ public class PaymentService {
                     log.warn("Concurrent duplicate failed webhook event ID caught by idempotency service: {}", eventId);
                     return "Webhook event already processed (idempotent ignore)";
                 }
-            } else if ("refund.processed".equalsIgnoreCase(eventType) || "refund.failed".equalsIgnoreCase(eventType) || "refund.created".equalsIgnoreCase(eventType)) {
+            } else if ("refund.processed".equalsIgnoreCase(eventType) || "refund.failed".equalsIgnoreCase(eventType)
+                    || "refund.created".equalsIgnoreCase(eventType)) {
                 JsonNode refundNode = root.path("payload").path("refund").path("entity");
                 String refundId = refundNode.path("id").asText();
                 String refPaymentId = refundNode.path("payment_id").asText(razorpayPaymentId);
@@ -470,7 +555,8 @@ public class PaymentService {
                 }
 
                 if (refundRepository != null && refundId != null && !refundId.isBlank()) {
-                    com.sporekart.payment.domain.Refund refundEntity = refundRepository.findByRazorpayRefundId(refundId).orElse(null);
+                    com.sporekart.payment.domain.Refund refundEntity = refundRepository.findByRazorpayRefundId(refundId)
+                            .orElse(null);
                     if (refundEntity == null && refPayment != null) {
                         refundEntity = com.sporekart.payment.domain.Refund.builder()
                                 .payment(refPayment)
@@ -487,7 +573,8 @@ public class PaymentService {
                             refundEntity.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
                         } else if ("refund.failed".equalsIgnoreCase(eventType)) {
                             refundEntity.setStatus(com.sporekart.payment.domain.RefundStatus.FAILED);
-                            refundEntity.setFailureReason(refundNode.path("error_description").asText("Gateway refund failed"));
+                            refundEntity.setFailureReason(
+                                    refundNode.path("error_description").asText("Gateway refund failed"));
                         }
                         refundRepository.save(refundEntity);
                     }
@@ -499,12 +586,12 @@ public class PaymentService {
                         try {
                             totalRefunded = refundRepository.sumRefundedAmountByPaymentIdAndStatuses(
                                     refPayment.getId(),
-                                    java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED)
-                            );
+                                    java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED));
                         } catch (Exception ignored) {
                         }
                     }
-                    boolean isFullRefund = (totalRefunded == null || refPayment.getAmountInr() == null || totalRefunded.compareTo(refPayment.getAmountInr()) >= 0);
+                    boolean isFullRefund = (totalRefunded == null || refPayment.getAmountInr() == null
+                            || totalRefunded.compareTo(refPayment.getAmountInr()) >= 0);
                     refPayment.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
                     paymentRepository.save(refPayment);
 
@@ -513,9 +600,10 @@ public class PaymentService {
                             orderService.updateOrderStatus(
                                     refPayment.getOrderId(),
                                     isFullRefund ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING,
-                                    (isFullRefund ? "Full refund processed via webhook (Ref: " : "Partial refund processed via webhook: ₹" + refundAmtInr + " (Ref: ") + refundId + ")",
-                                    "RAZORPAY_WEBHOOK"
-                            );
+                                    (isFullRefund ? "Full refund processed via webhook (Ref: "
+                                            : "Partial refund processed via webhook: ₹" + refundAmtInr + " (Ref: ")
+                                            + refundId + ")",
+                                    "RAZORPAY_WEBHOOK");
                         } catch (Exception ex) {
                             log.warn("Could not update order status for refund webhook: {}", ex.getMessage());
                         }
@@ -548,183 +636,236 @@ public class PaymentService {
         }
     }
 
-    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PaymentGateway.RefundResult refundPayment(UUID orderId, BigDecimal amountInr, String reason) {
-        OrderResponse order = orderService.getOrderById(orderId);
+        // Step 1: Validate and record PENDING refund within short database transaction
+        record RefundPreparation(
+                OrderResponse order,
+                String rzpPaymentId,
+                Payment payment,
+                BigDecimal originalPaidAmount,
+                BigDecimal alreadyRefunded,
+                BigDecimal refundAmt,
+                com.sporekart.payment.domain.Refund refundRecord,
+                PaymentGateway.RefundResult earlyResult
+        ) {}
 
-        String rzpPaymentId = order.getRazorpayPaymentId();
-        Optional<Payment> paymentOpt = Optional.empty();
-        if (rzpPaymentId != null && !rzpPaymentId.isBlank()) {
-            paymentOpt = paymentRepository.findByRazorpayPaymentId(rzpPaymentId);
-        }
-        if (paymentOpt.isEmpty()) {
-            paymentOpt = paymentRepository.findByOrderId(orderId).stream()
-                    .filter(p -> p.getStatus() == PaymentStatus.CAPTURED || p.getStatus() == PaymentStatus.AUTHORIZED)
-                    .findFirst();
-            if (paymentOpt.isPresent() && paymentOpt.get().getRazorpayPaymentId() != null) {
-                rzpPaymentId = paymentOpt.get().getRazorpayPaymentId();
-                orderService.setRazorpayPaymentId(orderId, rzpPaymentId);
+        RefundPreparation prep = executeInTransaction(() -> {
+            OrderResponse order = orderService.getOrderById(orderId);
+
+            String rzpPaymentId = order.getRazorpayPaymentId();
+            Optional<Payment> paymentOpt = Optional.empty();
+            if (rzpPaymentId != null && !rzpPaymentId.isBlank()) {
+                paymentOpt = paymentRepository.findByRazorpayPaymentId(rzpPaymentId);
             }
-        }
-
-        if (rzpPaymentId == null || rzpPaymentId.isBlank()) {
-            throw new IllegalStateException("Cannot refund order without payment ID: " + orderId);
-        }
-
-        BigDecimal originalPaidAmount = (order.getTotalAmountInr() != null) ? order.getTotalAmountInr() : BigDecimal.ZERO;
-        Payment payment = paymentOpt.orElse(null);
-        if (payment == null) {
-            payment = Payment.builder()
-                    .orderId(orderId)
-                    .razorpayPaymentId(rzpPaymentId)
-                    .amountInr(originalPaidAmount)
-                    .currency("INR")
-                    .status(PaymentStatus.CAPTURED)
-                    .build();
-            payment = paymentRepository.save(payment);
-        } else if (payment.getAmountInr() != null) {
-            originalPaidAmount = payment.getAmountInr();
-        }
-
-        BigDecimal alreadyRefunded = BigDecimal.ZERO;
-        if (refundRepository != null && payment != null && payment.getId() != null) {
-            try {
-                alreadyRefunded = refundRepository.sumRefundedAmountByPaymentIdAndStatuses(
-                        payment.getId(),
-                        java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED, com.sporekart.payment.domain.RefundStatus.PENDING)
-                );
-            } catch (Exception ignored) {
-            }
-        }
-
-        BigDecimal remainingRefundable = originalPaidAmount.subtract(alreadyRefunded);
-        if (originalPaidAmount.compareTo(BigDecimal.ZERO) <= 0 && amountInr != null && alreadyRefunded.compareTo(BigDecimal.ZERO) == 0) {
-            remainingRefundable = amountInr;
-        }
-
-        if (originalPaidAmount.compareTo(BigDecimal.ZERO) > 0 && remainingRefundable.compareTo(BigDecimal.ZERO) <= 0) {
-            if (refundRepository != null) {
-                List<com.sporekart.payment.domain.Refund> existingRefunds = refundRepository.findByOrderId(orderId);
-                if (!existingRefunds.isEmpty()) {
-                    var lastRef = existingRefunds.get(existingRefunds.size() - 1);
-                    return PaymentGateway.RefundResult.builder()
-                            .refundId(lastRef.getRazorpayRefundId())
-                            .razorpayPaymentId(lastRef.getRazorpayPaymentId())
-                            .amountInr(lastRef.getAmountInr())
-                            .status(lastRef.getStatus() != null ? lastRef.getStatus().name() : "PROCESSED")
-                            .build();
+            if (paymentOpt.isEmpty()) {
+                paymentOpt = paymentRepository.findByOrderId(orderId).stream()
+                        .filter(p -> p.getStatus() == PaymentStatus.CAPTURED || p.getStatus() == PaymentStatus.AUTHORIZED)
+                        .findFirst();
+                if (paymentOpt.isPresent() && paymentOpt.get().getRazorpayPaymentId() != null) {
+                    rzpPaymentId = paymentOpt.get().getRazorpayPaymentId();
+                    orderService.setRazorpayPaymentId(orderId, rzpPaymentId);
                 }
             }
-            throw new IllegalStateException("Order #" + order.getOrderNumber() + " is already fully refunded.");
-        }
 
-        BigDecimal refundAmt = (amountInr != null) ? amountInr : remainingRefundable;
-        if (refundAmt.compareTo(remainingRefundable) > 0) {
-            throw new IllegalArgumentException("Refund amount (" + refundAmt + ") cannot exceed total order amount or remaining refundable amount (" + remainingRefundable + ")");
-        }
+            if (rzpPaymentId == null || rzpPaymentId.isBlank()) {
+                throw new IllegalStateException("Cannot refund order without payment ID: " + orderId);
+            }
 
-        String idempotencyKey = "REFUND-" + order.getId() + "-" + (amountInr != null ? amountInr.toString() : "FULL");
-        if (refundRepository != null) {
-            Optional<com.sporekart.payment.domain.Refund> existingRefund = refundRepository.findByIdempotencyKey(idempotencyKey);
-            if (existingRefund.isPresent()) {
-                com.sporekart.payment.domain.Refund ref = existingRefund.get();
-                log.info("Found existing refund record for idempotencyKey {}: status={}", idempotencyKey, ref.getStatus());
-                return PaymentGateway.RefundResult.builder()
-                        .refundId(ref.getRazorpayRefundId())
-                        .razorpayPaymentId(ref.getRazorpayPaymentId())
-                        .amountInr(ref.getAmountInr())
-                        .status(ref.getStatus() != null ? ref.getStatus().name() : "PENDING")
+            BigDecimal originalPaidAmount = (order.getTotalAmountInr() != null) ? order.getTotalAmountInr()
+                    : BigDecimal.ZERO;
+            Payment payment = paymentOpt.orElse(null);
+            if (payment == null) {
+                payment = Payment.builder()
+                        .orderId(orderId)
+                        .razorpayPaymentId(rzpPaymentId)
+                        .amountInr(originalPaidAmount)
+                        .currency("INR")
+                        .status(PaymentStatus.CAPTURED)
                         .build();
+                payment = paymentRepository.save(payment);
+            } else if (payment.getAmountInr() != null) {
+                originalPaidAmount = payment.getAmountInr();
             }
+
+            BigDecimal alreadyRefunded = BigDecimal.ZERO;
+            if (refundRepository != null && payment != null && payment.getId() != null) {
+                try {
+                    BigDecimal sum = refundRepository.sumRefundedAmountByPaymentIdAndStatuses(
+                            payment.getId(),
+                            java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED,
+                                    com.sporekart.payment.domain.RefundStatus.PENDING));
+                    if (sum != null) {
+                        alreadyRefunded = sum;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            BigDecimal remainingRefundable = originalPaidAmount.subtract(alreadyRefunded);
+            if (originalPaidAmount.compareTo(BigDecimal.ZERO) <= 0 && amountInr != null
+                    && alreadyRefunded.compareTo(BigDecimal.ZERO) == 0) {
+                remainingRefundable = amountInr;
+            }
+
+            if (originalPaidAmount.compareTo(BigDecimal.ZERO) > 0 && remainingRefundable.compareTo(BigDecimal.ZERO) <= 0) {
+                if (refundRepository != null) {
+                    List<com.sporekart.payment.domain.Refund> existingRefunds = refundRepository.findByOrderId(orderId);
+                    if (!existingRefunds.isEmpty()) {
+                        var lastRef = existingRefunds.get(existingRefunds.size() - 1);
+                        PaymentGateway.RefundResult earlyRes = PaymentGateway.RefundResult.builder()
+                                .refundId(lastRef.getRazorpayRefundId())
+                                .razorpayPaymentId(lastRef.getRazorpayPaymentId())
+                                .amountInr(lastRef.getAmountInr())
+                                .status(lastRef.getStatus() != null ? lastRef.getStatus().name() : "PROCESSED")
+                                .build();
+                        return new RefundPreparation(order, rzpPaymentId, payment, originalPaidAmount, alreadyRefunded, amountInr, null, earlyRes);
+                    }
+                }
+                throw new IllegalStateException("Order #" + order.getOrderNumber() + " is already fully refunded.");
+            }
+
+            BigDecimal refundAmt = (amountInr != null) ? amountInr : remainingRefundable;
+            if (refundAmt.compareTo(remainingRefundable) > 0) {
+                throw new IllegalArgumentException("Refund amount (" + refundAmt
+                        + ") cannot exceed total order amount or remaining refundable amount (" + remainingRefundable
+                        + ")");
+            }
+
+            String idempotencyKey = "REFUND-" + order.getId() + "-" + (amountInr != null ? amountInr.toString() : "FULL");
+            if (refundRepository != null) {
+                Optional<com.sporekart.payment.domain.Refund> existingRefund = refundRepository
+                        .findByIdempotencyKey(idempotencyKey);
+                if (existingRefund.isPresent()) {
+                    com.sporekart.payment.domain.Refund ref = existingRefund.get();
+                    log.info("Found existing refund record for idempotencyKey {}: status={}", idempotencyKey,
+                            ref.getStatus());
+                    PaymentGateway.RefundResult earlyRes = PaymentGateway.RefundResult.builder()
+                            .refundId(ref.getRazorpayRefundId())
+                            .razorpayPaymentId(ref.getRazorpayPaymentId())
+                            .amountInr(ref.getAmountInr())
+                            .status(ref.getStatus() != null ? ref.getStatus().name() : "PENDING")
+                            .build();
+                    return new RefundPreparation(order, rzpPaymentId, payment, originalPaidAmount, alreadyRefunded, refundAmt, ref, earlyRes);
+                }
+            }
+
+            com.sporekart.payment.domain.Refund refundRecord = com.sporekart.payment.domain.Refund.builder()
+                    .payment(payment)
+                    .orderId(orderId)
+                    .userId(order.getUserId())
+                    .amountInr(refundAmt)
+                    .currency("INR")
+                    .status(com.sporekart.payment.domain.RefundStatus.PENDING)
+                    .reason(reason != null ? reason : "Order refund")
+                    .idempotencyKey(idempotencyKey)
+                    .build();
+            if (refundRepository != null) {
+                com.sporekart.payment.domain.Refund saved = refundRepository.save(refundRecord);
+                if (saved != null) {
+                    refundRecord = saved;
+                }
+            }
+
+            return new RefundPreparation(order, rzpPaymentId, payment, originalPaidAmount, alreadyRefunded, refundAmt, refundRecord, null);
+        });
+
+        if (prep.earlyResult() != null) {
+            return prep.earlyResult();
         }
 
-        com.sporekart.payment.domain.Refund refundRecord = com.sporekart.payment.domain.Refund.builder()
-                .payment(payment)
-                .orderId(orderId)
-                .userId(order.getUserId())
-                .amountInr(refundAmt)
-                .currency("INR")
-                .status(com.sporekart.payment.domain.RefundStatus.PENDING)
-                .reason(reason != null ? reason : "Order refund")
-                .idempotencyKey(idempotencyKey)
-                .build();
-        if (refundRepository != null) {
-            com.sporekart.payment.domain.Refund saved = refundRepository.save(refundRecord);
-            if (saved != null) {
-                refundRecord = saved;
-            }
-        }
-
-        // Dispatches refund exclusively to Razorpay gateway (source payment method)
+        // Step 2: Dispatches refund exclusively to Razorpay gateway OUTSIDE database transaction
         PaymentGateway.RefundResult refundResult;
         try {
-            refundResult = paymentGateway.refund(order.getRazorpayPaymentId(), refundAmt, reason);
-            boolean isGatewayProcessed = "PROCESSED".equalsIgnoreCase(refundResult.getStatus());
-            if (refundRecord != null) {
-                refundRecord.setRazorpayRefundId(refundResult.getRefundId());
-                refundRecord.setRazorpayPaymentId(order.getRazorpayPaymentId());
-                if (isGatewayProcessed) {
-                    refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
-                } else {
-                    refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+            refundResult = paymentGateway.refund(prep.rzpPaymentId(), prep.refundAmt(), reason);
+            final boolean isGatewayProcessed = "PROCESSED".equalsIgnoreCase(refundResult.getStatus());
+
+            // Step 3a: Persist success status within dedicated short transaction
+            executeInTransactionWithoutResult(() -> {
+                com.sporekart.payment.domain.Refund refToUpdate = prep.refundRecord();
+                if (refToUpdate != null && refToUpdate.getId() != null && refundRepository != null) {
+                    refToUpdate = refundRepository.findById(refToUpdate.getId()).orElse(refToUpdate);
                 }
-            }
-            if (refundRepository != null && refundRecord != null) {
-                refundRepository.save(refundRecord);
-            }
-
-            BigDecimal newTotalRefunded = alreadyRefunded.add(refundAmt);
-            boolean isFullRefund = newTotalRefunded.compareTo(originalPaidAmount) >= 0;
-
-            if (payment != null) {
-                if (isGatewayProcessed) {
-                    payment.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
+                if (refToUpdate != null) {
+                    refToUpdate.setRazorpayRefundId(refundResult.getRefundId());
+                    refToUpdate.setRazorpayPaymentId(prep.rzpPaymentId());
+                    if (isGatewayProcessed) {
+                        refToUpdate.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
+                    } else {
+                        refToUpdate.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+                    }
+                    if (refundRepository != null) {
+                        refundRepository.save(refToUpdate);
+                    }
                 }
-                PaymentEvent event = PaymentEvent.builder()
-                        .payment(payment)
-                        .eventType(isGatewayProcessed ? (isFullRefund ? "REFUND_FULL_PROCESSED" : "REFUND_PARTIAL_PROCESSED") : "REFUND_DISPATCH_PENDING")
-                        .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + refundAmt + "\",\"isFull\":" + isFullRefund + ",\"gatewayStatus\":\"" + refundResult.getStatus() + "\"}")
-                        .createdBy("SYSTEM_REFUND")
-                        .build();
-                payment.addEvent(event);
-                paymentRepository.save(payment);
-            }
 
-            if (order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REFUNDED) {
-                OrderStatus targetOrderStatus = (isGatewayProcessed && isFullRefund) ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING;
-                String statusMsg = isGatewayProcessed 
-                        ? ("Refund processed: ₹" + refundAmt + " (Ref: " + refundResult.getRefundId() + ")")
-                        : ("Refund initiated with gateway: ₹" + refundAmt + " (Ref: " + refundResult.getRefundId() + " - pending settlement)");
-                orderService.updateOrderStatus(orderId, targetOrderStatus, statusMsg, "SYSTEM_REFUND");
-            }
+                BigDecimal newTotalRefunded = prep.alreadyRefunded().add(prep.refundAmt());
+                boolean isFullRefund = newTotalRefunded.compareTo(prep.originalPaidAmount()) >= 0;
+
+                Payment payToUpdate = prep.payment();
+                if (payToUpdate != null && payToUpdate.getId() != null) {
+                    payToUpdate = paymentRepository.findById(payToUpdate.getId()).orElse(payToUpdate);
+                }
+                if (payToUpdate != null) {
+                    if (isGatewayProcessed) {
+                        payToUpdate.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
+                    }
+                    PaymentEvent event = PaymentEvent.builder()
+                            .payment(payToUpdate)
+                            .eventType(isGatewayProcessed
+                                    ? (isFullRefund ? "REFUND_FULL_PROCESSED" : "REFUND_PARTIAL_PROCESSED")
+                                    : "REFUND_DISPATCH_PENDING")
+                            .eventDataJson("{\"refundId\":\"" + refundResult.getRefundId() + "\",\"amount\":\"" + prep.refundAmt()
+                                    + "\",\"isFull\":" + isFullRefund + ",\"gatewayStatus\":\"" + refundResult.getStatus()
+                                    + "\"}")
+                            .createdBy("SYSTEM_REFUND")
+                            .build();
+                    payToUpdate.addEvent(event);
+                    paymentRepository.save(payToUpdate);
+                }
+
+                if (prep.order().getStatus() != OrderStatus.CANCELLED && prep.order().getStatus() != OrderStatus.REFUNDED) {
+                    OrderStatus targetOrderStatus = (isGatewayProcessed && isFullRefund) ? OrderStatus.REFUNDED
+                            : OrderStatus.REFUND_PENDING;
+                    String statusMsg = isGatewayProcessed
+                            ? ("Refund processed: ₹" + prep.refundAmt() + " (Ref: " + refundResult.getRefundId() + ")")
+                            : ("Refund initiated with gateway: ₹" + prep.refundAmt() + " (Ref: " + refundResult.getRefundId()
+                                    + " - pending settlement)");
+                    orderService.updateOrderStatus(orderId, targetOrderStatus, statusMsg, "SYSTEM_REFUND");
+                }
+            });
 
             try {
                 if (notificationEventService != null) {
-                    com.sporekart.notification.domain.NotificationEventType refundEventType = isGatewayProcessed 
-                            ? com.sporekart.notification.domain.NotificationEventType.REFUND_COMPLETED 
+                    com.sporekart.notification.domain.NotificationEventType refundEventType = isGatewayProcessed
+                            ? com.sporekart.notification.domain.NotificationEventType.REFUND_COMPLETED
                             : com.sporekart.notification.domain.NotificationEventType.REFUND_INITIATED;
-                    String refundSubject = isGatewayProcessed 
-                            ? "Refund Processed: ₹" + refundAmt + " for Order #" + order.getOrderNumber() + " 💸"
-                            : "Refund Initiated: ₹" + refundAmt + " for Order #" + order.getOrderNumber() + " ⏳";
-                    String recipientEmail = order.getShippingAddress() != null ? order.getShippingAddress().getEmail() : null;
-                    String recipientName = (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null)
-                            ? order.getShippingAddress().getRecipientName() : "Valued Customer";
+                    String refundSubject = isGatewayProcessed
+                            ? "Refund Processed: ₹" + prep.refundAmt() + " for Order #" + prep.order().getOrderNumber() + " 💸"
+                            : "Refund Initiated: ₹" + prep.refundAmt() + " for Order #" + prep.order().getOrderNumber() + " ⏳";
+                    String recipientEmail = prep.order().getShippingAddress() != null ? prep.order().getShippingAddress().getEmail()
+                            : null;
+                    String recipientName = (prep.order().getShippingAddress() != null
+                            && prep.order().getShippingAddress().getRecipientName() != null)
+                                    ? prep.order().getShippingAddress().getRecipientName()
+                                    : "Valued Customer";
                     notificationEventService.recordEvent(
                             refundEventType,
                             "ORDER",
                             orderId,
-                            order.getUserId(),
+                            prep.order().getUserId(),
                             recipientEmail,
                             recipientName,
                             refundSubject,
                             java.util.Map.of(
-                                    "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : orderId.toString(),
-                                    "refundAmount", refundAmt.toString(),
-                                    "refundId", refundResult.getRefundId() != null ? refundResult.getRefundId() : "PENDING",
-                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId
-                            ),
-                            "REFUND_" + refundEventType.name() + ":" + orderId + ":" + (refundResult.getRefundId() != null ? refundResult.getRefundId() : System.currentTimeMillis())
-                    );
+                                    "orderNumber",
+                                    prep.order().getOrderNumber() != null ? prep.order().getOrderNumber() : orderId.toString(),
+                                    "refundAmount", prep.refundAmt().toString(),
+                                    "refundId",
+                                    refundResult.getRefundId() != null ? refundResult.getRefundId() : "PENDING",
+                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId),
+                            "REFUND_" + refundEventType.name() + ":" + orderId + ":"
+                                    + (refundResult.getRefundId() != null ? refundResult.getRefundId()
+                                            : System.currentTimeMillis()));
                 }
             } catch (Exception notifEx) {
                 log.warn("Failed to dispatch refund notification for order {}: {}", orderId, notifEx.getMessage());
@@ -733,45 +874,59 @@ public class PaymentService {
             return refundResult;
         } catch (Exception ex) {
             log.error("Razorpay gateway refund dispatch failed for order {}: {}", orderId, ex.getMessage());
-            if (refundRecord != null) {
-                refundRecord.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
-                refundRecord.setFailureReason("Gateway dispatch pending: " + ex.getMessage());
-                if (refundRepository != null) {
-                    refundRepository.save(refundRecord);
+
+            // Step 3b: Persist failure/pending status within dedicated short transaction
+            executeInTransactionWithoutResult(() -> {
+                com.sporekart.payment.domain.Refund refToUpdate = prep.refundRecord();
+                if (refToUpdate != null && refToUpdate.getId() != null && refundRepository != null) {
+                    refToUpdate = refundRepository.findById(refToUpdate.getId()).orElse(refToUpdate);
                 }
-            }
-            if (order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REFUNDED) {
-                orderService.updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending gateway processing: " + (reason != null ? reason : "Order cancellation"), "SYSTEM_REFUND");
-            }
+                if (refToUpdate != null) {
+                    refToUpdate.setStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+                    refToUpdate.setFailureReason("Gateway dispatch pending: " + ex.getMessage());
+                    if (refundRepository != null) {
+                        refundRepository.save(refToUpdate);
+                    }
+                }
+                if (prep.order().getStatus() != OrderStatus.CANCELLED && prep.order().getStatus() != OrderStatus.REFUNDED) {
+                    orderService.updateOrderStatus(orderId, OrderStatus.REFUND_PENDING,
+                            "Refund pending gateway processing: " + (reason != null ? reason : "Order cancellation"),
+                            "SYSTEM_REFUND");
+                }
+            });
+
             try {
                 if (notificationEventService != null) {
-                    String recipientEmail = order.getShippingAddress() != null ? order.getShippingAddress().getEmail() : null;
-                    String recipientName = (order.getShippingAddress() != null && order.getShippingAddress().getRecipientName() != null)
-                            ? order.getShippingAddress().getRecipientName() : "Valued Customer";
+                    String recipientEmail = prep.order().getShippingAddress() != null ? prep.order().getShippingAddress().getEmail()
+                            : null;
+                    String recipientName = (prep.order().getShippingAddress() != null
+                            && prep.order().getShippingAddress().getRecipientName() != null)
+                                    ? prep.order().getShippingAddress().getRecipientName()
+                                    : "Valued Customer";
                     notificationEventService.recordEvent(
                             com.sporekart.notification.domain.NotificationEventType.REFUND_FAILED,
                             "ORDER",
                             orderId,
-                            order.getUserId(),
+                            prep.order().getUserId(),
                             recipientEmail,
                             recipientName,
-                            "Refund Dispatch Failed for Order #" + order.getOrderNumber(),
+                            "Refund Dispatch Failed for Order #" + prep.order().getOrderNumber(),
                             java.util.Map.of(
-                                    "orderNumber", order.getOrderNumber() != null ? order.getOrderNumber() : orderId.toString(),
-                                    "refundAmount", refundAmt.toString(),
+                                    "orderNumber",
+                                    prep.order().getOrderNumber() != null ? prep.order().getOrderNumber() : orderId.toString(),
+                                    "refundAmount", prep.refundAmt().toString(),
                                     "error", ex.getMessage() != null ? ex.getMessage() : "Gateway timeout",
-                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId
-                            ),
-                            "REFUND_FAILED:" + orderId + ":" + System.currentTimeMillis()
-                    );
+                                    "actionUrl", "/dashboard?tab=orders&orderId=" + orderId),
+                            "REFUND_FAILED:" + orderId + ":" + System.currentTimeMillis());
                 }
             } catch (Exception notifEx) {
-                log.warn("Failed to dispatch refund failure notification for order {}: {}", orderId, notifEx.getMessage());
+                log.warn("Failed to dispatch refund failure notification for order {}: {}", orderId,
+                        notifEx.getMessage());
             }
             return PaymentGateway.RefundResult.builder()
                     .refundId(null)
-                    .razorpayPaymentId(order.getRazorpayPaymentId())
-                    .amountInr(refundAmt)
+                    .razorpayPaymentId(prep.order().getRazorpayPaymentId())
+                    .amountInr(prep.refundAmt())
                     .status("PENDING")
                     .build();
         }
@@ -796,22 +951,28 @@ public class PaymentService {
                 Order orderEntity = orderOpt.get();
                 validateOrderAccess(orderEntity, userId, sessionId);
 
-                OrderAddressSnapshot shippingAddress = OrderAddressSnapshot.fromJson(orderEntity.getShippingAddressJson());
+                OrderAddressSnapshot shippingAddress = OrderAddressSnapshot
+                        .fromJson(orderEntity.getShippingAddressJson());
                 String city = (shippingAddress != null && shippingAddress.getCity() != null)
-                        ? shippingAddress.getCity() : "";
+                        ? shippingAddress.getCity()
+                        : "";
                 String state = (shippingAddress != null && shippingAddress.getState() != null)
-                        ? shippingAddress.getState() : "";
+                        ? shippingAddress.getState()
+                        : "";
                 String subtitle = (!city.isEmpty() || !state.isEmpty())
-                        ? (city + (city.isEmpty() || state.isEmpty() ? "" : ", ") + state) : "Delivery Order";
+                        ? (city + (city.isEmpty() || state.isEmpty() ? "" : ", ") + state)
+                        : "Delivery Order";
                 String statusStr = orderEntity.getStatus() != null ? orderEntity.getStatus().name() : "PENDING_PAYMENT";
-                String orderNo = orderEntity.getOrderNumber() != null ? orderEntity.getOrderNumber() : orderEntity.getId().toString().substring(0, 8);
+                String orderNo = orderEntity.getOrderNumber() != null ? orderEntity.getOrderNumber()
+                        : orderEntity.getId().toString().substring(0, 8);
 
                 return PaymentDtos.PaymentSummaryResponse.builder()
                         .type("ORDER")
                         .id(orderEntity.getId())
                         .title("Order #" + orderNo)
                         .subtitle(subtitle)
-                        .amountInr(orderEntity.getTotalAmountInr() != null ? orderEntity.getTotalAmountInr() : BigDecimal.ZERO)
+                        .amountInr(orderEntity.getTotalAmountInr() != null ? orderEntity.getTotalAmountInr()
+                                : BigDecimal.ZERO)
                         .status(statusStr)
                         .customerName(shippingAddress != null ? shippingAddress.getRecipientName() : null)
                         .customerPhone(shippingAddress != null ? shippingAddress.getPhone() : null)
@@ -826,13 +987,16 @@ public class PaymentService {
             if (enrollment != null) {
                 if (enrollment.getUserId() != null) {
                     if (userId == null || !userId.equals(enrollment.getUserId())) {
-                        throw new ForbiddenOperationException("Access denied: You are not authorized to access this training payment summary");
+                        throw new ForbiddenOperationException(
+                                "Access denied: You are not authorized to access this training payment summary");
                     }
                 }
                 String title = enrollment.getCourse() != null && enrollment.getCourse().getTitle() != null
-                        ? enrollment.getCourse().getTitle() : "Training Course";
+                        ? enrollment.getCourse().getTitle()
+                        : "Training Course";
                 String batchCode = enrollment.getBatch() != null && enrollment.getBatch().getBatchCode() != null
-                        ? enrollment.getBatch().getBatchCode() : "UPCOMING";
+                        ? enrollment.getBatch().getBatchCode()
+                        : "UPCOMING";
                 String statusStr = enrollment.getStatus() != null ? enrollment.getStatus().name() : "PENDING_PAYMENT";
 
                 return PaymentDtos.PaymentSummaryResponse.builder()
@@ -852,11 +1016,13 @@ public class PaymentService {
     private void validateOrderAccess(Order order, UUID userId, String sessionId) {
         if (order.getUserId() != null) {
             if (userId == null || !userId.equals(order.getUserId())) {
-                throw new ForbiddenOperationException("Access denied: You are not authorized to access this payment summary");
+                throw new ForbiddenOperationException(
+                        "Access denied: You are not authorized to access this payment summary");
             }
         } else {
             if (sessionId == null || sessionId.trim().isEmpty() || !sessionId.equals(order.getSessionId())) {
-                throw new ForbiddenOperationException("Access denied: You are not authorized to access this guest payment summary");
+                throw new ForbiddenOperationException(
+                        "Access denied: You are not authorized to access this guest payment summary");
             }
         }
     }
@@ -868,7 +1034,8 @@ public class PaymentService {
         }
         com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
         if (userId == null || !userId.equals(enrollment.getUserId())) {
-            throw new ForbiddenOperationException("Access denied: You are not authorized to initiate payment for this enrollment");
+            throw new ForbiddenOperationException(
+                    "Access denied: You are not authorized to initiate payment for this enrollment");
         }
 
         BigDecimal feeInr = enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO;
@@ -914,22 +1081,27 @@ public class PaymentService {
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
-    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request) {
+    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(
+            PaymentDtos.VerifyEnrollmentPaymentRequest request) {
         return verifyEnrollmentPayment(request, null);
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
-    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(PaymentDtos.VerifyEnrollmentPaymentRequest request, UUID callingUserId) {
+    public PaymentDtos.VerifyEnrollmentPaymentResponse verifyEnrollmentPayment(
+            PaymentDtos.VerifyEnrollmentPaymentRequest request, UUID callingUserId) {
         if (request.getEnrollmentId() == null) {
             throw new IllegalArgumentException("Enrollment ID is required");
         }
 
-        com.sporekart.training.domain.Enrollment enrollment = trainingService.getEnrollmentById(request.getEnrollmentId());
+        com.sporekart.training.domain.Enrollment enrollment = trainingService
+                .getEnrollmentById(request.getEnrollmentId());
 
         if (callingUserId == null || !callingUserId.equals(enrollment.getUserId())) {
-            log.error("ENROLLMENT PAYMENT FORGERY ATTEMPT: User {} attempted to verify payment for enrollment {} owned by user {}",
+            log.error(
+                    "ENROLLMENT PAYMENT FORGERY ATTEMPT: User {} attempted to verify payment for enrollment {} owned by user {}",
                     callingUserId, enrollment.getId(), enrollment.getUserId());
-            throw new ForbiddenOperationException("Access denied: You are not authorized to process payment for this training enrollment");
+            throw new ForbiddenOperationException(
+                    "Access denied: You are not authorized to process payment for this training enrollment");
         }
 
         // Idempotency: if already confirmed, return success
@@ -948,13 +1120,15 @@ public class PaymentService {
 
         BigDecimal feeInr = enrollment.getFeePaidInr() != null ? enrollment.getFeePaidInr() : BigDecimal.ZERO;
         String rzpOrderId = request.getRazorpayOrderId();
-        String rzpPaymentId = request.getRazorpayPaymentId() != null ? request.getRazorpayPaymentId() : request.getTransactionReference();
+        String rzpPaymentId = request.getRazorpayPaymentId() != null ? request.getRazorpayPaymentId()
+                : request.getTransactionReference();
         String signature = request.getRazorpaySignature();
 
         if (feeInr.compareTo(BigDecimal.ZERO) <= 0) {
             // Free enrollment bypass/confirmation
             String ref = (rzpPaymentId != null && !rzpPaymentId.trim().isEmpty()) ? rzpPaymentId : "FREE_ENROLLMENT";
-            com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(enrollment.getId(), ref);
+            com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService
+                    .confirmEnrollmentPayment(enrollment.getId(), ref);
             return PaymentDtos.VerifyEnrollmentPaymentResponse.builder()
                     .isSuccess(true)
                     .message("Free training enrollment confirmed")
@@ -963,20 +1137,33 @@ public class PaymentService {
                     .build();
         }
 
-        // Paid course enrollment: strictly require all Razorpay parameters and verify signature
-        if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Razorpay Order ID is required for paid enrollment verification");
-        }
-        if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Razorpay Payment ID is required for paid enrollment verification");
-        }
-        if (signature == null || signature.trim().isEmpty()) {
-            throw new IllegalArgumentException("Razorpay Signature is required for paid enrollment verification");
-        }
-        boolean validSig = paymentGateway.verifySignature(rzpOrderId, rzpPaymentId, signature);
-        if (!validSig) {
-            log.error("Invalid signature on enrollment payment. Order: {}, Payment: {}", rzpOrderId, rzpPaymentId);
-            throw new IllegalArgumentException("Invalid Razorpay payment signature for training enrollment");
+        // Paid course enrollment:
+        if (paymentGateway.isMockMode()) {
+            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Transaction reference is required for payment verification");
+            }
+            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
+                rzpOrderId = "ENROLLMENT-" + enrollment.getId();
+            }
+            if (signature == null || signature.trim().isEmpty()) {
+                signature = "mock_signature";
+            }
+        } else {
+            // Production / non-mock mode: strictly require all Razorpay parameters and verify signature
+            if (rzpOrderId == null || rzpOrderId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Order ID is required for paid enrollment verification");
+            }
+            if (rzpPaymentId == null || rzpPaymentId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Payment ID is required for paid enrollment verification");
+            }
+            if (signature == null || signature.trim().isEmpty()) {
+                throw new IllegalArgumentException("Razorpay Signature is required for paid enrollment verification");
+            }
+            boolean validSig = paymentGateway.verifySignature(rzpOrderId, rzpPaymentId, signature);
+            if (!validSig) {
+                log.error("Invalid signature on enrollment payment. Order: {}, Payment: {}", rzpOrderId, rzpPaymentId);
+                throw new IllegalArgumentException("Invalid Razorpay payment signature for training enrollment");
+            }
         }
 
         // Look up or link the Payment entity
@@ -1005,13 +1192,15 @@ public class PaymentService {
         PaymentEvent event = PaymentEvent.builder()
                 .payment(payment)
                 .eventType("ENROLLMENT_PAYMENT_CAPTURED")
-                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"paymentReference\":\"" + rzpPaymentId + "\"}")
+                .eventDataJson("{\"enrollmentId\":\"" + enrollment.getId() + "\",\"paymentReference\":\"" + rzpPaymentId
+                        + "\"}")
                 .createdBy("FRONTEND_ENROLLMENT_VERIFY")
                 .build();
         payment.addEvent(event);
         paymentRepository.save(payment);
 
-        com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService.confirmEnrollmentPayment(request.getEnrollmentId(), rzpPaymentId);
+        com.sporekart.training.domain.Enrollment confirmedEnrollment = trainingService
+                .confirmEnrollmentPayment(request.getEnrollmentId(), rzpPaymentId);
 
         recordMetric("payment.verified.success.total", "channel", "ENROLLMENT");
 

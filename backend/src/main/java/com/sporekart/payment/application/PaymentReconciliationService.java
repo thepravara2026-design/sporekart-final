@@ -36,6 +36,9 @@ public class PaymentReconciliationService {
     private final com.sporekart.notification.application.NotificationEventService notificationEventService;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private io.micrometer.core.instrument.MeterRegistry meterRegistry;
 
     private void recordMetric(String name, String... tags) {
@@ -63,15 +66,16 @@ public class PaymentReconciliationService {
         try {
             RefundReconciliationReport refundReport = reconcilePendingRefunds(OffsetDateTime.now().minusMinutes(15));
             log.info("Refund reconciliation finished: checked={}, reconciledProcessed={}, reconciledFailed={}",
-                    refundReport.getRefundsChecked(), refundReport.getRefundsProcessed(), refundReport.getRefundsFailed());
+                    refundReport.getRefundsChecked(), refundReport.getRefundsProcessed(),
+                    refundReport.getRefundsFailed());
         } catch (Exception e) {
             log.error("Error during scheduled refund reconciliation: {}", e.getMessage(), e);
         }
     }
 
-    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public ReconciliationReport reconcileStuckPayments(OffsetDateTime cutoff) {
-        List<Payment> initiatedPayments = paymentRepository.findByStatusAndCreatedAtBefore(PaymentStatus.INITIATED, cutoff);
+        List<Payment> initiatedPayments = paymentRepository.findByStatusAndCreatedAtBefore(PaymentStatus.INITIATED,
+                cutoff);
 
         int checked = 0;
         int captured = 0;
@@ -82,34 +86,50 @@ public class PaymentReconciliationService {
             String paymentId = payment.getRazorpayPaymentId();
             if (paymentId != null && !paymentId.isBlank()) {
                 try {
+                    // Outbound HTTP call executed outside database transaction boundary
                     PaymentGateway.GatewayPaymentDetails details = paymentGateway.fetchPayment(paymentId);
                     if (details != null && "captured".equalsIgnoreCase(details.getStatus())) {
-                        payment.setStatus(PaymentStatus.CAPTURED);
-                        PaymentEvent event = PaymentEvent.builder()
-                                .payment(payment)
-                                .eventType("RECONCILIATION_AUTO_CAPTURED")
-                                .eventDataJson("{\"gatewayStatus\":\"captured\"}")
-                                .createdBy("RECONCILIATION_SERVICE")
-                                .build();
-                        payment.addEvent(event);
-                        paymentRepository.save(payment);
+                        Runnable updateTask = () -> {
+                            payment.setStatus(PaymentStatus.CAPTURED);
+                            PaymentEvent event = PaymentEvent.builder()
+                                    .payment(payment)
+                                    .eventType("RECONCILIATION_AUTO_CAPTURED")
+                                    .eventDataJson("{\"gatewayStatus\":\"captured\"}")
+                                    .createdBy("RECONCILIATION_SERVICE")
+                                    .build();
+                            payment.addEvent(event);
+                            paymentRepository.save(payment);
 
-                        if (payment.getOrderId() != null) {
-                            orderService.setRazorpayPaymentId(payment.getOrderId(), paymentId);
-                            orderService.updateOrderStatus(payment.getOrderId(), OrderStatus.PAID, "Payment auto-reconciled via background job", "RECONCILIATION_SERVICE");
-                            orderService.confirmOrderInventory(payment.getOrderId());
-                            eventPublisher.publishEvent(PaymentCapturedEvent.builder()
-                                    .paymentId(payment.getId())
-                                    .orderId(payment.getOrderId())
-                                    .amountInr(payment.getAmountInr())
-                                    .razorpayPaymentId(paymentId)
-                                    .build());
+                            if (payment.getOrderId() != null) {
+                                orderService.setRazorpayPaymentId(payment.getOrderId(), paymentId);
+                                orderService.updateOrderStatus(payment.getOrderId(), OrderStatus.PAID,
+                                        "Payment auto-reconciled via background job", "RECONCILIATION_SERVICE");
+                                orderService.confirmOrderInventory(payment.getOrderId());
+                                eventPublisher.publishEvent(PaymentCapturedEvent.builder()
+                                        .paymentId(payment.getId())
+                                        .orderId(payment.getOrderId())
+                                        .amountInr(payment.getAmountInr())
+                                        .razorpayPaymentId(paymentId)
+                                        .build());
+                            }
+                        };
+                        if (transactionTemplate != null) {
+                            transactionTemplate.executeWithoutResult(status -> updateTask.run());
+                        } else {
+                            updateTask.run();
                         }
                         captured++;
                         recordMetric("payment.reconciliation.auto_captured.total");
                     } else if (details != null && "failed".equalsIgnoreCase(details.getStatus())) {
-                        payment.setStatus(PaymentStatus.FAILED);
-                        paymentRepository.save(payment);
+                        Runnable failTask = () -> {
+                            payment.setStatus(PaymentStatus.FAILED);
+                            paymentRepository.save(payment);
+                        };
+                        if (transactionTemplate != null) {
+                            transactionTemplate.executeWithoutResult(status -> failTask.run());
+                        } else {
+                            failTask.run();
+                        }
                         failed++;
                         recordMetric("payment.reconciliation.failed.total");
                     }
@@ -117,9 +137,26 @@ public class PaymentReconciliationService {
                     log.warn("Could not fetch gateway status for payment {}: {}", paymentId, ex.getMessage());
                 }
             } else if (payment.getCreatedAt().isBefore(OffsetDateTime.now().minusHours(2))) {
-                // Initiated payments with no payment attempt after 2 hours marked as expired/failed
-                payment.setStatus(PaymentStatus.FAILED);
-                paymentRepository.save(payment);
+                // Initiated payments with no payment attempt after 2 hours marked as
+                // expired/failed
+                Runnable expireTask = () -> {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(payment);
+                    if (payment.getOrderId() != null) {
+                        try {
+                            orderService.cancelOrder(payment.getOrderId(), "Payment attempt expired after 2 hours",
+                                    "RECONCILIATION_SERVICE", false);
+                        } catch (Exception ex) {
+                            log.warn("Could not auto-cancel expired order {}: {}", payment.getOrderId(),
+                                    ex.getMessage());
+                        }
+                    }
+                };
+                if (transactionTemplate != null) {
+                    transactionTemplate.executeWithoutResult(status -> expireTask.run());
+                } else {
+                    expireTask.run();
+                }
                 failed++;
                 recordMetric("payment.reconciliation.expired.total");
             }
@@ -132,9 +169,9 @@ public class PaymentReconciliationService {
                 .build();
     }
 
-    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public RefundReconciliationReport reconcilePendingRefunds(OffsetDateTime cutoff) {
-        List<com.sporekart.payment.domain.Refund> pendingRefunds = refundRepository.findByStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
+        List<com.sporekart.payment.domain.Refund> pendingRefunds = refundRepository
+                .findByStatus(com.sporekart.payment.domain.RefundStatus.PENDING);
 
         int checked = 0;
         int reconciledProcessed = 0;
@@ -145,81 +182,102 @@ public class PaymentReconciliationService {
             String rzpRefundId = refund.getRazorpayRefundId();
             if (rzpRefundId != null && !rzpRefundId.isBlank()) {
                 try {
+                    // Outbound HTTP call executed outside database transaction boundary
                     PaymentGateway.GatewayRefundDetails details = paymentGateway.fetchRefund(rzpRefundId);
                     if (details != null && "processed".equalsIgnoreCase(details.getStatus())) {
-                        refund.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
-                        refundRepository.save(refund);
+                        Runnable processRefundTask = () -> {
+                            refund.setStatus(com.sporekart.payment.domain.RefundStatus.PROCESSED);
+                            refundRepository.save(refund);
 
-                        Payment payment = refund.getPayment();
-                        if (payment != null) {
-                            BigDecimal totalRefunded = null;
-                            try {
-                                totalRefunded = refundRepository.sumRefundedAmountByPaymentIdAndStatuses(
-                                        payment.getId(),
-                                        java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED)
-                                );
-                            } catch (Exception ignored) {
-                            }
-                            boolean isFullRefund = (totalRefunded == null || payment.getAmountInr() == null || totalRefunded.compareTo(payment.getAmountInr()) >= 0);
-                            payment.setStatus(isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
-                            PaymentEvent event = PaymentEvent.builder()
-                                    .payment(payment)
-                                    .eventType("RECONCILIATION_REFUND_PROCESSED")
-                                    .eventDataJson("{\"gatewayStatus\":\"processed\",\"refundId\":\"" + rzpRefundId + "\"}")
-                                    .createdBy("RECONCILIATION_SERVICE")
-                                    .build();
-                            payment.addEvent(event);
-                            paymentRepository.save(payment);
+                            Payment payment = refund.getPayment();
+                            if (payment != null) {
+                                BigDecimal totalRefunded = null;
+                                try {
+                                    totalRefunded = refundRepository.sumRefundedAmountByPaymentIdAndStatuses(
+                                            payment.getId(),
+                                            java.util.List.of(com.sporekart.payment.domain.RefundStatus.PROCESSED));
+                                } catch (Exception ignored) {
+                                }
+                                boolean isFullRefund = (totalRefunded == null || payment.getAmountInr() == null
+                                        || totalRefunded.compareTo(payment.getAmountInr()) >= 0);
+                                payment.setStatus(
+                                        isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
+                                PaymentEvent event = PaymentEvent.builder()
+                                        .payment(payment)
+                                        .eventType("RECONCILIATION_REFUND_PROCESSED")
+                                        .eventDataJson("{\"gatewayStatus\":\"processed\",\"refundId\":\"" + rzpRefundId
+                                                + "\"}")
+                                        .createdBy("RECONCILIATION_SERVICE")
+                                        .build();
+                                payment.addEvent(event);
+                                paymentRepository.save(payment);
 
-                            if (payment.getOrderId() != null) {
-                                orderService.updateOrderStatus(
-                                        payment.getOrderId(),
-                                        isFullRefund ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING,
-                                        "Refund auto-reconciled via background job (Ref: " + rzpRefundId + ")",
-                                        "RECONCILIATION_SERVICE"
-                                );
+                                if (payment.getOrderId() != null) {
+                                    orderService.updateOrderStatus(
+                                            payment.getOrderId(),
+                                            isFullRefund ? OrderStatus.REFUNDED : OrderStatus.REFUND_PENDING,
+                                            "Refund auto-reconciled via background job (Ref: " + rzpRefundId + ")",
+                                            "RECONCILIATION_SERVICE");
+                                }
                             }
+                        };
+                        if (transactionTemplate != null) {
+                            transactionTemplate.executeWithoutResult(status -> processRefundTask.run());
+                        } else {
+                            processRefundTask.run();
                         }
                         reconciledProcessed++;
                         recordMetric("refund.reconciliation.auto_processed.total");
                     } else if (details != null && "failed".equalsIgnoreCase(details.getStatus())) {
-                        refund.setStatus(com.sporekart.payment.domain.RefundStatus.FAILED);
-                        refund.setFailureReason("Gateway reported refund failed during reconciliation");
-                        refundRepository.save(refund);
+                        Runnable failRefundTask = () -> {
+                            refund.setStatus(com.sporekart.payment.domain.RefundStatus.FAILED);
+                            refund.setFailureReason("Gateway reported refund failed during reconciliation");
+                            refundRepository.save(refund);
+
+                            if (notificationEventService != null && refund.getOrderId() != null) {
+                                try {
+                                    var ord = orderService.getOrderById(refund.getOrderId());
+                                    String recipientEmail = ord.getShippingAddress() != null
+                                            ? ord.getShippingAddress().getEmail()
+                                            : null;
+                                    String recipientName = (ord.getShippingAddress() != null
+                                            && ord.getShippingAddress().getRecipientName() != null)
+                                                    ? ord.getShippingAddress().getRecipientName()
+                                                    : "Valued Customer";
+                                    notificationEventService.recordEvent(
+                                            com.sporekart.notification.domain.NotificationEventType.REFUND_FAILED,
+                                            "ORDER",
+                                            refund.getOrderId(),
+                                            ord.getUserId(),
+                                            recipientEmail,
+                                            recipientName,
+                                            "Refund Failed: Order #" + ord.getOrderNumber() + " ⚠️",
+                                            java.util.Map.of(
+                                                    "orderNumber", ord.getOrderNumber(),
+                                                    "refundId", rzpRefundId != null ? rzpRefundId : "N/A",
+                                                    "actionUrl",
+                                                    "/dashboard?tab=orders&orderId=" + refund.getOrderId()),
+                                            "REFUND_FAILED:" + refund.getId());
+                                } catch (Exception notifEx) {
+                                    log.warn("Failed to dispatch refund failure notification: {}",
+                                            notifEx.getMessage());
+                                }
+                            }
+                        };
+                        if (transactionTemplate != null) {
+                            transactionTemplate.executeWithoutResult(status -> failRefundTask.run());
+                        } else {
+                            failRefundTask.run();
+                        }
                         reconciledFailed++;
                         recordMetric("refund.reconciliation.failed.total");
-
-                        if (notificationEventService != null && refund.getOrderId() != null) {
-                            try {
-                                var ord = orderService.getOrderById(refund.getOrderId());
-                                String recipientEmail = ord.getShippingAddress() != null ? ord.getShippingAddress().getEmail() : null;
-                                String recipientName = (ord.getShippingAddress() != null && ord.getShippingAddress().getRecipientName() != null)
-                                        ? ord.getShippingAddress().getRecipientName() : "Valued Customer";
-                                notificationEventService.recordEvent(
-                                        com.sporekart.notification.domain.NotificationEventType.REFUND_FAILED,
-                                        "ORDER",
-                                        refund.getOrderId(),
-                                        ord.getUserId(),
-                                        recipientEmail,
-                                        recipientName,
-                                        "Refund Failed: Order #" + ord.getOrderNumber() + " ⚠️",
-                                        java.util.Map.of(
-                                                "orderNumber", ord.getOrderNumber(),
-                                                "refundId", rzpRefundId != null ? rzpRefundId : "N/A",
-                                                "actionUrl", "/dashboard?tab=orders&orderId=" + refund.getOrderId()
-                                        ),
-                                        "REFUND_FAILED:" + refund.getId()
-                                );
-                            } catch (Exception notifEx) {
-                                log.warn("Failed to dispatch refund failure notification: {}", notifEx.getMessage());
-                            }
-                        }
                     }
                 } catch (Exception ex) {
                     log.warn("Could not fetch gateway status for refund {}: {}", rzpRefundId, ex.getMessage());
                 }
             } else if (refund.getCreatedAt() != null && cutoff != null && refund.getCreatedAt().isBefore(cutoff)) {
-                // Refund was never dispatched successfully to gateway and has exceeded timeout cutoff
+                // Refund was never dispatched successfully to gateway and has exceeded timeout
+                // cutoff
                 refund.setStatus(com.sporekart.payment.domain.RefundStatus.FAILED);
                 if (refund.getFailureReason() == null || refund.getFailureReason().isBlank()) {
                     refund.setFailureReason("Gateway refund dispatch timed out or failed without gateway refund ID");

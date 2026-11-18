@@ -90,6 +90,36 @@ public class ShiprocketDtos {
         @Builder.Default
         private boolean shippingIsBilling = true;
 
+        @JsonProperty("shipping_customer_name")
+        private String shippingCustomerName;
+
+        @JsonProperty("shipping_last_name")
+        private String shippingLastName;
+
+        @JsonProperty("shipping_address")
+        private String shippingAddress;
+
+        @JsonProperty("shipping_address_2")
+        private String shippingAddress2;
+
+        @JsonProperty("shipping_city")
+        private String shippingCity;
+
+        @JsonProperty("shipping_pincode")
+        private String shippingPincode;
+
+        @JsonProperty("shipping_country")
+        private String shippingCountry;
+
+        @JsonProperty("shipping_state")
+        private String shippingState;
+
+        @JsonProperty("shipping_email")
+        private String shippingEmail;
+
+        @JsonProperty("shipping_phone")
+        private String shippingPhone;
+
         @JsonProperty("order_items")
         private List<ShiprocketOrderItemDto> orderItems;
 

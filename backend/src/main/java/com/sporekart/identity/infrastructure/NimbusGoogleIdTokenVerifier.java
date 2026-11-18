@@ -44,6 +44,9 @@ public class NimbusGoogleIdTokenVerifier implements GoogleIdTokenVerifier {
     @Value("${app.google.jwks-url:" + DEFAULT_GOOGLE_JWKS_URL + "}")
     private String googleJwksUrl;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.core.env.Environment environment;
+
     private ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
     @PostConstruct
@@ -85,11 +88,15 @@ public class NimbusGoogleIdTokenVerifier implements GoogleIdTokenVerifier {
 
             // 2. Verify Audience
             List<String> audience = claimsSet.getAudience();
+            boolean isProd = environment != null && environment.acceptsProfiles(org.springframework.core.env.Profiles.of("prod", "production"));
             if (StringUtils.hasText(googleClientId)) {
                 if (audience == null || !audience.contains(googleClientId)) {
                     throw new BadCredentialsException("Google ID token audience mismatch");
                 }
             } else {
+                if (isProd) {
+                    throw new BadCredentialsException("FAIL-CLOSED: Google ID token audience check failed - GOOGLE_CLIENT_ID is unconfigured in production");
+                }
                 log.warn("GOOGLE_CLIENT_ID not configured; audience check skipped in non-prod configuration");
             }
 

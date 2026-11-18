@@ -19,6 +19,8 @@ public interface ShippingProvider {
 
     String generateLabel(String providerShipmentId, String awbCode);
 
+    boolean isMockMode();
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -34,6 +36,15 @@ public interface ShippingProvider {
         private String city;
         private String state;
         private String pincode;
+        private String country;
+        private String billingCustomerName;
+        private String billingPhone;
+        private String billingAddressLine1;
+        private String billingAddressLine2;
+        private String billingCity;
+        private String billingState;
+        private String billingPincode;
+        private String billingCountry;
         private BigDecimal totalAmountInr;
         private BigDecimal weightKg;
         private BigDecimal lengthCm;

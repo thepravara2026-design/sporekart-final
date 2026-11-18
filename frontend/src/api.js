@@ -336,24 +336,18 @@ export const adminApi = {
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
 };
 
+// RETIRED SERVICE: Customer wallet operations permanently retired (V41)
 export const walletApi = {
-  getWallet: () => api.get('/wallet'),
-  getBalance: () => api.get('/wallet/balance'),
-  getTransactions: (params) => api.get('/wallet/transactions', { params }),
-  requestWithdrawal: (data) => api.post('/wallet/withdraw', data),
-  getWithdrawals: () => api.get('/wallet/withdrawals'),
-  addMoney: (data) => api.post('/wallet/add-money', data),
-  verifyAddMoney: (data, amount) => api.post('/wallet/verify-add-money', data, { params: { amount } }),
-  checkoutPay: (data) => api.post('/wallet/checkout-pay', data),
+  getWallet: () => Promise.reject(new Error('Wallet service is permanently retired.')),
+  getBalance: () => Promise.resolve({ data: { success: true, data: 0 } }),
+  getTransactions: () => Promise.resolve({ data: { success: true, data: [] } }),
+  getWithdrawals: () => Promise.resolve({ data: { success: true, data: [] } }),
 };
 
 export const adminFinanceApi = {
   getOverview: () => api.get('/admin/finance/overview'),
   getTransactions: (params) => api.get('/admin/finance/transactions', { params }),
   getWithdrawals: (params) => api.get('/admin/finance/withdrawals', { params }),
-  approveWithdrawal: (id, notes) => api.post(`/admin/finance/withdrawals/${id}/approve`, { notes }),
-  rejectWithdrawal: (id, rejectionReason) => api.post(`/admin/finance/withdrawals/${id}/reject`, { rejectionReason }),
-  performManualAdjustment: (data) => api.post('/admin/finance/manual-adjustment', data),
 };
 
 export const analyticsApi = {

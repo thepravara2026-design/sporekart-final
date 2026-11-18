@@ -6,7 +6,7 @@ import {
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
   CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
 } from 'lucide-react';
-import { orderApi, trainingApi, customerApi, supportApi, walletApi, shippingApi } from '../api';
+import { orderApi, trainingApi, customerApi, supportApi, shippingApi } from '../api';
 import SeoHead from '../components/SeoHead';
 import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';
@@ -39,10 +39,6 @@ export default function DashboardPage({ user, setUser }) {
   const [bookings, setBookings] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const [walletTxns, setWalletTxns] = useState([]);
-  const [walletWithdrawals, setWalletWithdrawals] = useState([]);
-  const [walletTxnFilter, setWalletTxnFilter] = useState('ALL');
-  const [walletTxnSearch, setWalletTxnSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [reviewModalItem, setReviewModalItem] = useState(null);
@@ -114,13 +110,11 @@ export default function DashboardPage({ user, setUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [orderRes, bookingRes, addrRes, ticketRes, txnRes, wdRes] = await Promise.allSettled([
+      const [orderRes, bookingRes, addrRes, ticketRes] = await Promise.allSettled([
         orderApi.getUserOrders(),
         trainingApi.getUserBookings(),
         customerApi.getAddresses(),
         supportApi.getUserTickets(),
-        walletApi.getTransactions({ page: 0, size: 50 }),
-        walletApi.getWithdrawals(),
       ]);
 
       if (orderRes.status === 'fulfilled') {
@@ -138,13 +132,6 @@ export default function DashboardPage({ user, setUser }) {
       if (ticketRes.status === 'fulfilled') {
         const d = ticketRes.value.data?.data;
         setTickets(Array.isArray(d) ? d : (d?.content || []));
-      }
-      if (txnRes.status === 'fulfilled') {
-        const d = txnRes.value.data?.data;
-        setWalletTxns(Array.isArray(d) ? d : (d?.content || []));
-      }
-      if (wdRes.status === 'fulfilled') {
-        setWalletWithdrawals(wdRes.value.data?.data || []);
       }
     } catch (err) {
       console.error('Failed to load dashboard portal data:', err);
@@ -186,8 +173,8 @@ export default function DashboardPage({ user, setUser }) {
     } else if (urlBookingId) {
       setActiveTab('trainings');
     } else if (urlTab) {
-      const normalizedTab = urlTab === 'orders' ? 'activeTrack' : urlTab === 'training' ? 'trainings' : (urlTab === 'wallet' || urlTab === 'ledger') ? 'ledger' : urlTab;
-      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'ledger', 'wallet', 'support', 'reviews'];
+      const normalizedTab = urlTab === 'orders' ? 'activeTrack' : urlTab === 'training' ? 'trainings' : (urlTab === 'wallet' || urlTab === 'ledger') ? 'activeTrack' : urlTab;
+      const validTabs = ['activeTrack', 'history', 'trainings', 'addresses', 'support', 'reviews'];
       if (validTabs.includes(normalizedTab)) {
         setActiveTab(normalizedTab);
       }
@@ -512,7 +499,7 @@ export default function DashboardPage({ user, setUser }) {
             </div>
             <h2 className="text-2xl font-display font-extrabold text-forest-900">Sign In Required</h2>
             <p className="text-xs text-typography-secondary max-w-sm mx-auto">
-              You opened a secure notification link ({urlTab ? `View ${urlTab.toUpperCase()}` : 'Order Tracking / Wallet'}). Please sign in using your registered mobile number, email, or Google account to access your account details.
+              You opened a secure notification link ({urlTab ? `View ${urlTab.toUpperCase()}` : 'Order Tracking / Account'}). Please sign in using your registered mobile number, email, or Google account to access your account details.
             </p>
           </div>
 
@@ -798,17 +785,6 @@ export default function DashboardPage({ user, setUser }) {
           }`}
         >
           <MapPin className="w-4 h-4 text-forest-700" /> Delivery Addresses ({addresses.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ledger')}
-          className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all ${
-            activeTab === 'ledger' || activeTab === 'wallet'
-              ? 'btn-primary text-white shadow-level-1'
-              : 'text-typography-secondary hover:text-typography-primary bg-surface-white border border-surface-border'
-          }`}
-        >
-          <CreditCard className="w-4 h-4 text-forest-700" /> Payments &amp; Financial Ledger
         </button>
 
         <button
@@ -1581,165 +1557,6 @@ export default function DashboardPage({ user, setUser }) {
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* TAB 6: PAYMENTS & FINANCIAL LEDGER */}
-      {(activeTab === 'ledger' || activeTab === 'wallet') && (
-        <div className="space-y-6">
-          {/* Direct Razorpay Settlement & Gateway Assurance Banner */}
-          <div className="bg-gradient-to-r from-forest-900 via-forest-800 to-forest-900 text-white p-6 sm:p-8 rounded-card border border-forest-700 shadow-level-2 relative overflow-hidden">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-              <div className="space-y-2 max-w-2xl">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 bg-leaf/20 text-leaf text-[10px] font-bold rounded-lg border border-leaf/30 uppercase tracking-wider">
-                    Authoritative Gateway Architecture
-                  </span>
-                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-lg border border-emerald-400/30 uppercase tracking-wider">
-                    Zero Middleman Balances
-                  </span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black font-display text-white">
-                  Direct Razorpay Settlement &amp; Authoritative Gateway Refunds
-                </h2>
-                <p className="text-xs text-sage leading-relaxed">
-                  All customer payments and eligible cancellation refunds process directly through RBI-authorized Razorpay gateway rails to and from your original payment instruments (UPI, Cards, NetBanking). Sporekart does not retain customer wallet deposits or spendable balances.
-                </p>
-              </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center shrink-0 min-w-[200px]">
-                <ShieldCheck className="w-8 h-8 text-leaf mx-auto mb-1" />
-                <span className="text-xs font-bold text-white block">100% Gateway Protected</span>
-                <span className="text-[10px] text-sage block mt-0.5">5-7 Business Days Bank Refunds</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Pending Withdrawal Requests Banner */}
-          {walletWithdrawals.length > 0 && (
-            <div className="bg-surface-white p-6 rounded-card border border-surface-border space-y-3 shadow-level-1">
-              <h3 className="font-bold text-typography-primary text-sm uppercase tracking-wider flex items-center gap-2">
-                <ArrowUpRight className="w-4 h-4 text-forest-700" /> Historical Bank Withdrawal Archive
-              </h3>
-              <div className="divide-y divide-surface-border">
-                {walletWithdrawals.map((wd) => (
-                  <div key={wd.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-typography-primary">{wd.withdrawalReference}</span>
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border uppercase ${
-                          wd.status === 'SUCCESS' ? 'bg-green-600/10 text-green-700 border-green-600/20' :
-                          wd.status === 'REVERSED' ? 'bg-red-600/10 text-red-700 border-red-600/20' : 'bg-amber-600/10 text-amber-700 border-amber-600/20'
-                        }`}>
-                          {wd.status}
-                        </span>
-                      </div>
-                      <p className="text-typography-muted">
-                        Bank: <strong className="text-typography-primary">{wd.bankName}</strong> ({wd.accountNumberMasked}) • Requested on {new Date(wd.createdAt).toLocaleDateString()}
-                      </p>
-                      {wd.rejectionReason && (
-                        <p className="text-red-700 text-[11px]">Rejection Reason: {wd.rejectionReason}</p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className="font-mono font-extrabold text-red-700 text-sm block">₹{wd.amount}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Wallet Transaction Ledger Desk */}
-          <div className="bg-surface-white p-6 sm:p-8 rounded-card border border-surface-border space-y-6 shadow-level-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-4">
-              <div>
-                <h3 className="font-display font-extrabold text-lg text-typography-primary flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-forest-700" /> Immutable Financial Transaction Ledger
-                </h3>
-                <p className="text-xs text-typography-secondary">Complete auditable record of all credits, debits, order refunds, and training payments.</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Search Ref / Order ID..."
-                  value={walletTxnSearch}
-                  onChange={(e) => setWalletTxnSearch(e.target.value)}
-                  className="bg-surface-cream border border-surface-border rounded-xl px-3 py-1.5 text-xs text-typography-primary focus:outline-none focus:border-forest-700"
-                />
-              </div>
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              {['ALL', 'CREDIT', 'DEBIT', 'REFUND', 'WALLET_PAYMENT', 'WITHDRAWAL', 'TOPUP'].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setWalletTxnFilter(filter)}
-                  className={`px-3 py-1.5 rounded-xl border transition-all ${
-                    walletTxnFilter === filter
-                      ? 'btn-primary text-white'
-                      : 'bg-surface-white text-typography-secondary border-surface-border hover:bg-surface-cream'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-
-            {/* Ledger Table */}
-            <div className="w-full overflow-x-auto rounded-2xl border border-surface-border scrollbar-thin">
-              <table className="w-full text-left text-xs text-typography-secondary min-w-[750px]">
-                <thead className="bg-surface-cream text-typography-primary uppercase font-semibold border-b border-surface-border">
-                  <tr>
-                    <th className="p-3.5">Txn Reference</th>
-                    <th className="p-3.5">Date &amp; Time</th>
-                    <th className="p-3.5">Type &amp; Source</th>
-                    <th className="p-3.5">Description</th>
-                    <th className="p-3.5">Amount</th>
-                    <th className="p-3.5">Balance Ledger</th>
-                    <th className="p-3.5">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-border">
-                  {walletTxns
-                    .filter(t => (walletTxnFilter === 'ALL' || t.transactionType === walletTxnFilter) && (!walletTxnSearch || t.transactionReference?.toLowerCase().includes(walletTxnSearch.toLowerCase()) || t.description?.toLowerCase().includes(walletTxnSearch.toLowerCase())))
-                    .map((t) => {
-                      const isCredit = t.transactionDirection === 'CREDIT';
-                      return (
-                        <tr key={t.id} className="hover:bg-surface-cream/50">
-                          <td className="p-3.5 font-mono font-bold text-typography-primary whitespace-nowrap">{t.transactionReference}</td>
-                          <td className="p-3.5 text-typography-muted whitespace-nowrap">{new Date(t.createdAt).toLocaleString()}</td>
-                          <td className="p-3.5 whitespace-nowrap">
-                            <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border uppercase inline-flex items-center gap-1 ${
-                              isCredit ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-red-600/10 text-red-700 border-red-600/20'
-                            }`}>
-                              {isCredit ? <ArrowDownLeft className="w-3 h-3 text-green-600" /> : <ArrowUpRight className="w-3 h-3 text-red-600" />}
-                              {t.transactionType}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-typography-primary max-w-xs">{t.description}</td>
-                          <td className={`p-3.5 font-mono font-extrabold whitespace-nowrap ${isCredit ? 'text-green-700' : 'text-red-700'}`}>
-                            {isCredit ? '+' : '-'}₹{t.amount}
-                          </td>
-                          <td className="p-3.5 font-mono text-typography-muted whitespace-nowrap text-[11px]">
-                            ₹{t.balanceBefore} → <strong className="text-typography-primary font-bold">₹{t.balanceAfter}</strong>
-                          </td>
-                          <td className="p-3.5 whitespace-nowrap">
-                            <span className="px-2 py-0.5 bg-green-600/10 text-green-700 border border-green-600/20 text-[10px] font-bold rounded-lg uppercase">
-                              {t.status || 'SUCCESS'}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  {walletTxns.length === 0 && (
-                    <tr><td colSpan={7} className="p-6 text-center text-typography-muted">No wallet financial transactions recorded yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 

@@ -192,4 +192,35 @@ class SupportServiceUnitTest {
                 anyString()
         );
     }
+
+    @Test
+    @DisplayName("SEC-005: Support ticket message exceeding 5000 chars violates validation constraint")
+    void SEC_005_supportTicketMessageLengthViolation() {
+        jakarta.validation.Validator validator = jakarta.validation.Validation.buildDefaultValidatorFactory().getValidator();
+
+        com.sporekart.support.api.SupportController.CreateTicketRequest req = new com.sporekart.support.api.SupportController.CreateTicketRequest();
+        req.setSubject("Valid Subject");
+        req.setMessage("a".repeat(5001)); // Exceeds 5000 characters
+
+        java.util.Set<jakarta.validation.ConstraintViolation<com.sporekart.support.api.SupportController.CreateTicketRequest>> violations =
+                validator.validate(req);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("message") && v.getMessage().contains("5000")));
+    }
+
+    @Test
+    @DisplayName("SEC-005: Ticket message addition exceeding 5000 chars violates validation constraint")
+    void SEC_005_addMessageLengthViolation() {
+        jakarta.validation.Validator validator = jakarta.validation.Validation.buildDefaultValidatorFactory().getValidator();
+
+        com.sporekart.support.api.SupportController.AddMessageRequest req = new com.sporekart.support.api.SupportController.AddMessageRequest();
+        req.setMessage("a".repeat(5001)); // Exceeds 5000 characters
+
+        java.util.Set<jakarta.validation.ConstraintViolation<com.sporekart.support.api.SupportController.AddMessageRequest>> violations =
+                validator.validate(req);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("message") && v.getMessage().contains("5000")));
+    }
 }

@@ -226,4 +226,68 @@ public class ShippingControllerSecurityIntegrationTest {
                 .andExpect(jsonPath("$.data.shipmentId").value(shipmentId.toString()))
                 .andExpect(jsonPath("$.data.labelUrl").value("https://track.shiprocket.in/label/AWB-123"));
     }
+
+    @Test
+    @DisplayName("SEC-11: Guest shipment details denied when X-Session-ID is missing or mismatched (403 Forbidden)")
+    void testGetShipmentByOrder_guestSessionMismatched_forbidden() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        String validSession = "session-valid-guest-123";
+        String attackerSession = "session-attacker-456";
+
+        Shipment mockShipment = Shipment.builder()
+                .id(UUID.randomUUID())
+                .orderId(orderId)
+                .orderNumber("ORD-GUEST-01")
+                .status(ShipmentStatus.IN_TRANSIT)
+                .build();
+
+        OrderResponse mockOrder = new OrderResponse();
+        mockOrder.setId(orderId);
+        mockOrder.setUserId(null); // Guest order
+        mockOrder.setSessionId(validSession);
+
+        when(shippingService.getShipmentByOrderId(orderId)).thenReturn(Optional.of(mockShipment));
+        when(orderService.getOrderById(orderId)).thenReturn(mockOrder);
+
+        // Authenticated user but not matching session, or wrong session
+        UUID attackerId = UUID.randomUUID();
+        String attackerToken = tokenProvider.generateToken(attackerId, "attacker@example.com", "ROLE_CUSTOMER");
+
+        mockMvc.perform(get("/shipping/order/" + orderId)
+                        .header("Authorization", "Bearer " + attackerToken)
+                        .header("X-Session-ID", attackerSession))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("SEC-12: Guest shipment details allowed when X-Session-ID matches order (200 OK)")
+    void testGetShipmentByOrder_guestSessionMatched_success() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        String validSession = "session-valid-guest-123";
+
+        Shipment mockShipment = Shipment.builder()
+                .id(UUID.randomUUID())
+                .orderId(orderId)
+                .orderNumber("ORD-GUEST-01")
+                .awbCode("AWB-GUEST-789")
+                .status(ShipmentStatus.IN_TRANSIT)
+                .build();
+
+        OrderResponse mockOrder = new OrderResponse();
+        mockOrder.setId(orderId);
+        mockOrder.setUserId(null); // Guest order
+        mockOrder.setSessionId(validSession);
+
+        when(shippingService.getShipmentByOrderId(orderId)).thenReturn(Optional.of(mockShipment));
+        when(orderService.getOrderById(orderId)).thenReturn(mockOrder);
+
+        UUID customerId = UUID.randomUUID();
+        String customerToken = tokenProvider.generateToken(customerId, "guest_converted@example.com", "ROLE_CUSTOMER");
+
+        mockMvc.perform(get("/shipping/order/" + orderId)
+                        .header("Authorization", "Bearer " + customerToken)
+                        .header("X-Session-ID", validSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.awbCode").value("AWB-GUEST-789"));
+    }
 }

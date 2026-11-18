@@ -14,5 +14,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Optional<Payment> findByRazorpayPaymentId(String razorpayPaymentId);
     List<Payment> findByOrderId(UUID orderId);
     List<Payment> findByStatus(com.sporekart.payment.domain.PaymentStatus status);
+    long countByStatus(com.sporekart.payment.domain.PaymentStatus status);
     List<Payment> findByStatusAndCreatedAtBefore(com.sporekart.payment.domain.PaymentStatus status, java.time.OffsetDateTime cutoff);
 }

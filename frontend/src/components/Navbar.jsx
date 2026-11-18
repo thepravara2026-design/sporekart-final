@@ -30,12 +30,17 @@ export default function Navbar({ user, setUser }) {
     };
   }, [isMenuOpen]);
 
-  // Handle ESC key to close mobile menu or auth modal
+  // Handle ESC key to close mobile menu or auth modal, and Cmd/Ctrl+K to toggle search
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsMenuOpen(false);
         setIsAuthModalOpen(false);
+        setIsSearchOpen(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -90,42 +95,51 @@ export default function Navbar({ user, setUser }) {
       <header 
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           isScrolled
-            ? 'bg-surface-white/95 backdrop-blur-xl border-b border-surface-border shadow-level-1'
-            : 'bg-surface-white/90 backdrop-blur-md border-b border-surface-border/80 shadow-sm'
+            ? 'bg-surface-white/95 backdrop-blur-2xl border-b border-surface-border shadow-level-1'
+            : 'bg-surface-white/92 backdrop-blur-xl border-b border-surface-border/80 shadow-xs'
         }`}
       >
         {/* Layer 1: Announcement & Customer Contact Marquee Bar */}
         {isHomePage && <AnnouncementBar />}
 
+        {/* Layer 2: Main Floating Brand & Command Bar */}
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between min-h-[3.5rem] sm:min-h-[4.25rem] py-1.5 sm:py-2 gap-2 sm:gap-4">
-            {/* Logo */}
-            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-2 sm:gap-2.5 group min-h-[40px] sm:min-h-[44px] shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-forest-900 to-forest-800 flex items-center justify-center shadow-level-1 group-hover:scale-105 transition-all duration-200 shrink-0">
-                <Sprout className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between min-h-[3.25rem] sm:min-h-[3.75rem] py-1.5 sm:py-2 gap-2 sm:gap-4">
+            {/* Logo with Living Bio-Aura */}
+            <Link to="/" aria-label="Sporekart Agritech Home" className="flex items-center gap-2 sm:gap-2.5 group min-h-[38px] shrink-0">
+              <div className="relative">
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-emerald-500/40 via-forest-700/20 to-gold/30 blur-xs opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-forest-950 via-forest-900 to-forest-800 border border-emerald-500/40 flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 shrink-0">
+                  <Sprout className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
+                </div>
               </div>
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-display font-bold text-lg sm:text-2xl tracking-tight text-forest-900 leading-tight block">
-                  Spore<span className="text-forest-700">kart</span>
-                </span>
-                <span className="hidden min-[400px]:block text-[8px] sm:text-[9px] text-typography-muted font-semibold tracking-wider sm:tracking-widest uppercase mt-0.5 leading-none">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display font-bold text-lg sm:text-xl tracking-tight text-forest-950 leading-tight block">
+                    Spore<span className="text-emerald-700">kart</span>
+                  </span>
+                  <span className="hidden xl:inline-flex items-center text-[9px] font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-500/15 border border-emerald-600/25 px-1.5 py-0.5 rounded-full">
+                    Farm Direct
+                  </span>
+                </div>
+                <span className="hidden min-[480px]:block text-[8px] sm:text-[9px] text-typography-muted font-bold tracking-wider uppercase leading-none">
                   Smart Farming. Healthy Living.
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links (>= 1280px / xl) - Modern Glass Pill Tabs */}
-            <nav aria-label="Primary Navigation" className="hidden xl:flex items-center gap-1 font-sans text-xs font-semibold tracking-wide text-typography-secondary shrink-0 bg-surface-neutral/80 p-1 rounded-full border border-surface-border/60">
+            <nav aria-label="Primary Navigation" className="hidden xl:flex items-center gap-0.5 font-sans text-xs font-semibold tracking-wide text-typography-secondary shrink-0 bg-surface-neutral/80 backdrop-blur-md p-1 rounded-full border border-surface-border/80 shadow-2xs">
               {navItems.map((item) => {
                 const active = isNavActive(item.path);
                 return (
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`relative px-3.5 py-1.5 rounded-full transition-all duration-200 ${
+                    className={`relative px-3 py-1 rounded-full transition-all duration-200 ${
                       active 
-                        ? 'bg-forest-900 text-white font-bold shadow-sm' 
-                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5'
+                        ? 'bg-gradient-to-r from-forest-950 to-forest-800 text-white font-bold shadow-xs' 
+                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/6'
                     }`}
                   >
                     <span>{item.name}</span>
@@ -135,7 +149,7 @@ export default function Navbar({ user, setUser }) {
             </nav>
 
             {/* Compact Desktop Navigation Links for Large Screens (1024px - 1279px) */}
-            <nav aria-label="Primary Navigation Compact" className="hidden lg:flex xl:hidden items-center gap-0.5 font-sans text-xs font-semibold text-typography-secondary shrink-0 bg-surface-neutral/80 p-1 rounded-full border border-surface-border/60">
+            <nav aria-label="Primary Navigation Compact" className="hidden lg:flex xl:hidden items-center gap-0.5 font-sans text-xs font-semibold text-typography-secondary shrink-0 bg-surface-neutral/80 backdrop-blur-md p-1 rounded-full border border-surface-border/80 shadow-2xs">
               {navItems.map((item) => {
                 const active = isNavActive(item.path);
                 return (
@@ -144,8 +158,8 @@ export default function Navbar({ user, setUser }) {
                     to={item.path}
                     className={`relative px-2.5 py-1 rounded-full transition-all duration-200 ${
                       active 
-                        ? 'bg-forest-900 text-white font-bold shadow-sm' 
-                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5'
+                        ? 'bg-gradient-to-r from-forest-950 to-forest-800 text-white font-bold shadow-xs' 
+                        : 'text-typography-secondary hover:text-forest-900 hover:bg-forest-900/6'
                     }`}
                   >
                     <span>{item.name}</span>
@@ -154,46 +168,59 @@ export default function Navbar({ user, setUser }) {
               })}
             </nav>
 
-            {/* Actions: Search, Account, Cart & Shop Now */}
+            {/* Actions: Spotlight Search, Account, Cart & Shop Now */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               {/* Notification Center (if logged in) */}
               {user && <NotificationCenter user={user} />}
 
-              {/* Desktop/Tablet Search Toggle Button */}
+              {/* Desktop Spotlight Command Search Trigger Capsule (>= 1280px) */}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 aria-label="Toggle Global Search"
-                className="hidden md:flex p-2 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] items-center justify-center button-press shrink-0"
+                className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-neutral/80 hover:bg-white border border-surface-border/80 hover:border-emerald-500/40 text-typography-muted hover:text-forest-900 transition-all text-xs font-medium cursor-pointer shadow-2xs group"
+                title="Search Storefront (Press ⌘K or Ctrl+K)"
               >
-                <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <Search className="w-3.5 h-3.5 text-emerald-700 group-hover:scale-110 transition-transform" />
+                <span className="text-typography-muted group-hover:text-forest-900 transition-colors">Search harvest, spawn...</span>
+                <kbd className="text-[9px] font-mono bg-white px-1 py-0.5 rounded border border-surface-border text-typography-muted shadow-2xs">⌘K</kbd>
+              </button>
+
+              {/* Tablet/Mobile Search Toggle Button (< xl) */}
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                aria-label="Toggle Global Search"
+                className="flex xl:hidden p-1.5 sm:p-2 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[34px] min-w-[34px] sm:min-h-[36px] sm:min-w-[36px] items-center justify-center button-press shrink-0 border border-surface-border/60 hover:border-emerald-500/30"
+                title="Search Products"
+              >
+                <Search className="w-4 h-4 text-forest-800" />
               </button>
 
               {/* User Account / Auth */}
               {user ? (
-                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   {user.role === 'ROLE_ADMIN' ? (
                     <Link 
                       to="/admin" 
                       aria-label="Admin Control Console" 
-                      className="flex items-center gap-1.5 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-2.5 sm:px-3 py-1.5 rounded-full transition-all button-press shrink-0"
+                      className="flex items-center gap-1.5 text-xs font-bold bg-gold/15 hover:bg-gold/25 text-soil border border-gold/40 px-2.5 py-1 rounded-full transition-all button-press shrink-0 shadow-2xs"
                     >
-                      <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-gold shrink-0" />
                       <span className="hidden sm:inline">Admin Console</span>
                     </Link>
                   ) : (
                     <Link 
                       to="/dashboard" 
                       aria-label="User Account Dashboard" 
-                      className="p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                      className="p-1.5 sm:p-2 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[34px] min-w-[34px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center button-press shrink-0 border border-surface-border/60"
                       title={user.fullName || 'Dashboard'}
                     >
-                      <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                      <User className="w-4 h-4" />
                     </Link>
                   )}
                   <button 
                     onClick={handleLogout} 
                     aria-label="Log out of account" 
-                    className="text-xs text-typography-muted hover:text-rose-600 px-2 py-1 transition-colors font-medium hidden sm:inline"
+                    className="text-xs text-typography-muted hover:text-rose-600 px-1.5 py-1 transition-colors font-medium hidden sm:inline"
                   >
                     Logout
                   </button>
@@ -203,34 +230,35 @@ export default function Navbar({ user, setUser }) {
                   data-testid="desktop-login-btn"
                   onClick={() => setIsAuthModalOpen(true)}
                   aria-label="Login or Sign Up for an Account"
-                  className="p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                  className="p-1.5 sm:p-2 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[34px] min-w-[34px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center button-press shrink-0 border border-surface-border/60"
                   title="Login / Account"
                 >
-                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <User className="w-4 h-4 text-forest-800" />
                 </button>
               )}
 
               {/* Cart Button */}
               <button
                 onClick={openDrawer}
-                className="relative p-1.5 sm:p-2.5 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center button-press shrink-0"
+                className="relative p-1.5 sm:p-2 rounded-full text-typography-secondary hover:text-forest-900 hover:bg-forest-900/5 transition-all min-h-[34px] min-w-[34px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center button-press shrink-0 border border-surface-border/60 hover:border-emerald-500/40"
                 aria-label={`Shopping cart with ${cart.itemCount} items`}
               >
-                <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-forest-900" />
+                <ShoppingBag className="w-4 h-4 text-forest-900" />
                 {cart.itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-forest-900 text-white text-[10px] sm:text-[11px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-1 min-w-[17px] sm:min-w-[18px] h-4 sm:h-4.5 bg-gradient-to-r from-emerald-600 to-forest-900 text-white text-[9px] sm:text-[10px] font-bold rounded-full px-1 flex items-center justify-center shadow-xs">
                     {cart.itemCount}
                   </span>
                 )}
               </button>
 
-              {/* Prominent Shop Now CTA Button */}
+              {/* Prominent Shop Harvest CTA Button with Hover Shimmer */}
               <Link
                 to="/products"
-                className="hidden sm:inline-flex bg-gradient-to-r from-forest-900 to-forest-800 hover:from-forest-800 hover:to-forest-700 text-white font-medium text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full items-center gap-1.5 transition-all shadow-level-1 hover:shadow-glow button-press shrink-0 ml-0.5 sm:ml-1"
+                className="hidden sm:inline-flex bg-gradient-to-r from-forest-950 via-forest-900 to-forest-800 hover:from-forest-900 hover:to-forest-700 text-white font-semibold text-xs px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full items-center gap-1.5 transition-all shadow-2xs hover:shadow-glow button-press shrink-0 ml-0.5 group relative overflow-hidden"
               >
-                <span>Shop Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="relative z-10">Shop Now</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform relative z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               </Link>
 
               {/* Mobile Menu Toggle */}
@@ -238,23 +266,23 @@ export default function Navbar({ user, setUser }) {
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-expanded={isMenuOpen}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
-                className="lg:hidden p-1.5 sm:p-2 rounded-full text-typography-primary hover:bg-forest-900/5 min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center shrink-0 ml-0.5 transition-colors"
+                className="lg:hidden p-1.5 rounded-full text-typography-primary hover:bg-forest-900/5 min-h-[34px] min-w-[34px] flex items-center justify-center shrink-0 ml-0.5 transition-colors"
               >
-                {isMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6 text-forest-700" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-forest-900" />}
+                {isMenuOpen ? <X className="w-5 h-5 text-forest-700" /> : <Menu className="w-5 h-5 text-forest-900" />}
               </button>
             </div>
           </div>
 
-          {/* Desktop/Tablet Collapsible Global Search Drawer */}
+          {/* Collapsible Global Search Drawer (Desktop, Tablet & Mobile) */}
           {isSearchOpen && (
-            <div className="hidden md:block pt-2 pb-3 border-t border-surface-border/60 animate-fade-in">
-              <div className="max-w-2xl mx-auto flex items-center gap-3">
+            <div className="pt-1.5 pb-2.5 border-t border-surface-border/60 animate-fade-in">
+              <div className="max-w-2xl mx-auto flex items-center gap-2">
                 <div className="flex-1">
-                  <GlobalSearch />
+                  <GlobalSearch isMobile={true} onCloseMobile={() => setIsSearchOpen(false)} />
                 </div>
                 <button
                   onClick={() => setIsSearchOpen(false)}
-                  className="p-2 text-typography-muted hover:text-typography-primary text-xs font-semibold rounded-lg hover:bg-forest-900/5"
+                  className="p-1.5 text-typography-muted hover:text-typography-primary text-xs font-semibold rounded-lg hover:bg-forest-900/5"
                   aria-label="Close Search"
                 >
                   <X className="w-4 h-4" />
@@ -262,11 +290,6 @@ export default function Navbar({ user, setUser }) {
               </div>
             </div>
           )}
-
-          {/* Mobile Integrated Search Bar */}
-          <div className="md:hidden pb-2.5 pt-1 border-t border-surface-border/50">
-            <GlobalSearch isMobile={true} />
-          </div>
         </div>
 
         {/* Mobile Slide-down Glass Drawer */}

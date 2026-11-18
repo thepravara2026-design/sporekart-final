@@ -1351,58 +1351,6 @@ export default function AdminDashboardPage({ user }) {
     }
   };
 
-  // ADMIN FINANCE & WALLET ACTION HANDLERS
-  const handleApproveWithdrawal = async (id) => {
-    setStatusMessage(''); setErrorMessage('');
-    try {
-      await adminFinanceApi.approveWithdrawal(id, actionNotes || 'Approved by Admin');
-      setStatusMessage('Bank withdrawal request approved successfully.');
-      setWithdrawalActionModal(null); setActionNotes('');
-      fetchDataForSection('finance');
-    } catch (err) {
-      setErrorMessage(err.response?.data?.message || 'Failed approving withdrawal request.');
-    }
-  };
-
-  const handleRejectWithdrawal = async (id) => {
-    if (!actionNotes || !actionNotes.trim()) {
-      setErrorMessage('Please state a reason for rejecting the withdrawal.');
-      return;
-    }
-    setStatusMessage(''); setErrorMessage('');
-    try {
-      await adminFinanceApi.rejectWithdrawal(id, actionNotes);
-      setStatusMessage('Withdrawal request rejected. Compensating credit reversed to user wallet.');
-      setWithdrawalActionModal(null); setActionNotes('');
-      fetchDataForSection('finance');
-    } catch (err) {
-      setErrorMessage(err.response?.data?.message || 'Failed rejecting withdrawal request.');
-    }
-  };
-
-  const handlePerformManualAdjustment = async (e) => {
-    e.preventDefault();
-    if (!manualAdjForm.userId || !manualAdjForm.amount || !manualAdjForm.reason) {
-      setErrorMessage('User ID, Amount, and Audit Reason are required.');
-      return;
-    }
-    setStatusMessage(''); setErrorMessage('');
-    try {
-      await adminFinanceApi.performManualAdjustment({
-        userId: manualAdjForm.userId,
-        amount: parseFloat(manualAdjForm.amount),
-        direction: manualAdjForm.direction,
-        reason: manualAdjForm.reason,
-      });
-      setStatusMessage(`Manual ${manualAdjForm.direction} adjustment of ₹${manualAdjForm.amount} executed.`);
-      setManualAdjModalOpen(false);
-      setManualAdjForm({ userId: '', amount: '', direction: 'CREDIT', reason: '' });
-      fetchDataForSection('finance');
-    } catch (err) {
-      setErrorMessage(err.response?.data?.message || 'Failed executing manual wallet adjustment.');
-    }
-  };
-
   const handleSelectSupportTicket = async (ticket) => {
     setSelectedSupportTicket(ticket);
     try {
@@ -1909,7 +1857,7 @@ export default function AdminDashboardPage({ user }) {
         title: 'Gross Sales Revenue & Settlement',
         metric: `₹${grossRev.toLocaleString('en-IN')}`,
         subtitle: 'Aggregate transaction volume captured across retail orders and academy course fees.',
-        badge: 'Settled to ICICI Bank',
+        badge: 'Direct Razorpay Settlement',
         badgeColor: 'green',
         icon: CreditCard,
         filterPills,
@@ -2026,14 +1974,14 @@ export default function AdminDashboardPage({ user }) {
     setAnalyticsModalConfig({
       domain: 'Payment Gateway',
       title: 'Razorpay Reversal & Settlement Engine',
-      metric: '100% Settled',
+      metric: 'Auto Reconciled',
       subtitle: 'Webhook-driven automated reversal settlement back to customer bank/UPI source accounts.',
-      badge: 'Zero Payout Lag',
+      badge: 'Direct Gateway Settlement',
       badgeColor: 'green',
       icon: CheckCircle2,
       breakdown: [
-        { label: 'Settlement Time', value: '< 2 Hours' },
-        { label: 'Dispute Rate', value: '0.00%' },
+        { label: 'Settlement Window', value: 'SLA: 5-7 Bank Days' },
+        { label: 'Dispute SLA', value: '< 1.00% Target' },
         { label: 'Webhook Health', value: 'Operational' },
       ],
       items: [
@@ -2188,19 +2136,19 @@ export default function AdminDashboardPage({ user }) {
     } else {
       setAnalyticsModalConfig({
         domain: 'Treasury & Settlement',
-        title: 'Platform Settlement Bank Account',
-        metric: 'ICICI Bank •••• 4092',
-        subtitle: 'Primary current account configured for automated daily Razorpay settlements.',
-        badge: 'Settlement Verified',
+        title: 'Platform Settlement Architecture',
+        metric: overview?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)',
+        subtitle: 'Primary corporate current account configured in RBI-regulated Razorpay merchant dashboard for automated daily settlements.',
+        badge: 'Automated Banking Rails',
         badgeColor: 'forest',
-        icon: Wallet,
+        icon: CreditCard,
         breakdown: [
-          { label: 'Bank Name', value: 'ICICI Bank' },
-          { label: 'Settlement Frequency', value: 'T+1 Days' },
-          { label: 'IFSC Code', value: 'ICIC0001048' },
+          { label: 'Settlement Rail', value: 'Direct Bank NEFT/RTGS via Razorpay' },
+          { label: 'Settlement Frequency', value: 'Automated Daily Cycle' },
+          { label: 'Merchant Status', value: 'Verified Merchant Account' },
         ],
         items: [
-          { id: 'bank_01', title: 'Sporekart Agritech Private Limited', subtitle: 'Current Account • IFSC: ICIC0001048 • Branch: Solan HP', status: 'ACTIVE & VERIFIED', statusColor: 'green' },
+          { id: 'bank_01', title: 'Razorpay Direct Banking Settlement', subtitle: 'Automated settlement direct to registered corporate current account', status: 'ACTIVE & VERIFIED', statusColor: 'green' },
         ],
       });
     }
@@ -6447,8 +6395,8 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Gateway Success Rate"
-              value="99.4%"
-              badge="High Reliability"
+              value={overview?.gatewaySuccessRate != null ? `${overview.gatewaySuccessRate.toFixed(1)}%` : 'No data recorded'}
+              badge={overview?.gatewaySuccessRate != null ? (overview.gatewaySuccessRate >= 95 ? 'High Reliability' : 'Active Tracking') : 'Awaiting Transactions'}
               badgeStyle="text-emerald-700 bg-emerald-500/10"
               icon={TrendingUp}
               iconColor="text-forest-700"
@@ -6458,8 +6406,8 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Active Settlement Account"
-              value="ICICI Bank •••• 4092"
-              badge="Automated T+1 Cycle"
+              value={overview?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)'}
+              badge="Automated Banking Rails"
               badgeStyle="text-forest-800 bg-forest-900/10"
               icon={CreditCard}
               iconColor="text-forest-700"
@@ -6506,7 +6454,7 @@ export default function AdminDashboardPage({ user }) {
         </div>
       )}
 
-      {/* 3E: PLATFORM FINANCE & WALLET LEDGER */}
+      {/* 3E: GATEWAY FINANCIAL LEDGER & SETTLEMENT RECONCILIATION */}
       {activeSection === 'finance' && (
         <div className="space-y-6 w-full max-w-full">
           {/* Finance Executive KPI Ribbon */}
@@ -7475,9 +7423,9 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Refund Settlement Status"
-              value="Automated Completed"
-              subtext="Razorpay / Instant Ledger Sync"
-              badge="100% Reconciled"
+              value="Gateway Reconciled"
+              subtext="Razorpay Direct Settlement"
+              badge="Source Account Sync"
               badgeStyle="bg-green-600/10 text-green-700"
               icon={CheckCircle2}
               variant="forest"

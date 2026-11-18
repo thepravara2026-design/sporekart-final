@@ -110,6 +110,7 @@ class ShippingServiceUnitTest {
                 .awbCode("AWB123456")
                 .courierName("Delhivery")
                 .courierId("1")
+                .status("PICKUP_SCHEDULED")
                 .message("Pickup scheduled successfully")
                 .build();
         when(shippingProvider.createShipment(any())).thenReturn(providerResult);
@@ -255,6 +256,7 @@ class ShippingServiceUnitTest {
                     .providerShipmentId("SR-999")
                     .awbCode("AWB-999")
                     .courierName("Delhivery")
+                    .status("PICKUP_SCHEDULED")
                     .build();
         });
         when(shipmentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -262,6 +264,68 @@ class ShippingServiceUnitTest {
         Shipment created = shippingService.createShipmentForOrder(orderId);
         assertNotNull(created);
         verify(shippingProvider).createShipment(any());
+    }
+
+    @Test
+    @DisplayName("H-02: Creating shipment with AWB only sets AWB_ASSIGNED and does NOT assume PICKUP_SCHEDULED")
+    void H02_createShipment_awbOnly_setsAwbAssigned() {
+        when(shipmentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(orderService.getOrderById(orderId)).thenReturn(testOrderResponse);
+
+        ShippingProvider.CreateShipmentResult providerResult = ShippingProvider.CreateShipmentResult.builder()
+                .providerShipmentId("SR-SHIP-123")
+                .awbCode("AWB123456")
+                .courierName("Delhivery")
+                .courierId("1")
+                .status("AWB_ASSIGNED")
+                .message("AWB assigned, pickup pending")
+                .build();
+        when(shippingProvider.createShipment(any())).thenReturn(providerResult);
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(i -> i.getArgument(0));
+
+        Shipment shipment = shippingService.createShipmentForOrder(orderId);
+
+        assertNotNull(shipment);
+        assertEquals(ShipmentStatus.AWB_ASSIGNED, shipment.getStatus());
+        assertNull(shipment.getPickupScheduledAt());
+    }
+
+    @Test
+    @DisplayName("H-02: Assigning AWB sets AWB_ASSIGNED and allows separate pickup scheduling")
+    void H02_assignAwb_setsAwbAssigned_and_schedulePickupTransitions() {
+        Shipment pendingShipment = Shipment.builder()
+                .id(shipmentId)
+                .orderId(orderId)
+                .orderNumber("ORD-20260926-001")
+                .providerShipmentId("SR-SHIP-123")
+                .status(ShipmentStatus.AWB_PENDING)
+                .build();
+        when(shipmentRepository.findById(shipmentId)).thenReturn(Optional.of(pendingShipment));
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(i -> i.getArgument(0));
+
+        Shipment withAwb = shippingService.assignAwbForShipment(shipmentId, "AWB987654321", "BlueDart", "2");
+
+        assertEquals(ShipmentStatus.AWB_ASSIGNED, withAwb.getStatus());
+        assertEquals("AWB987654321", withAwb.getAwbCode());
+        assertNull(withAwb.getPickupScheduledAt());
+
+        // Now explicitly schedule pickup
+        Shipment pickedUp = shippingService.schedulePickupForShipment(shipmentId);
+        assertEquals(ShipmentStatus.PICKUP_SCHEDULED, pickedUp.getStatus());
+        assertNotNull(pickedUp.getPickupScheduledAt());
+    }
+
+    @Test
+    @DisplayName("H-03: When tracking is unavailable, does not persist duplicate junk rows to database")
+    void H03_trackingUnavailable_doesNotPersistDuplicateJunkRows() {
+        when(shipmentRepository.findById(shipmentId)).thenReturn(Optional.of(testShipment));
+        when(shippingProvider.trackShipment(any(), any())).thenReturn(null);
+
+        ShipmentTracking result = shippingService.updateTrackingStatus(shipmentId);
+
+        assertNotNull(result);
+        // Verify that shipmentRepository.save was NEVER called to persist an unavailable row
+        verify(shipmentRepository, never()).save(any());
     }
 
     @Test

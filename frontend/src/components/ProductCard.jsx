@@ -54,10 +54,10 @@ export default function ProductCard({
   return (
     <div
       data-testid="product-card"
-      className={`bg-surface-white rounded-xl sm:rounded-2xl overflow-hidden border border-surface-border/90 shadow-xs hover:shadow-md hover:border-forest-700/40 transition-all duration-300 flex flex-col justify-between group ${className}`}
+      className={`bg-surface-white rounded-xl sm:rounded-2xl overflow-hidden border border-surface-border/90 shadow-2xs hover:shadow-md hover:border-forest-700/40 transition-all duration-300 flex flex-col justify-between group h-full ${className}`}
     >
       <div>
-        {/* Product Image Area - Universal 1:1 Aspect Ratio (Amazon standard) */}
+        {/* Product Image Area - Universal 1:1 Aspect Ratio */}
         <Link
           to={`/product/${product.slug}`}
           className="relative block aspect-square overflow-hidden bg-surface-cream/50"
@@ -69,43 +69,43 @@ export default function ProductCard({
           />
 
           {/* Top Left Mini Amazon-style Badges */}
-          <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 flex flex-col gap-1 z-10 pointer-events-none">
+          <div className="absolute top-1 left-1 sm:top-2 sm:left-2 flex flex-col gap-0.5 sm:gap-1 z-10 pointer-events-none">
             {product.isBestSeller && (
-              <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-[8px] sm:text-[9.5px] font-black rounded uppercase tracking-wider shadow-xs flex items-center gap-0.5 border border-amber-300/30">
-                <Flame className="w-2.5 h-2.5 text-amber-200 shrink-0" /> BEST SELLER
+              <span className={`px-1 sm:px-1.5 py-0.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white ${compact ? 'text-[7.5px] min-[390px]:text-[8px] sm:text-[9.5px]' : 'text-[8px] sm:text-[9.5px]'} font-black rounded uppercase tracking-wider shadow-xs flex items-center gap-0.5 border border-amber-300/30`}>
+                <Flame className={`${compact ? 'w-2 h-2 sm:w-2.5 sm:h-2.5' : 'w-2.5 h-2.5'} text-amber-200 shrink-0`} /> BEST SELLER
               </span>
             )}
             {product.isPopular && (
-              <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[8px] sm:text-[9.5px] font-black rounded uppercase tracking-wider shadow-xs flex items-center gap-0.5 border border-amber-300/30">
-                <Star className="w-2.5 h-2.5 fill-amber-200 text-amber-200 shrink-0" /> MOST POPULAR
+              <span className={`px-1 sm:px-1.5 py-0.5 bg-amber-600 text-white ${compact ? 'text-[7.5px] min-[390px]:text-[8px] sm:text-[9.5px]' : 'text-[8px] sm:text-[9.5px]'} font-black rounded uppercase tracking-wider shadow-xs flex items-center gap-0.5 border border-amber-300/30`}>
+                <Star className={`${compact ? 'w-2 h-2 sm:w-2.5 sm:h-2.5' : 'w-2.5 h-2.5'} fill-amber-200 text-amber-200 shrink-0`} /> MOST POPULAR
               </span>
             )}
             {!product.isBestSeller && !product.isPopular && product.categoryName && (
-              <span className="px-1.5 py-0.5 bg-surface-white/90 backdrop-blur-md text-forest-900 text-[8px] sm:text-[9px] font-bold rounded border border-surface-border shadow-xs truncate max-w-[100px] sm:max-w-[120px]">
+              <span className={`px-1 sm:px-1.5 py-0.5 bg-surface-white/90 backdrop-blur-md text-forest-900 ${compact ? 'text-[7.5px] sm:text-[9px]' : 'text-[8px] sm:text-[9px]'} font-bold rounded border border-surface-border shadow-xs truncate max-w-[85px] sm:max-w-[120px]`}>
                 {product.categoryName}
               </span>
             )}
           </div>
 
           {/* Top Right Discreet Availability Badge */}
-          <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 z-10 pointer-events-none">
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10 pointer-events-none">
             <span
               data-testid="product-availability"
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-semibold border backdrop-blur-md shadow-xs ${
+              className={`inline-flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 rounded-full ${compact ? 'text-[7.5px] sm:text-[9px]' : 'text-[8px] sm:text-[9px]'} font-semibold border backdrop-blur-md shadow-xs ${
                 isAvailable
                   ? 'bg-white/95 text-emerald-800 border-emerald-200/80'
                   : 'bg-white/95 text-typography-muted border-surface-border'
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-500 animate-pulse' : 'bg-typography-muted'}`} />
+              <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${isAvailable ? 'bg-emerald-500 animate-pulse' : 'bg-typography-muted'}`} />
               <span>{availability.label || (isAvailable ? 'In Stock' : 'Out of Stock')}</span>
             </span>
           </div>
 
-          {/* Bottom Left Discount Deal Pill (Amazon Style) */}
+          {/* Bottom Left Discount Deal Pill */}
           {discountPercent > 0 && (
             <div
-              className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 flex items-center gap-1 px-1.5 py-0.5 bg-red-600 text-white text-[8.5px] sm:text-[9.5px] font-black rounded shadow-xs tracking-tight uppercase"
+              className={`absolute bottom-1 left-1 sm:bottom-1.5 sm:left-1.5 flex items-center gap-1 px-1 sm:px-1.5 py-0.5 bg-red-600 text-white ${compact ? 'text-[7.5px] sm:text-[9.5px]' : 'text-[8.5px] sm:text-[9.5px]'} font-black rounded shadow-xs tracking-tight uppercase`}
               data-testid="discount-badge"
             >
               <span>{discountPercent}% OFF</span>
@@ -114,18 +114,18 @@ export default function ProductCard({
         </Link>
 
         {/* Product Details Section - Compact & Systematic Layout */}
-        <div className="p-2.5 sm:p-3.5 space-y-1.5">
-          {/* Rating Row (Amazon Style) */}
+        <div className={compact ? 'p-2 sm:p-3 space-y-1 sm:space-y-1.5' : 'p-2.5 sm:p-3.5 space-y-1.5'}>
+          {/* Rating Row */}
           {product.averageRating > 0 ? (
-            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-amber-600 font-bold">
-              <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+            <div className={`flex items-center gap-0.5 sm:gap-1 ${compact ? 'text-[9px] sm:text-[11px]' : 'text-[10px] sm:text-[11px]'} text-amber-600 font-bold`}>
+              <Star className={`${compact ? 'w-2.5 h-2.5 sm:w-3 sm:h-3' : 'w-3 h-3'} fill-amber-400 text-amber-400 shrink-0`} />
               <span>{product.averageRating.toFixed(1)}</span>
-              <span className="text-typography-muted font-normal text-[9px] sm:text-[10px]">
+              <span className="text-typography-muted font-normal text-[8.5px] sm:text-[10px]">
                 ({product.reviewCount || 0} {product.reviewCount === 1 ? 'review' : 'reviews'})
               </span>
             </div>
           ) : (
-            <div className="text-[9px] sm:text-[10px] text-emerald-700 font-semibold tracking-wide flex items-center gap-1">
+            <div className={`${compact ? 'text-[8.5px] sm:text-[10px]' : 'text-[9px] sm:text-[10px]'} text-emerald-700 font-semibold tracking-wide flex items-center gap-1`}>
               <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0" /> Lab Tested
             </div>
           )}
@@ -133,17 +133,17 @@ export default function ProductCard({
           {/* Title - Clean 2-Line Clamp with Systematic Height */}
           <Link
             to={`/product/${product.slug}`}
-            className="font-display font-semibold sm:font-bold text-xs sm:text-sm text-forest-950 group-hover:text-forest-700 transition-colors block leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[2.25rem]"
+            className={`font-display font-semibold sm:font-bold ${compact ? 'text-xs sm:text-sm min-h-[1.9rem] sm:min-h-[2.25rem]' : 'text-xs sm:text-sm min-h-[2rem] sm:min-h-[2.25rem]'} text-forest-950 group-hover:text-forest-700 transition-colors block leading-tight line-clamp-2`}
           >
             {product.title}
           </Link>
 
           {/* Creative, Modern Variant Selector (Zero-Mess Single-Line Track) */}
           {product.variants && product.variants.length > 1 && (
-            <div className="pt-0.5 space-y-1">
-              <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px] text-typography-muted">
+            <div className="pt-0.5 space-y-0.5 sm:space-y-1">
+              <div className="flex items-center justify-between text-[8px] sm:text-[9.5px] text-typography-muted">
                 <span className="truncate pr-1">Option: <strong className="text-forest-900 font-bold">{activeVariant?.variantName}</strong></span>
-                <span className="text-[8px] sm:text-[8.5px] font-semibold text-forest-700 bg-forest-50 px-1 py-0.2 rounded border border-forest-100 shrink-0">
+                <span className="text-[7.5px] sm:text-[8.5px] font-semibold text-forest-700 bg-forest-50 px-1 py-0.2 rounded border border-forest-100 shrink-0">
                   {product.variants.length} sizes
                 </span>
               </div>
@@ -164,7 +164,7 @@ export default function ProductCard({
                         setSelectedVariant(v);
                       }}
                       title={`Select ${v.variantName}`}
-                      className={`shrink-0 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold border transition-all duration-150 cursor-pointer ${
+                      className={`shrink-0 px-1 sm:px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-bold border transition-all duration-150 cursor-pointer ${
                         isSelected
                           ? 'bg-forest-900 border-forest-900 text-white shadow-xs scale-[1.02]'
                           : 'bg-surface-neutral/80 border-surface-border text-typography-secondary hover:border-forest-600 hover:text-forest-900 hover:bg-surface-cream'
@@ -180,26 +180,26 @@ export default function ProductCard({
         </div>
       </div>
 
-      {/* Price & Add to Cart Footer (Compact, Amazon-style Spacing) */}
-      <div className="p-2.5 sm:p-3.5 pt-0 border-t border-surface-border/50 space-y-1.5 mt-0.5">
-        <div className="flex items-baseline justify-between gap-1 flex-wrap pt-1.5">
+      {/* Price & Add to Cart Footer (Compact, Modern Spacing) */}
+      <div className={compact ? 'p-2 sm:p-3 pt-0 border-t border-surface-border/50 space-y-1 sm:space-y-1.5 mt-0.5' : 'p-2.5 sm:p-3.5 pt-0 border-t border-surface-border/50 space-y-1.5 mt-0.5'}>
+        <div className="flex items-baseline justify-between gap-1 flex-wrap pt-1 sm:pt-1.5">
           <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-            <span className="font-display font-extrabold text-sm sm:text-base text-forest-950">
+            <span className={`font-display font-extrabold ${compact ? 'text-xs min-[390px]:text-sm sm:text-base' : 'text-sm sm:text-base'} text-forest-950`}>
               ₹{activeVariant?.calculatedFinalPriceInr || activeVariant?.priceInr || 0}
             </span>
             {hasComparePrice && (
               <span
-                className="text-[10px] sm:text-[11px] text-typography-muted line-through font-medium"
+                className="text-[9px] sm:text-[11px] text-typography-muted line-through font-medium"
                 data-testid="strikeout-price"
               >
                 ₹{activeVariant.compareAtPriceInr}
               </span>
             )}
-            <span className="text-[8.5px] sm:text-[9.5px] text-typography-muted font-normal">incl. GST</span>
+            <span className="text-[7.5px] sm:text-[9.5px] text-typography-muted font-normal">incl. GST</span>
           </div>
 
           {activeVariant?.variantName && product.variants?.length <= 1 && (
-            <span className="text-[9px] sm:text-[10px] text-typography-muted font-medium truncate max-w-[70px]">
+            <span className="text-[8px] sm:text-[10px] text-typography-muted font-medium truncate max-w-[65px]">
               {activeVariant.variantName}
             </span>
           )}
@@ -211,14 +211,14 @@ export default function ProductCard({
           data-testid="add-to-cart"
           onClick={handleAddToCart}
           disabled={!isAvailable || !activeVariant || isMaxInCart}
-          className={`w-full h-8 sm:h-9 min-h-[34px] sm:min-h-[38px] py-1 px-2.5 rounded-lg font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-95 ${
+          className={`w-full ${compact ? 'h-7 sm:h-8.5 min-h-[28px] sm:min-h-[34px] py-0.5 sm:py-1 px-1.5 sm:px-2.5 text-[10px] sm:text-xs' : 'h-8 sm:h-9 min-h-[34px] sm:min-h-[38px] py-1 px-2.5 text-[11px] sm:text-xs'} rounded-lg font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-150 active:scale-95 ${
             isAvailable && activeVariant && !isMaxInCart
-              ? 'btn-primary shadow-xs hover:shadow-sm'
+              ? 'btn-primary shadow-2xs hover:shadow-xs'
               : 'bg-surface-neutral text-typography-muted cursor-not-allowed border border-surface-border'
           }`}
         >
-          <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-          <span>
+          <ShoppingBag className={`${compact ? 'w-2.5 h-2.5 sm:w-3.5 sm:h-3.5' : 'w-3 h-3 sm:w-3.5 sm:h-3.5'} shrink-0`} />
+          <span className="truncate">
             {!isAvailable
               ? 'Out of Stock'
               : isMaxInCart

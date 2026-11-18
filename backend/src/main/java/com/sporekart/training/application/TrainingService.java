@@ -14,6 +14,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.sporekart.shared.infrastructure.CacheConfig;
@@ -309,7 +310,14 @@ public class TrainingService {
                 .feePaidInr(feeToPay)
                 .build();
 
-        Enrollment saved = enrollmentRepository.save(enrollment);
+        Enrollment saved;
+        try {
+            saved = enrollmentRepository.save(enrollment);
+        } catch (DataIntegrityViolationException ex) {
+            log.info("Concurrent enrollment race detected for user {} in batch {}. Falling back to existing record.", userId, batchId);
+            return enrollmentRepository.findByUserIdAndBatchId(userId, batchId)
+                    .orElseThrow(() -> ex);
+        }
 
         eventPublisher.publishEvent(com.sporekart.analytics.domain.events.EnrollmentCreatedEvent.builder()
                 .enrollmentId(saved.getId())

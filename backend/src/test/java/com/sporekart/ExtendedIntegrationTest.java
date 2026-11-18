@@ -173,7 +173,7 @@ public class ExtendedIntegrationTest {
                 .razorpaySignature("mock_signature_valid")
                 .build();
 
-        PaymentDtos.VerifyPaymentResponse verifyResp = paymentService.verifyPayment(verifyReq);
+        PaymentDtos.VerifyPaymentResponse verifyResp = paymentService.verifyPayment(verifyReq, userId, sessionId);
         assertTrue(verifyResp.isSuccess());
 
         // Refresh Order & Check Status

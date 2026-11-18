@@ -45,6 +45,7 @@ public class ShippingController {
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ApiResponse<ShippingDtos.ShipmentResponse>> getShipmentByOrder(
             @PathVariable UUID orderId,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
             Authentication authentication) {
 
         Shipment shipment = shippingService.getShipmentByOrderId(orderId)
@@ -56,8 +57,14 @@ public class ShippingController {
         if (!isAdmin) {
             OrderResponse order = orderService.getOrderById(orderId);
             UUID currentUserId = extractUserId(authentication);
-            if (order.getUserId() != null && (currentUserId == null || !order.getUserId().equals(currentUserId))) {
-                throw new AccessDeniedException("You do not have permission to view shipment details for this order");
+            if (order.getUserId() != null) {
+                if (currentUserId == null || !order.getUserId().equals(currentUserId)) {
+                    throw new AccessDeniedException("You do not have permission to view shipment details for this order");
+                }
+            } else {
+                if (sessionId == null || sessionId.isBlank() || !sessionId.equals(order.getSessionId())) {
+                    throw new AccessDeniedException("You do not have permission to view guest shipment details without matching session");
+                }
             }
         }
 
@@ -67,6 +74,7 @@ public class ShippingController {
     @GetMapping("/track/{shipmentId}")
     public ResponseEntity<ApiResponse<ShippingDtos.ShipmentResponse>> updateAndGetTracking(
             @PathVariable UUID shipmentId,
+            @RequestHeader(value = "X-Session-ID", required = false) String sessionId,
             Authentication authentication) {
 
         Shipment shipment = shippingService.getShipmentById(shipmentId)
@@ -78,8 +86,14 @@ public class ShippingController {
         if (!isAdmin) {
             OrderResponse order = orderService.getOrderById(shipment.getOrderId());
             UUID currentUserId = extractUserId(authentication);
-            if (order.getUserId() != null && (currentUserId == null || !order.getUserId().equals(currentUserId))) {
-                throw new AccessDeniedException("You do not have permission to track this shipment");
+            if (order.getUserId() != null) {
+                if (currentUserId == null || !order.getUserId().equals(currentUserId)) {
+                    throw new AccessDeniedException("You do not have permission to track this shipment");
+                }
+            } else {
+                if (sessionId == null || sessionId.isBlank() || !sessionId.equals(order.getSessionId())) {
+                    throw new AccessDeniedException("You do not have permission to track guest shipment without matching session");
+                }
             }
         }
 

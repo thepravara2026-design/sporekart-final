@@ -32,7 +32,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, UUID> {
             Pageable pageable
     );
 
-    @Query("SELECT p FROM BlogPost p WHERE p.status = 'SCHEDULED' AND p.scheduledPublishAt IS NOT NULL AND p.scheduledPublishAt <= :now")
+    @Query("SELECT p FROM BlogPost p WHERE p.status = com.sporekart.content.domain.BlogPostStatus.SCHEDULED AND p.scheduledPublishAt IS NOT NULL AND p.scheduledPublishAt <= :now")
     List<BlogPost> findDueScheduledPosts(@Param("now") ZonedDateTime now);
 
     Page<BlogPost> findByStatus(BlogPostStatus status, Pageable pageable);

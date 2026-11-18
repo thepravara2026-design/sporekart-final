@@ -33,6 +33,7 @@ public class FullMultiMethodLoginMatrixTest {
 
         // 1. Google OAuth Initial Login
         AuthDtos.GoogleOAuthRequest googleReq = AuthDtos.GoogleOAuthRequest.builder()
+                .idToken("test_token_" + googleEmail)
                 .email(googleEmail)
                 .googleSub(googleSub)
                 .firstName("Ramesh")

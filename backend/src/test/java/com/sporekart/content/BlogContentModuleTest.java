@@ -128,7 +128,6 @@ public class BlogContentModuleTest {
     }
 
     @Test
-    @Transactional
     void testScheduledPostPublishingWorkflow() {
         BlogPost post = blogService.createPostDraft(
                 "Future Spawn Storage Tips",
@@ -161,7 +160,7 @@ public class BlogContentModuleTest {
         postRepository.save(scheduled);
 
         // Run automated scheduled publisher
-        blogService.processScheduledPosts();
+        blogService.publishDueScheduledPosts();
 
         // Verify post is now PUBLISHED and indexable
         BlogPost afterProcess = blogService.getPostByIdForAdmin(post.getId()).orElseThrow();

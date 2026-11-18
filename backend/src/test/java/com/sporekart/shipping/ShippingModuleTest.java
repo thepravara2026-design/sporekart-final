@@ -127,7 +127,7 @@ public class ShippingModuleTest {
                 .razorpayPaymentId("pay_mock_ship_" + UUID.randomUUID().toString().substring(0, 8))
                 .razorpaySignature("mock_sig")
                 .build();
-        paymentService.verifyPayment(verifyReq);
+        paymentService.verifyPayment(verifyReq, userId, null);
     }
 
     @Test

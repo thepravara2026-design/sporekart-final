@@ -35,6 +35,8 @@ public class RazorpayCheckoutController {
     private final ApplicationEventPublisher eventPublisher;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.sporekart.shared.infrastructure.SecurityAuditService securityAuditService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
     /**
      * Standard Razorpay Order Creation Endpoint
@@ -44,7 +46,7 @@ public class RazorpayCheckoutController {
      * Minimum amount: 100 paise
      */
     @PostMapping("/create-order")
-    public ResponseEntity<?> createOrder(@jakarta.validation.Valid @RequestBody(required = false) RazorpayOrderDtos.CreateOrderRequest request) {
+    public ResponseEntity<?> createOrder(@RequestBody(required = false) RazorpayOrderDtos.CreateOrderRequest request) {
         if (request == null || request.getAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "failure",
@@ -176,7 +178,7 @@ public class RazorpayCheckoutController {
      */
     @PostMapping("/verify-payment")
     public ResponseEntity<?> verifyPayment(
-            @jakarta.validation.Valid @RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request,
+            @RequestBody(required = false) RazorpayOrderDtos.StandardVerifyPaymentRequest request,
             @org.springframework.web.bind.annotation.RequestHeader(name = "X-Session-ID", required = false) String sessionId,
             org.springframework.security.core.Authentication authentication) {
         if (request == null) {
@@ -343,50 +345,58 @@ public class RazorpayCheckoutController {
     }
 
     private void updatePaymentAndOrderSuccess(String razorpayOrderId, String razorpayPaymentId, String signature, UUID providedOrderId) {
-        Optional<Payment> paymentOpt = paymentRepository.findByRazorpayOrderId(razorpayOrderId);
-        UUID targetOrderId = providedOrderId;
-        Payment payment = null;
+        Runnable atomicUpdate = () -> {
+            Optional<Payment> paymentOpt = paymentRepository.findByRazorpayOrderId(razorpayOrderId);
+            UUID targetOrderId = providedOrderId;
+            Payment payment = null;
 
-        if (paymentOpt.isPresent()) {
-            payment = paymentOpt.get();
-            if (targetOrderId == null) {
-                targetOrderId = payment.getOrderId();
-            }
-        }
-
-        if (payment != null) {
-            if (payment.getStatus() == PaymentStatus.CAPTURED) {
-                return; // Idempotent check
-            }
-            payment.setStatus(PaymentStatus.CAPTURED);
-            payment.setRazorpayPaymentId(razorpayPaymentId);
-            payment.setRazorpaySignature(signature);
-            PaymentEvent event = PaymentEvent.builder()
-                    .payment(payment)
-                    .eventType("PAYMENT_CAPTURED_STANDARD_VERIFY")
-                    .eventDataJson("{\"paymentId\":\"" + razorpayPaymentId + "\"}")
-                    .createdBy("RAZORPAY_CHECKOUT")
-                    .build();
-            payment.addEvent(event);
-            paymentRepository.save(payment);
-        }
-
-        if (targetOrderId != null) {
-            try {
-                orderService.setRazorpayPaymentId(targetOrderId, razorpayPaymentId);
-                orderService.updateOrderStatus(targetOrderId, OrderStatus.PAID, "Payment verified successfully via Razorpay Standard Checkout", "RAZORPAY_CHECKOUT");
-                orderService.confirmOrderInventory(targetOrderId);
-                if (payment != null) {
-                    eventPublisher.publishEvent(PaymentCapturedEvent.builder()
-                            .paymentId(payment.getId())
-                            .orderId(targetOrderId)
-                            .amountInr(payment.getAmountInr())
-                            .razorpayPaymentId(razorpayPaymentId)
-                            .build());
+            if (paymentOpt.isPresent()) {
+                payment = paymentOpt.get();
+                if (targetOrderId == null) {
+                    targetOrderId = payment.getOrderId();
                 }
-            } catch (Exception ex) {
-                log.warn("Failed updating order {} status: {}", targetOrderId, ex.getMessage());
             }
+
+            if (payment != null) {
+                if (payment.getStatus() == PaymentStatus.CAPTURED) {
+                    return; // Idempotent check
+                }
+                payment.setStatus(PaymentStatus.CAPTURED);
+                payment.setRazorpayPaymentId(razorpayPaymentId);
+                payment.setRazorpaySignature(signature);
+                PaymentEvent event = PaymentEvent.builder()
+                        .payment(payment)
+                        .eventType("PAYMENT_CAPTURED_STANDARD_VERIFY")
+                        .eventDataJson("{\"paymentId\":\"" + razorpayPaymentId + "\"}")
+                        .createdBy("RAZORPAY_CHECKOUT")
+                        .build();
+                payment.addEvent(event);
+                paymentRepository.save(payment);
+            }
+
+            if (targetOrderId != null) {
+                try {
+                    orderService.setRazorpayPaymentId(targetOrderId, razorpayPaymentId);
+                    orderService.updateOrderStatus(targetOrderId, OrderStatus.PAID, "Payment verified successfully via Razorpay Standard Checkout", "RAZORPAY_CHECKOUT");
+                    orderService.confirmOrderInventory(targetOrderId);
+                    if (payment != null) {
+                        eventPublisher.publishEvent(PaymentCapturedEvent.builder()
+                                .paymentId(payment.getId())
+                                .orderId(targetOrderId)
+                                .amountInr(payment.getAmountInr())
+                                .razorpayPaymentId(razorpayPaymentId)
+                                .build());
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed updating order {} status: {}", targetOrderId, ex.getMessage());
+                }
+            }
+        };
+
+        if (transactionTemplate != null) {
+            transactionTemplate.executeWithoutResult(status -> atomicUpdate.run());
+        } else {
+            atomicUpdate.run();
         }
     }
 }

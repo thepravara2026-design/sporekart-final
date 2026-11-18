@@ -7,18 +7,19 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
-      idle-timeout: 60000
+      idle-timeout: 30000
       connection-timeout: 20000
-      max-lifetime: 300000
-      keepalive-time: 45000
-      connection-test-query: SELECT 1
-      validation-timeout: 3000
+      max-lifetime: 150000
+      keepalive-time: 30000
+      validation-timeout: 2500
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
     properties:
       hibernate:
         default_batch_fetch_size: 50
+        connection:
+          handling_mode: DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
     show-sql: false
   flyway:
     enabled: ${SPRING_FLYWAY_ENABLED:true}

@@ -160,7 +160,7 @@ public class PaymentModuleTest {
                 .razorpaySignature("mock_signature")
                 .build();
 
-        PaymentDtos.VerifyPaymentResponse verifyResp = paymentService.verifyPayment(verifyReq);
+        PaymentDtos.VerifyPaymentResponse verifyResp = paymentService.verifyPayment(verifyReq, null, testOrder.getSessionId());
         assertTrue(verifyResp.isSuccess());
 
         Payment payment = paymentRepository.findByRazorpayOrderId(initResp.getRazorpayOrderId()).orElseThrow();
@@ -210,7 +210,7 @@ public class PaymentModuleTest {
                 .razorpayPaymentId("pay_mock_refund")
                 .razorpaySignature("mock_signature")
                 .build();
-        paymentService.verifyPayment(verifyReq);
+        paymentService.verifyPayment(verifyReq, null, testOrder.getSessionId());
 
         PaymentGateway.RefundResult refundResult = paymentService.refundPayment(testOrder.getId(), new BigDecimal("210.00"), "Product return requested");
 

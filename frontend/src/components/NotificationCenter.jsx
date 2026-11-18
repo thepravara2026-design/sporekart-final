@@ -195,7 +195,7 @@ export function resolveNotificationUrl(notification, isAdmin = false) {
       return `/dashboard?tab=history${entityId ? `&orderId=${entityId}` : ''}`;
     }
     if (category === 'WALLET' || entityType === 'WALLET' || eventType.includes('WALLET')) {
-      return '/dashboard?tab=ledger';
+      return '/dashboard?tab=history';
     }
     if (category === 'SHIPPING' || category === 'SHIPMENT' || eventType.includes('SHIPMENT')) {
       return `/dashboard?tab=activeTrack${entityId ? `&orderId=${entityId}` : ''}`;

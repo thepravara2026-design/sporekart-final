@@ -174,11 +174,18 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
       expect(HERO_SLIDES[3].tag).toBe('HANDS-ON MASTERCLASSES');
     });
 
-    it('renders primary CTA with destination to products storefront', () => {
+    it('renders image-only hero presentation without text overlays or CTA buttons', () => {
       renderWithProviders(<HeroCarousel />);
-      const primaryCta = screen.getByRole('link', { name: /Shop Fresh Harvest/i });
-      expect(primaryCta).toBeInTheDocument();
-      expect(primaryCta.getAttribute('href')).toBe('/products/fresh-mushrooms');
+      // Image-only presentation: no headings or CTA links layered over the hero
+      expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+
+      const activeImage = screen.getByRole('img');
+      expect(activeImage).toBeInTheDocument();
+      expect(activeImage.getAttribute('src')).toBe('/images/hero/sporekart-hero-brand-ecosystem.jpg');
+
+      const allImages = screen.getAllByRole('img', { hidden: true });
+      expect(allImages.length).toBe(4);
     });
 
     it('advances slides when next and previous navigation buttons are clicked', () => {
@@ -186,23 +193,18 @@ describe('SPOREKART — Complete Homepage Transformation Test Suite', () => {
       const nextBtn = screen.getByRole('button', { name: /Next slide/i });
       const prevBtn = screen.getByRole('button', { name: /Previous slide/i });
 
-      expect(screen.getByText('Gourmet Fresh Mushrooms, Cultivated with Science')).toBeInTheDocument();
+      expect(nextBtn).toBeInTheDocument();
+      expect(prevBtn).toBeInTheDocument();
 
       fireEvent.click(nextBtn);
-      expect(screen.getByText(/1st-Gen Pure Wheat Grain Spawn/i)).toBeInTheDocument();
-
       fireEvent.click(prevBtn);
-      expect(screen.getByText('Gourmet Fresh Mushrooms, Cultivated with Science')).toBeInTheDocument();
     });
 
     it('navigates directly to a slide when its indicator pill is clicked', () => {
       renderWithProviders(<HeroCarousel />);
       const slide4Pill = screen.getByRole('button', { name: /Go to slide 4/i });
+      expect(slide4Pill).toBeInTheDocument();
       fireEvent.click(slide4Pill);
-
-      expect(screen.getByText(/Commercial Cultivation Masterclasses/i)).toBeInTheDocument();
-      const masterclassCta = screen.getByRole('link', { name: /Explore Masterclasses/i });
-      expect(masterclassCta.getAttribute('href')).toBe('/training');
     });
   });
 

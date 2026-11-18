@@ -102,11 +102,11 @@ export default function App() {
                   {/* Legacy URL Aliases & Notification Email Direct Route Aliases */}
                   <Route path="/catalog" element={<Navigate to="/products" replace />} />
                   <Route path="/catalog/:slug" element={<CatalogPage />} />
-                  <Route path="/wallet" element={<Navigate to="/dashboard?tab=ledger" replace />} />
+                  <Route path="/wallet" element={<Navigate to="/dashboard?tab=history" replace />} />
                   <Route path="/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
                   <Route path="/orders/:orderId" element={<OrderRedirect />} />
                   <Route path="/account" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/account/wallet" element={<Navigate to="/dashboard?tab=ledger" replace />} />
+                  <Route path="/account/wallet" element={<Navigate to="/dashboard?tab=history" replace />} />
                   <Route path="/account/orders" element={<Navigate to="/dashboard?tab=activeTrack" replace />} />
                   <Route path="/account/orders/:orderId" element={<OrderRedirect />} />
 

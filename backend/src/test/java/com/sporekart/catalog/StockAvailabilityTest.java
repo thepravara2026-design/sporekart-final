@@ -22,14 +22,18 @@ public class StockAvailabilityTest {
         assertEquals(StockAvailability.LIMITED_STOCK, StockAvailability.fromQuantity(15));
         assertEquals(StockAvailability.LIMITED_STOCK, StockAvailability.fromQuantity(11));
 
-        // 1..10 -> LOW_STOCK ("Only a few left. Hurry!")
+        // 5..10 -> LOW_STOCK ("Only a few left. Hurry!")
         assertEquals(StockAvailability.LOW_STOCK, StockAvailability.fromQuantity(10));
         assertEquals("Only a few left. Hurry!", StockAvailability.LOW_STOCK.getLabel());
 
         assertEquals(StockAvailability.LOW_STOCK, StockAvailability.fromQuantity(9));
         assertEquals(StockAvailability.LOW_STOCK, StockAvailability.fromQuantity(6));
         assertEquals(StockAvailability.LOW_STOCK, StockAvailability.fromQuantity(5));
-        assertEquals(StockAvailability.LOW_STOCK, StockAvailability.fromQuantity(1));
+
+        // 1..4 -> VERY_LOW_STOCK ("Very low stock")
+        assertEquals(StockAvailability.VERY_LOW_STOCK, StockAvailability.fromQuantity(4));
+        assertEquals("Very low stock", StockAvailability.VERY_LOW_STOCK.getLabel());
+        assertEquals(StockAvailability.VERY_LOW_STOCK, StockAvailability.fromQuantity(1));
 
         // <= 0 -> OUT_OF_STOCK ("Out of stock")
         assertEquals(StockAvailability.OUT_OF_STOCK, StockAvailability.fromQuantity(0));

@@ -56,6 +56,17 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
     @Query("DELETE FROM NotificationEvent n WHERE n.status = :status AND n.sentAt < :cutoff")
     int deleteByStatusAndSentAtBefore(@Param("status") NotificationStatus status, @Param("cutoff") java.time.ZonedDateTime cutoff);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE NotificationEvent n SET n.status = com.sporekart.notification.domain.NotificationStatus.RETRY_SCHEDULED " +
+           "WHERE n.status = com.sporekart.notification.domain.NotificationStatus.PROCESSING " +
+           "  AND n.lastAttemptAt < :cutoff")
+    int resetStuckProcessingEvents(@Param("cutoff") java.time.ZonedDateTime cutoff);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM NotificationEvent n WHERE (n.status = com.sporekart.notification.domain.NotificationStatus.SENT AND n.sentAt < :cutoff) " +
+           "   OR (n.status = com.sporekart.notification.domain.NotificationStatus.FAILED AND n.failedAt < :cutoff)")
+    int deleteArchivedNotificationsBefore(@Param("cutoff") java.time.ZonedDateTime cutoff);
+
     @Query("SELECT n FROM NotificationEvent n WHERE " +
            "(:eventType IS NULL OR n.eventType = :eventType) AND " +
            "(:status IS NULL OR n.status = :status) AND " +

@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://${RAILWAY_BACKEND_HOST:sporekart-backend.up.railway.app}/api/v1/:path*"
+      "destination": "https://api.sporekart.in/api/v1/:path*"
     },
     {
       "source": "/(.*)",
@@ -18,7 +18,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com; connect-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://lumberjack.razorpay.com https://accounts.google.com https://*.supabase.co https://*.railway.app; object-src 'none'; base-uri 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com; connect-src 'self' https://api.sporekart.in https://checkout.razorpay.com https://api.razorpay.com https://lumberjack.razorpay.com https://accounts.google.com https://*.supabase.co https://*.railway.app; object-src 'none'; base-uri 'self';"
         },
         {
           "key": "X-Frame-Options",

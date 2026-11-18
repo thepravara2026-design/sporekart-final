@@ -1,28 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sprout, Layers, Zap, Award, Wrench } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Layers, Sparkles, Sprout } from 'lucide-react';
 import * as api from '../api';
 
 const CATEGORY_FALLBACK_MAP = {
   'fresh-mushrooms': {
     name: 'Fresh Mushrooms',
     image: '/sporekart-white-button.jpg',
+    accentRing: 'from-emerald-500 to-forest-700',
   },
   'spawn-seeds': {
     name: 'Spawn Seeds',
     image: '/sporekart-cultivation-stage1-lab.jpg',
+    accentRing: 'from-amber-500 to-forest-800',
   },
   'growing-kits': {
     name: 'Growing Kits',
     image: '/sporekart-oyster-cluster.jpg',
+    accentRing: 'from-teal-500 to-forest-800',
   },
   'dry-mushrooms': {
     name: 'Dry Mushrooms',
     image: '/sporekart-shiitake.jpg',
+    accentRing: 'from-orange-500 to-soil',
   },
   'equipment-supplies': {
-    name: 'Supplies & Tools',
+    name: 'Equipment & Supplies',
     image: '/sporekart-farm-scientist.jpg',
+    accentRing: 'from-blue-500 to-forest-900',
   },
 };
 
@@ -36,7 +41,6 @@ const DEFAULT_CATEGORIES = [
 
 export default function CircularCategoryNav() {
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -101,84 +105,112 @@ export default function CircularCategoryNav() {
 
   const scroll = (direction) => {
     if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -260 : 260;
+      const scrollAmount = direction === 'left' ? -220 : 220;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
       setTimeout(updateScrollButtons, 350);
     }
   };
 
   return (
-    <nav 
-      aria-label="Product categories navigation" 
-      className="w-full bg-surface-white/95 sm:bg-surface-white/90 border-t border-surface-border/50 border-b border-surface-border/70 backdrop-blur-md py-2 sm:py-2.5 px-3 sm:px-6 relative z-30 shadow-xs transition-colors"
+    <nav
+      aria-label="Product categories navigation"
+      className="w-full bg-surface-white/95 backdrop-blur-md border-t border-surface-border/50 border-b border-surface-border/70 py-1 sm:py-1.5 px-3 sm:px-6 relative z-30 shadow-2xs transition-all duration-200"
     >
-      <div className="max-w-7xl mx-auto relative flex items-center">
-        {/* Left Scroll Button (Desktop) */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
+        {/* Amazon-style "All Products" Pill on Left */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Link
+            to="/products"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-forest-950 hover:text-emerald-700 bg-surface-neutral/90 hover:bg-forest-900/10 border border-surface-border/80 shrink-0 transition-all shadow-2xs group"
+            title="Browse all products"
+          >
+            <Layers className="w-3.5 h-3.5 text-emerald-700 group-hover:rotate-12 transition-transform duration-200" />
+            <span className="tracking-tight">All</span>
+          </Link>
+          <span className="hidden sm:inline-block h-3.5 w-px bg-surface-border/80 shrink-0 mx-0.5" />
+        </div>
+
+        {/* Scroll Left Button (if overflowed) */}
         {canScrollLeft && (
           <button
             type="button"
             onClick={() => scroll('left')}
             aria-label="Scroll categories left"
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 border border-surface-border shadow-level-2 items-center justify-center text-forest-800 hover:text-forest-950 hover:scale-105 transition-all duration-200 cursor-pointer -ml-2"
+            className="hidden sm:flex w-6 h-6 rounded-full bg-white hover:bg-forest-900 text-forest-900 hover:text-white border border-surface-border shadow-2xs items-center justify-center transition-all cursor-pointer shrink-0"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
         )}
 
-        {/* Scrollable Categories Row */}
+        {/* Amazon-style Compact Horizontal Category Strip */}
         <div
           ref={scrollRef}
           onScroll={updateScrollButtons}
-          className="flex items-center gap-3.5 sm:gap-7 overflow-x-auto scrollbar-none py-0.5 px-1 w-full scroll-smooth justify-start md:justify-center"
+          className="flex-1 flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none py-0.5 px-1 scroll-smooth"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {categories.map((cat) => (
-            <Link
-              key={cat.id || cat.slug}
-              to={`/products/${cat.slug}`}
-              className="flex flex-col items-center group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 rounded-2xl p-1 transition-all"
-              title={`Explore ${cat.name}`}
-            >
-              {/* Circular Image Container */}
-              <div className="relative w-12 h-12 min-[420px]:w-14 min-[420px]:h-14 sm:w-16 sm:h-16 rounded-full p-0.5 sm:p-1 bg-gradient-to-tr from-emerald-600/30 via-forest-700/20 to-emerald-400/40 group-hover:from-emerald-600 group-hover:to-forest-800 transition-all duration-300 shadow-sm group-hover:shadow-level-2 group-hover:scale-105 shrink-0">
-                <div className="w-full h-full rounded-full overflow-hidden bg-surface-cream border-2 border-white shadow-inner flex items-center justify-center">
-                  <img
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    width="64"
-                    height="64"
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = '/sporekart-white-button.jpg';
-                    }}
-                  />
-                </div>
-              </div>
+          {categories.map((cat) => {
+            const fallback = CATEGORY_FALLBACK_MAP[cat.slug] || {};
+            const accentRing = fallback.accentRing || 'from-emerald-500 to-forest-700';
 
-              {/* Category Name Label */}
-              <span className="text-[10px] sm:text-xs font-bold text-forest-900 group-hover:text-emerald-700 mt-1 sm:mt-1.5 text-center max-w-[70px] min-[420px]:max-w-[80px] sm:max-w-[100px] truncate transition-colors leading-tight">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
+            return (
+              <Link
+                key={cat.id || cat.slug}
+                to={`/products/${cat.slug}`}
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-full hover:bg-forest-900/6 border border-transparent hover:border-emerald-500/25 transition-all duration-200 shrink-0 group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-600"
+                title={`Explore ${cat.name}`}
+              >
+                {/* Smaller Circular Icon (Amazon style, 24px-28px diameter) */}
+                <div className={`relative w-6 h-6 sm:w-7 sm:h-7 rounded-full p-[1.5px] bg-gradient-to-tr ${accentRing} shadow-2xs shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_8px_rgba(16,185,129,0.35)] transition-all duration-300`}>
+                  <div className="w-full h-full rounded-full overflow-hidden bg-surface-cream border border-white flex items-center justify-center">
+                    <img
+                      src={cat.imageUrl}
+                      alt={cat.name}
+                      width="28"
+                      height="28"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/sporekart-white-button.jpg';
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Category Label */}
+                <span className="text-[11px] sm:text-xs font-semibold text-forest-950 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
+                  {cat.name}
+                </span>
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Right Scroll Button (Desktop) */}
+        {/* Scroll Right Button (if overflowed) */}
         {canScrollRight && (
           <button
             type="button"
             onClick={() => scroll('right')}
             aria-label="Scroll categories right"
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-surface-border shadow-level-2 items-center justify-center text-forest-800 hover:text-forest-950 hover:scale-105 transition-all duration-200 cursor-pointer -mr-2"
+            className="hidden sm:flex w-6 h-6 rounded-full bg-white hover:bg-forest-900 text-forest-900 hover:text-white border border-surface-border shadow-2xs items-center justify-center transition-all cursor-pointer shrink-0"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
+
+        {/* Right Quick Telemetry Tag (Desktop >= 1024px) */}
+        <div className="hidden lg:flex items-center gap-2 shrink-0 pl-2 border-l border-surface-border/70">
+          <Link
+            to="/training"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-soil hover:text-forest-950 bg-gold/15 hover:bg-gold/25 border border-gold/30 px-2.5 py-0.5 rounded-full transition-colors"
+          >
+            <Sparkles className="w-3 h-3 text-gold" />
+            <span>Workshops & Training</span>
+          </Link>
+        </div>
       </div>
     </nav>
   );
 }
-

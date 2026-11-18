@@ -182,7 +182,8 @@ public class NotificationEventService {
         if (name.startsWith("ADMIN")) return "ADMIN";
         if (name.startsWith("ORDER")) return "ORDER";
         if (name.startsWith("SHIPMENT")) return "SHIPPING";
-        if (name.startsWith("WALLET") || name.startsWith("REFUND")) return "WALLET";
+        if (name.startsWith("REFUND")) return "REFUND";
+        if (name.startsWith("WALLET")) return "FINANCE";
         if (name.startsWith("ENROLLMENT") || name.startsWith("TRAINING")) return "TRAINING";
         if (name.startsWith("BLOG")) return "CONTENT";
         if (name.startsWith("PROMOTION")) return "PROMOTION";
@@ -217,7 +218,7 @@ public class NotificationEventService {
             return "/dashboard?tab=activeTrack" + (entityId != null ? "&orderId=" + entityId : "");
         }
         if ("WALLET".equalsIgnoreCase(entityType)) {
-            return "/dashboard?tab=ledger";
+            return "/dashboard?tab=history";
         }
         if ("TRAINING".equalsIgnoreCase(entityType) || "ENROLLMENT".equalsIgnoreCase(entityType)) {
             return "/dashboard?tab=trainings" + (entityId != null ? "&bookingId=" + entityId : "");

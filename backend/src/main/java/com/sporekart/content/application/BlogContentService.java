@@ -261,6 +261,10 @@ public class BlogContentService {
     @Scheduled(fixedRate = 60000)
     @SchedulerLock(name = "BlogContentService_processScheduledPosts", lockAtMostFor = "50s", lockAtLeastFor = "10s")
     public void processScheduledPosts() {
+        publishDueScheduledPosts();
+    }
+
+    public int publishDueScheduledPosts() {
         ZonedDateTime now = ZonedDateTime.now();
         List<BlogPost> duePosts = postRepository.findDueScheduledPosts(now);
         for (BlogPost post : duePosts) {
@@ -279,6 +283,7 @@ public class BlogContentService {
                 log.error("Automated Scheduled Publisher: Failed to publish post {} ({}): {}", post.getId(), post.getTitle(), e.getMessage(), e);
             }
         }
+        return duePosts.size();
     }
 
     // --- Public Content Discovery ---

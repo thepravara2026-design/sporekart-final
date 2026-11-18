@@ -19,6 +19,8 @@ import com.sporekart.shared.application.ForbiddenOperationException;
 import com.sporekart.shared.application.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -628,7 +631,7 @@ public class OrderService {
 
         validateOrderAccess(order, userId, sessionId);
         boolean isAdmin = isCallerAdmin(userId);
-        return performOrderCancellation(order, userId, reason, isAdmin);
+        return performOrderCancellation(order, userId, reason, isAdmin, null);
     }
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
@@ -648,10 +651,32 @@ public class OrderService {
             return mapToResponse(order);
         }
 
-        return performOrderCancellation(order, userId, reason, isAdmin);
+        return performOrderCancellation(order, userId, reason, isAdmin, null);
     }
 
-    private OrderResponse performOrderCancellation(Order order, UUID userId, String reason, boolean isAdmin) {
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public OrderResponse cancelOrder(UUID orderId, String reason, String updatedBy, boolean isAdmin) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        return performOrderCancellation(order, null, reason, isAdmin, updatedBy);
+    }
+
+    @Scheduled(fixedDelayString = "${sporekart.order.reaper.interval-ms:900000}", initialDelay = 60000)
+    @SchedulerLock(name = "OrderService_reapExpiredPendingOrders", lockAtMostFor = "10m", lockAtLeastFor = "1m")
+    @Transactional
+    public void reapExpiredPendingOrders() {
+        OffsetDateTime cutoff = OffsetDateTime.now().minusMinutes(60);
+        List<Order> staleOrders = orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING_PAYMENT, cutoff);
+        for (Order order : staleOrders) {
+            try {
+                cancelOrder(order.getId(), "Expired unpaid order reservation", "SYSTEM_REAPER", false);
+            } catch (Exception ex) {
+                log.warn("Failed to reap expired pending order {}: {}", order.getId(), ex.getMessage());
+            }
+        }
+    }
+
+    private OrderResponse performOrderCancellation(Order order, UUID userId, String reason, boolean isAdmin, String updatedBy) {
         UUID orderId = order.getId();
 
         OrderStatus currentStatus = order.getStatus();
@@ -684,6 +709,10 @@ public class OrderService {
             }
         }
 
+        String actor = (updatedBy != null && !updatedBy.isBlank())
+                ? updatedBy
+                : (isAdmin ? ("ADMIN:" + userId) : (userId != null ? userId.toString() : "CUSTOMER"));
+
         String formattedReason = (reason != null && !reason.trim().isEmpty())
                 ? reason
                 : (isAdmin ? "Cancelled by Admin" : "Cancelled by Customer");
@@ -692,7 +721,7 @@ public class OrderService {
         for (OrderItem item : order.getItems()) {
             if (item.getVariantId() != null) {
                 try {
-                    inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), isPaidOrder, formattedReason, isAdmin ? ("ADMIN:" + userId) : (userId != null ? userId.toString() : "CUSTOMER"));
+                    inventoryService.releaseCancelledOrder(item.getVariantId(), item.getQuantity(), order.getOrderNumber(), isPaidOrder, formattedReason, actor);
                 } catch (Exception ex) {
                     org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Failed to release inventory for variant {}: {}", item.getVariantId(), ex.getMessage());
                 }
@@ -730,16 +759,16 @@ public class OrderService {
                     return getOrderById(orderId);
                 } else {
                     org.slf4j.LoggerFactory.getLogger(OrderService.class).warn("Paid order {} has no payment ID recorded. Marking REFUND_PENDING for manual review.", orderId);
-                    return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending manual review (missing payment ID): " + formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+                    return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending manual review (missing payment ID): " + formattedReason, actor);
                 }
             } catch (Exception ex) {
                 org.slf4j.LoggerFactory.getLogger(OrderService.class).error("Gateway/wallet refund dispatch failed for order {}: {}", orderId, ex.getMessage());
-                return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending gateway processing: " + formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+                return updateOrderStatus(orderId, OrderStatus.REFUND_PENDING, "Refund pending gateway processing: " + formattedReason, actor);
             }
         }
 
         OrderStatus nextStatus = isPaidOrder ? OrderStatus.REFUND_PENDING : OrderStatus.CANCELLED;
-        return updateOrderStatusForEntity(order, nextStatus, formattedReason, isAdmin ? "ADMIN:" + userId : (userId != null ? "CUSTOMER:" + userId : "GUEST"));
+        return updateOrderStatusForEntity(order, nextStatus, formattedReason, actor);
     }
 
     private OrderAddressSnapshot resolveAddressSnapshot(UUID userId, CreateOrderRequest request) {

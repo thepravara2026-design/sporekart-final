@@ -54,7 +54,8 @@ describe('Legal & Regulatory Compliance Documentation Tests', () => {
     expect(fullText).toContain('7 calendar days');
     expect(fullText).toContain('unopened bag');
     expect(fullText).toContain('100% Full Refund');
-    expect(fullText).toContain('Sporekart Store Wallet');
+    expect(fullText).toContain('Original Payment Source (Razorpay)');
+    expect(fullText).not.toContain('Sporekart Store Wallet');
   });
 
   it('verifies Cookie & Cache Policy details local storage keys and zero ad tracking', () => {

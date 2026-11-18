@@ -23,18 +23,20 @@ public class ShipmentTrackingSyncTask {
 
     /**
      * Periodic background reconciliation for active, non-terminal shipments.
-     * Defaults to every 4 hours, configurable via sporekart.shipping.tracking-sync.cron.
+     * Defaults to every 4 hours, configurable via
+     * sporekart.shipping.tracking-sync.cron.
      */
-    @Scheduled(cron = "${sporekart.shipping.tracking-sync.cron:0 0 */4 * * *}")
-    @SchedulerLock(name = "ShipmentTrackingSyncTask_sync", lockAtMostFor = "3h", lockAtLeastFor = "10m")
+    @Scheduled(cron = "${sporekart.shipping.tracking-sync.cron:0 0 */4 * * *}", zone = "Asia/Kolkata")
+    @SchedulerLock(name = "ShipmentTrackingSyncTask_sync", lockAtMostFor = "15m", lockAtLeastFor = "2m")
     public void syncActiveShipmentTracking() {
         log.info("Starting scheduled background tracking synchronization for active shipments...");
         try {
             List<ShipmentStatus> activeStatuses = List.of(
+                    ShipmentStatus.AWB_PENDING,
+                    ShipmentStatus.AWB_ASSIGNED,
                     ShipmentStatus.PICKUP_SCHEDULED,
                     ShipmentStatus.IN_TRANSIT,
-                    ShipmentStatus.OUT_FOR_DELIVERY
-            );
+                    ShipmentStatus.OUT_FOR_DELIVERY);
             List<Shipment> activeShipments = shipmentRepository.findByStatusIn(activeStatuses);
             log.info("Found {} active shipments pending tracking sync", activeShipments.size());
 
@@ -47,7 +49,8 @@ public class ShipmentTrackingSyncTask {
                     log.warn("Failed tracking sync for shipment {}: {}", shipment.getId(), e.getMessage());
                 }
             }
-            log.info("Completed background tracking sync. Successfully processed: {}/{}", syncedCount, activeShipments.size());
+            log.info("Completed background tracking sync. Successfully processed: {}/{}", syncedCount,
+                    activeShipments.size());
         } catch (Exception e) {
             log.error("Error occurred during scheduled tracking sync: {}", e.getMessage(), e);
         }

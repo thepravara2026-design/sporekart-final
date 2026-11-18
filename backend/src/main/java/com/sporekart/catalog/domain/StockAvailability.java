@@ -7,6 +7,7 @@ public enum StockAvailability {
     AVAILABLE("Available"),
     LIMITED_STOCK("Limited stock"),
     LOW_STOCK("Only a few left. Hurry!"),
+    VERY_LOW_STOCK("Very low stock"),
     OUT_OF_STOCK("Out of stock");
 
     private final String label;
@@ -20,8 +21,10 @@ public enum StockAvailability {
             return AVAILABLE;
         } else if (stockQuantity > 10) {
             return LIMITED_STOCK;
-        } else if (stockQuantity > 0) {
+        } else if (stockQuantity >= 5) {
             return LOW_STOCK;
+        } else if (stockQuantity > 0) {
+            return VERY_LOW_STOCK;
         } else {
             return OUT_OF_STOCK;
         }

@@ -37,7 +37,14 @@ export default function AvailabilityBadge({ availability, className = '' }) {
           bg: 'bg-soil/15 border-soil/30 text-soil',
           dot: 'bg-soil animate-pulse',
           icon: AlertCircle,
-          defaultLabel: 'Low Stock'
+          defaultLabel: 'Hurry! Low Stock'
+        };
+      case 'VERY_LOW_STOCK':
+        return {
+          bg: 'bg-red-500/15 border-red-500/40 text-red-600',
+          dot: 'bg-red-600 animate-pulse',
+          icon: AlertCircle,
+          defaultLabel: 'Very Low Stock'
         };
       case 'OUT_OF_STOCK':
         return {

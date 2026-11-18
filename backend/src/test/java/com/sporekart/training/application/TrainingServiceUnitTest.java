@@ -61,9 +61,6 @@ public class TrainingServiceUnitTest {
     private com.sporekart.identity.infrastructure.UserRepository userRepository;
 
     @Mock
-    private com.sporekart.wallet.application.WalletService walletService;
-
-    @Mock
     private com.sporekart.promotion.application.PromotionService promotionService;
 
     @Mock

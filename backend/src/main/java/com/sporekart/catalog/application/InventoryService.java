@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -158,41 +159,31 @@ public class InventoryService {
         }
     }
 
-    private void recordAuditLog(UUID variantId, InventoryEventType eventType, int quantityChanged, InventoryRecord record, String referenceId, String reason, String createdBy) {
-        Runnable task = () -> {
-            try {
-                String safeReason = reason;
-                if (safeReason != null && safeReason.length() > 255) {
-                    safeReason = safeReason.substring(0, 252) + "...";
-                }
-                InventoryAuditEvent audit = InventoryAuditEvent.builder()
-                        .variantId(variantId)
-                        .eventType(eventType)
-                        .quantityChanged(quantityChanged)
-                        .availableQuantityAfter(record.getAvailableQuantity())
-                        .reservedQuantityAfter(record.getReservedQuantity())
-                        .soldQuantityAfter(record.getSoldQuantity())
-                        .referenceId(referenceId)
-                        .reason(safeReason)
-                        .createdBy(createdBy)
-                        .build();
-                inventoryAuditRepository.save(audit);
-            } catch (Exception ex) {
-                org.slf4j.LoggerFactory.getLogger(InventoryService.class).warn("Background inventory audit log failed: {}", ex.getMessage());
-            }
-        };
+    private static final java.util.concurrent.atomic.AtomicLong auditNanoOffset = new java.util.concurrent.atomic.AtomicLong(0);
 
-        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
-            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-                    new org.springframework.transaction.support.TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            java.util.concurrent.CompletableFuture.runAsync(task);
-                        }
-                    }
-            );
-        } else {
-            java.util.concurrent.CompletableFuture.runAsync(task);
+    private void recordAuditLog(UUID variantId, InventoryEventType eventType, int quantityChanged, InventoryRecord record, String referenceId, String reason, String createdBy) {
+        try {
+            String safeReason = reason;
+            if (safeReason != null && safeReason.length() > 255) {
+                safeReason = safeReason.substring(0, 252) + "...";
+            }
+            long offsetNanos = auditNanoOffset.incrementAndGet() % 1000000;
+            LocalDateTime eventTime = LocalDateTime.now().plusNanos(offsetNanos);
+            InventoryAuditEvent audit = InventoryAuditEvent.builder()
+                    .variantId(variantId)
+                    .eventType(eventType)
+                    .quantityChanged(quantityChanged)
+                    .availableQuantityAfter(record.getAvailableQuantity())
+                    .reservedQuantityAfter(record.getReservedQuantity())
+                    .soldQuantityAfter(record.getSoldQuantity())
+                    .referenceId(referenceId)
+                    .reason(safeReason)
+                    .createdBy(createdBy)
+                    .createdAt(eventTime)
+                    .build();
+            inventoryAuditRepository.save(audit);
+        } catch (Exception ex) {
+            org.slf4j.LoggerFactory.getLogger(InventoryService.class).warn("Inventory audit log failed: {}", ex.getMessage());
         }
     }
 }

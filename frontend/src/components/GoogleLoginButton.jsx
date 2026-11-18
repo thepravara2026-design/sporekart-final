@@ -150,7 +150,7 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
             </div>
           )}
         </div>
-      ) : (
+      ) : isDev ? (
         <button
           type="button"
           onClick={handleDevMockGoogleLogin}
@@ -183,6 +183,10 @@ export default function GoogleLoginButton({ onSuccess, onError, loading, setLoad
               : 'Continue with Google (Dev Mode)'}
           </span>
         </button>
+      ) : (
+        <div className="w-full p-3 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded-input">
+          Google Sign-In is unavailable. Please check your connection or reload the page.
+        </div>
       )}
     </div>
   );

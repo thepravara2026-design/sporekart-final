@@ -17,8 +17,11 @@ public class PaymentController {
 
     @PostMapping("/initiate")
     public ResponseEntity<ApiResponse<PaymentDtos.InitiatePaymentResponse>> initiatePayment(
-            @Valid @RequestBody PaymentDtos.InitiatePaymentRequest request) {
-        PaymentDtos.InitiatePaymentResponse response = paymentService.initiatePayment(request.getOrderId());
+            @Valid @RequestBody PaymentDtos.InitiatePaymentRequest request,
+            @RequestHeader(name = "X-Session-ID", required = false) String sessionId,
+            org.springframework.security.core.Authentication authentication) {
+        java.util.UUID userId = extractUserId(authentication);
+        PaymentDtos.InitiatePaymentResponse response = paymentService.initiatePayment(request.getOrderId(), userId, sessionId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

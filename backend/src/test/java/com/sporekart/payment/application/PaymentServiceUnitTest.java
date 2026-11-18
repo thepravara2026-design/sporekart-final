@@ -70,6 +70,12 @@ public class PaymentServiceUnitTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         lenient().when(paymentEventIdempotencyService.recordEventIfUnique(any())).thenReturn(true);
+        lenient().when(paymentGateway.fetchPayment(any())).thenReturn(
+                PaymentGateway.GatewayPaymentDetails.builder()
+                        .status("captured")
+                        .currency("INR")
+                        .build()
+        );
     }
 
     @Test
@@ -107,6 +113,40 @@ public class PaymentServiceUnitTest {
         when(orderService.getOrderById(orderId)).thenThrow(new ResourceNotFoundException("Order not found"));
 
         assertThrows(ResourceNotFoundException.class, () -> paymentService.initiatePayment(orderId));
+    }
+
+    @Test
+    @DisplayName("SEC-002: initiatePayment with mismatched authenticated user throws ForbiddenOperationException")
+    void SEC_002_initiate_payment_unauthorized_user_throws_forbidden() {
+        UUID orderId = UUID.randomUUID();
+        UUID ownerUserId = UUID.randomUUID();
+        UUID attackerUserId = UUID.randomUUID();
+
+        OrderResponse orderResp = new OrderResponse();
+        orderResp.setId(orderId);
+        orderResp.setUserId(ownerUserId);
+
+        when(orderService.getOrderById(orderId)).thenReturn(orderResp);
+
+        assertThrows(com.sporekart.shared.application.ForbiddenOperationException.class,
+                () -> paymentService.initiatePayment(orderId, attackerUserId, null));
+    }
+
+    @Test
+    @DisplayName("SEC-002: initiatePayment with mismatched guest session throws ForbiddenOperationException")
+    void SEC_002_initiate_payment_unauthorized_guest_session_throws_forbidden() {
+        UUID orderId = UUID.randomUUID();
+        String validSession = "session-valid-123";
+        String attackerSession = "session-attacker-456";
+
+        OrderResponse orderResp = new OrderResponse();
+        orderResp.setId(orderId);
+        orderResp.setSessionId(validSession);
+
+        when(orderService.getOrderById(orderId)).thenReturn(orderResp);
+
+        assertThrows(com.sporekart.shared.application.ForbiddenOperationException.class,
+                () -> paymentService.initiatePayment(orderId, null, attackerSession));
     }
 
     @Test
@@ -507,7 +547,7 @@ public class PaymentServiceUnitTest {
                 .paymentReference("pay_rzp_98765")
                 .build();
 
-        when(paymentGateway.isMockMode()).thenReturn(false);
+        lenient().when(paymentGateway.isMockMode()).thenReturn(false);
         when(trainingService.getEnrollmentById(enrollmentId)).thenReturn(enrollment);
         when(paymentGateway.verifySignature("order_rzp_enroll_123", "pay_rzp_98765", "valid_signature_hash")).thenReturn(true);
         when(paymentRepository.findByRazorpayOrderId("order_rzp_enroll_123")).thenReturn(Optional.of(initiatedPayment));
@@ -642,7 +682,7 @@ public class PaymentServiceUnitTest {
 
         when(paymentRepository.findByRazorpayOrderId(rzpOrderId)).thenReturn(Optional.of(payment));
         when(paymentGateway.verifySignature(any(), any(), any())).thenReturn(true);
-        when(paymentGateway.isMockMode()).thenReturn(false);
+        lenient().when(paymentGateway.isMockMode()).thenReturn(false);
         when(paymentGateway.fetchPayment(rzpPayId)).thenReturn(PaymentGateway.GatewayPaymentDetails.builder()
                 .paymentId(rzpPayId)
                 .orderId(rzpOrderId)
@@ -682,7 +722,7 @@ public class PaymentServiceUnitTest {
 
         when(paymentRepository.findByRazorpayOrderId(rzpOrderId)).thenReturn(Optional.of(payment));
         when(paymentGateway.verifySignature(any(), any(), any())).thenReturn(true);
-        when(paymentGateway.isMockMode()).thenReturn(false);
+        lenient().when(paymentGateway.isMockMode()).thenReturn(false);
         when(paymentGateway.fetchPayment(rzpPayId)).thenReturn(PaymentGateway.GatewayPaymentDetails.builder()
                 .paymentId(rzpPayId)
                 .orderId(rzpOrderId)

@@ -45,8 +45,6 @@ vi.mock('../api', () => ({
     getWallet: vi.fn(),
     getTransactions: vi.fn(),
     getWithdrawals: vi.fn(),
-    addMoney: vi.fn(),
-    verifyAddMoney: vi.fn(),
   },
   shippingApi: {
     getShipmentByOrder: vi.fn(),

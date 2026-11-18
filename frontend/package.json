@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:staging": "vite build --mode staging",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
     "preview": "vite preview",
     "seo:gate": "node scripts/seo-quality-gate.js",
+    "validate:deployment": "node scripts/validate-deployment-config.js",
     "test": "vitest run"
   },
   "dependencies": {

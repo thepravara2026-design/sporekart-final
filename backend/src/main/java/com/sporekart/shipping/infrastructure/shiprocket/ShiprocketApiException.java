@@ -18,6 +18,13 @@ public class ShiprocketApiException extends RuntimeException {
         this.responseBody = responseBody;
     }
 
+    public ShiprocketApiException(String message) {
+        super(message);
+        this.statusCode = null;
+        this.endpoint = null;
+        this.responseBody = null;
+    }
+
     public ShiprocketApiException(String message, Throwable cause) {
         super(message, cause);
         this.statusCode = null;

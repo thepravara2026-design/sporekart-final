@@ -12,8 +12,14 @@ logging:
     root: INFO
     com.sporekart: INFO
 
+app:
+  razorpay:
+    mock-mode: false
+
 sporekart:
   mail:
     use-real-smtp: ${USE_REAL_SMTP:true}
+  shiprocket:
+    use-real-shiprocket: true
 
 

@@ -147,6 +147,7 @@ public class SupportController {
         private TicketPriority priority;
 
         @NotBlank(message = "Message is required")
+        @Size(max = 5000, message = "Message cannot exceed 5000 characters")
         private String message;
 
         private UUID orderId;
@@ -159,6 +160,7 @@ public class SupportController {
     @Data
     public static class AddMessageRequest {
         @NotBlank(message = "Message is required")
+        @Size(max = 5000, message = "Message cannot exceed 5000 characters")
         private String message;
     }
 
@@ -167,6 +169,8 @@ public class SupportController {
         @Min(value = 1, message = "Rating must be between 1 and 5")
         @Max(value = 5, message = "Rating must be between 1 and 5")
         private Integer rating;
+
+        @Size(max = 1000, message = "Feedback cannot exceed 1000 characters")
         private String feedback;
     }
 }

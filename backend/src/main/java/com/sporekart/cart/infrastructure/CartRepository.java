@@ -25,8 +25,14 @@ public interface CartRepository extends JpaRepository<Cart, UUID> {
 
     java.util.List<Cart> findByStatusAndUpdatedAtBefore(CartStatus status, java.time.OffsetDateTime cutoff);
 
-    @Query("SELECT DISTINCT c FROM Cart c LEFT JOIN FETCH c.items WHERE c.status = :status AND c.userId IS NOT NULL AND c.updatedAt < :cutoff")
-    java.util.List<Cart> findAbandonedCartsWithItems(@org.springframework.data.repository.query.Param("status") CartStatus status, @org.springframework.data.repository.query.Param("cutoff") java.time.OffsetDateTime cutoff);
+    java.util.List<Cart> findByStatusAndUpdatedAtBetween(CartStatus status, java.time.OffsetDateTime cutoffLower, java.time.OffsetDateTime cutoffUpper);
+
+    @Query("SELECT DISTINCT c FROM Cart c LEFT JOIN FETCH c.items WHERE c.status = :status AND c.userId IS NOT NULL AND c.updatedAt >= :cutoffLower AND c.updatedAt < :cutoffUpper")
+    java.util.List<Cart> findAbandonedCartsWithItems(
+            @org.springframework.data.repository.query.Param("status") CartStatus status,
+            @org.springframework.data.repository.query.Param("cutoffLower") java.time.OffsetDateTime cutoffLower,
+            @org.springframework.data.repository.query.Param("cutoffUpper") java.time.OffsetDateTime cutoffUpper
+    );
 
     @Query(value = "SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtext(:lockKey))) as lock_subquery", nativeQuery = true)
     Integer acquireAdvisoryLock(@org.springframework.data.repository.query.Param("lockKey") String lockKey);

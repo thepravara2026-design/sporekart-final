@@ -54,6 +54,7 @@ public class WalletService {
         return mapToWalletResponse(wallet);
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction creditWallet(
             UUID userId,
@@ -147,6 +148,7 @@ public class WalletService {
         return savedTxn;
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction debitWallet(
             UUID userId,
@@ -235,6 +237,7 @@ public class WalletService {
         return savedTxn;
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction processRefundToWallet(
             UUID userId,
@@ -263,6 +266,7 @@ public class WalletService {
         );
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse requestWithdrawal(UUID userId, WalletDtos.WithdrawRequest request) {
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -347,6 +351,7 @@ public class WalletService {
         return mapToWithdrawalResponse(saved);
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse approveWithdrawal(UUID withdrawalId, String adminUser, String notes) {
         WalletWithdrawal withdrawal = withdrawalRepository.findById(withdrawalId)
@@ -387,6 +392,7 @@ public class WalletService {
         return mapToWithdrawalResponse(saved);
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletDtos.WithdrawalResponse rejectWithdrawal(UUID withdrawalId, String adminUser, String reason) {
         WalletWithdrawal withdrawal = withdrawalRepository.findById(withdrawalId)
@@ -520,6 +526,7 @@ public class WalletService {
                 .build();
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction performAdminAdjustment(UUID targetUserId, BigDecimal amount, String direction, String reason, String adminUser) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -600,6 +607,7 @@ public class WalletService {
                 .build();
     }
 
+    @Deprecated
     @Transactional
     public WalletDtos.AddMoneyResponse createTopupIntent(UUID userId, BigDecimal amount) {
         if (userId == null) {
@@ -636,6 +644,7 @@ public class WalletService {
                 .build();
     }
 
+    @Deprecated
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public WalletTransaction verifyTopup(
             UUID userId,

@@ -152,8 +152,8 @@ class ShiprocketAdapterLiveUnitTest {
     }
 
     @Test
-    @DisplayName("ADAPT-LIVE-4: AWB assignment fallback uses shipment reference if carrier fails to assign AWB immediately")
-    void ADAPT_LIVE_4_fallbackToShipmentRef_whenAwbFails() {
+    @DisplayName("ADAPT-LIVE-4: AWB assignment failure retains AWB_PENDING state without synthetic AWB")
+    void ADAPT_LIVE_4_retainsAwbPending_whenAwbFails() {
         ShiprocketDtos.CreateOrderResponse createOrderResponse = ShiprocketDtos.CreateOrderResponse.builder()
                 .orderId(887766L)
                 .shipmentId(998877L)
@@ -167,20 +167,25 @@ class ShiprocketAdapterLiveUnitTest {
         ShippingProvider.CreateShipmentCommand command = ShippingProvider.CreateShipmentCommand.builder()
                 .orderId(UUID.randomUUID())
                 .orderNumber("SK-2026-0099")
-                .recipientName("Ramesh")
+                .recipientName("Ramesh Patil")
                 .phone("9876543210")
-                .addressLine1("Farm 101")
+                .addressLine1("Farm 101, Main Road")
                 .city("Pune")
                 .state("Maharashtra")
                 .pincode("411001")
                 .totalAmountInr(new BigDecimal("500.00"))
+                .weightKg(new BigDecimal("0.500"))
+                .lengthCm(new BigDecimal("15.00"))
+                .breadthCm(new BigDecimal("15.00"))
+                .heightCm(new BigDecimal("10.00"))
                 .build();
 
         ShippingProvider.CreateShipmentResult result = adapter.createShipment(command);
 
         assertNotNull(result);
         assertEquals("998877", result.getProviderShipmentId());
-        assertEquals("SR-998877", result.getAwbCode());
-        assertEquals("PICKUP_SCHEDULED", result.getStatus());
+        assertNull(result.getAwbCode(), "A locally generated identifier must never be represented as an actual Shiprocket AWB");
+        assertEquals("AWB_PENDING", result.getStatus(), "Status must retain AWB_PENDING when carrier has not assigned AWB");
+        verify(shiprocketRestClient, never()).requestPickup("998877");
     }
 }

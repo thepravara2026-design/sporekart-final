@@ -190,7 +190,7 @@ public class ShiprocketLiveSimulatedHarnessIntegrationTest {
                 .razorpayPaymentId("pay_live_mock_" + UUID.randomUUID().toString().substring(0, 8))
                 .razorpaySignature("sig_mock_12345")
                 .build();
-        paymentService.verifyPayment(payReq);
+        paymentService.verifyPayment(payReq, userId, null);
 
         paidOrder = orderService.getOrderById(paidOrder.getId());
         assertEquals(OrderStatus.PAID, paidOrder.getStatus(), "Order must be in PAID state prior to dispatch");

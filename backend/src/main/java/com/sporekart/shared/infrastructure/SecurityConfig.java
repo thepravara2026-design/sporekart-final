@@ -108,9 +108,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/orders", "/orders/").permitAll()
                     .requestMatchers(HttpMethod.GET, "/orders/*", "/orders/*/invoice").permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/create-order",
-                        "/verify-payment",
-                        "/payment/initiate", "/payment/verify", "/payment/webhook").permitAll()
+                        "/payment/initiate", "/payment/verify", "/payment/webhook",
+                        "/create-order", "/verify-payment").permitAll()
                     .requestMatchers(HttpMethod.POST, "/shipping/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/payment/summary").permitAll()
                     .requestMatchers(HttpMethod.POST, "/analytics/track-*").permitAll()

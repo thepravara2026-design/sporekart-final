@@ -93,7 +93,7 @@ public class NotificationWorker {
     }
 
     @Scheduled(fixedDelay = 10000)
-    @SchedulerLock(name = "NotificationWorker_processOutbox", lockAtMostFor = "8s", lockAtLeastFor = "3s")
+    @SchedulerLock(name = "NotificationWorker_processOutbox", lockAtMostFor = "2m", lockAtLeastFor = "5s")
     public void processOutboxQueue() {
         List<NotificationEvent> pendingEvents = notificationRepository
                 .findTop20ByStatusInAndAttemptCountLessThanOrderByCreatedAtAsc(
@@ -112,15 +112,30 @@ public class NotificationWorker {
         }
     }
 
-    @Scheduled(cron = "${sporekart.notification.retention.cron:0 0 3 * * ?}")
+    @Scheduled(fixedDelay = 60000)
+    @SchedulerLock(name = "NotificationWorker_recoverStuck", lockAtMostFor = "5m", lockAtLeastFor = "10s")
+    @org.springframework.transaction.annotation.Transactional
+    public void recoverStuckProcessingNotifications() {
+        try {
+            ZonedDateTime cutoff = ZonedDateTime.now().minusMinutes(10);
+            int recovered = notificationRepository.resetStuckProcessingEvents(cutoff);
+            if (recovered > 0) {
+                log.warn("Recovered {} stuck PROCESSING notifications (last attempt before {}) back to RETRY_SCHEDULED", recovered, cutoff);
+            }
+        } catch (Exception e) {
+            log.error("Failed to recover stuck notifications: {}", e.getMessage(), e);
+        }
+    }
+
+    @Scheduled(cron = "${sporekart.notification.retention.cron:0 0 3 * * ?}", zone = "Asia/Kolkata")
     @SchedulerLock(name = "NotificationWorker_cleanupOldArchivedNotifications", lockAtMostFor = "1h", lockAtLeastFor = "5m")
     @org.springframework.transaction.annotation.Transactional
     public void cleanupOldArchivedNotifications() {
         try {
             ZonedDateTime cutoff = ZonedDateTime.now().minusDays(90);
-            int deleted = notificationRepository.deleteByStatusAndSentAtBefore(NotificationStatus.SENT, cutoff);
+            int deleted = notificationRepository.deleteArchivedNotificationsBefore(cutoff);
             if (deleted > 0) {
-                log.info("Purged {} archived SENT notifications older than 90 days (cutoff: {})", deleted, cutoff);
+                log.info("Purged {} archived notifications (SENT/FAILED) older than 90 days (cutoff: {})", deleted, cutoff);
             }
         } catch (Exception e) {
             log.error("Failed to run scheduled notification outbox cleanup: {}", e.getMessage());

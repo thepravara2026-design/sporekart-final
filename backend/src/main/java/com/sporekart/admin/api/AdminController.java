@@ -9,6 +9,7 @@ import com.sporekart.shared.api.ApiResponse;
 import com.sporekart.training.infrastructure.CourseRepository;
 import com.sporekart.training.infrastructure.EnrollmentRepository;
 import com.sporekart.payment.infrastructure.RefundRepository;
+import com.sporekart.payment.infrastructure.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +37,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final RefundRepository refundRepository;
+    private final PaymentRepository paymentRepository;
 
     @GetMapping("/audit-logs")
     public ResponseEntity<ApiResponse<Page<AdminAuditLog>>> getAuditLogs(
@@ -70,6 +72,12 @@ public class AdminController {
         BigDecimal grossRevenue = orderRevenue.add(tuitionRevenue);
         BigDecimal netRevenue = grossRevenue.subtract(completedRefunds);
 
+        long totalPayments = paymentRepository.count();
+        long successfulPayments = paymentRepository.countByStatus(com.sporekart.payment.domain.PaymentStatus.CAPTURED);
+        Double gatewaySuccessRate = totalPayments > 0
+                ? Math.round(((double) successfulPayments / totalPayments * 100.0) * 10.0) / 10.0
+                : null;
+
         AdminAnalyticsOverview overview = AdminAnalyticsOverview.builder()
                 .totalProducts(totalProducts)
                 .activeOrders(activeOrders)
@@ -81,6 +89,11 @@ public class AdminController {
                 .totalRefundsInr(completedRefunds)
                 .trainingTuitionRevenueInr(tuitionRevenue)
                 .systemHealthStatus("HEALTHY")
+                .gatewaySuccessRate(gatewaySuccessRate)
+                .totalPaymentsCount(totalPayments)
+                .successfulPaymentsCount(successfulPayments)
+                .settlementAccountDisplay("Direct Razorpay Settlement (Merchant Dashboard)")
+                .settlementAccountConfigured(true)
                 .build();
         return ResponseEntity.ok(ApiResponse.success(overview));
     }
@@ -100,5 +113,10 @@ public class AdminController {
         private BigDecimal totalRefundsInr;
         private BigDecimal trainingTuitionRevenueInr;
         private String systemHealthStatus;
+        private Double gatewaySuccessRate;
+        private Long totalPaymentsCount;
+        private Long successfulPaymentsCount;
+        private String settlementAccountDisplay;
+        private boolean settlementAccountConfigured;
     }
 }

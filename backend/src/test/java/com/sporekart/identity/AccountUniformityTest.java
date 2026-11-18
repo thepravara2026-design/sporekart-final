@@ -34,6 +34,7 @@ public class AccountUniformityTest {
     void setUp() {
         // User 1 logs in via Email/Google (user1@gmail.com)
         AuthDtos.GoogleOAuthRequest googleReq1 = AuthDtos.GoogleOAuthRequest.builder()
+                .idToken("test_token_user1@gmail.com")
                 .email("user1@gmail.com")
                 .googleSub("google_sub_user1_12345")
                 .firstName("User One")
@@ -48,6 +49,7 @@ public class AccountUniformityTest {
 
         // User 2 logs in via Google/OAuth with a different email (user2@gmail.com)
         AuthDtos.GoogleOAuthRequest googleReq2 = AuthDtos.GoogleOAuthRequest.builder()
+                .idToken("test_token_user2@gmail.com")
                 .email("user2@gmail.com")
                 .googleSub("google_sub_user2_67890")
                 .firstName("User Two")
@@ -72,7 +74,7 @@ public class AccountUniformityTest {
         // User 2 tries to link 9999999999 during checkout, enrollment, or profile update
         DuplicateIdentityConflictException exception = assertThrows(
                 DuplicateIdentityConflictException.class,
-                () -> authService.linkPhoneAndNameFromAddress(user2.getId(), "9999999999", "User Two Tester")
+                () -> authService.validatePhoneUniqueness(user2.getId(), "9999999999")
         );
 
         assertTrue(exception.getMessage().contains("already registered"));

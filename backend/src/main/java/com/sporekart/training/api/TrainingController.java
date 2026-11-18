@@ -118,8 +118,10 @@ public class TrainingController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Enrollment enrollment = trainingService.getEnrollmentById(enrollmentId);
-        if (enrollment.getUserId() != null && (authUserId == null || (!authUserId.equals(enrollment.getUserId()) && !isAdmin))) {
-            return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to training enrollment details"));
+        if (!isAdmin) {
+            if (enrollment.getUserId() == null || authUserId == null || !authUserId.equals(enrollment.getUserId())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied to training enrollment details"));
+            }
         }
         return ResponseEntity.ok(ApiResponse.success(mapEnrollment(enrollment)));
     }

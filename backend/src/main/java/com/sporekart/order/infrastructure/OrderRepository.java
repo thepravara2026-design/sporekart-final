@@ -40,6 +40,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByStatus(OrderStatus status);
 
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, java.time.OffsetDateTime cutoff);
+
     Page<Order> findByStatusNot(OrderStatus status, Pageable pageable);
 
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);

@@ -70,9 +70,6 @@ public class OrderServiceUnitTest {
     private com.sporekart.promotion.application.PromotionService promotionService;
 
     @Mock
-    private com.sporekart.wallet.application.WalletService walletService;
-
-    @Mock
     private com.sporekart.notification.application.NotificationEventService notificationEventService;
 
     @Mock

@@ -15,6 +15,12 @@ public class LiveSmtpDeliveryVerificationTest {
     @Test
     @DisplayName("SMTP-LIVE-01: Verify JavaMailSender connects and dispatches live email through Gmail SMTP")
     void testLiveGmailSmtpDispatch() {
+        try {
+            java.net.InetAddress.getByName("smtp.gmail.com");
+        } catch (Exception e) {
+            org.junit.jupiter.api.Assumptions.abort("Skipping live SMTP test: Network or smtp.gmail.com unreachable in current execution environment");
+        }
+
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);

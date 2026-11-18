@@ -191,7 +191,7 @@ If your spawn shipment arrives visibly damaged, contaminated during transit, pun
 2. Share your Order ID along with clear unboxing photographs or a short video showing the unopened bag with its batch tag and outer shipping label.
 3. Upon rapid verification by our laboratory agronomist, you may choose:
    - **Immediate Free Reshipment:** We will dispatch a fresh, certified replacement batch via priority express at zero cost to you; OR
-   - **100% Full Refund:** Credited to your original payment source or instant Sporekart wallet.`
+   - **100% Full Refund:** Credited directly to your original payment source (UPI, net banking, debit/credit card via Razorpay).`
       },
       {
         id: 'equipment-returns',
@@ -217,8 +217,7 @@ If your spawn shipment arrives visibly damaged, contaminated during transit, pun
         content: `Once a refund is approved by our billing desk:
 
 - **Refund Initiation:** Initiated within **24 to 48 hours**.
-- **Original Payment Source (Razorpay):** Re-credited to the exact card, bank account, or UPI VPA used during checkout. Depending on your bank's clearing cycle, the funds will reflect in your account within **5 to 7 business days**.
-- **Sporekart Store Wallet:** Instant deposit into your Sporekart profile ledger, immediately redeemable toward any future purchase with zero deductions.`
+- **Original Payment Source (Razorpay):** Re-credited to the exact card, bank account, or UPI VPA used during checkout. Depending on your bank's clearing cycle, the funds will reflect in your account within **5 to 7 business days**.`
       }
     ]
   },
