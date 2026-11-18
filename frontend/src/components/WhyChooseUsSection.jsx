@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Leaf, Users, Truck, Cpu, Heart, ArrowRight } from 'lucide-react';
+import { Award, Leaf, Users, Truck, Cpu, Heart, ArrowRight, ShieldCheck } from 'lucide-react';
 
 const FEATURES = [
   {

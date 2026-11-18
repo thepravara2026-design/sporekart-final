@@ -6,7 +6,7 @@ import {
   MessageSquare, ExternalLink, Download, ChevronRight, Edit3, Trash2, Check, ArrowRight,
   CreditCard, ArrowDownLeft, ArrowUpRight, RotateCcw, Star, Sparkles, Ban, Bot
 } from 'lucide-react';
-import { orderApi, trainingApi, customerApi, supportApi, shippingApi } from '../api';
+import { orderApi, trainingApi, customerApi, supportApi, shippingApi, authApi, clearSessionAndTokens } from '../api';
 import SeoHead from '../components/SeoHead';
 import EmptyState from '../components/EmptyState';
 import PageSkeleton from '../components/PageSkeleton';

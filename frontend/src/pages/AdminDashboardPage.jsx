@@ -2137,7 +2137,7 @@ export default function AdminDashboardPage({ user }) {
       setAnalyticsModalConfig({
         domain: 'Treasury & Settlement',
         title: 'Platform Settlement Architecture',
-        metric: overview?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)',
+        metric: analytics?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)',
         subtitle: 'Primary corporate current account configured in RBI-regulated Razorpay merchant dashboard for automated daily settlements.',
         badge: 'Automated Banking Rails',
         badgeColor: 'forest',
@@ -6395,8 +6395,8 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Gateway Success Rate"
-              value={overview?.gatewaySuccessRate != null ? `${overview.gatewaySuccessRate.toFixed(1)}%` : 'No data recorded'}
-              badge={overview?.gatewaySuccessRate != null ? (overview.gatewaySuccessRate >= 95 ? 'High Reliability' : 'Active Tracking') : 'Awaiting Transactions'}
+              value={analytics?.gatewaySuccessRate != null ? `${analytics.gatewaySuccessRate.toFixed(1)}%` : 'No data recorded'}
+              badge={analytics?.gatewaySuccessRate != null ? (analytics.gatewaySuccessRate >= 95 ? 'High Reliability' : 'Active Tracking') : 'Awaiting Transactions'}
               badgeStyle="text-emerald-700 bg-emerald-500/10"
               icon={TrendingUp}
               iconColor="text-forest-700"
@@ -6406,7 +6406,7 @@ export default function AdminDashboardPage({ user }) {
             />
             <AnalyticsMetricCard
               title="Active Settlement Account"
-              value={overview?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)'}
+              value={analytics?.settlementAccountDisplay || 'Direct Razorpay Settlement (Merchant Dashboard)'}
               badge="Automated Banking Rails"
               badgeStyle="text-forest-800 bg-forest-900/10"
               icon={CreditCard}

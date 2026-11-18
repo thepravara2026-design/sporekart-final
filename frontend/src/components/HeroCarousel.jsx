@@ -123,7 +123,7 @@ export default function HeroCarousel() {
                 alt={slide.alt || slide.title}
                 width="1024"
                 height="576"
-                fetchpriority={index === 0 ? 'high' : 'auto'}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding="async"
                 className={`w-full h-full object-cover object-center transform transition-transform duration-3000 ease-out ${
