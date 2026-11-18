@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
 
-export const ADMIN_EMAIL = 'thepravara2026@gmail.com';
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'thepravara2026@gmail.com';
 export const ADMIN_SUB = 'google_admin_thepravara2026';
-export const API_BASE = 'http://localhost:8080/api/v1';
-export const FRONTEND_URL = 'http://localhost:3000';
+export const API_BASE = process.env.API_BASE || 'http://localhost:8080/api/v1';
+export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 /**
  * Generate unique isolated test user fixtures
