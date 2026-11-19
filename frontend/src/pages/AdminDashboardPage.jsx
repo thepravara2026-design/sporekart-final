@@ -647,8 +647,8 @@ export default function AdminDashboardPage({ user }) {
 
     const extractedUrl = extractDirectImageUrl(mediaUrlInput);
 
-    if (!extractedUrl.startsWith('http://') && !extractedUrl.startsWith('https://') && !extractedUrl.startsWith('data:image/')) {
-      setErrorMessage('Please enter a valid image web URL starting with http:// or https://');
+    if (!extractedUrl.startsWith('http://') && !extractedUrl.startsWith('https://')) {
+      setErrorMessage('Please enter a valid image web URL starting with http:// or https:// (raw base64 images are prohibited to maintain performance)');
       return;
     }
 
@@ -1140,6 +1140,10 @@ export default function AdminDashboardPage({ user }) {
   const handleCreateCategory = async (e) => {
     e.preventDefault();
     setStatusMessage(''); setErrorMessage('');
+    if (catImageUrl && (catImageUrl.startsWith('data:image/') || (!catImageUrl.startsWith('http://') && !catImageUrl.startsWith('https://')))) {
+      setErrorMessage('Category image must use http:// or https:// URL. Raw base64 data URLs are prohibited.');
+      return;
+    }
     try {
       await adminApi.createCategory({ 
         name: catName, 
@@ -1168,6 +1172,10 @@ export default function AdminDashboardPage({ user }) {
     e.preventDefault();
     if (!editingCategory) return;
     setStatusMessage(''); setErrorMessage('');
+    if (editCatImageUrl && (editCatImageUrl.startsWith('data:image/') || (!editCatImageUrl.startsWith('http://') && !editCatImageUrl.startsWith('https://')))) {
+      setErrorMessage('Category image must use http:// or https:// URL. Raw base64 data URLs are prohibited.');
+      return;
+    }
     try {
       await adminApi.updateCategory(editingCategory.id, {
         name: editCatName,

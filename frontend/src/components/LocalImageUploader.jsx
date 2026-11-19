@@ -41,15 +41,9 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
         sizeKb: Math.round(file.size / 1024),
       });
 
-      // Immediately convert first file to Data URL for onImageSelected callback
+      // Note: Raw base64 Data URLs are blocked to prevent database bloat and socket aborts
       if (onImageSelected && file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (reader.result) {
-            onImageSelected(reader.result);
-          }
-        };
-        reader.readAsDataURL(file);
+        setErrorMsg('Direct base64 image saving is disabled to maintain site performance. Please paste an HTTPS image URL (e.g. from Supabase Storage or Unsplash) below.');
       }
     }
 
@@ -75,70 +69,8 @@ export default function LocalImageUploader({ productId, onUploadSuccess, onImage
   const handleUploadAll = async () => {
     if (!selectedFiles.length || isUploading) return;
 
-    setIsUploading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-    setUploadProgress(10);
-
-    try {
-      const uploadedMediaItems = [];
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const item = selectedFiles[i];
-        
-        // Convert file to Data URL for persistent rendering
-        const dataUrl = await new Promise((resolve) => {
-          if (item.file) {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(item.file);
-          } else {
-            resolve(item.previewUrl);
-          }
-        });
-
-        const formData = {
-          productId: productId || null,
-          mediaUrl: dataUrl,
-          mediaType: 'IMAGE',
-          role: 'GALLERY',
-          isPrimary: i === 0,
-          displayOrder: i,
-        };
-
-        if (productId) {
-          try {
-            const res = await adminApi.addMedia(formData);
-            uploadedMediaItems.push(res?.data?.data || formData);
-          } catch (apiErr) {
-            uploadedMediaItems.push(formData);
-          }
-        } else {
-          uploadedMediaItems.push(formData);
-        }
-        
-        setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
-      }
-
-      setSuccessMsg(`Successfully added ${selectedFiles.length} image(s) to product gallery.`);
-      
-      // Clean up object URLs
-      selectedFiles.forEach((item) => {
-        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-      });
-      setSelectedFiles([]);
-      setUploadProgress(0);
-
-      if (onUploadSuccess) {
-        onUploadSuccess(uploadedMediaItems);
-      }
-      if (onImageSelected && uploadedMediaItems.length > 0) {
-        onImageSelected(uploadedMediaItems[0].mediaUrl);
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to upload selected images. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
+    setErrorMsg('Direct base64 image uploads are disabled to maintain sub-second page performance. Please upload images to Supabase Storage or specify an HTTPS image URL.');
+    return;
   };
 
   return (

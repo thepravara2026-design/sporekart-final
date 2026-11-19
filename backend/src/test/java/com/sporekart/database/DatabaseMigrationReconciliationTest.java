@@ -70,10 +70,10 @@ public class DatabaseMigrationReconciliationTest {
         Map<Integer, Path> supabase = getSupabaseMigrations();
 
         assertEquals(flyway.size(), supabase.size(), "Flyway and Supabase migration inventory sizes must match");
-        assertEquals(50, flyway.size(), "Flyway must have exactly 50 migrations (V1 to V50)");
-        assertEquals(50, supabase.size(), "Supabase migrations must have exactly 50 synchronized files (V1 to V50)");
+        assertEquals(51, flyway.size(), "Flyway must have exactly 51 migrations (V1 to V51)");
+        assertEquals(51, supabase.size(), "Supabase migrations must have exactly 51 synchronized files (V1 to V51)");
 
-        for (int v = 1; v <= 50; v++) {
+        for (int v = 1; v <= 51; v++) {
             assertTrue(flyway.containsKey(v), "Flyway must contain migration V" + v);
             assertTrue(supabase.containsKey(v), "Supabase must contain migration V" + v);
         }

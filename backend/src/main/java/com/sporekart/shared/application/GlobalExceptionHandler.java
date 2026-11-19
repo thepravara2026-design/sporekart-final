@@ -173,6 +173,18 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("SHIPPING_GATEWAY_ERROR", "Logistics gateway communication failure"));
     }
 
+    @ExceptionHandler(java.io.IOException.class)
+    public ResponseEntity<Void> handleIoException(java.io.IOException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+        if (msg.contains("broken pipe") || msg.contains("connection reset") || msg.contains("aborted")
+                || ex.getClass().getName().contains("ClientAbortException")) {
+            log.debug("Client aborted or reset TCP connection: {}", ex.getMessage());
+            return null;
+        }
+        log.warn("I/O exception during request processing: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         String correlationId = RequestIdContext.getCurrentRequestId();

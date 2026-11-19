@@ -34,11 +34,19 @@ public class AdminCatalogService {
             throw new IllegalArgumentException("Duplicate category slug: " + slug);
         }
 
+        String imgUrl = request.getImageUrl();
+        if (imgUrl != null && !imgUrl.isBlank()) {
+            imgUrl = imgUrl.trim();
+            if (imgUrl.startsWith("data:image/") || !imgUrl.matches("^https?://.*") || imgUrl.length() > 2000) {
+                throw new IllegalArgumentException("Category Image URL must use http:// or https:// protocol and cannot exceed 2000 characters (raw base64 images prohibited)");
+            }
+        }
+
         Category category = Category.builder()
                 .name(request.getName().trim())
                 .slug(slug)
                 .description(request.getDescription())
-                .imageUrl(request.getImageUrl())
+                .imageUrl(imgUrl)
                 .isActive(request.isActive())
                 .build();
 
@@ -64,7 +72,15 @@ public class AdminCatalogService {
             category.setDescription(request.getDescription());
         }
         if (request.getImageUrl() != null) {
-            category.setImageUrl(request.getImageUrl());
+            String imgUrl = request.getImageUrl().trim();
+            if (!imgUrl.isEmpty()) {
+                if (imgUrl.startsWith("data:image/") || !imgUrl.matches("^https?://.*") || imgUrl.length() > 2000) {
+                    throw new IllegalArgumentException("Category Image URL must use http:// or https:// protocol and cannot exceed 2000 characters (raw base64 images prohibited)");
+                }
+                category.setImageUrl(imgUrl);
+            } else {
+                category.setImageUrl(null);
+            }
         }
         if (request.getIsActive() != null) {
             category.setActive(request.getIsActive());
@@ -355,8 +371,12 @@ public class AdminCatalogService {
 
     @Transactional
     public ProductMedia addMedia(CatalogDtos.CreateMediaRequest request) {
-        if (request.getMediaUrl() == null || !request.getMediaUrl().trim().matches("^https?://.*")) {
-            throw new IllegalArgumentException("Media URL must use http:// or https:// protocol");
+        if (request.getMediaUrl() == null) {
+            throw new IllegalArgumentException("Media URL is required");
+        }
+        String cleanUrl = request.getMediaUrl().trim();
+        if (cleanUrl.startsWith("data:image/") || !cleanUrl.matches("^https?://.*") || cleanUrl.length() > 2000) {
+            throw new IllegalArgumentException("Media URL must use http:// or https:// protocol and cannot exceed 2000 characters (raw base64 images prohibited)");
         }
 
         Product product = productRepository.findById(request.getProductId())
@@ -375,7 +395,7 @@ public class AdminCatalogService {
         ProductMedia media = ProductMedia.builder()
                 .product(product)
                 .variantId(request.getVariantId())
-                .mediaUrl(request.getMediaUrl())
+                .mediaUrl(cleanUrl)
                 .mediaType(request.getMediaType() != null ? request.getMediaType() : MediaType.IMAGE)
                 .role(request.getRole() != null ? request.getRole() : ProductMediaRole.GALLERY)
                 .isPrimary(request.isPrimary())
@@ -429,11 +449,15 @@ public class AdminCatalogService {
                 if (req.getMediaUrl() == null || req.getMediaUrl().trim().isEmpty()) {
                     continue;
                 }
+                String cleanUrl = req.getMediaUrl().trim();
+                if (cleanUrl.startsWith("data:image/") || !cleanUrl.matches("^https?://.*") || cleanUrl.length() > 2000) {
+                    throw new IllegalArgumentException("Media URL must use http:// or https:// protocol and cannot exceed 2000 characters (raw base64 images prohibited)");
+                }
                 boolean isPrimary = req.isPrimary() || (!hasPrimary && i == 0);
                 ProductMedia media = ProductMedia.builder()
                         .product(product)
                         .variantId(req.getVariantId())
-                        .mediaUrl(req.getMediaUrl().trim())
+                        .mediaUrl(cleanUrl)
                         .mediaType(req.getMediaType() != null ? req.getMediaType() : MediaType.IMAGE)
                         .role(req.getRole() != null ? req.getRole() : (isPrimary ? ProductMediaRole.PRIMARY : ProductMediaRole.GALLERY))
                         .isPrimary(isPrimary)
