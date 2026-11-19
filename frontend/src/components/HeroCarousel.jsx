@@ -50,7 +50,7 @@ export default function HeroCarousel() {
     setCurrentSlide(idx);
   };
 
-  // Preload all slide images on mount for instant, flicker-free 1-second transition loop
+  // Preload all slide images on mount for instant, flicker-free 2-second transition loop
   useEffect(() => {
     HERO_SLIDES.forEach((slide) => {
       const img = new Image();
@@ -58,11 +58,11 @@ export default function HeroCarousel() {
     });
   }, []);
 
-  // Automatic slideshow timer: continuous 1-second loop
+  // Automatic slideshow timer: continuous 2-second loop
   useEffect(() => {
     timerRef.current = setInterval(() => {
       nextSlide();
-    }, 1000);
+    }, 2000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
